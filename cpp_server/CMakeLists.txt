@@ -116,6 +116,9 @@ set(SERVER_SOURCES
     src/pcg/fleet_doctrine.cpp
     src/pcg/snappable_grid.cpp
     src/pcg/station_generator.cpp
+    src/pcg/salvage_system.cpp
+    src/pcg/rover_system.cpp
+    src/pcg/collision_manager.cpp
 )
 
 set(SERVER_HEADERS
@@ -206,6 +209,9 @@ set(SERVER_HEADERS
     include/pcg/fleet_doctrine.h
     include/pcg/snappable_grid.h
     include/pcg/station_generator.h
+    include/pcg/salvage_system.h
+    include/pcg/rover_system.h
+    include/pcg/collision_manager.h
 )
 
 # Steam SDK configuration
@@ -364,6 +370,9 @@ if(BUILD_TESTS)
         src/pcg/fleet_doctrine.cpp
         src/pcg/snappable_grid.cpp
         src/pcg/station_generator.cpp
+        src/pcg/salvage_system.cpp
+        src/pcg/rover_system.cpp
+        src/pcg/collision_manager.cpp
     )
 
     add_executable(test_systems
