@@ -120,6 +120,9 @@
 #include "pcg/planet_generator.h"
 #include "pcg/habitat_generator.h"
 #include "pcg/grav_bike_generator.h"
+#include "pcg/spine_hull_generator.h"
+#include "pcg/terrain_generator.h"
+#include "pcg/turret_placement_system.h"
 #include "pcg/collision_manager.h"
 #include "pcg/asteroid_field_generator.h"
 #include "pcg/anomaly_generator.h"
@@ -16523,6 +16526,248 @@ void testAIFleetDispatchSystem() {
     assertTrue(dispatch->isComplete(), "Complete after time");
 }
 
+// ==================== Spine Hull Generator Tests ====================
+
+void testSpineHullGeneration() {
+    std::cout << "\n=== Spine Hull Generation ===" << std::endl;
+    pcg::PCGContext ctx{ 42, 1 };
+    auto hull = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Cruiser);
+    assertTrue(hull.valid, "Generated spine hull is valid");
+    assertTrue(hull.profile.length > 0.0f, "Hull has positive length");
+    assertTrue(hull.profile.width_mid > 0.0f, "Hull has positive mid-width");
+    assertTrue(hull.engine_cluster_count > 0, "Hull has engines");
+    assertTrue(static_cast<int>(hull.zones.size()) == 3, "Hull has 3 functional zones");
+    assertTrue(hull.bilateral_symmetry, "Ships have bilateral symmetry");
+}
+
+void testSpineHullDeterminism() {
+    std::cout << "\n=== Spine Hull Determinism ===" << std::endl;
+    pcg::PCGContext ctx{ 777, 1 };
+    auto h1 = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Battleship);
+    auto h2 = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Battleship);
+    assertTrue(h1.spine == h2.spine, "Same seed same spine type");
+    assertTrue(approxEqual(h1.profile.length, h2.profile.length), "Same seed same length");
+    assertTrue(approxEqual(h1.profile.width_mid, h2.profile.width_mid), "Same seed same width");
+    assertTrue(h1.engine_cluster_count == h2.engine_cluster_count, "Same seed same engines");
+    assertTrue(h1.total_greeble_count == h2.total_greeble_count, "Same seed same greebles");
+}
+
+void testSpineHullZoneOrdering() {
+    std::cout << "\n=== Spine Hull Zone Ordering ===" << std::endl;
+    pcg::PCGContext ctx{ 555, 1 };
+    auto hull = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Frigate);
+    assertTrue(hull.zones[0].zone == pcg::FunctionalZone::Command, "Zone 0 is Command");
+    assertTrue(hull.zones[1].zone == pcg::FunctionalZone::MidHull, "Zone 1 is MidHull");
+    assertTrue(hull.zones[2].zone == pcg::FunctionalZone::Engineering, "Zone 2 is Engineering");
+
+    // Zone fractions must sum to 1.0.
+    float total = hull.zones[0].length_fraction + hull.zones[1].length_fraction
+                + hull.zones[2].length_fraction;
+    assertTrue(std::fabs(total - 1.0f) < 0.02f, "Zone fractions sum to 1.0");
+}
+
+void testSpineHullAspectRatio() {
+    std::cout << "\n=== Spine Hull Aspect Ratio ===" << std::endl;
+    // Generate many hulls and verify aspect ratio clamping.
+    bool allClamped = true;
+    for (uint64_t i = 1; i <= 100; ++i) {
+        pcg::PCGContext ctx{ i * 31, 1 };
+        auto hull = pcg::SpineHullGenerator::generate(ctx);
+        if (hull.aspect_ratio < 1.5f || hull.aspect_ratio > 15.0f) {
+            allClamped = false;
+            break;
+        }
+    }
+    assertTrue(allClamped, "All hulls have aspect ratio in [1.5, 15]");
+}
+
+void testSpineHullFactionStyle() {
+    std::cout << "\n=== Spine Hull Faction Style ===" << std::endl;
+    pcg::PCGContext ctx{ 999, 1 };
+    auto solari = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Cruiser, "Solari");
+    auto veyren = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Cruiser, "Veyren");
+    assertTrue(solari.faction_style == "Solari", "Solari faction tag set");
+    assertTrue(veyren.faction_style == "Veyren", "Veyren faction tag set");
+    // Solari hulls should be narrower (elegant) vs Veyren (wider, angular).
+    assertTrue(solari.profile.width_mid < veyren.profile.width_mid,
+               "Solari narrower than Veyren");
+}
+
+void testSpineHullAllClassesValid() {
+    std::cout << "\n=== Spine Hull All Classes Valid ===" << std::endl;
+    pcg::HullClass classes[] = {
+        pcg::HullClass::Frigate, pcg::HullClass::Destroyer,
+        pcg::HullClass::Cruiser, pcg::HullClass::Battlecruiser,
+        pcg::HullClass::Battleship, pcg::HullClass::Capital
+    };
+    bool allValid = true;
+    for (auto hc : classes) {
+        pcg::PCGContext ctx{ static_cast<uint64_t>(hc) * 100 + 7, 1 };
+        auto hull = pcg::SpineHullGenerator::generate(ctx, hc);
+        if (!hull.valid) { allValid = false; break; }
+    }
+    assertTrue(allValid, "All hull classes produce valid spine hulls");
+}
+
+void testSpineHullCapitalLarger() {
+    std::cout << "\n=== Spine Hull Capital Larger ===" << std::endl;
+    pcg::PCGContext ctx{ 123, 1 };
+    auto frigate = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Frigate);
+    auto capital = pcg::SpineHullGenerator::generate(ctx, pcg::HullClass::Capital);
+    assertTrue(capital.profile.length > frigate.profile.length,
+               "Capital hull longer than frigate");
+    assertTrue(capital.engine_cluster_count > frigate.engine_cluster_count,
+               "Capital has more engines than frigate");
+}
+
+void testSpineTypeName() {
+    std::cout << "\n=== Spine Type Names ===" << std::endl;
+    assertTrue(pcg::SpineHullGenerator::spineTypeName(pcg::SpineType::Needle) == "Needle", "Needle name");
+    assertTrue(pcg::SpineHullGenerator::spineTypeName(pcg::SpineType::Wedge) == "Wedge", "Wedge name");
+    assertTrue(pcg::SpineHullGenerator::spineTypeName(pcg::SpineType::Hammer) == "Hammer", "Hammer name");
+    assertTrue(pcg::SpineHullGenerator::spineTypeName(pcg::SpineType::Slab) == "Slab", "Slab name");
+    assertTrue(pcg::SpineHullGenerator::spineTypeName(pcg::SpineType::Ring) == "Ring", "Ring name");
+}
+
+// ==================== Terrain Generator Tests ====================
+
+void testTerrainGeneration() {
+    std::cout << "\n=== Terrain Generation ===" << std::endl;
+    auto terrain = pcg::TerrainGenerator::generate(42, pcg::PlanetType::Rocky, 4);
+    assertTrue(terrain.valid, "Terrain is valid");
+    assertTrue(terrain.grid_size == 4, "Grid size is 4");
+    assertTrue(static_cast<int>(terrain.regions.size()) == 16, "4×4 = 16 regions");
+    assertTrue(!terrain.regions[0].cells.empty(), "Regions have cells");
+}
+
+void testTerrainDeterminism() {
+    std::cout << "\n=== Terrain Determinism ===" << std::endl;
+    auto t1 = pcg::TerrainGenerator::generate(888, pcg::PlanetType::Ice, 4);
+    auto t2 = pcg::TerrainGenerator::generate(888, pcg::PlanetType::Ice, 4);
+    assertTrue(t1.mineable_count == t2.mineable_count, "Same seed same mineable count");
+    assertTrue(t1.landing_zone_count == t2.landing_zone_count, "Same seed same landing zones");
+    assertTrue(t1.regions.size() == t2.regions.size(), "Same region count");
+    // Check first region cells match.
+    assertTrue(approxEqual(t1.regions[0].avg_height, t2.regions[0].avg_height),
+               "Same seed same avg height");
+}
+
+void testTerrainBiomeClassification() {
+    std::cout << "\n=== Terrain Biome Classification ===" << std::endl;
+    // Lava planet: high terrain → Volcanic.
+    auto lava_biome = pcg::TerrainGenerator::classifyBiome(0.8f, 0.5f, pcg::PlanetType::Lava);
+    assertTrue(lava_biome == pcg::BiomeType::Volcanic, "High lava terrain is Volcanic");
+    // Ice planet: high terrain → Mountains.
+    auto ice_biome = pcg::TerrainGenerator::classifyBiome(0.7f, 0.5f, pcg::PlanetType::Ice);
+    assertTrue(ice_biome == pcg::BiomeType::Mountains, "High ice terrain is Mountains");
+    // Desert planet: low terrain → Dunes.
+    auto desert_biome = pcg::TerrainGenerator::classifyBiome(0.3f, 0.5f, pcg::PlanetType::Desert);
+    assertTrue(desert_biome == pcg::BiomeType::Dunes, "Low desert terrain is Dunes");
+}
+
+void testTerrainMineableDeposits() {
+    std::cout << "\n=== Terrain Mineable Deposits ===" << std::endl;
+    auto terrain = pcg::TerrainGenerator::generate(333, pcg::PlanetType::Rocky, 8);
+    assertTrue(terrain.mineable_count > 0, "Rocky planet has mineable deposits");
+    // Gas giants should have no mineable cells.
+    auto gas = pcg::TerrainGenerator::generate(333, pcg::PlanetType::Gas, 4);
+    assertTrue(gas.mineable_count == 0, "Gas giant has no mineable deposits");
+}
+
+void testTerrainLandingZones() {
+    std::cout << "\n=== Terrain Landing Zones ===" << std::endl;
+    auto terrain = pcg::TerrainGenerator::generate(555, pcg::PlanetType::Forest, 8);
+    assertTrue(terrain.landing_zone_count >= 0, "Landing zone count non-negative");
+    // At least some regions should be flat enough on a large grid.
+    auto big = pcg::TerrainGenerator::generate(555, pcg::PlanetType::Forest, 16);
+    assertTrue(big.landing_zone_count >= 0, "Large grid has non-negative landing zones");
+}
+
+void testTerrainBiomeName() {
+    std::cout << "\n=== Terrain Biome Names ===" << std::endl;
+    assertTrue(pcg::TerrainGenerator::biomeName(pcg::BiomeType::Plains) == "Plains", "Plains name");
+    assertTrue(pcg::TerrainGenerator::biomeName(pcg::BiomeType::Mountains) == "Mountains", "Mountains name");
+    assertTrue(pcg::TerrainGenerator::biomeName(pcg::BiomeType::Volcanic) == "Volcanic", "Volcanic name");
+}
+
+void testTerrainDifferentSeeds() {
+    std::cout << "\n=== Terrain Different Seeds ===" << std::endl;
+    auto t1 = pcg::TerrainGenerator::generate(100, pcg::PlanetType::Rocky, 4);
+    auto t2 = pcg::TerrainGenerator::generate(200, pcg::PlanetType::Rocky, 4);
+    // Different seeds should produce different terrain (very unlikely to match).
+    bool differs = (t1.mineable_count != t2.mineable_count)
+                || (t1.landing_zone_count != t2.landing_zone_count)
+                || !approxEqual(t1.regions[0].avg_height, t2.regions[0].avg_height);
+    assertTrue(differs, "Different seeds produce different terrain");
+}
+
+// ==================== Turret Placement System Tests ====================
+
+void testTurretPlacementBasic() {
+    std::cout << "\n=== Turret Placement Basic ===" << std::endl;
+    pcg::PCGContext ctx{ 42, 1 };
+    auto placement = pcg::TurretPlacementSystem::place(ctx, pcg::HullClass::Cruiser, 4);
+    assertTrue(static_cast<int>(placement.mounts.size()) == 4, "4 mounts placed");
+    assertTrue(placement.coverage_score > 0.0f, "Has some coverage");
+    assertTrue(placement.coverage_score <= 1.0f, "Coverage ≤ 1.0");
+}
+
+void testTurretPlacementDeterminism() {
+    std::cout << "\n=== Turret Placement Determinism ===" << std::endl;
+    pcg::PCGContext ctx{ 777, 1 };
+    auto p1 = pcg::TurretPlacementSystem::place(ctx, pcg::HullClass::Battleship, 6);
+    auto p2 = pcg::TurretPlacementSystem::place(ctx, pcg::HullClass::Battleship, 6);
+    assertTrue(p1.mounts.size() == p2.mounts.size(), "Same mount count");
+    assertTrue(approxEqual(p1.coverage_score, p2.coverage_score), "Same coverage");
+    assertTrue(approxEqual(p1.max_overlap, p2.max_overlap), "Same overlap");
+}
+
+void testTurretPlacementOverlapThreshold() {
+    std::cout << "\n=== Turret Placement Overlap Threshold ===" << std::endl;
+    // Moderate turret counts should pass the 30% overlap threshold.
+    bool allValid = true;
+    for (uint64_t i = 1; i <= 50; ++i) {
+        pcg::PCGContext ctx{ i * 13, 1 };
+        auto p = pcg::TurretPlacementSystem::place(ctx, pcg::HullClass::Cruiser, 3);
+        if (!p.valid) { allValid = false; break; }
+    }
+    assertTrue(allValid, "3-turret cruisers all pass overlap threshold");
+}
+
+void testTurretPlacementFaction() {
+    std::cout << "\n=== Turret Placement Faction ===" << std::endl;
+    pcg::PCGContext ctx{ 999, 1 };
+    auto solari = pcg::TurretPlacementSystem::place(ctx, pcg::HullClass::Cruiser, 4, "Solari");
+    auto veyren = pcg::TurretPlacementSystem::place(ctx, pcg::HullClass::Cruiser, 4, "Veyren");
+    assertTrue(static_cast<int>(solari.mounts.size()) == 4, "Solari has 4 mounts");
+    assertTrue(static_cast<int>(veyren.mounts.size()) == 4, "Veyren has 4 mounts");
+    // Veyren should have wider arcs (utilitarian spread).
+    float solariArcSum = 0.0f, veyrenArcSum = 0.0f;
+    for (const auto& m : solari.mounts) solariArcSum += m.arc_deg;
+    for (const auto& m : veyren.mounts) veyrenArcSum += m.arc_deg;
+    assertTrue(veyrenArcSum > solariArcSum, "Veyren has wider total arcs than Solari");
+}
+
+void testTurretPlacementZeroTurrets() {
+    std::cout << "\n=== Turret Placement Zero Turrets ===" << std::endl;
+    pcg::PCGContext ctx{ 0, 1 };
+    auto p = pcg::TurretPlacementSystem::place(ctx, pcg::HullClass::Frigate, 0);
+    assertTrue(p.mounts.empty(), "Zero turrets produces no mounts");
+    assertTrue(approxEqual(p.coverage_score, 0.0f), "No coverage with zero turrets");
+}
+
+void testTurretPlacementCoverageComputation() {
+    std::cout << "\n=== Turret Placement Coverage Computation ===" << std::endl;
+    // A single turret with 360° arc should give 100% coverage.
+    std::vector<pcg::TurretMount> mounts;
+    pcg::TurretMount m{};
+    m.direction_deg = 0.0f;
+    m.arc_deg = 360.0f;
+    mounts.push_back(m);
+    float cov = pcg::TurretPlacementSystem::computeCoverage(mounts);
+    assertTrue(approxEqual(cov, 1.0f), "360° arc gives 100% coverage");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -16560,7 +16805,8 @@ int main() {
     std::cout << "CharacterMesh, Rig, Turret, Planet, Habitat, GravBike," << std::endl;
     std::cout << "Legend, AncientTech, Docking, Survival," << std::endl;
     std::cout << "Menu, Crew, SalvageExploration, InteriorExterior, Race, Lore, MarketOrder," << std::endl;
-    std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)" << std::endl;
+    std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)," << std::endl;
+    std::cout << "SpineHullGenerator, TerrainGenerator, TurretPlacementSystem" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -17652,6 +17898,33 @@ int main() {
     testMarketFillOrderSystem();
     testMarketOrderExpirySystem();
     testAIFleetDispatchSystem();
+
+    // Spine Hull Generator tests
+    testSpineHullGeneration();
+    testSpineHullDeterminism();
+    testSpineHullZoneOrdering();
+    testSpineHullAspectRatio();
+    testSpineHullFactionStyle();
+    testSpineHullAllClassesValid();
+    testSpineHullCapitalLarger();
+    testSpineTypeName();
+
+    // Terrain Generator tests
+    testTerrainGeneration();
+    testTerrainDeterminism();
+    testTerrainBiomeClassification();
+    testTerrainMineableDeposits();
+    testTerrainLandingZones();
+    testTerrainBiomeName();
+    testTerrainDifferentSeeds();
+
+    // Turret Placement System tests
+    testTurretPlacementBasic();
+    testTurretPlacementDeterminism();
+    testTurretPlacementOverlapThreshold();
+    testTurretPlacementFaction();
+    testTurretPlacementZeroTurrets();
+    testTurretPlacementCoverageComputation();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

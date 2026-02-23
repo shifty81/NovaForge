@@ -162,6 +162,9 @@ set(SERVER_SOURCES
     src/pcg/planet_generator.cpp
     src/pcg/habitat_generator.cpp
     src/pcg/grav_bike_generator.cpp
+    src/pcg/spine_hull_generator.cpp
+    src/pcg/terrain_generator.cpp
+    src/pcg/turret_placement_system.cpp
 )
 
 set(SERVER_HEADERS
@@ -299,6 +302,9 @@ set(SERVER_HEADERS
     include/pcg/planet_generator.h
     include/pcg/habitat_generator.h
     include/pcg/grav_bike_generator.h
+    include/pcg/spine_hull_generator.h
+    include/pcg/terrain_generator.h
+    include/pcg/turret_placement_system.h
 )
 
 # Steam SDK configuration
@@ -503,6 +509,9 @@ if(BUILD_TESTS)
         src/pcg/planet_generator.cpp
         src/pcg/habitat_generator.cpp
         src/pcg/grav_bike_generator.cpp
+        src/pcg/spine_hull_generator.cpp
+        src/pcg/terrain_generator.cpp
+        src/pcg/turret_placement_system.cpp
     )
 
     add_executable(test_systems
