@@ -78,7 +78,7 @@ inline constexpr PCGVersion CURRENT_PCG_VERSION = {
     /* weapon     */ 1,
     /* spine_hull */ 1,
     /* terrain    */ 1,
-    /* char_wpn */ 1,
+    /* character_weapon */ 1,
 };
 
 } // namespace pcg
