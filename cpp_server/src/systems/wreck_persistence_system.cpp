@@ -4,6 +4,11 @@
 namespace atlas {
 namespace systems {
 
+namespace {
+    constexpr float EXPIRED_LIFETIME = -1.0f;
+    bool isMarkedExpired(float lifetime) { return lifetime <= EXPIRED_LIFETIME; }
+}
+
 WreckPersistenceSystem::WreckPersistenceSystem(ecs::World* world)
     : System(world) {
 }
@@ -17,8 +22,8 @@ void WreckPersistenceSystem::update(float delta_time) {
         wreck->elapsed += delta_time;
 
         // Mark expired wrecks
-        if (wreck->elapsed >= wreck->lifetime) {
-            wreck->lifetime = -1.0f;
+        if (wreck->elapsed >= wreck->lifetime && !isMarkedExpired(wreck->lifetime)) {
+            wreck->lifetime = EXPIRED_LIFETIME;
         }
 
         // Try to assign salvage NPC
@@ -41,7 +46,7 @@ bool WreckPersistenceSystem::isExpired(const std::string& entity_id) const {
     if (!entity) return false;
     auto* wreck = entity->getComponent<components::WreckPersistence>();
     if (!wreck) return false;
-    return wreck->lifetime < 0.0f;
+    return isMarkedExpired(wreck->lifetime);
 }
 
 float WreckPersistenceSystem::getRemainingLifetime(const std::string& entity_id) const {
@@ -49,7 +54,7 @@ float WreckPersistenceSystem::getRemainingLifetime(const std::string& entity_id)
     if (!entity) return 0.0f;
     auto* wreck = entity->getComponent<components::WreckPersistence>();
     if (!wreck) return 0.0f;
-    if (wreck->lifetime < 0.0f) return 0.0f;
+    if (isMarkedExpired(wreck->lifetime)) return 0.0f;
     float remaining = wreck->lifetime - wreck->elapsed;
     return remaining > 0.0f ? remaining : 0.0f;
 }
@@ -69,7 +74,7 @@ std::vector<std::string> WreckPersistenceSystem::getExpiredWrecks() const {
     auto entities = world_->getEntities<components::WreckPersistence>();
     for (auto* entity : entities) {
         auto* wreck = entity->getComponent<components::WreckPersistence>();
-        if (wreck && wreck->lifetime < 0.0f) {
+        if (wreck && isMarkedExpired(wreck->lifetime)) {
             result.push_back(entity->getId());
         }
     }

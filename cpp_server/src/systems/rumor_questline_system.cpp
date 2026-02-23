@@ -19,13 +19,7 @@ void RumorQuestlineSystem::update(float /*delta_time*/) {
                 rumor.belief_strength >= belief_threshold) {
                 // Check if already graduated
                 auto* existing = entity->getComponent<components::RumorQuestline>();
-                bool already_graduated = false;
-                if (existing && existing->rumor_id == rumor.rumor_id) {
-                    already_graduated = true;
-                }
-                // Look through all RumorQuestline components - since ECS typically
-                // has one component per type, we check the single one
-                if (!already_graduated && !existing) {
+                if (!existing) {
                     auto quest = std::make_unique<components::RumorQuestline>();
                     quest->rumor_id = rumor.rumor_id;
                     quest->questline_id = "quest_" + rumor.rumor_id;
