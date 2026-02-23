@@ -1112,8 +1112,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Keldari** — Rugged, industrial bulk, visible internals — Wider mid/aft, extra greeble for exposed internals
 
 #### Damage & Visual States
-- [ ] **Damage decals** — Missing modules, hull breaches visible on damaged ships
-- [ ] **Economy-driven generation** — NPC ships reflect economic state (resource-rich = mining hulls, war-torn = damaged patrols)
+- [x] **Damage decals** — Missing modules, hull breaches visible on damaged ships — DamageStateGenerator with DamageLevel classification, decal placement, structural integrity (6 tests)
+- [x] **Economy-driven generation** — NPC ships reflect economic state (resource-rich = mining hulls, war-torn = damaged patrols) — EconomyDrivenGenerator with 5 economy states, 7 ship roles, equipment quality and wear (7 tests)
 
 ---
 

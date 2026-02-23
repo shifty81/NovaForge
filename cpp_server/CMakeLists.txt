@@ -165,6 +165,8 @@ set(SERVER_SOURCES
     src/pcg/spine_hull_generator.cpp
     src/pcg/terrain_generator.cpp
     src/pcg/turret_placement_system.cpp
+    src/pcg/damage_state_generator.cpp
+    src/pcg/economy_driven_generator.cpp
 )
 
 set(SERVER_HEADERS
@@ -305,6 +307,8 @@ set(SERVER_HEADERS
     include/pcg/spine_hull_generator.h
     include/pcg/terrain_generator.h
     include/pcg/turret_placement_system.h
+    include/pcg/damage_state_generator.h
+    include/pcg/economy_driven_generator.h
 )
 
 # Steam SDK configuration
@@ -512,6 +516,8 @@ if(BUILD_TESTS)
         src/pcg/spine_hull_generator.cpp
         src/pcg/terrain_generator.cpp
         src/pcg/turret_placement_system.cpp
+        src/pcg/damage_state_generator.cpp
+        src/pcg/economy_driven_generator.cpp
     )
 
     add_executable(test_systems

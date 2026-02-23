@@ -123,6 +123,8 @@
 #include "pcg/spine_hull_generator.h"
 #include "pcg/terrain_generator.h"
 #include "pcg/turret_placement_system.h"
+#include "pcg/damage_state_generator.h"
+#include "pcg/economy_driven_generator.h"
 #include "pcg/collision_manager.h"
 #include "pcg/asteroid_field_generator.h"
 #include "pcg/anomaly_generator.h"
@@ -16768,6 +16770,153 @@ void testTurretPlacementCoverageComputation() {
     assertTrue(approxEqual(cov, 1.0f), "360° arc gives 100% coverage");
 }
 
+// ==================== Damage State Generator Tests ====================
+
+void testDamageStateGeneration() {
+    std::cout << "\n=== Damage State Generation ===" << std::endl;
+    pcg::PCGContext ctx{ 42, 1 };
+    auto state = pcg::DamageStateGenerator::generate(ctx, 0.6f, pcg::HullClass::Cruiser);
+    assertTrue(state.valid, "Damage state is valid");
+    assertTrue(state.level == pcg::DamageLevel::Heavy, "0.6 damage = Heavy");
+    assertTrue(!state.decals.empty(), "Heavy damage produces decals");
+    assertTrue(state.hull_breach_count > 0, "Heavy damage has hull breaches");
+    assertTrue(state.structural_integrity > 0.0f, "Structural integrity positive");
+    assertTrue(state.structural_integrity < 1.0f, "Structural integrity reduced");
+}
+
+void testDamageStateDeterminism() {
+    std::cout << "\n=== Damage State Determinism ===" << std::endl;
+    pcg::PCGContext ctx{ 777, 1 };
+    auto s1 = pcg::DamageStateGenerator::generate(ctx, 0.4f, pcg::HullClass::Battleship);
+    auto s2 = pcg::DamageStateGenerator::generate(ctx, 0.4f, pcg::HullClass::Battleship);
+    assertTrue(s1.level == s2.level, "Same seed same damage level");
+    assertTrue(s1.hull_breach_count == s2.hull_breach_count, "Same seed same breach count");
+    assertTrue(s1.missing_module_count == s2.missing_module_count, "Same seed same missing modules");
+    assertTrue(static_cast<int>(s1.decals.size()) == static_cast<int>(s2.decals.size()),
+               "Same seed same decal count");
+    assertTrue(approxEqual(s1.structural_integrity, s2.structural_integrity),
+               "Same seed same structural integrity");
+}
+
+void testDamageStatePristine() {
+    std::cout << "\n=== Damage State Pristine ===" << std::endl;
+    pcg::PCGContext ctx{ 100, 1 };
+    auto state = pcg::DamageStateGenerator::generate(ctx, 0.0f, pcg::HullClass::Frigate);
+    assertTrue(state.level == pcg::DamageLevel::Pristine, "0.0 damage = Pristine");
+    assertTrue(state.decals.empty(), "Pristine has no decals");
+    assertTrue(state.hull_breach_count == 0, "Pristine has no breaches");
+    assertTrue(state.missing_module_count == 0, "Pristine has no missing modules");
+    assertTrue(approxEqual(state.structural_integrity, 1.0f), "Pristine integrity = 1.0");
+}
+
+void testDamageStateCritical() {
+    std::cout << "\n=== Damage State Critical ===" << std::endl;
+    pcg::PCGContext ctx{ 200, 1 };
+    auto state = pcg::DamageStateGenerator::generate(ctx, 0.95f, pcg::HullClass::Capital);
+    assertTrue(state.level == pcg::DamageLevel::Critical, "0.95 damage = Critical");
+    assertTrue(static_cast<int>(state.decals.size()) > 10, "Critical capital has many decals");
+    assertTrue(state.hull_breach_count >= 2, "Critical has multiple breaches");
+    assertTrue(state.structural_integrity < 0.3f, "Critical integrity very low");
+}
+
+void testDamageStateScalesWithClass() {
+    std::cout << "\n=== Damage State Scales With Class ===" << std::endl;
+    pcg::PCGContext ctx{ 300, 1 };
+    auto frigate = pcg::DamageStateGenerator::generate(ctx, 0.7f, pcg::HullClass::Frigate);
+    auto capital = pcg::DamageStateGenerator::generate(ctx, 0.7f, pcg::HullClass::Capital);
+    assertTrue(static_cast<int>(capital.decals.size()) > static_cast<int>(frigate.decals.size()),
+               "Capital has more decals than frigate at same damage");
+}
+
+void testDamageStateLevelNames() {
+    std::cout << "\n=== Damage State Level Names ===" << std::endl;
+    assertTrue(pcg::DamageStateGenerator::damageLevelName(pcg::DamageLevel::Pristine) == "Pristine", "Pristine name");
+    assertTrue(pcg::DamageStateGenerator::damageLevelName(pcg::DamageLevel::Light) == "Light", "Light name");
+    assertTrue(pcg::DamageStateGenerator::damageLevelName(pcg::DamageLevel::Heavy) == "Heavy", "Heavy name");
+    assertTrue(pcg::DamageStateGenerator::decalTypeName(pcg::DecalType::HullBreach) == "HullBreach", "HullBreach name");
+    assertTrue(pcg::DamageStateGenerator::decalTypeName(pcg::DecalType::ScorchMark) == "ScorchMark", "ScorchMark name");
+}
+
+// ==================== Economy-Driven Generator Tests ====================
+
+void testEconomyFleetGeneration() {
+    std::cout << "\n=== Economy Fleet Generation ===" << std::endl;
+    pcg::PCGContext ctx{ 42, 1 };
+    auto fleet = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::ResourceRich, 10);
+    assertTrue(fleet.valid, "Economy fleet is valid");
+    assertTrue(fleet.total_ships == 10, "Fleet has 10 ships");
+    assertTrue(static_cast<int>(fleet.ships.size()) == 10, "Ships vector has 10 entries");
+    assertTrue(fleet.economy == pcg::EconomyState::ResourceRich, "Economy state matches");
+    assertTrue(fleet.average_equipment_quality > 0.0f, "Fleet has positive equipment quality");
+}
+
+void testEconomyFleetDeterminism() {
+    std::cout << "\n=== Economy Fleet Determinism ===" << std::endl;
+    pcg::PCGContext ctx{ 777, 1 };
+    auto f1 = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::WarTorn, 5);
+    auto f2 = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::WarTorn, 5);
+    assertTrue(f1.total_ships == f2.total_ships, "Same seed same ship count");
+    assertTrue(approxEqual(f1.average_equipment_quality, f2.average_equipment_quality),
+               "Same seed same equipment quality");
+    bool rolesMatch = true;
+    for (int i = 0; i < f1.total_ships; ++i) {
+        if (f1.ships[i].role != f2.ships[i].role) { rolesMatch = false; break; }
+    }
+    assertTrue(rolesMatch, "Same seed same roles");
+}
+
+void testEconomyResourceRichHasMiners() {
+    std::cout << "\n=== Economy ResourceRich Has Miners ===" << std::endl;
+    pcg::PCGContext ctx{ 555, 1 };
+    auto fleet = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::ResourceRich, 20);
+    int minerCount = 0;
+    for (const auto& ship : fleet.ships) {
+        if (ship.role == pcg::EconomyShipRole::Miner) minerCount++;
+    }
+    assertTrue(minerCount > 0, "ResourceRich produces miners");
+}
+
+void testEconomyWarTornHasDamage() {
+    std::cout << "\n=== Economy WarTorn Has Damage ===" << std::endl;
+    pcg::PCGContext ctx{ 888, 1 };
+    auto fleet = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::WarTorn, 10);
+    float totalWear = 0.0f;
+    for (const auto& ship : fleet.ships) {
+        totalWear += ship.damage_wear;
+    }
+    float avgWear = totalWear / static_cast<float>(fleet.total_ships);
+    assertTrue(avgWear > 0.1f, "WarTorn ships have significant wear");
+}
+
+void testEconomyProsperousHighQuality() {
+    std::cout << "\n=== Economy Prosperous High Quality ===" << std::endl;
+    pcg::PCGContext ctx{ 123, 1 };
+    auto prosperous = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::Prosperous, 15);
+    auto declining  = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::Declining, 15);
+    assertTrue(prosperous.average_equipment_quality > declining.average_equipment_quality,
+               "Prosperous has better equipment than Declining");
+}
+
+void testEconomyLawlessHasPirates() {
+    std::cout << "\n=== Economy Lawless Has Pirates ===" << std::endl;
+    pcg::PCGContext ctx{ 444, 1 };
+    auto fleet = pcg::EconomyDrivenGenerator::generate(ctx, pcg::EconomyState::Lawless, 20);
+    int pirateCount = 0;
+    for (const auto& ship : fleet.ships) {
+        if (ship.role == pcg::EconomyShipRole::Pirate) pirateCount++;
+    }
+    assertTrue(pirateCount > 0, "Lawless produces pirates");
+}
+
+void testEconomyStateNames() {
+    std::cout << "\n=== Economy State Names ===" << std::endl;
+    assertTrue(pcg::EconomyDrivenGenerator::economyStateName(pcg::EconomyState::Prosperous) == "Prosperous", "Prosperous name");
+    assertTrue(pcg::EconomyDrivenGenerator::economyStateName(pcg::EconomyState::ResourceRich) == "ResourceRich", "ResourceRich name");
+    assertTrue(pcg::EconomyDrivenGenerator::economyStateName(pcg::EconomyState::WarTorn) == "WarTorn", "WarTorn name");
+    assertTrue(pcg::EconomyDrivenGenerator::shipRoleName(pcg::EconomyShipRole::Miner) == "Miner", "Miner role name");
+    assertTrue(pcg::EconomyDrivenGenerator::shipRoleName(pcg::EconomyShipRole::Pirate) == "Pirate", "Pirate role name");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -17925,6 +18074,23 @@ int main() {
     testTurretPlacementFaction();
     testTurretPlacementZeroTurrets();
     testTurretPlacementCoverageComputation();
+
+    // Damage State Generator tests
+    testDamageStateGeneration();
+    testDamageStateDeterminism();
+    testDamageStatePristine();
+    testDamageStateCritical();
+    testDamageStateScalesWithClass();
+    testDamageStateLevelNames();
+
+    // Economy-Driven Generator tests
+    testEconomyFleetGeneration();
+    testEconomyFleetDeterminism();
+    testEconomyResourceRichHasMiners();
+    testEconomyWarTornHasDamage();
+    testEconomyProsperousHighQuality();
+    testEconomyLawlessHasPirates();
+    testEconomyStateNames();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
