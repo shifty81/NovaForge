@@ -2175,7 +2175,8 @@ public:
     std::string ship_class = "Frigate";
 
     float computeBreathingOffset(float elapsed_time) const {
-        float phase = breathing_phase + elapsed_time * breathing_frequency * 6.2831853f;
+        static constexpr float kTwoPi = 6.2831853f;
+        float phase = breathing_phase + elapsed_time * breathing_frequency * kTwoPi;
         return breathing_amplitude * std::sin(phase);
     }
 

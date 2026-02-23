@@ -12,16 +12,16 @@ FleetWarpFormationSystem::FleetWarpFormationSystem(ecs::World* world)
 }
 
 void FleetWarpFormationSystem::update(float delta_time) {
+    static constexpr float kTwoPi = 6.2831853f;
     auto entities = world_->getEntities<components::FleetWarpState>();
     for (auto* entity : entities) {
         auto* ws = entity->getComponent<components::FleetWarpState>();
         if (!ws || !ws->in_fleet_warp) continue;
 
         // Advance breathing phase
-        ws->breathing_phase += delta_time * ws->breathing_frequency * 6.2831853f;
+        ws->breathing_phase += delta_time * ws->breathing_frequency * kTwoPi;
         // Wrap phase to prevent unbounded growth
-        if (ws->breathing_phase > 6.2831853f)
-            ws->breathing_phase -= 6.2831853f;
+        ws->breathing_phase = std::fmod(ws->breathing_phase, kTwoPi);
     }
 }
 

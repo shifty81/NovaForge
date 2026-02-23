@@ -284,7 +284,7 @@ See the [Modding Guide](docs/MODDING_GUIDE.md) for details.
 | 8 | **Cinematic Warp** — Tunnel shaders, audio, anomalies | 📋 |
 | 9 | **Fleet AI** — Captain personalities, morale, chatter | 📋 |
 | 10 | **Tactical Overlay** — 2.5D strategy view, distance rings | 📋 |
-| 11 | **Fleet Civilization** — 25-ship fleets, station deployment | 📋 |
+| 11 | **Fleet Civilization** — 25-ship fleets, station deployment | 🔄 |
 | 12 | **Ship Gen v2** — Spine-based hulls, silhouette-first design | 📋 |
 
 </td>

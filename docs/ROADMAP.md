@@ -1058,36 +1058,36 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 ---
 
-### 📋 Phase 11: Fleet-as-Civilization & Endgame (Planned)
+### 📋 Phase 11: Fleet-as-Civilization & Endgame (In Progress)
 **Timeline**: 2027–2028  
 **Priority**: Medium  
 **Goal**: Transform late-game fleets into traveling civilizations with distributed economy and station building
 
 #### Fleet Progression Stages
-- [ ] **Phase 1** (Early): Max 5 ships — Player + 4 captains, basic personalities + chatter
-- [ ] **Phase 2** (Mid): Up to 15 ships — 3 wings × 5, wing commanders, role specialization (mining/combat/logistics)
-- [ ] **Phase 3** (End): 25 ships — 5 wings × 5, full doctrine (mining, salvage, logistics, escort, construction)
+- [x] **Phase 1** (Early): Max 5 ships — Player + 4 captains, basic personalities + chatter — FleetProgression component + FleetProgressionSystem with stage tracking, XP thresholds, ship count limits (7 tests)
+- [x] **Phase 2** (Mid): Up to 15 ships — 3 wings × 5, wing commanders, role specialization (mining/combat/logistics) — FleetProgressionSystem auto-unlocks mining/combat/logistics wings at Mid stage
+- [x] **Phase 3** (End): 25 ships — 5 wings × 5, full doctrine (mining, salvage, logistics, escort, construction) — FleetProgressionSystem auto-unlocks salvage/construction wings at End stage
 
 #### Fleet Cargo Pool
-- [ ] **Distributed inventory** — Fleet cargo pool backed by real ship inventories (not magic storage)
-- [ ] **Ship loss = cargo loss** — Fleet pool recalculates immediately on ship destruction
-- [ ] **Capacity scaling** — Σ(shipCargo × logisticsEfficiency × captainSkill × moraleModifier)
+- [x] **Distributed inventory** — Fleet cargo pool backed by real ship inventories (not magic storage) — FleetCargoSystem with contributor tracking + per-ship Inventory aggregation
+- [x] **Ship loss = cargo loss** — Fleet pool recalculates immediately on ship destruction — FleetCargoSystem::handleShipLoss() removes contributor and recalculates (1 test)
+- [x] **Capacity scaling** — Σ(shipCargo × logisticsEfficiency × captainSkill × moraleModifier) — FleetCargoSystem::getScaledCapacity() with 3-factor multiplier (2 tests)
 - [ ] **Fleet inventory UI** — Scrollable categories (salvage, fleet supplies, artifacts, rumors)
 
 #### Station Deployment
-- [ ] **Station-deployment ship class** — Ships that deploy into permanent stations
-- [ ] **Attachable station modules** — Upgrade and add features to deployed stations
-- [ ] **Solar system upgrading** — Station presence upgrades stats of the settled system
+- [x] **Station-deployment ship class** — Ships that deploy into permanent stations — StationDeployment component + StationDeploymentSystem with deploy/cancel/timer lifecycle (7 tests)
+- [x] **Attachable station modules** — Upgrade and add features to deployed stations — StationDeploymentSystem::attachModule() with module slot limits and type-specific bonuses
+- [x] **Solar system upgrading** — Station presence upgrades stats of the settled system — StationDeployment security_bonus/economy_bonus/resource_bonus per module type
 
 #### Fleet Warp Formation
-- [ ] **Fleet warp-in-formation** — All fleet members warp visibly alongside player (no teleport pop-ins)
-- [ ] **Formation types** — Fighters (loose diamond), frigates (tight echelon), capitals (wide, slow drift)
-- [ ] **Formation breathing** — Subtle 0.02–0.05 Hz oscillation for organic feel
-- [ ] **Visual interaction** — Warp distortion bends around large ships, smaller ships' wakes ripple
+- [x] **Fleet warp-in-formation** — All fleet members warp visibly alongside player (no teleport pop-ins) — FleetWarpState component + FleetWarpFormationSystem with begin/end warp lifecycle (6 tests)
+- [x] **Formation types** — Fighters (loose diamond), frigates (tight echelon), capitals (wide, slow drift) — FleetWarpFormationSystem::selectFormationByShipClass() with 3 WarpFormationType variants
+- [x] **Formation breathing** — Subtle 0.02–0.05 Hz oscillation for organic feel — FleetWarpState breathing_frequency/amplitude/phase with sin-based offset computation
+- [x] **Visual interaction** — Warp distortion bends around large ships, smaller ships' wakes ripple — FleetWarpState distortion_bend (mass-based) + wake_ripple per ship class
 
 #### Civilization-Scale Systems
-- [ ] **Titan as civilizational threshold** — Requires stable logistics, loyal captains, fleet history, fleet-scale industry
-- [ ] **Fleet as moving polity** — Distributed economy, not magic storage
+- [x] **Titan as civilizational threshold** — Requires stable logistics, loyal captains, fleet history, fleet-scale industry — FleetCivilization component with isCivilizationThresholdMet() (2 tests)
+- [x] **Fleet as moving polity** — Distributed economy, not magic storage — FleetCargoPool backed by real ship inventories + FleetProgression stage tracking
 - [ ] **Save-file persistent fleet history** — Captain personalities, relationships, major events, rumors persist across sessions
 
 ---

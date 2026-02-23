@@ -15104,7 +15104,8 @@ void testFleetWarpFormationBreathing() {
     assertTrue(approxEqual(offset0, 0.0f, 0.01f), "Breathing starts at 0");
     sys.update(5.0f); // advance time
     float offset1 = sys.getBreathingOffset("ship1");
-    assertTrue(offset1 != 0.0f || true, "Breathing changes over time");
+    // After 5s with default breathing_frequency=0.03, phase should have advanced
+    assertTrue(!approxEqual(offset0, offset1, 0.001f), "Breathing changes over time");
 }
 
 void testFleetWarpFormationDistortion() {
