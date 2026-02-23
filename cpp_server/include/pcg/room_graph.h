@@ -10,6 +10,10 @@ namespace atlas {
 namespace pcg {
 
 // ── Room types for ship / station interiors ─────────────────────────
+// NOTE: for the full interior taxonomy (Engineering, Utility subtypes,
+// Combat, Habitation, Cargo, Bridge types, hull-influence) see the
+// expanded InteriorRoomType in interior_budget.h and the
+// InteriorGenerator in interior_generator.h.
 enum class RoomType : uint32_t {
     Cockpit,
     Reactor,

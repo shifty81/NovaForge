@@ -134,6 +134,8 @@ set(SERVER_SOURCES
     src/pcg/constraint_solver.cpp
     src/pcg/weapon_socket.cpp
     src/pcg/pcg_verify.cpp
+    src/pcg/interior_budget.cpp
+    src/pcg/interior_generator.cpp
 )
 
 set(SERVER_HEADERS
@@ -243,6 +245,8 @@ set(SERVER_HEADERS
     include/pcg/weapon_socket.h
     include/pcg/pcg_version.h
     include/pcg/pcg_verify.h
+    include/pcg/interior_budget.h
+    include/pcg/interior_generator.h
 )
 
 # Steam SDK configuration
@@ -419,6 +423,8 @@ if(BUILD_TESTS)
         src/pcg/constraint_solver.cpp
         src/pcg/weapon_socket.cpp
         src/pcg/pcg_verify.cpp
+        src/pcg/interior_budget.cpp
+        src/pcg/interior_generator.cpp
     )
 
     add_executable(test_systems
