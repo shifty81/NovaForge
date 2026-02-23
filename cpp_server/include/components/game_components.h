@@ -7,6 +7,7 @@
 #include <map>
 #include <algorithm>
 #include <cstdint>
+#include <cmath>
 
 namespace atlas {
 namespace components {
@@ -2050,6 +2051,168 @@ public:
     int occupiedCells = 0;
     uint64_t pcgSeed = 0;
     COMPONENT_TYPE(SectorGrid)
+};
+
+// ==================== Phase 11: Fleet-as-Civilization ====================
+
+/**
+ * @brief Fleet progression stage tracking
+ *
+ * Tracks fleet growth through 3 stages:
+ *   Early (max 5 ships)  — Player + 4 captains, basic personalities + chatter
+ *   Mid   (max 15 ships) — 3 wings × 5, wing commanders, role specialization
+ *   End   (max 25 ships) — 5 wings × 5, full doctrine (mining, salvage, logistics, escort, construction)
+ */
+class FleetProgression : public ecs::Component {
+public:
+    enum class Stage { Early, Mid, End };
+
+    Stage stage = Stage::Early;
+    int max_ships = 5;
+    int max_wings = 1;
+    int current_ship_count = 1;       // starts with player ship
+    int ships_per_wing = 5;
+
+    // Stage thresholds (measured by cumulative fleet experience)
+    float fleet_experience = 0.0f;    // accumulated from missions, combat, etc.
+    float mid_threshold = 100.0f;     // XP required to unlock Mid stage
+    float end_threshold = 500.0f;     // XP required to unlock End stage
+
+    // Role specialization unlocks (Mid stage+)
+    bool mining_wing_unlocked = false;
+    bool combat_wing_unlocked = false;
+    bool logistics_wing_unlocked = false;
+    bool salvage_wing_unlocked = false;   // End stage
+    bool construction_wing_unlocked = false; // End stage
+
+    void updateStage() {
+        if (fleet_experience >= end_threshold) {
+            stage = Stage::End;
+            max_ships = 25;
+            max_wings = 5;
+        } else if (fleet_experience >= mid_threshold) {
+            stage = Stage::Mid;
+            max_ships = 15;
+            max_wings = 3;
+        } else {
+            stage = Stage::Early;
+            max_ships = 5;
+            max_wings = 1;
+        }
+    }
+
+    COMPONENT_TYPE(FleetProgression)
+};
+
+/**
+ * @brief Station deployment component
+ *
+ * Attached to ships capable of deploying into permanent stations.
+ * Tracks deployment state, attached modules, and system upgrade effects.
+ */
+class StationDeployment : public ecs::Component {
+public:
+    enum class DeployState { Mobile, Deploying, Deployed };
+
+    DeployState deploy_state = DeployState::Mobile;
+    float deploy_timer = 0.0f;          // seconds remaining in deployment
+    float deploy_duration = 300.0f;     // 5 minutes to deploy
+
+    // Location (set on deployment)
+    std::string system_id;
+    float deploy_x = 0.0f;
+    float deploy_y = 0.0f;
+    float deploy_z = 0.0f;
+
+    // Attached station modules (module_type -> count)
+    std::map<std::string, int> attached_modules;
+    int max_module_slots = 3;
+
+    // System upgrading effects
+    float security_bonus = 0.0f;        // +security to the system
+    float economy_bonus = 0.0f;         // +economy to the system
+    float resource_bonus = 0.0f;        // +resource availability
+
+    int getTotalAttachedModules() const {
+        int total = 0;
+        for (const auto& pair : attached_modules)
+            total += pair.second;
+        return total;
+    }
+
+    bool canAttachModule() const {
+        return getTotalAttachedModules() < max_module_slots;
+    }
+
+    COMPONENT_TYPE(StationDeployment)
+};
+
+/**
+ * @brief Fleet warp formation state
+ *
+ * Extends FleetFormation with warp-specific behavior:
+ * - Formation type selection based on ship class
+ * - Breathing oscillation for organic feel (0.02–0.05 Hz)
+ * - Visual interaction data (distortion bending, wake ripples)
+ */
+class FleetWarpState : public ecs::Component {
+public:
+    enum class WarpFormationType { TightEchelon, LooseDiamond, WideCapital };
+
+    WarpFormationType warp_formation = WarpFormationType::TightEchelon;
+    bool in_fleet_warp = false;
+
+    // Breathing oscillation (organic feel)
+    float breathing_frequency = 0.03f;  // Hz (0.02–0.05)
+    float breathing_amplitude = 0.1f;   // fraction of spacing
+    float breathing_phase = 0.0f;       // current phase (radians)
+
+    // Visual interaction
+    float distortion_bend = 0.0f;       // warp distortion bending factor (mass-based)
+    float wake_ripple = 0.0f;           // wake ripple intensity
+
+    // Ship class for formation selection
+    std::string ship_class = "Frigate";
+
+    float computeBreathingOffset(float elapsed_time) const {
+        float phase = breathing_phase + elapsed_time * breathing_frequency * 6.2831853f;
+        return breathing_amplitude * std::sin(phase);
+    }
+
+    COMPONENT_TYPE(FleetWarpState)
+};
+
+/**
+ * @brief Fleet civilization-scale tracking
+ *
+ * Tracks the metrics required for a fleet to reach civilization status:
+ * titan threshold, fleet stability, and persistent history.
+ */
+class FleetCivilization : public ecs::Component {
+public:
+    // Titan threshold requirements
+    bool has_stable_logistics = false;     // sustained supply chain
+    bool has_loyal_captains = false;       // average morale >= "Steady"
+    bool has_fleet_history = false;        // >= 20 missions completed together
+    bool has_fleet_industry = false;       // fleet-scale manufacturing active
+
+    // Civilization metrics
+    int total_missions_completed = 0;
+    int total_stations_deployed = 0;
+    float fleet_stability_score = 0.0f;   // 0-100 stability index
+    float economic_output = 0.0f;         // cumulative fleet economic value
+
+    // Persistent history
+    int major_events_count = 0;
+    int ships_ever_owned = 0;
+    int captains_ever_served = 0;
+
+    bool isCivilizationThresholdMet() const {
+        return has_stable_logistics && has_loyal_captains &&
+               has_fleet_history && has_fleet_industry;
+    }
+
+    COMPONENT_TYPE(FleetCivilization)
 };
 
 } // namespace components

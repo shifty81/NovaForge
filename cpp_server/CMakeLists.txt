@@ -109,6 +109,9 @@ set(SERVER_SOURCES
     src/systems/ambient_traffic_system.cpp
     src/systems/snapshot_replication_system.cpp
     src/systems/interest_management_system.cpp
+    src/systems/fleet_progression_system.cpp
+    src/systems/station_deployment_system.cpp
+    src/systems/fleet_warp_formation_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -216,6 +219,9 @@ set(SERVER_HEADERS
     include/systems/ambient_traffic_system.h
     include/systems/snapshot_replication_system.h
     include/systems/interest_management_system.h
+    include/systems/fleet_progression_system.h
+    include/systems/station_deployment_system.h
+    include/systems/fleet_warp_formation_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -389,6 +395,9 @@ if(BUILD_TESTS)
         src/systems/ambient_traffic_system.cpp
         src/systems/snapshot_replication_system.cpp
         src/systems/interest_management_system.cpp
+        src/systems/fleet_progression_system.cpp
+        src/systems/station_deployment_system.cpp
+        src/systems/fleet_warp_formation_system.cpp
         src/data/world_persistence.cpp
         src/utils/logger.cpp
         src/utils/server_metrics.cpp

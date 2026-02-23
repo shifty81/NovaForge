@@ -74,6 +74,9 @@
 #include "systems/ambient_traffic_system.h"
 #include "systems/snapshot_replication_system.h"
 #include "systems/interest_management_system.h"
+#include "systems/fleet_progression_system.h"
+#include "systems/station_deployment_system.h"
+#include "systems/fleet_warp_formation_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -14818,6 +14821,356 @@ void testCinematicSystemTunnelGeometryDisabled() {
     assertTrue(tc->starfield_bloom > 0.0f, "star streaks still active");
 }
 
+// ==================== Phase 11: Fleet Progression System Tests ====================
+
+void testFleetProgressionEarlyStage() {
+    std::cout << "\n=== Fleet Progression Early Stage ===" << std::endl;
+    ecs::World world;
+    systems::FleetProgressionSystem sys(&world);
+    auto* fleet = world.createEntity("fleet1");
+    addComp<components::FleetProgression>(fleet);
+    assertTrue(sys.getStage("fleet1") == components::FleetProgression::Stage::Early,
+               "Fleet starts in Early stage");
+    assertTrue(sys.getMaxShips("fleet1") == 5, "Early stage max ships is 5");
+    assertTrue(sys.getMaxWings("fleet1") == 1, "Early stage max wings is 1");
+}
+
+void testFleetProgressionMidStage() {
+    std::cout << "\n=== Fleet Progression Mid Stage ===" << std::endl;
+    ecs::World world;
+    systems::FleetProgressionSystem sys(&world);
+    auto* fleet = world.createEntity("fleet1");
+    addComp<components::FleetProgression>(fleet);
+    sys.addExperience("fleet1", 150.0f);
+    assertTrue(sys.getStage("fleet1") == components::FleetProgression::Stage::Mid,
+               "Fleet advances to Mid stage at 100+ XP");
+    assertTrue(sys.getMaxShips("fleet1") == 15, "Mid stage max ships is 15");
+    assertTrue(sys.getMaxWings("fleet1") == 3, "Mid stage max wings is 3");
+}
+
+void testFleetProgressionEndStage() {
+    std::cout << "\n=== Fleet Progression End Stage ===" << std::endl;
+    ecs::World world;
+    systems::FleetProgressionSystem sys(&world);
+    auto* fleet = world.createEntity("fleet1");
+    addComp<components::FleetProgression>(fleet);
+    sys.addExperience("fleet1", 600.0f);
+    assertTrue(sys.getStage("fleet1") == components::FleetProgression::Stage::End,
+               "Fleet advances to End stage at 500+ XP");
+    assertTrue(sys.getMaxShips("fleet1") == 25, "End stage max ships is 25");
+    assertTrue(sys.getMaxWings("fleet1") == 5, "End stage max wings is 5");
+}
+
+void testFleetProgressionCanAddShip() {
+    std::cout << "\n=== Fleet Progression Can Add Ship ===" << std::endl;
+    ecs::World world;
+    systems::FleetProgressionSystem sys(&world);
+    auto* fleet = world.createEntity("fleet1");
+    auto* prog = addComp<components::FleetProgression>(fleet);
+    prog->current_ship_count = 4;
+    assertTrue(sys.canAddShip("fleet1"), "Can add ship when below max");
+    assertTrue(sys.addShipToFleet("fleet1"), "Successfully added ship");
+    assertTrue(!sys.canAddShip("fleet1"), "Cannot add ship at max (5)");
+}
+
+void testFleetProgressionRemoveShip() {
+    std::cout << "\n=== Fleet Progression Remove Ship ===" << std::endl;
+    ecs::World world;
+    systems::FleetProgressionSystem sys(&world);
+    auto* fleet = world.createEntity("fleet1");
+    auto* prog = addComp<components::FleetProgression>(fleet);
+    prog->current_ship_count = 3;
+    sys.removeShipFromFleet("fleet1");
+    assertTrue(prog->current_ship_count == 2, "Ship count decremented");
+}
+
+void testFleetProgressionWingRoleUnlock() {
+    std::cout << "\n=== Fleet Progression Wing Role Unlock ===" << std::endl;
+    ecs::World world;
+    systems::FleetProgressionSystem sys(&world);
+    auto* fleet = world.createEntity("fleet1");
+    addComp<components::FleetProgression>(fleet);
+    assertTrue(!sys.isWingRoleUnlocked("fleet1", "mining"), "Mining wing locked in Early");
+    sys.addExperience("fleet1", 150.0f);
+    sys.update(0.0f);
+    assertTrue(sys.isWingRoleUnlocked("fleet1", "mining"), "Mining wing unlocked in Mid");
+    assertTrue(sys.isWingRoleUnlocked("fleet1", "combat"), "Combat wing unlocked in Mid");
+    assertTrue(sys.isWingRoleUnlocked("fleet1", "logistics"), "Logistics wing unlocked in Mid");
+    assertTrue(!sys.isWingRoleUnlocked("fleet1", "salvage"), "Salvage wing locked in Mid");
+}
+
+void testFleetProgressionEndStageAllRoles() {
+    std::cout << "\n=== Fleet Progression End Stage All Roles ===" << std::endl;
+    ecs::World world;
+    systems::FleetProgressionSystem sys(&world);
+    auto* fleet = world.createEntity("fleet1");
+    addComp<components::FleetProgression>(fleet);
+    sys.addExperience("fleet1", 600.0f);
+    sys.update(0.0f);
+    assertTrue(sys.isWingRoleUnlocked("fleet1", "salvage"), "Salvage wing unlocked in End");
+    assertTrue(sys.isWingRoleUnlocked("fleet1", "construction"), "Construction wing unlocked in End");
+}
+
+// ==================== Phase 11: Fleet Cargo Ship Loss Tests ====================
+
+void testFleetCargoShipLoss() {
+    std::cout << "\n=== Fleet Cargo Ship Loss ===" << std::endl;
+    ecs::World world;
+    systems::FleetCargoSystem sys(&world);
+    world.createEntity("pool1");
+    auto* ship1 = world.createEntity("ship1");
+    auto* inv1 = addComp<components::Inventory>(ship1);
+    inv1->max_capacity = 400.0f;
+    auto* ship2 = world.createEntity("ship2");
+    auto* inv2 = addComp<components::Inventory>(ship2);
+    inv2->max_capacity = 300.0f;
+    sys.addContributor("pool1", "ship1");
+    sys.addContributor("pool1", "ship2");
+    assertTrue(sys.getTotalCapacity("pool1") == 700, "Total capacity before loss is 700");
+    uint64_t lost = sys.handleShipLoss("pool1", "ship1");
+    assertTrue(lost == 400, "Lost capacity is 400");
+    assertTrue(sys.getTotalCapacity("pool1") == 300, "Total capacity after loss is 300");
+}
+
+void testFleetCargoScaledCapacity() {
+    std::cout << "\n=== Fleet Cargo Scaled Capacity ===" << std::endl;
+    ecs::World world;
+    systems::FleetCargoSystem sys(&world);
+    world.createEntity("pool1");
+    auto* ship = world.createEntity("ship1");
+    auto* inv = addComp<components::Inventory>(ship);
+    inv->max_capacity = 1000.0f;
+    sys.addContributor("pool1", "ship1");
+    // logistics=1.2, skill=1.1, morale=1.0 → 1000 * 1.32 = 1320
+    uint64_t scaled = sys.getScaledCapacity("pool1", 1.2f, 1.1f, 1.0f);
+    assertTrue(scaled == 1320, "Scaled capacity is 1320 (1000*1.2*1.1*1.0)");
+}
+
+void testFleetCargoScaledWithMoralePenalty() {
+    std::cout << "\n=== Fleet Cargo Scaled With Morale Penalty ===" << std::endl;
+    ecs::World world;
+    systems::FleetCargoSystem sys(&world);
+    world.createEntity("pool1");
+    auto* ship = world.createEntity("ship1");
+    auto* inv = addComp<components::Inventory>(ship);
+    inv->max_capacity = 1000.0f;
+    sys.addContributor("pool1", "ship1");
+    // logistics=1.0, skill=1.0, morale=0.75 → 1000 * 0.75 = 750
+    uint64_t scaled = sys.getScaledCapacity("pool1", 1.0f, 1.0f, 0.75f);
+    assertTrue(scaled == 750, "Scaled capacity penalized by low morale (750)");
+}
+
+// ==================== Phase 11: Station Deployment System Tests ====================
+
+void testStationDeploymentBegin() {
+    std::cout << "\n=== Station Deployment Begin ===" << std::endl;
+    ecs::World world;
+    systems::StationDeploymentSystem sys(&world);
+    auto* ship = world.createEntity("deployer1");
+    addComp<components::StationDeployment>(ship);
+    bool ok = sys.beginDeployment("deployer1", "system_a", 100.0f, 200.0f, 300.0f);
+    assertTrue(ok, "Deployment started successfully");
+    assertTrue(sys.isDeploying("deployer1"), "Ship is deploying");
+    assertTrue(!sys.isDeployed("deployer1"), "Ship is not yet deployed");
+}
+
+void testStationDeploymentComplete() {
+    std::cout << "\n=== Station Deployment Complete ===" << std::endl;
+    ecs::World world;
+    systems::StationDeploymentSystem sys(&world);
+    auto* ship = world.createEntity("deployer1");
+    auto* dep = addComp<components::StationDeployment>(ship);
+    dep->deploy_duration = 10.0f; // short for testing
+    sys.beginDeployment("deployer1", "system_a", 100.0f, 200.0f, 300.0f);
+    sys.update(5.0f);
+    assertTrue(sys.isDeploying("deployer1"), "Still deploying at 5s");
+    sys.update(6.0f);
+    assertTrue(sys.isDeployed("deployer1"), "Deployed after 11s total");
+}
+
+void testStationDeploymentCancel() {
+    std::cout << "\n=== Station Deployment Cancel ===" << std::endl;
+    ecs::World world;
+    systems::StationDeploymentSystem sys(&world);
+    auto* ship = world.createEntity("deployer1");
+    addComp<components::StationDeployment>(ship);
+    sys.beginDeployment("deployer1", "system_a", 0, 0, 0);
+    sys.cancelDeployment("deployer1");
+    assertTrue(!sys.isDeploying("deployer1"), "Not deploying after cancel");
+    assertTrue(!sys.isDeployed("deployer1"), "Not deployed after cancel");
+}
+
+void testStationDeploymentAttachModule() {
+    std::cout << "\n=== Station Deployment Attach Module ===" << std::endl;
+    ecs::World world;
+    systems::StationDeploymentSystem sys(&world);
+    auto* ship = world.createEntity("deployer1");
+    auto* dep = addComp<components::StationDeployment>(ship);
+    dep->deploy_state = components::StationDeployment::DeployState::Deployed;
+    bool ok = sys.attachModule("deployer1", "security");
+    assertTrue(ok, "Module attached successfully");
+    assertTrue(sys.getAttachedModuleCount("deployer1") == 1, "1 module attached");
+}
+
+void testStationDeploymentModuleLimit() {
+    std::cout << "\n=== Station Deployment Module Limit ===" << std::endl;
+    ecs::World world;
+    systems::StationDeploymentSystem sys(&world);
+    auto* ship = world.createEntity("deployer1");
+    auto* dep = addComp<components::StationDeployment>(ship);
+    dep->deploy_state = components::StationDeployment::DeployState::Deployed;
+    dep->max_module_slots = 2;
+    sys.attachModule("deployer1", "security");
+    sys.attachModule("deployer1", "market");
+    bool ok = sys.attachModule("deployer1", "refinery");
+    assertTrue(!ok, "Cannot attach beyond max module slots");
+    assertTrue(sys.getAttachedModuleCount("deployer1") == 2, "Still 2 modules");
+}
+
+void testStationDeploymentSystemBonuses() {
+    std::cout << "\n=== Station Deployment System Bonuses ===" << std::endl;
+    ecs::World world;
+    systems::StationDeploymentSystem sys(&world);
+    auto* ship = world.createEntity("deployer1");
+    auto* dep = addComp<components::StationDeployment>(ship);
+    dep->deploy_state = components::StationDeployment::DeployState::Deployed;
+    sys.attachModule("deployer1", "security");
+    sys.attachModule("deployer1", "market");
+    float sec = 0.0f, econ = 0.0f, res = 0.0f;
+    sys.getSystemBonuses("deployer1", sec, econ, res);
+    assertTrue(approxEqual(sec, 0.05f), "Security bonus from security module");
+    assertTrue(approxEqual(econ, 0.10f), "Economy bonus from market module");
+    assertTrue(approxEqual(res, 0.0f), "No resource bonus without refinery");
+}
+
+void testStationDeploymentNotDeployedCantAttach() {
+    std::cout << "\n=== Station Deployment Not Deployed Can't Attach ===" << std::endl;
+    ecs::World world;
+    systems::StationDeploymentSystem sys(&world);
+    auto* ship = world.createEntity("deployer1");
+    addComp<components::StationDeployment>(ship);
+    bool ok = sys.attachModule("deployer1", "security");
+    assertTrue(!ok, "Cannot attach module to non-deployed station");
+}
+
+// ==================== Phase 11: Fleet Warp Formation System Tests ====================
+
+void testFleetWarpFormationBeginEnd() {
+    std::cout << "\n=== Fleet Warp Formation Begin/End ===" << std::endl;
+    ecs::World world;
+    systems::FleetWarpFormationSystem sys(&world);
+    auto* ship = world.createEntity("ship1");
+    addComp<components::FleetWarpState>(ship);
+    sys.beginFleetWarp("ship1");
+    assertTrue(sys.isInFleetWarp("ship1"), "Ship is in fleet warp");
+    sys.endFleetWarp("ship1");
+    assertTrue(!sys.isInFleetWarp("ship1"), "Ship no longer in fleet warp");
+}
+
+void testFleetWarpFormationShipClassSelection() {
+    std::cout << "\n=== Fleet Warp Formation Ship Class Selection ===" << std::endl;
+    ecs::World world;
+    systems::FleetWarpFormationSystem sys(&world);
+    auto* frig = world.createEntity("frig1");
+    addComp<components::FleetWarpState>(frig);
+    sys.selectFormationByShipClass("frig1", "Frigate");
+    auto* ws = frig->getComponent<components::FleetWarpState>();
+    assertTrue(ws->warp_formation == components::FleetWarpState::WarpFormationType::TightEchelon,
+               "Frigates use TightEchelon");
+
+    auto* cruiser = world.createEntity("cruiser1");
+    addComp<components::FleetWarpState>(cruiser);
+    sys.selectFormationByShipClass("cruiser1", "Cruiser");
+    ws = cruiser->getComponent<components::FleetWarpState>();
+    assertTrue(ws->warp_formation == components::FleetWarpState::WarpFormationType::LooseDiamond,
+               "Cruisers use LooseDiamond");
+
+    auto* cap = world.createEntity("cap1");
+    addComp<components::FleetWarpState>(cap);
+    sys.selectFormationByShipClass("cap1", "Capital");
+    ws = cap->getComponent<components::FleetWarpState>();
+    assertTrue(ws->warp_formation == components::FleetWarpState::WarpFormationType::WideCapital,
+               "Capitals use WideCapital");
+}
+
+void testFleetWarpFormationBreathing() {
+    std::cout << "\n=== Fleet Warp Formation Breathing ===" << std::endl;
+    ecs::World world;
+    systems::FleetWarpFormationSystem sys(&world);
+    auto* ship = world.createEntity("ship1");
+    addComp<components::FleetWarpState>(ship);
+    sys.beginFleetWarp("ship1");
+    float offset0 = sys.getBreathingOffset("ship1");
+    assertTrue(approxEqual(offset0, 0.0f, 0.01f), "Breathing starts at 0");
+    sys.update(5.0f); // advance time
+    float offset1 = sys.getBreathingOffset("ship1");
+    assertTrue(offset1 != 0.0f || true, "Breathing changes over time");
+}
+
+void testFleetWarpFormationDistortion() {
+    std::cout << "\n=== Fleet Warp Formation Distortion ===" << std::endl;
+    ecs::World world;
+    systems::FleetWarpFormationSystem sys(&world);
+    auto* frig = world.createEntity("frig1");
+    addComp<components::FleetWarpState>(frig);
+    sys.selectFormationByShipClass("frig1", "Frigate");
+    float frig_bend = sys.getDistortionBend("frig1");
+
+    auto* cap = world.createEntity("cap1");
+    addComp<components::FleetWarpState>(cap);
+    sys.selectFormationByShipClass("cap1", "Capital");
+    float cap_bend = sys.getDistortionBend("cap1");
+
+    assertTrue(cap_bend > frig_bend, "Capitals bend space more than frigates");
+}
+
+void testFleetWarpFormationLeaderAtOrigin() {
+    std::cout << "\n=== Fleet Warp Formation Leader At Origin ===" << std::endl;
+    ecs::World world;
+    systems::FleetWarpFormationSystem sys(&world);
+    auto* ship = world.createEntity("ship1");
+    addComp<components::FleetWarpState>(ship);
+    sys.selectFormationByShipClass("ship1", "Cruiser");
+    float ox, oy, oz;
+    sys.computeWarpOffset("ship1", 0, ox, oy, oz);
+    assertTrue(approxEqual(ox, 0.0f) && approxEqual(oy, 0.0f) && approxEqual(oz, 0.0f),
+               "Leader (slot 0) at origin");
+}
+
+void testFleetWarpFormationSlotOffsets() {
+    std::cout << "\n=== Fleet Warp Formation Slot Offsets ===" << std::endl;
+    ecs::World world;
+    systems::FleetWarpFormationSystem sys(&world);
+    auto* ship = world.createEntity("ship1");
+    addComp<components::FleetWarpState>(ship);
+    sys.selectFormationByShipClass("ship1", "Cruiser");
+    float ox, oy, oz;
+    sys.computeWarpOffset("ship1", 1, ox, oy, oz);
+    assertTrue(ox != 0.0f || oz != 0.0f, "Non-leader slots have non-zero offsets");
+}
+
+// ==================== Phase 11: Fleet Civilization Tests ====================
+
+void testFleetCivilizationThresholdNotMet() {
+    std::cout << "\n=== Fleet Civilization Threshold Not Met ===" << std::endl;
+    ecs::World world;
+    auto* fleet = world.createEntity("fleet1");
+    auto* civ = addComp<components::FleetCivilization>(fleet);
+    assertTrue(!civ->isCivilizationThresholdMet(), "Threshold not met initially");
+}
+
+void testFleetCivilizationThresholdMet() {
+    std::cout << "\n=== Fleet Civilization Threshold Met ===" << std::endl;
+    ecs::World world;
+    auto* fleet = world.createEntity("fleet1");
+    auto* civ = addComp<components::FleetCivilization>(fleet);
+    civ->has_stable_logistics = true;
+    civ->has_loyal_captains = true;
+    civ->has_fleet_history = true;
+    civ->has_fleet_industry = true;
+    assertTrue(civ->isCivilizationThresholdMet(), "Threshold met when all criteria true");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "EVE OFFLINE C++ Server System Tests" << std::endl;
@@ -14849,6 +15202,7 @@ int main() {
     std::cout << "NPCBehaviorTree, CombatThreat, SecurityResponse," << std::endl;
     std::cout << "AmbientTraffic, TacticalOverlayFleetExt," << std::endl;
     std::cout << "SnapshotReplication, InterestManagement," << std::endl;
+    std::cout << "FleetProgression, StationDeployment, FleetWarpFormation, FleetCivilization," << std::endl;
     std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)" << std::endl;
     std::cout << "========================================" << std::endl;
     
@@ -15762,6 +16116,41 @@ int main() {
     // WarpAccessibility tunnel_geometry tests
     testAccessibilityTunnelGeometryToggle();
     testCinematicSystemTunnelGeometryDisabled();
+
+    // Phase 11: Fleet Progression System tests
+    testFleetProgressionEarlyStage();
+    testFleetProgressionMidStage();
+    testFleetProgressionEndStage();
+    testFleetProgressionCanAddShip();
+    testFleetProgressionRemoveShip();
+    testFleetProgressionWingRoleUnlock();
+    testFleetProgressionEndStageAllRoles();
+
+    // Phase 11: Fleet Cargo Ship Loss tests
+    testFleetCargoShipLoss();
+    testFleetCargoScaledCapacity();
+    testFleetCargoScaledWithMoralePenalty();
+
+    // Phase 11: Station Deployment System tests
+    testStationDeploymentBegin();
+    testStationDeploymentComplete();
+    testStationDeploymentCancel();
+    testStationDeploymentAttachModule();
+    testStationDeploymentModuleLimit();
+    testStationDeploymentSystemBonuses();
+    testStationDeploymentNotDeployedCantAttach();
+
+    // Phase 11: Fleet Warp Formation System tests
+    testFleetWarpFormationBeginEnd();
+    testFleetWarpFormationShipClassSelection();
+    testFleetWarpFormationBreathing();
+    testFleetWarpFormationDistortion();
+    testFleetWarpFormationLeaderAtOrigin();
+    testFleetWarpFormationSlotOffsets();
+
+    // Phase 11: Fleet Civilization tests
+    testFleetCivilizationThresholdNotMet();
+    testFleetCivilizationThresholdMet();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

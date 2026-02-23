@@ -97,5 +97,47 @@ void FleetCargoSystem::recalculate(const std::string& pool_entity_id) {
     pool->used_capacity = used_cap;
 }
 
+// Phase 11: Ship loss = cargo loss
+uint64_t FleetCargoSystem::handleShipLoss(const std::string& pool_entity_id,
+                                           const std::string& ship_entity_id) {
+    auto* entity = world_->getEntity(pool_entity_id);
+    if (!entity) return 0;
+
+    auto* pool = entity->getComponent<components::FleetCargoPool>();
+    if (!pool) return 0;
+
+    // Record the ship's capacity before removal
+    uint64_t lost_capacity = 0;
+    auto* ship_entity = world_->getEntity(ship_entity_id);
+    if (ship_entity) {
+        auto* inventory = ship_entity->getComponent<components::Inventory>();
+        if (inventory) {
+            lost_capacity = static_cast<uint64_t>(inventory->max_capacity);
+        }
+    }
+
+    // Remove the contributor and recalculate immediately
+    removeContributor(pool_entity_id, ship_entity_id);
+
+    return lost_capacity;
+}
+
+// Phase 11: Capacity scaling with modifiers
+uint64_t FleetCargoSystem::getScaledCapacity(const std::string& pool_entity_id,
+                                              float logistics_efficiency,
+                                              float captain_skill,
+                                              float morale_modifier) const {
+    const auto* entity = world_->getEntity(pool_entity_id);
+    if (!entity) return 0;
+
+    const auto* pool = entity->getComponent<components::FleetCargoPool>();
+    if (!pool) return 0;
+
+    float scale = logistics_efficiency * captain_skill * morale_modifier;
+    if (scale < 0.0f) scale = 0.0f;
+
+    return static_cast<uint64_t>(static_cast<float>(pool->total_capacity) * scale);
+}
+
 } // namespace systems
 } // namespace atlas
