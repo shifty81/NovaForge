@@ -90,6 +90,8 @@ set(SERVER_SOURCES
     src/systems/captain_memory_system.cpp
     src/systems/ship_fitting_system.cpp
     src/systems/warp_cinematic_system.cpp
+    src/systems/warp_hud_travel_mode_system.cpp
+    src/systems/warp_auto_comfort_system.cpp
     src/systems/refining_system.cpp
     src/systems/anomaly_system.cpp
     src/systems/reputation_system.cpp
@@ -186,6 +188,8 @@ set(SERVER_HEADERS
     include/systems/captain_memory_system.h
     include/systems/ship_fitting_system.h
     include/systems/warp_cinematic_system.h
+    include/systems/warp_hud_travel_mode_system.h
+    include/systems/warp_auto_comfort_system.h
     include/systems/refining_system.h
     include/systems/anomaly_system.h
     include/systems/reputation_system.h
@@ -347,6 +351,8 @@ if(BUILD_TESTS)
         src/systems/captain_memory_system.cpp
         src/systems/ship_fitting_system.cpp
         src/systems/warp_cinematic_system.cpp
+        src/systems/warp_hud_travel_mode_system.cpp
+        src/systems/warp_auto_comfort_system.cpp
         src/systems/refining_system.cpp
         src/systems/anomaly_system.cpp
         src/systems/reputation_system.cpp

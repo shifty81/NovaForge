@@ -118,6 +118,12 @@ void WarpCinematicSystem::update(float /*delta_time*/) {
             tunnelCfg->tunnel_skin       *= blur_scale;
             tunnelCfg->vignette          *= motion_scale;
             tunnelCfg->composite_intensity = composite * motion_scale;
+
+            // Tunnel geometry toggle: when disabled, zero the tunnel skin
+            // (star streaks remain via starfield_bloom)
+            if (access && !access->tunnel_geometry_enabled) {
+                tunnelCfg->tunnel_skin = 0.0f;
+            }
         }
 
         if (audioCfg) {

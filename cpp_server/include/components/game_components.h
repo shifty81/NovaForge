@@ -1544,8 +1544,60 @@ public:
     float motion_intensity = 1.0f;   // Motion effect scale (0.0–1.0, 0=off)
     float bass_intensity   = 1.0f;   // Sub-bass volume scale (0.0–1.0)
     float blur_intensity   = 1.0f;   // Blur/distortion scale (0.0–1.0)
+    bool  tunnel_geometry_enabled = true;  // false = star streaks only, no full warp skin
 
     COMPONENT_TYPE(WarpAccessibility)
+};
+
+/**
+ * @brief HUD travel mode during warp — softens edges, desaturates, adds padding
+ *
+ * During warp cruise the HUD transitions into a softer, less intrusive mode:
+ * - Edges soften, bright colors desaturate, tactical warnings muted
+ * - Safe-area padding pushes HUD inward (32–48 px)
+ * - Optional UI flair: animated brackets, glow synced to engine bass, parallax
+ */
+class WarpHUDTravelMode : public ecs::Component {
+public:
+    // Soft edge treatment (0=normal, 1=fully softened)
+    float edge_softness = 0.0f;
+
+    // Color desaturation (0=normal, 1=fully desaturated)
+    float color_desaturation = 0.0f;
+
+    // Warning muting (0=normal, 1=fully muted tactical warnings)
+    float warning_mute = 0.0f;
+
+    // Safe-area padding in pixels (0=normal, target 32–48px during cruise)
+    float safe_area_padding = 0.0f;
+
+    // HUD scale factor (1.0=normal, 0.95=scaled inward during warp)
+    float hud_scale = 1.0f;
+
+    // Optional UI flair (player toggle)
+    bool  ui_flair_enabled = false;
+    float bracket_animation = 0.0f;     // animated bracket offset (0–1)
+    float ui_glow_intensity = 0.0f;     // glow synced to engine bass (0–1)
+    float hud_parallax_offset = 0.0f;   // subtle parallax shift (pixels)
+
+    COMPONENT_TYPE(WarpHUDTravelMode)
+};
+
+/**
+ * @brief Auto-comfort rules for warp visual effects
+ *
+ * Automatically reduces warp visual intensity when performance drops
+ * or ultrawide aspect ratios are detected to prevent discomfort.
+ */
+class WarpAutoComfort : public ecs::Component {
+public:
+    float target_fps = 60.0f;              // Desired frame rate
+    float current_fps = 60.0f;             // Measured frame rate
+    float comfort_reduction = 0.0f;        // Auto-applied reduction (0=full effects, 1=minimum)
+    bool  ultrawide_detected = false;      // True if aspect ratio > 2.2
+    float max_distortion_ultrawide = 0.5f; // Clamp distortion on ultrawide displays
+
+    COMPONENT_TYPE(WarpAutoComfort)
 };
 
 /**
