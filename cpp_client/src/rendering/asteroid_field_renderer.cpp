@@ -203,7 +203,7 @@ void AsteroidFieldRenderer::generateField(
         AsteroidSize::SMALL,
         AsteroidSize::MEDIUM,
         AsteroidSize::LARGE,
-        AsteroidSize::HUGE
+        AsteroidSize::ENORMOUS
     };
     
     int asteroidIndex = 0;
@@ -319,7 +319,7 @@ float AsteroidFieldRenderer::getSizeScale(AsteroidSize size) const {
             return 150.0f;  // ~150m diameter
         case AsteroidSize::LARGE:
             return 400.0f;  // ~400m diameter
-        case AsteroidSize::HUGE:
+        case AsteroidSize::ENORMOUS:
             return 1000.0f; // ~1000m diameter
         default:
             return 100.0f;

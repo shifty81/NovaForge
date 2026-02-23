@@ -138,3 +138,4 @@ cpp_client/assets/reference_models/Vulcan Dkyr Class/
 # UI layout presets (user-generated, not tracked)
 ui_layouts/
 cpp_client/build_atlas_test/
+cpp_server/build/

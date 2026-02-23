@@ -25,7 +25,7 @@ public:
         SMALL,
         MEDIUM,
         LARGE,
-        HUGE
+        ENORMOUS
     };
     
     /**
@@ -61,7 +61,7 @@ public:
      * Generate an asteroid field
      * @param center Center point of the field
      * @param radius Radius of the field in meters
-     * @param asteroidCounts Count of each size (SMALL, MEDIUM, LARGE, HUGE)
+     * @param asteroidCounts Count of each size (SMALL, MEDIUM, LARGE, ENORMOUS)
      * @param layout Layout pattern (SEMICIRCLE or SPHERICAL)
      * @param seed Random seed for deterministic generation
      */

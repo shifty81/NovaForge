@@ -76,6 +76,12 @@
 #include "ui/server_console.h"
 #include "utils/logger.h"
 #include "utils/server_metrics.h"
+#include "pcg/deterministic_rng.h"
+#include "pcg/hash_utils.h"
+#include "pcg/pcg_context.h"
+#include "pcg/pcg_manager.h"
+#include "pcg/ship_generator.h"
+#include "pcg/fleet_doctrine.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -13815,6 +13821,218 @@ void testInterestEntityNoPosition() {
                "Entity without position is always relevant");
 }
 
+// ==================== PCG Framework Tests ====================
+
+void testDeterministicRNGSameSeed() {
+    std::cout << "\n=== PCG: DeterministicRNG same-seed determinism ===" << std::endl;
+    atlas::pcg::DeterministicRNG a(12345);
+    atlas::pcg::DeterministicRNG b(12345);
+
+    bool allMatch = true;
+    for (int i = 0; i < 100; ++i) {
+        if (a.nextU32() != b.nextU32()) { allMatch = false; break; }
+    }
+    assertTrue(allMatch, "Two RNGs with same seed produce identical sequence");
+}
+
+void testDeterministicRNGDifferentSeed() {
+    std::cout << "\n=== PCG: DeterministicRNG different seeds diverge ===" << std::endl;
+    atlas::pcg::DeterministicRNG a(111);
+    atlas::pcg::DeterministicRNG b(222);
+
+    bool anyDiffer = false;
+    for (int i = 0; i < 20; ++i) {
+        if (a.nextU32() != b.nextU32()) { anyDiffer = true; break; }
+    }
+    assertTrue(anyDiffer, "Different seeds produce different sequences");
+}
+
+void testDeterministicRNGRange() {
+    std::cout << "\n=== PCG: DeterministicRNG range bounds ===" << std::endl;
+    atlas::pcg::DeterministicRNG rng(42);
+
+    bool inBounds = true;
+    for (int i = 0; i < 500; ++i) {
+        int v = rng.range(10, 20);
+        if (v < 10 || v > 20) { inBounds = false; break; }
+    }
+    assertTrue(inBounds, "range(10,20) always in [10,20]");
+
+    bool floatOk = true;
+    atlas::pcg::DeterministicRNG rng2(99);
+    for (int i = 0; i < 500; ++i) {
+        float f = rng2.nextFloat();
+        if (f < 0.0f || f >= 1.0f) { floatOk = false; break; }
+    }
+    assertTrue(floatOk, "nextFloat() always in [0,1)");
+}
+
+void testHashCombineDeterminism() {
+    std::cout << "\n=== PCG: hashCombine determinism ===" << std::endl;
+    uint64_t h1 = atlas::pcg::hashCombine(100, 200);
+    uint64_t h2 = atlas::pcg::hashCombine(100, 200);
+    assertTrue(h1 == h2, "hashCombine is deterministic");
+
+    uint64_t h3 = atlas::pcg::hashCombine(100, 201);
+    assertTrue(h1 != h3, "Different inputs produce different hashes");
+}
+
+void testHash64FourInputs() {
+    std::cout << "\n=== PCG: hash64 four-input determinism ===" << std::endl;
+    uint64_t a = atlas::pcg::hash64(1, 2, 3, 4);
+    uint64_t b = atlas::pcg::hash64(1, 2, 3, 4);
+    assertTrue(a == b, "hash64 is deterministic");
+
+    uint64_t c = atlas::pcg::hash64(1, 2, 3, 5);
+    assertTrue(a != c, "Changing one input changes hash");
+}
+
+void testDeriveSeed() {
+    std::cout << "\n=== PCG: deriveSeed hierarchy ===" << std::endl;
+    uint64_t parent = 0xDEADBEEF;
+    uint64_t child1 = atlas::pcg::deriveSeed(parent, 1);
+    uint64_t child2 = atlas::pcg::deriveSeed(parent, 2);
+    uint64_t child1b = atlas::pcg::deriveSeed(parent, 1);
+
+    assertTrue(child1 == child1b, "Same parent+id produces same child seed");
+    assertTrue(child1 != child2, "Different ids produce different child seeds");
+    assertTrue(child1 != parent, "Child seed differs from parent");
+}
+
+void testPCGManagerInitialize() {
+    std::cout << "\n=== PCG: PCGManager initialize ===" << std::endl;
+    atlas::pcg::PCGManager mgr;
+    assertTrue(!mgr.isInitialized(), "Not initialized before init");
+
+    mgr.initialize(0xCAFEBABE);
+    assertTrue(mgr.isInitialized(), "Initialized after init");
+    assertTrue(mgr.universeSeed() == 0xCAFEBABE, "Seed stored correctly");
+}
+
+void testPCGManagerContextDeterminism() {
+    std::cout << "\n=== PCG: PCGManager context determinism ===" << std::endl;
+    atlas::pcg::PCGManager mgr;
+    mgr.initialize(42);
+
+    auto ctx1 = mgr.makeRootContext(atlas::pcg::PCGDomain::Ship, 100, 1);
+    auto ctx2 = mgr.makeRootContext(atlas::pcg::PCGDomain::Ship, 100, 1);
+    assertTrue(ctx1.seed == ctx2.seed, "Same domain+id → same seed");
+
+    auto ctx3 = mgr.makeRootContext(atlas::pcg::PCGDomain::Ship, 101, 1);
+    assertTrue(ctx1.seed != ctx3.seed, "Different id → different seed");
+
+    auto ctx4 = mgr.makeRootContext(atlas::pcg::PCGDomain::Asteroid, 100, 1);
+    assertTrue(ctx1.seed != ctx4.seed, "Different domain → different seed");
+}
+
+void testShipGeneratorDeterminism() {
+    std::cout << "\n=== PCG: ShipGenerator determinism ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 777, 1 };
+
+    auto ship1 = atlas::pcg::ShipGenerator::generate(ctx);
+    auto ship2 = atlas::pcg::ShipGenerator::generate(ctx);
+
+    assertTrue(ship1.hullClass == ship2.hullClass, "Same hull class");
+    assertTrue(ship1.mass == ship2.mass, "Same mass");
+    assertTrue(ship1.thrust == ship2.thrust, "Same thrust");
+    assertTrue(ship1.turretSlots == ship2.turretSlots, "Same turret slots");
+    assertTrue(ship1.valid == ship2.valid, "Same validity");
+}
+
+void testShipGeneratorConstraints() {
+    std::cout << "\n=== PCG: ShipGenerator constraints ===" << std::endl;
+    // Generate many ships and verify invariants.
+    bool allValid = true;
+    bool thrustOk = true;
+    bool massOk = true;
+
+    for (uint64_t i = 1; i <= 200; ++i) {
+        atlas::pcg::PCGContext ctx{ i * 137, 1 };
+        auto ship = atlas::pcg::ShipGenerator::generate(ctx);
+        if (!ship.valid)    allValid = false;
+        if (ship.thrust <= 0) thrustOk = false;
+        if (ship.mass <= 0)  massOk = false;
+    }
+    assertTrue(allValid, "All 200 generated ships are valid");
+    assertTrue(thrustOk, "All ships have positive thrust");
+    assertTrue(massOk, "All ships have positive mass");
+}
+
+void testShipGeneratorHullOverride() {
+    std::cout << "\n=== PCG: ShipGenerator hull override ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 555, 1 };
+
+    auto frigate = atlas::pcg::ShipGenerator::generate(ctx, atlas::pcg::HullClass::Frigate);
+    assertTrue(frigate.hullClass == atlas::pcg::HullClass::Frigate, "Hull override works (Frigate)");
+    assertTrue(frigate.mass >= 1000.0f && frigate.mass <= 2500.0f, "Frigate mass in range");
+
+    auto capital = atlas::pcg::ShipGenerator::generate(ctx, atlas::pcg::HullClass::Capital);
+    assertTrue(capital.hullClass == atlas::pcg::HullClass::Capital, "Hull override works (Capital)");
+    assertTrue(capital.mass >= 800000.0f, "Capital mass in range");
+    assertTrue(capital.engineCount >= 6, "Capital has ≥ 6 engines");
+}
+
+void testFleetDoctrineGeneration() {
+    std::cout << "\n=== PCG: FleetDoctrine basic generation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 999, 1 };
+
+    auto fleet = atlas::pcg::FleetDoctrineGenerator::generate(
+        ctx, atlas::pcg::FleetDoctrine::Brawler, 10);
+
+    assertTrue(fleet.doctrine == atlas::pcg::FleetDoctrine::Brawler, "Doctrine stored");
+    assertTrue(static_cast<int>(fleet.slots.size()) == 10, "Correct ship count");
+    assertTrue(fleet.totalShips == 10, "totalShips matches");
+
+    // At least one commander.
+    bool hasCmd = false;
+    for (const auto& s : fleet.slots) {
+        if (s.role == atlas::pcg::FleetRole::Commander) hasCmd = true;
+    }
+    assertTrue(hasCmd, "Fleet has a commander");
+}
+
+void testFleetDoctrineDeterminism() {
+    std::cout << "\n=== PCG: FleetDoctrine determinism ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 888, 1 };
+
+    auto f1 = atlas::pcg::FleetDoctrineGenerator::generate(
+        ctx, atlas::pcg::FleetDoctrine::Sniper, 8);
+    auto f2 = atlas::pcg::FleetDoctrineGenerator::generate(
+        ctx, atlas::pcg::FleetDoctrine::Sniper, 8);
+
+    assertTrue(f1.slots.size() == f2.slots.size(), "Same fleet size");
+    bool allMatch = true;
+    for (size_t i = 0; i < f1.slots.size(); ++i) {
+        if (f1.slots[i].role != f2.slots[i].role) { allMatch = false; break; }
+        if (f1.slots[i].ship.mass != f2.slots[i].ship.mass) { allMatch = false; break; }
+    }
+    assertTrue(allMatch, "Two fleets from same seed are identical");
+}
+
+void testFleetDoctrineRoles() {
+    std::cout << "\n=== PCG: FleetDoctrine role distribution ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 1234, 1 };
+
+    auto fleet = atlas::pcg::FleetDoctrineGenerator::generate(
+        ctx, atlas::pcg::FleetDoctrine::Logistics, 20);
+
+    int logiCount = 0;
+    for (const auto& s : fleet.slots) {
+        if (s.role == atlas::pcg::FleetRole::Logistics) logiCount++;
+    }
+    // Logistics doctrine should have many logi ships (50% target).
+    assertTrue(logiCount >= 5, "Logistics doctrine has ≥ 5 logi ships in 20-ship fleet");
+}
+
+void testFleetDoctrineZeroShips() {
+    std::cout << "\n=== PCG: FleetDoctrine zero ships ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 0, 1 };
+
+    auto fleet = atlas::pcg::FleetDoctrineGenerator::generate(
+        ctx, atlas::pcg::FleetDoctrine::Brawler, 0);
+    assertTrue(fleet.slots.empty(), "Zero-ship fleet has no slots");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "EVE OFFLINE C++ Server System Tests" << std::endl;
@@ -13845,7 +14063,8 @@ int main() {
     std::cout << "BackgroundSimulation, NPCIntent," << std::endl;
     std::cout << "NPCBehaviorTree, CombatThreat, SecurityResponse," << std::endl;
     std::cout << "AmbientTraffic, TacticalOverlayFleetExt," << std::endl;
-    std::cout << "SnapshotReplication, InterestManagement" << std::endl;
+    std::cout << "SnapshotReplication, InterestManagement," << std::endl;
+    std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -14661,6 +14880,23 @@ int main() {
     testInterestUnregisterClient();
     testInterestMultipleClients();
     testInterestEntityNoPosition();
+
+    // PCG Framework tests
+    testDeterministicRNGSameSeed();
+    testDeterministicRNGDifferentSeed();
+    testDeterministicRNGRange();
+    testHashCombineDeterminism();
+    testHash64FourInputs();
+    testDeriveSeed();
+    testPCGManagerInitialize();
+    testPCGManagerContextDeterminism();
+    testShipGeneratorDeterminism();
+    testShipGeneratorConstraints();
+    testShipGeneratorHullOverride();
+    testFleetDoctrineGeneration();
+    testFleetDoctrineDeterminism();
+    testFleetDoctrineRoles();
+    testFleetDoctrineZeroShips();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

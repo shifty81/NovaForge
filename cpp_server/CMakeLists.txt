@@ -111,6 +111,9 @@ set(SERVER_SOURCES
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
     src/data/world_persistence.cpp
+    src/pcg/pcg_manager.cpp
+    src/pcg/ship_generator.cpp
+    src/pcg/fleet_doctrine.cpp
 )
 
 set(SERVER_HEADERS
@@ -193,6 +196,12 @@ set(SERVER_HEADERS
     include/data/npc_database.h
     include/data/wormhole_database.h
     include/data/world_persistence.h
+    include/pcg/deterministic_rng.h
+    include/pcg/hash_utils.h
+    include/pcg/pcg_context.h
+    include/pcg/pcg_manager.h
+    include/pcg/ship_generator.h
+    include/pcg/fleet_doctrine.h
 )
 
 # Steam SDK configuration
@@ -346,6 +355,9 @@ if(BUILD_TESTS)
         src/auth/whitelist.cpp
         src/utils/name_generator.cpp
         src/data/ship_database.cpp
+        src/pcg/pcg_manager.cpp
+        src/pcg/ship_generator.cpp
+        src/pcg/fleet_doctrine.cpp
     )
 
     add_executable(test_systems
