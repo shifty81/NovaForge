@@ -19,7 +19,7 @@ float TurretGenerator::computeOptimalRange(TurretSize size, TurretType type) {
         case TurretType::Energy:  base *= 1.2f; break;
         case TurretType::Missile: base *= 1.5f; break;
         case TurretType::Mining:  base *= 0.4f; break;
-        case TurretType::Whip:   base *= 0.3f; break;  // Close-range weapon
+        case TurretType::Whip:    base *= 0.3f; break;  // Close-range weapon
         default: break;
     }
     return base;
