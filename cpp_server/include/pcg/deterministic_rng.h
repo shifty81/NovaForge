@@ -24,7 +24,8 @@ public:
 
     /** Uniform float in [0, 1). */
     float nextFloat() {
-        return (nextU32() >> 8) * (1.0f / 16777216.0f);
+        constexpr float INV_2_24 = 1.0f / 16777216.0f;
+        return (nextU32() >> 8) * INV_2_24;
     }
 
     /** Uniform integer in [min, max] (inclusive). */

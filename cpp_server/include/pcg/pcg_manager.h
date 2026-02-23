@@ -27,7 +27,7 @@ public:
      */
     void initialize(uint64_t universeSeed);
 
-    /** Check whether the manager has been initialised. */
+    /** Check whether the manager has been initialized. */
     bool isInitialized() const;
 
     /**

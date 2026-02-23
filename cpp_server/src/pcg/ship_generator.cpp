@@ -104,7 +104,7 @@ void ShipGenerator::attachEngines(DeterministicRNG& rng, GeneratedShip& ship) {
 
     // Total thrust = per-engine thrust × count, always ≥ required.
     float perEngine = requiredThrust / static_cast<float>(ship.engineCount);
-    perEngine *= rng.rangeFloat(1.0f, 1.5f); // 0–50 % extra
+    perEngine *= rng.rangeFloat(1.0f, 1.5f); // 0-50% extra
     ship.thrust = perEngine * static_cast<float>(ship.engineCount);
 
     // Derive align time from the EVE formula approximation.
