@@ -112,6 +112,15 @@ set(SERVER_SOURCES
     src/systems/fleet_progression_system.cpp
     src/systems/station_deployment_system.cpp
     src/systems/fleet_warp_formation_system.cpp
+    src/systems/warp_meditation_system.cpp
+    src/systems/rumor_questline_system.cpp
+    src/systems/captain_departure_system.cpp
+    src/systems/captain_transfer_system.cpp
+    src/systems/npc_rerouting_system.cpp
+    src/systems/local_reputation_system.cpp
+    src/systems/station_news_system.cpp
+    src/systems/wreck_persistence_system.cpp
+    src/systems/fleet_history_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -222,6 +231,15 @@ set(SERVER_HEADERS
     include/systems/fleet_progression_system.h
     include/systems/station_deployment_system.h
     include/systems/fleet_warp_formation_system.h
+    include/systems/warp_meditation_system.h
+    include/systems/rumor_questline_system.h
+    include/systems/captain_departure_system.h
+    include/systems/captain_transfer_system.h
+    include/systems/npc_rerouting_system.h
+    include/systems/local_reputation_system.h
+    include/systems/station_news_system.h
+    include/systems/wreck_persistence_system.h
+    include/systems/fleet_history_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -398,6 +416,15 @@ if(BUILD_TESTS)
         src/systems/fleet_progression_system.cpp
         src/systems/station_deployment_system.cpp
         src/systems/fleet_warp_formation_system.cpp
+        src/systems/warp_meditation_system.cpp
+        src/systems/rumor_questline_system.cpp
+        src/systems/captain_departure_system.cpp
+        src/systems/captain_transfer_system.cpp
+        src/systems/npc_rerouting_system.cpp
+        src/systems/local_reputation_system.cpp
+        src/systems/station_news_system.cpp
+        src/systems/wreck_persistence_system.cpp
+        src/systems/fleet_history_system.cpp
         src/data/world_persistence.cpp
         src/utils/logger.cpp
         src/utils/server_metrics.cpp

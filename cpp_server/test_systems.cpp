@@ -77,6 +77,15 @@
 #include "systems/fleet_progression_system.h"
 #include "systems/station_deployment_system.h"
 #include "systems/fleet_warp_formation_system.h"
+#include "systems/warp_meditation_system.h"
+#include "systems/rumor_questline_system.h"
+#include "systems/captain_departure_system.h"
+#include "systems/captain_transfer_system.h"
+#include "systems/npc_rerouting_system.h"
+#include "systems/local_reputation_system.h"
+#include "systems/station_news_system.h"
+#include "systems/wreck_persistence_system.h"
+#include "systems/fleet_history_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -15172,6 +15181,573 @@ void testFleetCivilizationThresholdMet() {
     assertTrue(civ->isCivilizationThresholdMet(), "Threshold met when all criteria true");
 }
 
+// ==================== Warp Meditation System Tests ====================
+
+void testWarpMeditationDefaults() {
+    std::cout << "\n=== Warp Meditation Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("med1");
+    auto* med = addComp<components::WarpMeditationLayer>(e);
+    assertTrue(!med->active, "Meditation not active by default");
+    assertTrue(approxEqual(med->volume, 0.0f), "Volume is 0 by default");
+    assertTrue(approxEqual(med->activation_delay, 15.0f), "Activation delay default 15s");
+    assertTrue(approxEqual(med->fade_duration, 5.0f), "Fade duration default 5s");
+}
+
+void testMeditationActivatesAfterDelay() {
+    std::cout << "\n=== Meditation Activates After Delay ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("med2");
+    auto* med = addComp<components::WarpMeditationLayer>(e);
+    auto* warp = addComp<components::WarpState>(e);
+    warp->phase = components::WarpState::WarpPhase::Cruise;
+    med->activation_delay = 10.0f;
+
+    systems::WarpMeditationSystem sys(&world);
+    // Not enough time yet
+    sys.update(5.0f);
+    assertTrue(!med->active, "Not active before delay");
+    // Enough time
+    sys.update(6.0f);
+    assertTrue(med->active, "Active after delay reached");
+}
+
+void testMeditationFadesInDuringCruise() {
+    std::cout << "\n=== Meditation Fades In During Cruise ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("med3");
+    auto* med = addComp<components::WarpMeditationLayer>(e);
+    auto* warp = addComp<components::WarpState>(e);
+    warp->phase = components::WarpState::WarpPhase::Cruise;
+    med->activation_delay = 0.0f;
+    med->fade_duration = 10.0f;
+
+    systems::WarpMeditationSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(med->active, "Active after activation");
+    sys.update(5.0f);
+    assertTrue(med->volume > 0.0f && med->volume < 1.0f, "Volume ramping up");
+    sys.update(10.0f);
+    assertTrue(approxEqual(med->volume, 1.0f), "Volume reaches 1.0");
+}
+
+void testMeditationFadesOutOnExit() {
+    std::cout << "\n=== Meditation Fades Out On Exit ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("med4");
+    auto* med = addComp<components::WarpMeditationLayer>(e);
+    auto* warp = addComp<components::WarpState>(e);
+    warp->phase = components::WarpState::WarpPhase::Cruise;
+    med->activation_delay = 0.0f;
+    med->fade_duration = 5.0f;
+
+    systems::WarpMeditationSystem sys(&world);
+    sys.update(1.0f);
+    sys.update(10.0f); // fully faded in
+    assertTrue(approxEqual(med->volume, 1.0f), "Volume at 1.0");
+
+    warp->phase = components::WarpState::WarpPhase::None;
+    sys.update(2.0f);
+    assertTrue(med->volume < 1.0f, "Volume decreasing after exit");
+}
+
+void testMeditationResetOnNone() {
+    std::cout << "\n=== Meditation Reset On None ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("med5");
+    auto* med = addComp<components::WarpMeditationLayer>(e);
+    auto* warp = addComp<components::WarpState>(e);
+    warp->phase = components::WarpState::WarpPhase::Cruise;
+    med->activation_delay = 5.0f;
+
+    systems::WarpMeditationSystem sys(&world);
+    sys.update(6.0f);
+    assertTrue(med->warp_cruise_time > 0.0f, "Cruise time accumulated");
+
+    warp->phase = components::WarpState::WarpPhase::None;
+    sys.update(10.0f);
+    assertTrue(approxEqual(med->warp_cruise_time, 0.0f), "Cruise time reset to 0");
+}
+
+void testAudioProgressionPhases() {
+    std::cout << "\n=== Audio Progression Phases ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("prog1");
+    auto* prog = addComp<components::WarpAudioProgression>(e);
+    auto* warp = addComp<components::WarpState>(e);
+    warp->phase = components::WarpState::WarpPhase::Cruise;
+    prog->tension_duration = 3.0f;
+    prog->stabilize_duration = 5.0f;
+    prog->bloom_duration = 4.0f;
+
+    systems::WarpMeditationSystem sys(&world);
+    using Phase = components::WarpAudioProgression::Phase;
+
+    sys.update(1.0f);
+    assertTrue(prog->current_phase == Phase::Tension, "Phase is Tension at 1s");
+    sys.update(3.0f); // total 4s
+    assertTrue(prog->current_phase == Phase::Stabilize, "Phase is Stabilize at 4s");
+    sys.update(5.0f); // total 9s
+    assertTrue(prog->current_phase == Phase::Bloom, "Phase is Bloom at 9s");
+    sys.update(4.0f); // total 13s
+    assertTrue(prog->current_phase == Phase::Meditative, "Phase is Meditative at 13s");
+}
+
+void testAudioProgressionReset() {
+    std::cout << "\n=== Audio Progression Reset ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("prog2");
+    auto* prog = addComp<components::WarpAudioProgression>(e);
+    auto* warp = addComp<components::WarpState>(e);
+    warp->phase = components::WarpState::WarpPhase::Cruise;
+
+    systems::WarpMeditationSystem sys(&world);
+    sys.update(20.0f);
+    using Phase = components::WarpAudioProgression::Phase;
+    assertTrue(prog->current_phase == Phase::Meditative, "Reached Meditative");
+
+    warp->phase = components::WarpState::WarpPhase::None;
+    sys.update(0.1f);
+    assertTrue(prog->current_phase == Phase::Tension, "Reset to Tension on None");
+    assertTrue(approxEqual(prog->phase_timer, 0.0f), "Timer reset to 0");
+}
+
+void testAudioProgressionComputeOverall() {
+    std::cout << "\n=== Audio Progression Compute Overall ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("prog3");
+    auto* prog = addComp<components::WarpAudioProgression>(e);
+    prog->tension_duration = 3.0f;
+    prog->stabilize_duration = 5.0f;
+    prog->bloom_duration = 4.0f;
+
+    prog->phase_timer = 0.0f;
+    assertTrue(approxEqual(prog->computeOverallProgression(), 0.0f), "Overall 0 at start");
+
+    prog->phase_timer = 6.0f; // halfway through total 12s
+    assertTrue(approxEqual(prog->computeOverallProgression(), 0.5f), "Overall 0.5 at midpoint");
+
+    prog->phase_timer = 12.0f;
+    assertTrue(approxEqual(prog->computeOverallProgression(), 1.0f), "Overall 1.0 at end");
+
+    prog->phase_timer = 20.0f; // past end
+    assertTrue(approxEqual(prog->computeOverallProgression(), 1.0f), "Overall clamped to 1.0");
+}
+
+// ==================== Rumor Questline System Tests ====================
+
+void testRumorQuestlineNoGraduation() {
+    std::cout << "\n=== Rumor Questline No Graduation ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rumor1");
+    auto* log = addComp<components::RumorLog>(e);
+    log->addRumor("r1", "Some rumor", false);
+    log->rumors[0].times_heard = 2;
+    log->rumors[0].belief_strength = 0.8f;
+
+    systems::RumorQuestlineSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(!sys.hasGraduatedRumor("rumor1", "r1"), "Rumor not graduated with < 3 hearings");
+}
+
+void testRumorQuestlineGraduates() {
+    std::cout << "\n=== Rumor Questline Graduates ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rumor2");
+    auto* log = addComp<components::RumorLog>(e);
+    log->addRumor("r1", "A strong rumor", false);
+    log->rumors[0].times_heard = 3;
+    log->rumors[0].belief_strength = 0.8f;
+
+    systems::RumorQuestlineSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(sys.hasGraduatedRumor("rumor2", "r1"), "Rumor graduated with >= 3 hearings and belief >= 0.7");
+    auto quests = sys.getGraduatedQuestlines("rumor2");
+    assertTrue(quests.size() == 1, "One questline generated");
+}
+
+void testRumorQuestlineLowBeliefNoGraduation() {
+    std::cout << "\n=== Rumor Questline Low Belief ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rumor3");
+    auto* log = addComp<components::RumorLog>(e);
+    log->addRumor("r1", "Weak rumor", false);
+    log->rumors[0].times_heard = 5;
+    log->rumors[0].belief_strength = 0.3f;
+
+    systems::RumorQuestlineSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(!sys.hasGraduatedRumor("rumor3", "r1"), "Low belief prevents graduation");
+}
+
+// ==================== Captain Departure System Tests ====================
+
+void testDeparturePhaseNone() {
+    std::cout << "\n=== Departure Phase None ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("dep1");
+    auto* state = addComp<components::CaptainDepartureState>(e);
+    state->disagreement_score = 2.0f;
+
+    systems::CaptainDepartureSystem sys(&world);
+    sys.update(1.0f);
+    using DP = components::CaptainDepartureState::DeparturePhase;
+    assertTrue(sys.getDeparturePhase("dep1") == DP::None, "Low disagreement stays None");
+}
+
+void testDeparturePhaseGrumbling() {
+    std::cout << "\n=== Departure Phase Grumbling ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("dep2");
+    auto* state = addComp<components::CaptainDepartureState>(e);
+    state->disagreement_score = 6.0f;
+
+    systems::CaptainDepartureSystem sys(&world);
+    sys.update(1.0f);
+    using DP = components::CaptainDepartureState::DeparturePhase;
+    assertTrue(sys.getDeparturePhase("dep2") == DP::Grumbling, "Score >= grumble_threshold transitions to Grumbling");
+}
+
+void testDeparturePhaseRequest() {
+    std::cout << "\n=== Departure Phase Request ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("dep3");
+    auto* state = addComp<components::CaptainDepartureState>(e);
+    state->disagreement_score = 11.0f;
+
+    systems::CaptainDepartureSystem sys(&world);
+    sys.update(1.0f);
+    using DP = components::CaptainDepartureState::DeparturePhase;
+    assertTrue(sys.getDeparturePhase("dep3") == DP::FormalRequest, "Score >= request_threshold transitions to FormalRequest");
+}
+
+void testDepartureAcknowledge() {
+    std::cout << "\n=== Departure Acknowledge ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("dep4");
+    auto* state = addComp<components::CaptainDepartureState>(e);
+    state->disagreement_score = 11.0f;
+
+    systems::CaptainDepartureSystem sys(&world);
+    sys.update(1.0f);
+    sys.acknowledgeRequest("dep4");
+    sys.update(0.1f);
+    using DP = components::CaptainDepartureState::DeparturePhase;
+    assertTrue(sys.getDeparturePhase("dep4") == DP::Departing, "Acknowledge causes transition to Departing");
+}
+
+void testDepartureTimerCountdown() {
+    std::cout << "\n=== Departure Timer Countdown ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("dep5");
+    auto* state = addComp<components::CaptainDepartureState>(e);
+    state->disagreement_score = 11.0f;
+    state->departure_delay = 10.0f;
+
+    systems::CaptainDepartureSystem sys(&world);
+    sys.update(1.0f); // transitions to FormalRequest
+    using DP = components::CaptainDepartureState::DeparturePhase;
+    assertTrue(sys.getDeparturePhase("dep5") == DP::FormalRequest, "In FormalRequest phase");
+    sys.update(5.0f);
+    assertTrue(state->departure_timer < 10.0f, "Timer counting down");
+    sys.update(6.0f);
+    assertTrue(sys.getDeparturePhase("dep5") == DP::Departing, "Timer expired, now Departing");
+}
+
+// ==================== Captain Transfer System Tests ====================
+
+void testTransferHighMorale() {
+    std::cout << "\n=== Transfer High Morale ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("xfer1");
+    auto* req = addComp<components::CaptainTransferRequest>(e);
+    auto* morale = addComp<components::FleetMorale>(e);
+    morale->morale_score = 85.0f;
+
+    systems::CaptainTransferSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(req->request_pending, "High morale triggers transfer request");
+    assertTrue(req->request_type == components::CaptainTransferRequest::TransferType::BiggerShip,
+               "High morale requests BiggerShip");
+}
+
+void testTransferLowMorale() {
+    std::cout << "\n=== Transfer Low Morale ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("xfer2");
+    auto* req = addComp<components::CaptainTransferRequest>(e);
+    auto* morale = addComp<components::FleetMorale>(e);
+    morale->morale_score = 20.0f;
+
+    systems::CaptainTransferSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(req->request_pending, "Low morale triggers transfer request");
+    assertTrue(req->request_type == components::CaptainTransferRequest::TransferType::EscortOnly,
+               "Low morale requests EscortOnly");
+}
+
+void testTransferApprove() {
+    std::cout << "\n=== Transfer Approve ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("xfer3");
+    auto* req = addComp<components::CaptainTransferRequest>(e);
+    auto* morale = addComp<components::FleetMorale>(e);
+    morale->morale_score = 90.0f;
+
+    systems::CaptainTransferSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(req->request_pending, "Request is pending");
+    sys.approveTransfer("xfer3");
+    assertTrue(!req->request_pending, "Approve clears pending");
+}
+
+// ==================== NPC Rerouting System Tests ====================
+
+void testNPCReroutingNoDanger() {
+    std::cout << "\n=== NPC Rerouting No Danger ===" << std::endl;
+    ecs::World world;
+    auto* sys_entity = world.createEntity("sys_safe");
+    auto* sys_state = addComp<components::SimStarSystemState>(sys_entity);
+    sys_state->threat_level = 0.2f;
+
+    auto* npc = world.createEntity("npc1");
+    auto* route = addComp<components::NPCRouteState>(npc);
+    route->planned_route = {"sys_safe"};
+
+    systems::NPCReroutingSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(!route->rerouting, "No rerouting when threat is low");
+    assertTrue(route->planned_route.size() == 1, "Route unchanged");
+}
+
+void testNPCReroutingDangerousSystem() {
+    std::cout << "\n=== NPC Rerouting Dangerous System ===" << std::endl;
+    ecs::World world;
+    auto* sys_entity = world.createEntity("sys_danger");
+    auto* sys_state = addComp<components::SimStarSystemState>(sys_entity);
+    sys_state->threat_level = 0.9f;
+
+    auto* npc = world.createEntity("npc2");
+    auto* route = addComp<components::NPCRouteState>(npc);
+    route->planned_route = {"sys_danger"};
+
+    systems::NPCReroutingSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(route->rerouting, "Rerouting triggered by dangerous system");
+    assertTrue(route->planned_route.empty(), "Dangerous system removed from route");
+}
+
+void testNPCReroutingCooldown() {
+    std::cout << "\n=== NPC Rerouting Cooldown ===" << std::endl;
+    ecs::World world;
+    auto* sys_entity = world.createEntity("sys_mid");
+    auto* sys_state = addComp<components::SimStarSystemState>(sys_entity);
+    sys_state->threat_level = 0.9f;
+
+    auto* npc = world.createEntity("npc3");
+    auto* route = addComp<components::NPCRouteState>(npc);
+    route->planned_route = {"sys_mid"};
+    route->reroute_cooldown = 100.0f;
+
+    systems::NPCReroutingSystem sys(&world);
+    sys.update(1.0f);
+    assertTrue(!route->rerouting, "Cooldown prevents rerouting");
+}
+
+// ==================== Local Reputation System Tests ====================
+
+void testLocalReputationDefaults() {
+    std::cout << "\n=== Local Reputation Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("sys1");
+    addComp<components::LocalReputation>(e);
+
+    systems::LocalReputationSystem sys(&world);
+    assertTrue(approxEqual(sys.getReputation("sys1", "player1"), 0.0f), "Default reputation is 0");
+    assertTrue(sys.getStanding("sys1", "player1") == "Neutral", "Default standing is Neutral");
+}
+
+void testLocalReputationModify() {
+    std::cout << "\n=== Local Reputation Modify ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("sys2");
+    addComp<components::LocalReputation>(e);
+
+    systems::LocalReputationSystem sys(&world);
+    sys.modifyReputation("sys2", "player1", 30.0f);
+    assertTrue(approxEqual(sys.getReputation("sys2", "player1"), 30.0f), "Reputation modified");
+    sys.modifyReputation("sys2", "player1", 200.0f);
+    assertTrue(approxEqual(sys.getReputation("sys2", "player1"), 100.0f), "Reputation clamped to 100");
+}
+
+void testLocalReputationDecay() {
+    std::cout << "\n=== Local Reputation Decay ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("sys3");
+    auto* rep = addComp<components::LocalReputation>(e);
+    rep->reputation_decay_rate = 1.0f;
+
+    systems::LocalReputationSystem sys(&world);
+    sys.modifyReputation("sys3", "player1", 10.0f);
+    sys.update(5.0f);
+    assertTrue(sys.getReputation("sys3", "player1") < 10.0f, "Reputation decayed toward 0");
+}
+
+void testLocalReputationStanding() {
+    std::cout << "\n=== Local Reputation Standing ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("sys4");
+    addComp<components::LocalReputation>(e);
+
+    systems::LocalReputationSystem sys(&world);
+    sys.modifyReputation("sys4", "p1", -60.0f);
+    assertTrue(sys.getStanding("sys4", "p1") == "Hostile", "Hostile at -60");
+    sys.modifyReputation("sys4", "p1", 30.0f); // now -30
+    assertTrue(sys.getStanding("sys4", "p1") == "Unfriendly", "Unfriendly at -30");
+
+    auto* e2 = world.createEntity("sys5");
+    addComp<components::LocalReputation>(e2);
+    sys.modifyReputation("sys5", "p2", 60.0f);
+    assertTrue(sys.getStanding("sys5", "p2") == "Allied", "Allied at 60");
+    sys.modifyReputation("sys5", "p3", 20.0f);
+    assertTrue(sys.getStanding("sys5", "p3") == "Friendly", "Friendly at 20");
+}
+
+// ==================== Station News System Tests ====================
+
+void testStationNewsEmpty() {
+    std::cout << "\n=== Station News Empty ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("station1");
+    addComp<components::StationNewsFeed>(e);
+
+    systems::StationNewsSystem sys(&world);
+    assertTrue(sys.getNewsCount("station1") == 0, "No news initially");
+    auto news = sys.getNews("station1");
+    assertTrue(news.empty(), "Empty news list");
+}
+
+void testStationNewsAddCombat() {
+    std::cout << "\n=== Station News Add Combat ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("station2");
+    addComp<components::StationNewsFeed>(e);
+
+    systems::StationNewsSystem sys(&world);
+    sys.reportCombatEvent("station2", "Pirates defeated", 100.0f);
+    assertTrue(sys.getNewsCount("station2") == 1, "One news entry");
+    auto news = sys.getNews("station2");
+    assertTrue(news[0].category == "combat", "Category is combat");
+}
+
+void testStationNewsMaxEntries() {
+    std::cout << "\n=== Station News Max Entries ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("station3");
+    auto* feed = addComp<components::StationNewsFeed>(e);
+    feed->max_entries = 5;
+
+    systems::StationNewsSystem sys(&world);
+    for (int i = 0; i < 10; i++) {
+        sys.reportCombatEvent("station3", "Event " + std::to_string(i), static_cast<float>(i));
+    }
+    assertTrue(sys.getNewsCount("station3") == 5, "Entries trimmed to max");
+}
+
+// ==================== Wreck Persistence System Tests ====================
+
+void testWreckPersistenceDefaults() {
+    std::cout << "\n=== Wreck Persistence Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("wreck1");
+    auto* wreck = addComp<components::WreckPersistence>(e);
+    assertTrue(approxEqual(wreck->lifetime, 7200.0f), "Default lifetime 7200s");
+    assertTrue(approxEqual(wreck->elapsed, 0.0f), "Elapsed starts at 0");
+    assertTrue(!wreck->salvage_npc_assigned, "No NPC assigned");
+}
+
+void testWreckPersistenceExpires() {
+    std::cout << "\n=== Wreck Persistence Expires ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("wreck2");
+    auto* wreck = addComp<components::WreckPersistence>(e);
+    wreck->lifetime = 10.0f;
+
+    systems::WreckPersistenceSystem sys(&world);
+    sys.update(5.0f);
+    assertTrue(!sys.isExpired("wreck2"), "Not expired at 5s");
+    sys.update(6.0f);
+    assertTrue(sys.isExpired("wreck2"), "Expired after lifetime");
+}
+
+void testWreckPersistenceAssignNPC() {
+    std::cout << "\n=== Wreck Persistence Assign NPC ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("wreck3");
+    auto* wreck = addComp<components::WreckPersistence>(e);
+
+    systems::WreckPersistenceSystem sys(&world);
+    sys.assignSalvageNPC("wreck3", "npc_salvager");
+    assertTrue(wreck->salvage_npc_assigned, "NPC assigned");
+    assertTrue(wreck->assigned_npc_id == "npc_salvager", "Correct NPC ID");
+}
+
+// ==================== Fleet History System Tests ====================
+
+void testFleetHistoryEmpty() {
+    std::cout << "\n=== Fleet History Empty ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::FleetHistory>(e);
+
+    systems::FleetHistorySystem sys(&world);
+    assertTrue(sys.getEventCount("fleet1") == 0, "No events initially");
+}
+
+void testFleetHistoryRecordEvent() {
+    std::cout << "\n=== Fleet History Record Event ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet2");
+    addComp<components::FleetHistory>(e);
+
+    systems::FleetHistorySystem sys(&world);
+    sys.recordEvent("fleet2", "mission_complete", "Cleared pirates", 100.0f, "mission_1");
+    assertTrue(sys.getEventCount("fleet2") == 1, "One event recorded");
+    auto history = sys.getHistory("fleet2");
+    assertTrue(history[0].event_type == "mission_complete", "Correct event type");
+}
+
+void testFleetHistoryMaxEvents() {
+    std::cout << "\n=== Fleet History Max Events ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet3");
+    auto* hist = addComp<components::FleetHistory>(e);
+    hist->max_events = 5;
+
+    systems::FleetHistorySystem sys(&world);
+    for (int i = 0; i < 10; i++) {
+        sys.recordEvent("fleet3", "event", "desc " + std::to_string(i), static_cast<float>(i));
+    }
+    assertTrue(sys.getEventCount("fleet3") == 5, "Events trimmed to max");
+}
+
+void testFleetHistoryByType() {
+    std::cout << "\n=== Fleet History By Type ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet4");
+    addComp<components::FleetHistory>(e);
+
+    systems::FleetHistorySystem sys(&world);
+    sys.recordEvent("fleet4", "mission_complete", "Mission 1", 1.0f);
+    sys.recordEvent("fleet4", "ship_lost", "Lost a frigate", 2.0f);
+    sys.recordEvent("fleet4", "mission_complete", "Mission 2", 3.0f);
+
+    auto missions = sys.getEventsByType("fleet4", "mission_complete");
+    assertTrue(static_cast<int>(missions.size()) == 2, "Two mission_complete events");
+    auto losses = sys.getEventsByType("fleet4", "ship_lost");
+    assertTrue(static_cast<int>(losses.size()) == 1, "One ship_lost event");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "EVE OFFLINE C++ Server System Tests" << std::endl;
@@ -15204,6 +15780,8 @@ int main() {
     std::cout << "AmbientTraffic, TacticalOverlayFleetExt," << std::endl;
     std::cout << "SnapshotReplication, InterestManagement," << std::endl;
     std::cout << "FleetProgression, StationDeployment, FleetWarpFormation, FleetCivilization," << std::endl;
+    std::cout << "WarpMeditation, RumorQuestline, CaptainDeparture, CaptainTransfer," << std::endl;
+    std::cout << "NPCRerouting, LocalReputation, StationNews, WreckPersistence, FleetHistory," << std::endl;
     std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)" << std::endl;
     std::cout << "========================================" << std::endl;
     
@@ -16152,6 +16730,60 @@ int main() {
     // Phase 11: Fleet Civilization tests
     testFleetCivilizationThresholdNotMet();
     testFleetCivilizationThresholdMet();
+
+    // Warp Meditation System tests
+    testWarpMeditationDefaults();
+    testMeditationActivatesAfterDelay();
+    testMeditationFadesInDuringCruise();
+    testMeditationFadesOutOnExit();
+    testMeditationResetOnNone();
+    testAudioProgressionPhases();
+    testAudioProgressionReset();
+    testAudioProgressionComputeOverall();
+
+    // Rumor Questline System tests
+    testRumorQuestlineNoGraduation();
+    testRumorQuestlineGraduates();
+    testRumorQuestlineLowBeliefNoGraduation();
+
+    // Captain Departure System tests
+    testDeparturePhaseNone();
+    testDeparturePhaseGrumbling();
+    testDeparturePhaseRequest();
+    testDepartureAcknowledge();
+    testDepartureTimerCountdown();
+
+    // Captain Transfer System tests
+    testTransferHighMorale();
+    testTransferLowMorale();
+    testTransferApprove();
+
+    // NPC Rerouting System tests
+    testNPCReroutingNoDanger();
+    testNPCReroutingDangerousSystem();
+    testNPCReroutingCooldown();
+
+    // Local Reputation System tests
+    testLocalReputationDefaults();
+    testLocalReputationModify();
+    testLocalReputationDecay();
+    testLocalReputationStanding();
+
+    // Station News System tests
+    testStationNewsEmpty();
+    testStationNewsAddCombat();
+    testStationNewsMaxEntries();
+
+    // Wreck Persistence System tests
+    testWreckPersistenceDefaults();
+    testWreckPersistenceExpires();
+    testWreckPersistenceAssignNPC();
+
+    // Fleet History System tests
+    testFleetHistoryEmpty();
+    testFleetHistoryRecordEvent();
+    testFleetHistoryMaxEvents();
+    testFleetHistoryByType();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

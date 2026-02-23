@@ -1810,6 +1810,42 @@ public:
     COMPONENT_TYPE(WarpEvent)
 };
 
+// ==================== Phase 8: Warp Audio Enhancement Components ====================
+
+class WarpMeditationLayer : public ecs::Component {
+public:
+    bool active = false;
+    float fade_timer = 0.0f;
+    float fade_duration = 5.0f;
+    float volume = 0.0f;
+    float activation_delay = 15.0f;
+    float warp_cruise_time = 0.0f;
+
+    COMPONENT_TYPE(WarpMeditationLayer)
+};
+
+class WarpAudioProgression : public ecs::Component {
+public:
+    enum class Phase { Tension, Stabilize, Bloom, Meditative };
+
+    Phase current_phase = Phase::Tension;
+    float phase_timer = 0.0f;
+    float tension_duration = 3.0f;
+    float stabilize_duration = 5.0f;
+    float bloom_duration = 4.0f;
+    float blend_factor = 0.0f;
+
+    float computeOverallProgression() const {
+        float total = tension_duration + stabilize_duration + bloom_duration;
+        float elapsed = phase_timer;
+        if (elapsed >= total) return 1.0f;
+        if (elapsed <= 0.0f) return 0.0f;
+        return elapsed / total;
+    }
+
+    COMPONENT_TYPE(WarpAudioProgression)
+};
+
 // ==================== Phase 10: Tactical Overlay Components ====================
 
 class TacticalProjection : public ecs::Component {
@@ -2051,6 +2087,138 @@ public:
     int occupiedCells = 0;
     uint64_t pcgSeed = 0;
     COMPONENT_TYPE(SectorGrid)
+};
+
+// ==================== Phase 9: Rumor-to-Questline, Departure, Transfer ====================
+
+class RumorQuestline : public ecs::Component {
+public:
+    std::string rumor_id;
+    std::string questline_id;
+    int required_confirmations = 3;
+    bool graduated = false;
+    std::string quest_description;
+
+    COMPONENT_TYPE(RumorQuestline)
+};
+
+class CaptainDepartureState : public ecs::Component {
+public:
+    enum class DeparturePhase { None, Grumbling, FormalRequest, Departing };
+
+    DeparturePhase phase = DeparturePhase::None;
+    float disagreement_score = 0.0f;
+    float grumble_threshold = 5.0f;
+    float request_threshold = 10.0f;
+    float departure_timer = 0.0f;
+    float departure_delay = 120.0f;
+    bool player_acknowledged = false;
+
+    COMPONENT_TYPE(CaptainDepartureState)
+};
+
+class CaptainTransferRequest : public ecs::Component {
+public:
+    enum class TransferType { BiggerShip, EscortOnly, RoleChange };
+
+    TransferType request_type = TransferType::BiggerShip;
+    bool request_pending = false;
+    std::string requested_ship_class;
+    std::string requested_role;
+    float morale_at_request = 0.0f;
+
+    COMPONENT_TYPE(CaptainTransferRequest)
+};
+
+// ==================== Living Universe: NPC Rerouting, Reputation, News, Wrecks ====================
+
+class NPCRouteState : public ecs::Component {
+public:
+    std::string current_system_id;
+    std::string destination_system_id;
+    std::vector<std::string> planned_route;
+    bool rerouting = false;
+    float danger_threshold = 0.6f;
+    float reroute_cooldown = 0.0f;
+
+    COMPONENT_TYPE(NPCRouteState)
+};
+
+class LocalReputation : public ecs::Component {
+public:
+    std::map<std::string, float> player_reputation;
+    std::string system_id;
+    float reputation_decay_rate = 0.01f;
+
+    COMPONENT_TYPE(LocalReputation)
+};
+
+struct StationNewsEntry {
+    std::string headline;
+    std::string body;
+    float timestamp = 0.0f;
+    std::string category;
+};
+
+class StationNewsFeed : public ecs::Component {
+public:
+    std::vector<StationNewsEntry> entries;
+    int max_entries = 20;
+
+    void addEntry(const std::string& headline, const std::string& body,
+                  float ts, const std::string& category) {
+        StationNewsEntry entry;
+        entry.headline = headline;
+        entry.body = body;
+        entry.timestamp = ts;
+        entry.category = category;
+        entries.push_back(entry);
+        while (static_cast<int>(entries.size()) > max_entries) {
+            entries.erase(entries.begin());
+        }
+    }
+
+    COMPONENT_TYPE(StationNewsFeed)
+};
+
+class WreckPersistence : public ecs::Component {
+public:
+    float lifetime = 7200.0f;
+    float elapsed = 0.0f;
+    bool salvage_npc_assigned = false;
+    std::string assigned_npc_id;
+
+    COMPONENT_TYPE(WreckPersistence)
+};
+
+// ==================== Phase 11: Fleet History ====================
+
+struct FleetHistoryEntry {
+    std::string event_type;
+    std::string description;
+    float timestamp = 0.0f;
+    std::string involved_entity_id;
+};
+
+class FleetHistory : public ecs::Component {
+public:
+    std::vector<FleetHistoryEntry> events;
+    int max_events = 100;
+
+    void addEvent(const std::string& type, const std::string& desc,
+                  float ts, const std::string& entity_id) {
+        FleetHistoryEntry entry;
+        entry.event_type = type;
+        entry.description = desc;
+        entry.timestamp = ts;
+        entry.involved_entity_id = entity_id;
+        events.push_back(entry);
+        while (static_cast<int>(events.size()) > max_events) {
+            events.erase(events.begin());
+        }
+    }
+
+    COMPONENT_TYPE(FleetHistory)
 };
 
 // ==================== Phase 11: Fleet-as-Civilization ====================
