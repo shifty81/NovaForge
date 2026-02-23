@@ -91,6 +91,10 @@
 #include "systems/ancient_tech_system.h"
 #include "systems/docking_system.h"
 #include "systems/survival_system.h"
+#include "systems/menu_system.h"
+#include "systems/crew_system.h"
+#include "systems/salvage_exploration_system.h"
+#include "systems/market_order_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -16151,6 +16155,374 @@ void testSurvivalHunger() {
     assertTrue(approxEqual(hun, 2.0f), "Hunger at 2.0 after 20s");
 }
 
+// ==================== Menu System Tests ====================
+
+void testMenuStateDefaults() {
+    std::cout << "\n=== Menu State Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("menu1");
+    auto* menu = addComp<components::MenuState>(e);
+    assertTrue(menu->current_screen == components::MenuState::Screen::TitleScreen, "Starts at TitleScreen");
+    assertTrue(menu->previous_screen == components::MenuState::Screen::TitleScreen, "Previous is TitleScreen");
+    assertTrue(!menu->transition_active, "No transition active");
+}
+
+void testMenuNavigateTo() {
+    std::cout << "\n=== Menu Navigate To ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("menu2");
+    addComp<components::MenuState>(e);
+
+    systems::MenuSystem sys(&world);
+    bool result = sys.navigateTo("menu2", components::MenuState::Screen::NewGame);
+    assertTrue(result, "Navigate succeeded");
+    assertTrue(sys.getCurrentScreen("menu2") == components::MenuState::Screen::NewGame, "Screen is NewGame");
+}
+
+void testMenuGoBack() {
+    std::cout << "\n=== Menu Go Back ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("menu3");
+    addComp<components::MenuState>(e);
+
+    systems::MenuSystem sys(&world);
+    sys.navigateTo("menu3", components::MenuState::Screen::NewGame);
+    bool result = sys.goBack("menu3");
+    assertTrue(result, "GoBack succeeded");
+    assertTrue(sys.getCurrentScreen("menu3") == components::MenuState::Screen::TitleScreen, "Back to TitleScreen");
+}
+
+void testMenuIsInGame() {
+    std::cout << "\n=== Menu IsInGame ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("menu4");
+    addComp<components::MenuState>(e);
+
+    systems::MenuSystem sys(&world);
+    assertTrue(!sys.isInGame("menu4"), "Not in game at title");
+    sys.navigateTo("menu4", components::MenuState::Screen::InGame);
+    assertTrue(sys.isInGame("menu4"), "In game after navigate");
+}
+
+// ==================== Crew System Tests ====================
+
+void testCrewDefaults() {
+    std::cout << "\n=== Crew Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* crew = addComp<components::ShipCrew>(e);
+    assertTrue(crew->current_crew == 0, "No crew initially");
+    assertTrue(crew->crew_member_ids.empty(), "Empty crew list");
+}
+
+void testCrewAssign() {
+    std::cout << "\n=== Crew Assign ===" << std::endl;
+    ecs::World world;
+    auto* ship = world.createEntity("ship2");
+    addComp<components::ShipCrew>(ship);
+    auto* member = world.createEntity("crew_a");
+    addComp<components::CrewMember>(member);
+
+    systems::CrewSystem sys(&world);
+    bool result = sys.assignCrew("ship2", "crew_a", "engine_room");
+    assertTrue(result, "Assign succeeded");
+    assertTrue(sys.getCrewCount("ship2") == 1, "Crew count is 1");
+}
+
+void testCrewEfficiency() {
+    std::cout << "\n=== Crew Efficiency ===" << std::endl;
+    ecs::World world;
+    auto* ship = world.createEntity("ship3");
+    addComp<components::ShipCrew>(ship);
+    auto* m1 = world.createEntity("crew_b");
+    auto* cm = addComp<components::CrewMember>(m1);
+    cm->skill_level = 3.0f;
+    cm->morale = 80.0f;
+
+    systems::CrewSystem sys(&world);
+    sys.assignCrew("ship3", "crew_b", "bridge");
+    sys.update(0.0f);
+
+    // efficiency_bonus = (3.0 * 0.1) + (80.0 / 200.0) = 0.3 + 0.4 = 0.7
+    assertTrue(approxEqual(cm->efficiency_bonus, 0.7f), "Efficiency bonus is 0.7");
+    assertTrue(approxEqual(sys.getOverallEfficiency("ship3"), 0.7f), "Overall efficiency is 0.7");
+}
+
+void testCrewRemove() {
+    std::cout << "\n=== Crew Remove ===" << std::endl;
+    ecs::World world;
+    auto* ship = world.createEntity("ship4");
+    addComp<components::ShipCrew>(ship);
+    auto* m1 = world.createEntity("crew_c");
+    addComp<components::CrewMember>(m1);
+
+    systems::CrewSystem sys(&world);
+    sys.assignCrew("ship4", "crew_c", "medbay");
+    assertTrue(sys.getCrewCount("ship4") == 1, "Crew count 1 after assign");
+    bool result = sys.removeCrew("ship4", "crew_c");
+    assertTrue(result, "Remove succeeded");
+    assertTrue(sys.getCrewCount("ship4") == 0, "Crew count 0 after remove");
+}
+
+// ==================== Salvage Exploration Tests ====================
+
+void testSalvageSiteDefaults() {
+    std::cout << "\n=== Salvage Site Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("site1");
+    auto* site = addComp<components::SalvageSite>(e);
+    assertTrue(site->discovered_nodes == 0, "No discovered nodes");
+    assertTrue(site->looted_nodes == 0, "No looted nodes");
+    assertTrue(site->total_loot_nodes == 0, "No total nodes");
+}
+
+void testSalvageDiscover() {
+    std::cout << "\n=== Salvage Discover ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("site2");
+    auto* site = addComp<components::SalvageSite>(e);
+    site->total_loot_nodes = 5;
+
+    systems::SalvageExplorationSystem sys(&world);
+    bool result = sys.discoverNode("site2");
+    assertTrue(result, "Discover succeeded");
+    assertTrue(sys.getDiscoveredNodes("site2") == 1, "Discovered 1 node");
+}
+
+void testSalvageLoot() {
+    std::cout << "\n=== Salvage Loot ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("site3");
+    auto* site = addComp<components::SalvageSite>(e);
+    site->total_loot_nodes = 5;
+
+    systems::SalvageExplorationSystem sys(&world);
+    sys.discoverNode("site3");
+    bool result = sys.lootNode("site3");
+    assertTrue(result, "Loot succeeded");
+    assertTrue(site->looted_nodes == 1, "Looted 1 node");
+
+    // Can't loot more than discovered
+    bool result2 = sys.lootNode("site3");
+    assertTrue(!result2, "Can't loot undiscovered");
+}
+
+void testSalvageFullyLooted() {
+    std::cout << "\n=== Salvage Fully Looted ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("site4");
+    auto* site = addComp<components::SalvageSite>(e);
+    site->total_loot_nodes = 2;
+
+    systems::SalvageExplorationSystem sys(&world);
+    sys.discoverNode("site4");
+    sys.discoverNode("site4");
+    sys.lootNode("site4");
+    sys.lootNode("site4");
+    assertTrue(sys.isFullyLooted("site4"), "Fully looted");
+    assertTrue(sys.getRemainingNodes("site4") == 0, "0 remaining");
+}
+
+void testSalvageTrinkets() {
+    std::cout << "\n=== Salvage Trinkets ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("site5");
+    addComp<components::SalvageSite>(e);
+
+    systems::SalvageExplorationSystem sys(&world);
+    int count = sys.generateTrinkets("site5", 42);
+    assertTrue(count >= 0 && count <= 5, "Trinket count 0-5");
+}
+
+// ==================== Interior-Exterior Coupling Tests ====================
+
+void testInteriorExteriorDefaults() {
+    std::cout << "\n=== Interior-Exterior Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("link1");
+    auto* link = addComp<components::InteriorExteriorLink>(e);
+    assertTrue(link->effects.empty(), "No effects");
+    assertTrue(link->visible_module_count == 0, "No visible modules");
+    assertTrue(approxEqual(link->total_hull_deformation, 0.0f), "No hull deformation");
+}
+
+void testInteriorExteriorAddEffect() {
+    std::cout << "\n=== Interior-Exterior Add Effect ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("link2");
+    auto* link = addComp<components::InteriorExteriorLink>(e);
+    link->addEffect("refinery", 0.3f, true, 1.5f);
+    link->addEffect("cargo_rack", 0.1f, false, 1.0f);
+    assertTrue(static_cast<int>(link->effects.size()) == 2, "Two effects");
+    assertTrue(link->visible_module_count == 1, "One visible module");
+    assertTrue(approxEqual(link->total_hull_deformation, 0.4f), "Total deformation 0.4");
+}
+
+void testInteriorExteriorClear() {
+    std::cout << "\n=== Interior-Exterior Clear ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("link3");
+    auto* link = addComp<components::InteriorExteriorLink>(e);
+    link->addEffect("solar_panel", 0.2f, true, 1.0f);
+    link->clearEffects();
+    assertTrue(link->effects.empty(), "Effects cleared");
+    assertTrue(link->visible_module_count == 0, "Visible count reset");
+    assertTrue(approxEqual(link->total_hull_deformation, 0.0f), "Deformation reset");
+}
+
+// ==================== Race & Lore Tests ====================
+
+void testRaceDefaults() {
+    std::cout << "\n=== Race Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("race1");
+    auto* info = addComp<components::RaceInfo>(e);
+    assertTrue(info->race == components::RaceInfo::RaceName::TerranDescendant, "Default TerranDescendant");
+    assertTrue(approxEqual(info->learning_rate, 1.0f), "Default learning rate 1.0");
+}
+
+void testRaceApplyDefaults() {
+    std::cout << "\n=== Race Apply Defaults ===" << std::endl;
+    ecs::World world;
+
+    auto* e1 = world.createEntity("race_td");
+    auto* td = addComp<components::RaceInfo>(e1);
+    td->race = components::RaceInfo::RaceName::TerranDescendant;
+    components::RaceInfo::applyRaceDefaults(*td);
+    assertTrue(approxEqual(td->learning_rate, 1.2f), "TD learning rate 1.2");
+    assertTrue(approxEqual(td->diplomacy_modifier, 0.15f), "TD diplomacy 0.15");
+
+    auto* e2 = world.createEntity("race_sb");
+    auto* sb = addComp<components::RaceInfo>(e2);
+    sb->race = components::RaceInfo::RaceName::SynthBorn;
+    components::RaceInfo::applyRaceDefaults(*sb);
+    assertTrue(approxEqual(sb->automation_bonus, 0.25f), "SB automation 0.25");
+
+    auto* e3 = world.createEntity("race_pa");
+    auto* pa = addComp<components::RaceInfo>(e3);
+    pa->race = components::RaceInfo::RaceName::PureAlien;
+    components::RaceInfo::applyRaceDefaults(*pa);
+    assertTrue(approxEqual(pa->environmental_resilience, 1.3f), "PA resilience 1.3");
+
+    auto* e4 = world.createEntity("race_he");
+    auto* he = addComp<components::RaceInfo>(e4);
+    he->race = components::RaceInfo::RaceName::HybridEvolutionary;
+    components::RaceInfo::applyRaceDefaults(*he);
+    assertTrue(approxEqual(he->mutation_rate, 0.05f), "HE mutation 0.05");
+}
+
+void testLoreAddEntry() {
+    std::cout << "\n=== Lore Add Entry ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("lore1");
+    auto* lore = addComp<components::LoreEntry>(e);
+    lore->addLore("Great Calamity", "Year 3355 event", 100.0f, "ship_log");
+    assertTrue(lore->getLoreCount() == 1, "One lore entry");
+    assertTrue(lore->discovered_lore[0].title == "Great Calamity", "Correct title");
+}
+
+void testLoreMaxEntries() {
+    std::cout << "\n=== Lore Max Entries ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("lore2");
+    auto* lore = addComp<components::LoreEntry>(e);
+    lore->max_entries = 3;
+    lore->addLore("A", "a", 1.0f, "ruin");
+    lore->addLore("B", "b", 2.0f, "ruin");
+    lore->addLore("C", "c", 3.0f, "ruin");
+    lore->addLore("D", "d", 4.0f, "ruin");
+    assertTrue(lore->getLoreCount() == 3, "Trimmed to max 3");
+    assertTrue(lore->discovered_lore[0].title == "B", "Oldest removed");
+}
+
+// ==================== Market Order Tests ====================
+
+void testMarketOrderComponentDefaults() {
+    std::cout << "\n=== Market Order Component Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("order1");
+    auto* order = addComp<components::MarketOrder>(e);
+    assertTrue(!order->is_filled, "Not filled");
+    assertTrue(approxEqual(order->elapsed_time, 0.0f), "No elapsed time");
+}
+
+void testMarketPlaceOrderSystem() {
+    std::cout << "\n=== Market Place Order System ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("order2");
+    addComp<components::MarketOrder>(e);
+
+    systems::MarketOrderSystem sys(&world);
+    sys.placeOrder("order2", components::MarketOrder::OrderType::Sell,
+                   "Tritanium", 1000, 5.0f, "region_a", "station_1", "player_1");
+
+    auto* order = e->getComponent<components::MarketOrder>();
+    assertTrue(order->item_type == "Tritanium", "Item is Tritanium");
+    assertTrue(order->quantity == 1000, "Quantity 1000");
+    assertTrue(order->quantity_remaining == 1000, "Remaining 1000");
+    assertTrue(approxEqual(order->price_per_unit, 5.0f), "Price 5.0");
+}
+
+void testMarketFillOrderSystem() {
+    std::cout << "\n=== Market Fill Order System ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("order3");
+    addComp<components::MarketOrder>(e);
+
+    systems::MarketOrderSystem sys(&world);
+    sys.placeOrder("order3", components::MarketOrder::OrderType::Buy,
+                   "Pyerite", 500, 10.0f, "region_b", "station_2", "player_2");
+
+    int filled = sys.fillOrder("order3", 200);
+    assertTrue(filled == 200, "Filled 200");
+    auto* order = e->getComponent<components::MarketOrder>();
+    assertTrue(order->quantity_remaining == 300, "300 remaining");
+    assertTrue(!order->is_filled, "Not fully filled yet");
+
+    int filled2 = sys.fillOrder("order3", 300);
+    assertTrue(filled2 == 300, "Filled remaining 300");
+    assertTrue(order->is_filled, "Now fully filled");
+}
+
+void testMarketOrderExpirySystem() {
+    std::cout << "\n=== Market Order Expiry System ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("order4");
+    auto* order = addComp<components::MarketOrder>(e);
+    order->expiry_time = 100.0f;
+
+    systems::MarketOrderSystem sys(&world);
+    sys.placeOrder("order4", components::MarketOrder::OrderType::Sell,
+                   "Mexallon", 100, 20.0f, "region_c", "station_3", "npc_1");
+
+    assertTrue(!sys.isOrderExpired("order4"), "Not expired initially");
+    sys.update(101.0f);
+    assertTrue(sys.isOrderExpired("order4"), "Expired after 101s");
+}
+
+void testAIFleetDispatchSystem() {
+    std::cout << "\n=== AI Fleet Dispatch ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("order5");
+    addComp<components::MarketOrder>(e);
+
+    systems::MarketOrderSystem sys(&world);
+    std::string dispatch_id = sys.dispatchAIFleet("order5",
+        components::AIFleetDispatch::DispatchType::Hauling, "system_alpha", 2);
+    assertTrue(!dispatch_id.empty(), "Dispatch created");
+
+    auto dispatches = sys.getActiveDispatches();
+    assertTrue(static_cast<int>(dispatches.size()) == 1, "One active dispatch");
+
+    auto* de = world.getEntity(dispatch_id);
+    auto* dispatch = de->getComponent<components::AIFleetDispatch>();
+    assertTrue(!dispatch->isComplete(), "Not complete yet");
+
+    // Simulate enough time for completion
+    sys.update(dispatch->estimated_completion + 1.0f);
+    assertTrue(dispatch->isComplete(), "Complete after time");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "EVE OFFLINE C++ Server System Tests" << std::endl;
@@ -16187,6 +16559,7 @@ int main() {
     std::cout << "NPCRerouting, LocalReputation, StationNews, WreckPersistence, FleetHistory," << std::endl;
     std::cout << "CharacterMesh, Rig, Turret, Planet, Habitat, GravBike," << std::endl;
     std::cout << "Legend, AncientTech, Docking, Survival," << std::endl;
+    std::cout << "Menu, Crew, SalvageExploration, InteriorExterior, Race, Lore, MarketOrder," << std::endl;
     std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)" << std::endl;
     std::cout << "========================================" << std::endl;
     
@@ -17242,6 +17615,43 @@ int main() {
     testSurvivalDrain();
     testSurvivalRefill();
     testSurvivalHunger();
+
+    // Menu System tests
+    testMenuStateDefaults();
+    testMenuNavigateTo();
+    testMenuGoBack();
+    testMenuIsInGame();
+
+    // Crew System tests
+    testCrewDefaults();
+    testCrewAssign();
+    testCrewEfficiency();
+    testCrewRemove();
+
+    // Salvage Exploration tests
+    testSalvageSiteDefaults();
+    testSalvageDiscover();
+    testSalvageLoot();
+    testSalvageFullyLooted();
+    testSalvageTrinkets();
+
+    // Interior-Exterior Coupling tests
+    testInteriorExteriorDefaults();
+    testInteriorExteriorAddEffect();
+    testInteriorExteriorClear();
+
+    // Race & Lore tests
+    testRaceDefaults();
+    testRaceApplyDefaults();
+    testLoreAddEntry();
+    testLoreMaxEntries();
+
+    // Market Order tests
+    testMarketOrderComponentDefaults();
+    testMarketPlaceOrderSystem();
+    testMarketFillOrderSystem();
+    testMarketOrderExpirySystem();
+    testAIFleetDispatchSystem();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

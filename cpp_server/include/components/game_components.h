@@ -2526,6 +2526,253 @@ public:
     COMPONENT_TYPE(Fabricator)
 };
 
+// ==================== Menu & Game Flow ====================
+
+class MenuState : public ecs::Component {
+public:
+    enum class Screen {
+        TitleScreen,
+        NewGame,
+        LoadGame,
+        ModMenu,
+        MultiplayerMenu,
+        CharacterCreation,
+        InGame,
+        PauseMenu
+    };
+
+    Screen current_screen = Screen::TitleScreen;
+    Screen previous_screen = Screen::TitleScreen;
+    float transition_timer = 0.0f;
+    bool transition_active = false;
+
+    COMPONENT_TYPE(MenuState)
+};
+
+class MultiplayerSession : public ecs::Component {
+public:
+    enum class Role { None, Host, Client };
+
+    Role role = Role::None;
+    std::string host_address;
+    int port = 7777;
+    int max_players = 20;
+    int connected_players = 0;
+    bool mod_validation_passed = false;
+    uint64_t world_seed = 0;
+
+    COMPONENT_TYPE(MultiplayerSession)
+};
+
+// ==================== NPC Crew Simulation ====================
+
+class CrewMember : public ecs::Component {
+public:
+    enum class CrewRole {
+        Engineer, Pilot, Gunner, Medic,
+        Scientist, Miner, Cook, Security
+    };
+    enum class Activity {
+        Idle, Working, Walking, Resting, Eating, Repairing, Manning
+    };
+
+    CrewRole role = CrewRole::Engineer;
+    Activity current_activity = Activity::Idle;
+    std::string assigned_room_id;
+    std::string current_room_id;
+    float skill_level = 1.0f;
+    float morale = 50.0f;
+    float efficiency_bonus = 0.0f;
+
+    COMPONENT_TYPE(CrewMember)
+};
+
+class ShipCrew : public ecs::Component {
+public:
+    int max_crew = 10;
+    int current_crew = 0;
+    std::vector<std::string> crew_member_ids;
+    float overall_efficiency = 1.0f;
+    float morale_average = 50.0f;
+
+    COMPONENT_TYPE(ShipCrew)
+};
+
+// ==================== Salvage Exploration ====================
+
+class SalvageSite : public ecs::Component {
+public:
+    enum class SiteType { ShipWreck, DerelictStation, Ruins, DebrisField, AncientSite };
+
+    SiteType type = SiteType::ShipWreck;
+    int total_loot_nodes = 0;
+    int discovered_nodes = 0;
+    int looted_nodes = 0;
+    float scan_difficulty = 0.5f;
+    bool has_hostiles = false;
+    int hostile_count = 0;
+    bool has_ancient_tech = false;
+
+    int trinket_count = 0;
+    bool has_rare_bobblehead = false;
+
+    COMPONENT_TYPE(SalvageSite)
+};
+
+class SalvageTool : public ecs::Component {
+public:
+    enum class ToolType { Cutter, GravGun, Scanner, RepairTool };
+
+    ToolType type = ToolType::Cutter;
+    float efficiency = 1.0f;
+    float power_usage = 5.0f;
+    float durability = 100.0f;
+    float max_durability = 100.0f;
+    int tier = 1;
+
+    COMPONENT_TYPE(SalvageTool)
+};
+
+// ==================== Interior-Exterior Coupling ====================
+
+class InteriorExteriorLink : public ecs::Component {
+public:
+    struct ExteriorEffect {
+        std::string module_type;
+        float hull_deformation = 0.0f;
+        bool visible_on_exterior = true;
+        float scale = 1.0f;
+    };
+
+    std::vector<ExteriorEffect> effects;
+    float total_hull_deformation = 0.0f;
+    int visible_module_count = 0;
+
+    void addEffect(const std::string& type, float deform, bool visible, float scale) {
+        effects.push_back({type, deform, visible, scale});
+        if (visible) visible_module_count++;
+        total_hull_deformation += deform;
+    }
+
+    void clearEffects() {
+        effects.clear();
+        total_hull_deformation = 0.0f;
+        visible_module_count = 0;
+    }
+
+    COMPONENT_TYPE(InteriorExteriorLink)
+};
+
+// ==================== Race & Lore ====================
+
+class RaceInfo : public ecs::Component {
+public:
+    enum class RaceName { TerranDescendant, SynthBorn, PureAlien, HybridEvolutionary };
+
+    RaceName race = RaceName::TerranDescendant;
+
+    float learning_rate = 1.0f;
+    float diplomacy_modifier = 0.0f;
+    float automation_bonus = 0.0f;
+    float environmental_resilience = 1.0f;
+    float mutation_rate = 0.0f;
+
+    std::string preferred_tech;
+    float faction_standing_modifier = 0.0f;
+
+    static void applyRaceDefaults(RaceInfo& info) {
+        switch (info.race) {
+            case RaceName::TerranDescendant:
+                info.learning_rate = 1.2f;
+                info.diplomacy_modifier = 0.15f;
+                info.preferred_tech = "balanced";
+                break;
+            case RaceName::SynthBorn:
+                info.automation_bonus = 0.25f;
+                info.environmental_resilience = 0.8f;
+                info.preferred_tech = "drone";
+                break;
+            case RaceName::PureAlien:
+                info.environmental_resilience = 1.3f;
+                info.preferred_tech = "exotic";
+                break;
+            case RaceName::HybridEvolutionary:
+                info.learning_rate = 1.1f;
+                info.environmental_resilience = 1.1f;
+                info.mutation_rate = 0.05f;
+                info.preferred_tech = "hybrid";
+                break;
+        }
+    }
+
+    COMPONENT_TYPE(RaceInfo)
+};
+
+class LoreEntry : public ecs::Component {
+public:
+    struct LogEntry {
+        std::string title;
+        std::string content;
+        float discovery_timestamp;
+        std::string source;
+    };
+
+    std::vector<LogEntry> discovered_lore;
+    int max_entries = 100;
+
+    void addLore(const std::string& title, const std::string& content,
+                 float ts, const std::string& source) {
+        LogEntry entry{title, content, ts, source};
+        discovered_lore.push_back(entry);
+        if (static_cast<int>(discovered_lore.size()) > max_entries) {
+            discovered_lore.erase(discovered_lore.begin());
+        }
+    }
+
+    int getLoreCount() const { return static_cast<int>(discovered_lore.size()); }
+
+    COMPONENT_TYPE(LoreEntry)
+};
+
+// ==================== Enhanced Market ====================
+
+class MarketOrder : public ecs::Component {
+public:
+    enum class OrderType { Buy, Sell };
+
+    OrderType type = OrderType::Buy;
+    std::string item_type;
+    int quantity = 0;
+    int quantity_remaining = 0;
+    float price_per_unit = 0.0f;
+    std::string region_id;
+    std::string station_id;
+    std::string owner_id;
+    float expiry_time = 86400.0f;
+    float elapsed_time = 0.0f;
+    bool is_npc_order = false;
+    bool is_filled = false;
+
+    COMPONENT_TYPE(MarketOrder)
+};
+
+class AIFleetDispatch : public ecs::Component {
+public:
+    enum class DispatchType { Mining, Hauling, Production };
+
+    DispatchType type = DispatchType::Mining;
+    std::string target_system_id;
+    std::string order_id;
+    bool dispatched = false;
+    float estimated_completion = 0.0f;
+    float elapsed = 0.0f;
+    int fleet_size = 1;
+
+    bool isComplete() const { return elapsed >= estimated_completion; }
+
+    COMPONENT_TYPE(AIFleetDispatch)
+};
+
 } // namespace components
 } // namespace atlas
 
