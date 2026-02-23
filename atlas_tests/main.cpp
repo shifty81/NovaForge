@@ -39,6 +39,24 @@ void test_net_send_receive();
 void test_net_broadcast_receive();
 void test_net_shutdown_clears_queues();
 
+// Network quality monitor tests
+void test_nqm_initial_rtt();
+void test_nqm_rtt_ewma();
+void test_nqm_stable_rtt_low_jitter();
+void test_nqm_negative_rtt_ignored();
+void test_nqm_no_loss();
+void test_nqm_50_percent_loss();
+void test_nqm_window_trims();
+void test_nqm_empty_loss_rate();
+void test_nqm_interp_floor();
+void test_nqm_interp_ceiling();
+void test_nqm_interp_increases_with_jitter();
+void test_nqm_interp_increases_with_loss();
+void test_nqm_reset();
+void test_net_send_assigns_sequence();
+void test_net_broadcast_assigns_sequence();
+void test_net_sequence_resets_on_init();
+
 // World tests
 void test_cube_sphere_projection();
 void test_cube_sphere_chunk_roundtrip();
@@ -141,6 +159,25 @@ int main() {
     test_net_send_receive();
     test_net_broadcast_receive();
     test_net_shutdown_clears_queues();
+
+    // Network Quality Monitor
+    std::cout << "\n--- Network Quality Monitor ---" << std::endl;
+    test_nqm_initial_rtt();
+    test_nqm_rtt_ewma();
+    test_nqm_stable_rtt_low_jitter();
+    test_nqm_negative_rtt_ignored();
+    test_nqm_no_loss();
+    test_nqm_50_percent_loss();
+    test_nqm_window_trims();
+    test_nqm_empty_loss_rate();
+    test_nqm_interp_floor();
+    test_nqm_interp_ceiling();
+    test_nqm_interp_increases_with_jitter();
+    test_nqm_interp_increases_with_loss();
+    test_nqm_reset();
+    test_net_send_assigns_sequence();
+    test_net_broadcast_assigns_sequence();
+    test_net_sequence_resets_on_init();
 
     // World
     std::cout << "\n--- World Layout ---" << std::endl;

@@ -8,6 +8,7 @@ void NetContext::Init(NetMode mode) {
     m_peers.clear();
     m_snapshots.clear();
     m_nextPeerID = 1;
+    m_nextSequence = 1;
     while (!m_outgoing.empty()) m_outgoing.pop();
     while (!m_incoming.empty()) m_incoming.pop();
 }
@@ -33,6 +34,7 @@ void NetContext::Send(uint32_t peerID, const Packet& pkt) {
     QueuedPacket qp;
     qp.destPeerID = peerID;
     qp.packet = pkt;
+    qp.packet.sequence = m_nextSequence++;
     m_outgoing.push(qp);
 }
 
@@ -40,6 +42,7 @@ void NetContext::Broadcast(const Packet& pkt) {
     QueuedPacket qp;
     qp.destPeerID = 0; // 0 = broadcast
     qp.packet = pkt;
+    qp.packet.sequence = m_nextSequence++;
     m_outgoing.push(qp);
 }
 

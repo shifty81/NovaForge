@@ -93,9 +93,23 @@ public:
      * Interpolate position towards target
      * Called every frame for smooth movement
      * @param deltaTime Time since last frame in seconds
-     * @param interpolationTime Time window for interpolation (default 0.1s)
+     * @param interpolationTime Time window for interpolation (default 0.1s).
+     *        Pass a value from NetworkQualityMonitor::getAdaptiveInterpolationTime()
+     *        for network-quality-aware smoothing.
      */
     void interpolate(float deltaTime, float interpolationTime = 0.1f);
+
+    /**
+     * Return the number of server state updates received.
+     * Useful for detecting stale entities (no updates for a long time).
+     */
+    uint32_t getUpdateCount() const { return m_updateCount; }
+
+    /**
+     * Seconds since the last server state update.
+     * Requires the caller to accumulate deltaTime via interpolate().
+     */
+    float getTimeSinceLastUpdate() const { return m_timeSinceUpdate; }
 
 private:
     // Entity ID
@@ -119,6 +133,8 @@ private:
     // Interpolation tracking
     float m_interpolationProgress{0.0f};  // 0.0 to 1.0
     bool m_needsUpdate{false};
+    uint32_t m_updateCount{0};
+    float m_timeSinceUpdate{0.0f};
 
     // Ship information
     std::string m_shipType;

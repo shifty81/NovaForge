@@ -33,6 +33,8 @@ void Entity::updateFromSpawn(const glm::vec3& position, const Health& health,
     // Reset interpolation
     m_interpolationProgress = 1.0f;
     m_needsUpdate = true;
+    m_updateCount = 1;
+    m_timeSinceUpdate = 0.0f;
 }
 
 void Entity::updateFromState(const glm::vec3& position, const glm::vec3& velocity,
@@ -51,9 +53,13 @@ void Entity::updateFromState(const glm::vec3& position, const glm::vec3& velocit
     // Reset interpolation progress
     m_interpolationProgress = 0.0f;
     m_needsUpdate = true;
+    ++m_updateCount;
+    m_timeSinceUpdate = 0.0f;
 }
 
 void Entity::interpolate(float deltaTime, float interpolationTime) {
+    m_timeSinceUpdate += deltaTime;
+
     if (m_interpolationProgress >= 1.0f) {
         // Already at target - apply velocity-based extrapolation for smoother motion
         if (glm::length(m_targetVelocity) > 0.001f) {

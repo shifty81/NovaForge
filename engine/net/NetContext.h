@@ -18,6 +18,7 @@ struct Packet {
     uint16_t type = 0;
     uint16_t size = 0;
     uint32_t tick = 0;
+    uint32_t sequence = 0;  // monotonic sequence number for loss detection
     std::vector<uint8_t> payload;
 };
 
@@ -79,6 +80,9 @@ private:
     // Local packet queues for testability
     std::queue<QueuedPacket> m_outgoing;
     std::queue<Packet> m_incoming;
+
+    // Sequence numbering for packet loss detection
+    uint32_t m_nextSequence = 1;
 };
 
 }

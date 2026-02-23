@@ -6,6 +6,7 @@ add_executable(AtlasTests
     test_asset.cpp
     test_net.cpp
     test_net_queue.cpp
+    test_net_quality.cpp
     test_world.cpp
     test_compiler.cpp
     test_engine.cpp
