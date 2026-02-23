@@ -27,6 +27,8 @@ enum class PCGDomain : uint32_t {
     Station     = 11,
     Salvage     = 12,
     Rover       = 13,
+    Anomaly     = 14,
+    Encounter   = 15,
 };
 
 /**
