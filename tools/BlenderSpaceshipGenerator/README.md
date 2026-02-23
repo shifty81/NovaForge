@@ -2,7 +2,7 @@
 
 A comprehensive Blender addon for procedurally generating spaceships with modular parts and interiors. Inspired by games like X4 Foundations, Elite Dangerous, and Eve Online.
 
-Built as the ship generator for the [Nova Forge](https://github.com/shifty81/Nova Forge) project — a PVE space simulator powered by the custom Atlas Engine and Atlas UI.
+Built as the ship generator for the [Nova Forge](https://github.com/shifty81/EVEOFFLINE) project — a PVE space simulator powered by the custom Atlas Engine and Atlas UI.
 
 ## Nova Forge / Atlas Integration
 
@@ -15,7 +15,7 @@ This addon integrates directly with the Nova Forge project:
 - **Station generation** — procedural space stations matching Nova Forge station types (Industrial, Military, Commercial, Research, Mining) and Upwell structures (Astrahus, Fortizar, Keepstar).
 - **Asteroid belt generation** — procedural asteroid belts with all 16 Nova Forge ore types and 4 belt layouts (Semicircle, Sphere, Cluster, Ring).
 
-**→ [Full Nova Forge Integration Guide](Nova Forge_GUIDE.md)** — start-to-finish instructions for generating and exporting ships into the Atlas engine.
+**→ [Full Nova Forge Integration Guide](EVEOFFLINE_GUIDE.md)** — start-to-finish instructions for generating and exporting ships into the Atlas engine.
 
 **→ [Engine Integration Reference](ENGINE_INTEGRATION.md)** — data structures, JSON schemas, ECS mappings, and C++ pseudocode for implementing ship systems in the Atlas engine.
 

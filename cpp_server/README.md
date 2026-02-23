@@ -330,7 +330,7 @@ Adjust based on server capacity:
 ### Building from Source
 
 ```bash
-git clone https://github.com/shifty81/NovaForge.git
+git clone https://github.com/shifty81/EVEOFFLINE.git
 cd NovaForge/cpp_server
 mkdir build && cd build
 cmake ..
@@ -430,7 +430,7 @@ cpp_server/
 ## Support
 
 For issues and support:
-- GitHub Issues: https://github.com/shifty81/NovaForge/issues
+- GitHub Issues: https://github.com/shifty81/EVEOFFLINE/issues
 - Discord: [TBD]
 
 ## Roadmap

@@ -207,7 +207,7 @@ Once the split is complete, this will be replaced with a git submodule or CMake 
 
 - [Atlas Engine README](https://github.com/shifty81/Atlas/blob/main/README.md)
 - [Atlas Development Roadmap](https://github.com/shifty81/Atlas/blob/main/docs/09_DEVELOPMENT_ROADMAP.md)
-- [Atlas Future Plans](https://github.com/shifty81/Nova Forge/commit/033f2f8e222e7bfa0f853123ed902c23d98c307a) — Detailed design discussion covering WorldGraph APIs, API cleanup, editor tools, and documentation tracks
+- [Atlas Future Plans](https://github.com/shifty81/EVEOFFLINE/commit/033f2f8e222e7bfa0f853123ed902c23d98c307a) — Detailed design discussion covering WorldGraph APIs, API cleanup, editor tools, and documentation tracks
 - [Atlas Contributing Guide](https://github.com/shifty81/Atlas/blob/main/CONTRIBUTING.md)
 - [Nova Forge Roadmap](docs/ROADMAP.md)
 - [Nova Forge Modding Guide](docs/MODDING_GUIDE.md)

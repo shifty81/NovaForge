@@ -85,7 +85,7 @@ Blender addon for procedurally generating spaceships, stations, and asteroid bel
 **Documentation:**
 - [README](BlenderSpaceshipGenerator/README.md) — Overview and quick start
 - [Usage Guide](BlenderSpaceshipGenerator/USAGE.md) — Detailed usage instructions
-- [Nova Forge Guide](BlenderSpaceshipGenerator/Nova Forge_GUIDE.md) — Integration with Nova Forge
+- [Nova Forge Guide](BlenderSpaceshipGenerator/EVEOFFLINE_GUIDE.md) — Integration with Nova Forge
 - [Engine Integration](BlenderSpaceshipGenerator/ENGINE_INTEGRATION.md) — Technical reference for engine developers
 - [Examples](BlenderSpaceshipGenerator/EXAMPLES.md) — Usage examples
 
