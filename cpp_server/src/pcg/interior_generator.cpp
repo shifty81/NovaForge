@@ -192,8 +192,10 @@ void InteriorGenerator::distributeAcrossDecks(DeterministicRNG& rng,
     if (deckCount > roomCount) deckCount = roomCount;
     interior.deckCount = deckCount;
 
-    static constexpr float DECK_HEIGHT = 3.0f;
-    static constexpr float ROOM_SPACING = 6.0f;
+    // Deck height (3m) and room spacing (6m) are consistent with the
+    // deck_graph.h constants and the corridor length used below.
+    static constexpr float DECK_HEIGHT = 3.0f;    // metres per deck
+    static constexpr float ROOM_SPACING = 6.0f;   // metres between room centres
 
     // Assign deck levels round-robin, then position.
     for (int i = 0; i < roomCount; ++i) {
@@ -241,7 +243,7 @@ void InteriorGenerator::connectWithCorridors(DeterministicRNG& rng,
             c.toRoomId   = deckRoomIds[i + 1];
             c.width      = corridorWidth;
             c.length     = 6.0f; // matches ROOM_SPACING
-            c.isMainSpine = (i == 0);
+            c.isMainSpine = true;
 
             // Register connections on rooms.
             interior.rooms[static_cast<size_t>(c.fromRoomId)].connections.push_back(c.toRoomId);
@@ -295,7 +297,7 @@ void InteriorGenerator::addLoopConnections(DeterministicRNG& rng,
         // Check they aren't already connected.
         bool alreadyConnected = false;
         for (int c : interior.rooms[static_cast<size_t>(a)].connections) {
-            if (c == interior.rooms[static_cast<size_t>(b)].roomId) {
+            if (c == b) {
                 alreadyConnected = true;
                 break;
             }
