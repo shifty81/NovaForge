@@ -1,5 +1,7 @@
 #include "pcg/turret_generator.h"
 
+#include <algorithm>
+
 namespace atlas {
 namespace pcg {
 
