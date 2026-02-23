@@ -17,7 +17,7 @@ bool TurretAISystem::isWithinArc(float bearing_deg,
     float half_arc = arc_degrees * 0.5f;
     float diff = bearing_deg - turret_direction_deg;
 
-    // Normalise to [-180, 180]
+    // Normalize to [-180, 180]
     diff = std::fmod(diff + 180.0f, 360.0f);
     if (diff < 0.0f) diff += 360.0f;
     diff -= 180.0f;

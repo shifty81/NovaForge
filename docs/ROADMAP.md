@@ -1018,7 +1018,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] NPC behavior trees (per archetype) — NPCBehaviorTreeSystem with per-archetype phase tables (10 tests)
 - [x] NPC rerouting based on system danger — NPCRouteState component + NPCReroutingSystem with danger_threshold and route filtering (3 tests)
 - [x] Ambient traffic spawns driven by system state — AmbientTrafficSystem with AmbientTrafficState component (7 tests)
-- [ ] AI as real economic actors (wallets, ship ownership, permanent death)
+- [x] AI as real economic actors (wallets, ship ownership, permanent death) — AIEconomicActor component + AIEconomicActorSystem with earn/spend ISK, ship destruction/replacement, permanent death (7 tests, 27 assertions)
 - [x] Local reputation per system — LocalReputation component + LocalReputationSystem with decay, modify, and standing query (4 tests)
 - [x] Wreck persistence and salvage NPCs — WreckPersistence component + WreckPersistenceSystem with lifetime tracking, NPC assignment, and expiry (3 tests)
 - [x] Security response delay — SecurityResponseSystem with CONCORD-style delayed response (7 tests)
@@ -1212,7 +1212,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 #### Turret Generation
 - [x] **Procedural turrets** — 4 sizes × 5 types with faction style modifiers — TurretGenerator with range, tracking, damage, barrel count (3 tests)
-- [ ] **Turret AI + firing arcs** — Automated targeting within arc constraints
+- [x] **Turret AI + firing arcs** — Automated targeting within arc constraints — TurretAISystem with isWithinArc(), computeTrackingPenalty(), cooldown management, damage accumulation (7 tests, 28 assertions)
 - [x] **Ship turret placement** — Deterministic socket-based mounting per hull — TurretPlacementSystem with spine distribution, arc constraints, faction rules, coverage scoring, overlap validation (6 tests)
 
 #### Enhanced Market

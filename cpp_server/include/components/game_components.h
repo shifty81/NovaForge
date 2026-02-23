@@ -2817,7 +2817,7 @@ public:
     float tracking_speed = 1.0f;       // rad/s — how fast turret can track
     float base_damage = 10.0f;
     float rate_of_fire = 1.0f;         // shots per second
-    float optimal_range = 100.0f;
+    float optimal_range = 100.0f;      // for future range-based damage falloff
 
     // Runtime state
     std::string target_entity_id;       // currently targeted entity
