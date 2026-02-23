@@ -10,7 +10,7 @@ namespace atlas {
 namespace pcg {
 
 enum class TurretSize : uint32_t { Small, Medium, Large, Capital };
-enum class TurretType : uint32_t { Projectile, Energy, Missile, Hybrid, Mining, Whip };
+enum class TurretType : uint32_t { Projectile, Energy, Missile, Hybrid, Mining };
 
 struct TurretProfile {
     TurretSize size;

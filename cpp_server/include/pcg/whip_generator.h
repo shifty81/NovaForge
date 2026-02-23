@@ -50,13 +50,14 @@ struct GeneratedWhip {
 };
 
 /**
- * @brief Deterministic whip weapon generator.
+ * @brief Deterministic character whip weapon generator.
+ *
+ * Whips are character-held melee weapons used during on-foot gameplay
+ * (station interiors, ship interiors, planetary exploration).  They are
+ * NOT ship weapons — spaceships use turrets, missiles, and energy beams.
  *
  * Given a seed, whip style, and faction, produces a fully-specified
  * GeneratedWhip.  The same inputs always yield the same whip.
- *
- * Whips are close-range, wide-arc weapons with high tracking speed.
- * They excel at brawling range and provide area-denial capability.
  *
  * Generation follows the hierarchy:
  *   1. Select whip style

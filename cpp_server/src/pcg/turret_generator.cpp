@@ -19,7 +19,6 @@ float TurretGenerator::computeOptimalRange(TurretSize size, TurretType type) {
         case TurretType::Energy:  base *= 1.2f; break;
         case TurretType::Missile: base *= 1.5f; break;
         case TurretType::Mining:  base *= 0.4f; break;
-        case TurretType::Whip:    base *= 0.3f; break;  // Close-range weapon
         default: break;
     }
     return base;
@@ -83,14 +82,6 @@ GeneratedTurret TurretGenerator::generate(uint64_t seed, TurretSize size, Turret
     } else if (faction == "Keldari") {
         turret.optimal_range *= 1.2f;
         turret.profile.rate_of_fire *= 0.9f;
-    }
-
-    // Whip-type adjustments: close-range, wide arc, fast tracking
-    if (type == TurretType::Whip) {
-        turret.profile.arc_degrees = std::min(turret.profile.arc_degrees * 1.5f, 360.0f);
-        turret.profile.tracking_speed *= 1.3f;
-        turret.optimal_range *= 0.3f;
-        turret.falloff_range *= 0.5f;
     }
 
     return turret;

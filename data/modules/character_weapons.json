@@ -1,0 +1,58 @@
+{
+  "energy_whip": {
+    "id": "energy_whip",
+    "name": "Plasma Lash I",
+    "type": "character_melee",
+    "slot": "hand",
+    "weapon_type": "whip",
+    "damage": 120,
+    "damage_type": "em",
+    "swing_time": 3.0,
+    "reach": 2.5,
+    "arc_degrees": 270,
+    "mass": 1.2,
+    "meta_level": 0
+  },
+  "kinetic_whip": {
+    "id": "kinetic_whip",
+    "name": "Tether Chain I",
+    "type": "character_melee",
+    "slot": "hand",
+    "weapon_type": "whip",
+    "damage": 160,
+    "damage_type": "kinetic",
+    "swing_time": 4.0,
+    "reach": 2.0,
+    "arc_degrees": 240,
+    "mass": 2.0,
+    "meta_level": 0
+  },
+  "thermal_whip": {
+    "id": "thermal_whip",
+    "name": "Solar Filament I",
+    "type": "character_melee",
+    "slot": "hand",
+    "weapon_type": "whip",
+    "damage": 140,
+    "damage_type": "thermal",
+    "swing_time": 3.5,
+    "reach": 3.0,
+    "arc_degrees": 260,
+    "mass": 0.8,
+    "meta_level": 0
+  },
+  "gravimetric_whip": {
+    "id": "gravimetric_whip",
+    "name": "Gravity Tether I",
+    "type": "character_melee",
+    "slot": "hand",
+    "weapon_type": "whip",
+    "damage": 60,
+    "damage_type": "explosive",
+    "swing_time": 5.0,
+    "reach": 3.5,
+    "arc_degrees": 300,
+    "mass": 1.5,
+    "meta_level": 0
+  }
+}

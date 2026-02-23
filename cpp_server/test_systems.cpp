@@ -16918,10 +16918,10 @@ void testEconomyStateNames() {
     assertTrue(pcg::EconomyDrivenGenerator::shipRoleName(pcg::EconomyShipRole::Pirate) == "Pirate", "Pirate role name");
 }
 
-// ==================== Whip Generator Tests ====================
+// ==================== Character Whip Generator Tests ====================
 
 void testWhipGeneration() {
-    std::cout << "\n=== Whip Generation ===" << std::endl;
+    std::cout << "\n=== Character Whip Generation ===" << std::endl;
     pcg::WhipGenerator gen;
     auto whip = gen.generate(42, pcg::WhipStyle::Energy, "Solari");
     assertTrue(whip.profile.base_damage > 0.0f, "Whip has damage");
@@ -16995,17 +16995,6 @@ void testWhipStyleNames() {
     assertTrue(std::string(pcg::WhipGenerator::styleName(pcg::WhipStyle::Kinetic)) == "Kinetic", "Kinetic name");
     assertTrue(std::string(pcg::WhipGenerator::styleName(pcg::WhipStyle::Thermal)) == "Thermal", "Thermal name");
     assertTrue(std::string(pcg::WhipGenerator::styleName(pcg::WhipStyle::Gravimetric)) == "Gravimetric", "Gravimetric name");
-}
-
-void testTurretWhipType() {
-    std::cout << "\n=== Turret Whip Type ===" << std::endl;
-    pcg::TurretGenerator gen;
-    auto whipTurret = gen.generate(42, pcg::TurretSize::Medium, pcg::TurretType::Whip, "Solari");
-    assertTrue(whipTurret.profile.base_damage > 0.0f, "Whip turret has damage");
-    assertTrue(whipTurret.optimal_range > 0.0f, "Whip turret has range");
-    // Whip turrets should have short range compared to energy
-    auto energyTurret = gen.generate(42, pcg::TurretSize::Medium, pcg::TurretType::Energy, "Solari");
-    assertTrue(whipTurret.optimal_range < energyTurret.optimal_range, "Whip shorter range than energy");
 }
 
 int main() {
@@ -18183,7 +18172,7 @@ int main() {
     testEconomyLawlessHasPirates();
     testEconomyStateNames();
 
-    // Whip Generator tests
+    // Character Whip Generator tests
     testWhipGeneration();
     testWhipDeterminism();
     testWhipStyleScaling();
@@ -18192,7 +18181,6 @@ int main() {
     testWhipRandomGeneration();
     testWhipFactionModifiers();
     testWhipStyleNames();
-    testTurretWhipType();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
