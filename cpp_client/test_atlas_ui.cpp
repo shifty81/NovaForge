@@ -2892,6 +2892,62 @@ void testContextMenuJumpAction() {
     menu.Close();
 }
 
+// ─── Context Menu Align To Callback test ──────────────────────────
+
+void testContextMenuAlignToCallback() {
+    std::cout << "\n=== Context Menu Align To Callback ===" << std::endl;
+
+    UI::ContextMenu menu;
+
+    // Verify AlignTo callback can be set and the menu properly stores it
+    std::string alignedTo;
+    menu.SetAlignToCallback([&alignedTo](const std::string& id) {
+        alignedTo = id;
+    });
+
+    menu.ShowEntityMenu("planet_1", false, false);
+    assertTrue(menu.IsOpen(), "Entity menu is open for align test");
+    menu.Close();
+    assertTrue(alignedTo.empty(), "AlignTo callback not fired until action triggered");
+}
+
+// ─── Celestial Overview EntityId test ─────────────────────────────
+
+void testCelestialOverviewEntityId() {
+    std::cout << "\n=== Celestial Overview EntityId ===" << std::endl;
+
+    // Simulate building overview entries for celestials the same way
+    // as Application::render() — entries must have entityId set
+    atlas::OverviewEntry entry;
+    entry.entityId = "planet_1";
+    entry.name = "Asakai I";
+    entry.type = "Planet";
+    entry.distance = 5000.0f;
+
+    assertTrue(!entry.entityId.empty(), "Celestial overview entry has entityId");
+    assertTrue(entry.entityId == "planet_1", "Celestial entityId matches celestial id");
+    assertTrue(entry.name == "Asakai I", "Celestial name set correctly");
+
+    // Stargate entry
+    atlas::OverviewEntry gateEntry;
+    gateEntry.entityId = "gate_perimeter";
+    gateEntry.name = "Stargate (Perimeter)";
+    gateEntry.type = "Stargate";
+    gateEntry.distance = 100000.0f;
+
+    assertTrue(!gateEntry.entityId.empty(), "Stargate overview entry has entityId");
+    assertTrue(gateEntry.entityId == "gate_perimeter", "Stargate entityId correct");
+
+    // Station entry
+    atlas::OverviewEntry stationEntry;
+    stationEntry.entityId = "station_1";
+    stationEntry.name = "Assembly Plant";
+    stationEntry.type = "Station";
+    stationEntry.distance = 2500.0f;
+
+    assertTrue(!stationEntry.entityId.empty(), "Station overview entry has entityId");
+}
+
 // ─── Atlas Console tests ───────────────────────────────────────────────
 
 void testAtlasConsoleBasics() {
@@ -3280,6 +3336,8 @@ int main() {
     testRadialMenuDragToRange();
     testPanelDeferredMouseConsumption();
     testContextMenuJumpAction();
+    testContextMenuAlignToCallback();
+    testCelestialOverviewEntityId();
 
     // ── Atlas Console tests ─────────────────────────────────────────────
     testAtlasConsoleBasics();

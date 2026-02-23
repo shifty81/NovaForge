@@ -142,8 +142,8 @@ void ContextMenu::RenderAtlas(atlas::AtlasContext& ctx) {
                         if (m_onApproach) m_onApproach(m_targetEntityId);
                         break;
                     case ContextMenuAction::NAVIGATE_TO:
-                        if (m_menuType == ContextMenuType::ENTITY && m_onApproach) {
-                            m_onApproach(m_targetEntityId);
+                        if (m_menuType == ContextMenuType::ENTITY && m_onAlignTo) {
+                            m_onAlignTo(m_targetEntityId);
                         } else if (m_onNavigateTo) {
                             m_onNavigateTo(m_worldX, m_worldY, m_worldZ);
                         }
