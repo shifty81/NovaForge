@@ -121,6 +121,11 @@ set(SERVER_SOURCES
     src/systems/station_news_system.cpp
     src/systems/wreck_persistence_system.cpp
     src/systems/fleet_history_system.cpp
+    src/systems/rig_system.cpp
+    src/systems/legend_system.cpp
+    src/systems/ancient_tech_system.cpp
+    src/systems/docking_system.cpp
+    src/systems/survival_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -148,6 +153,11 @@ set(SERVER_SOURCES
     src/pcg/pcg_verify.cpp
     src/pcg/interior_budget.cpp
     src/pcg/interior_generator.cpp
+    src/pcg/character_mesh_system.cpp
+    src/pcg/turret_generator.cpp
+    src/pcg/planet_generator.cpp
+    src/pcg/habitat_generator.cpp
+    src/pcg/grav_bike_generator.cpp
 )
 
 set(SERVER_HEADERS
@@ -240,6 +250,11 @@ set(SERVER_HEADERS
     include/systems/station_news_system.h
     include/systems/wreck_persistence_system.h
     include/systems/fleet_history_system.h
+    include/systems/rig_system.h
+    include/systems/legend_system.h
+    include/systems/ancient_tech_system.h
+    include/systems/docking_system.h
+    include/systems/survival_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -271,6 +286,11 @@ set(SERVER_HEADERS
     include/pcg/pcg_verify.h
     include/pcg/interior_budget.h
     include/pcg/interior_generator.h
+    include/pcg/character_mesh_system.h
+    include/pcg/turret_generator.h
+    include/pcg/planet_generator.h
+    include/pcg/habitat_generator.h
+    include/pcg/grav_bike_generator.h
 )
 
 # Steam SDK configuration
@@ -425,6 +445,11 @@ if(BUILD_TESTS)
         src/systems/station_news_system.cpp
         src/systems/wreck_persistence_system.cpp
         src/systems/fleet_history_system.cpp
+        src/systems/rig_system.cpp
+        src/systems/legend_system.cpp
+        src/systems/ancient_tech_system.cpp
+        src/systems/docking_system.cpp
+        src/systems/survival_system.cpp
         src/data/world_persistence.cpp
         src/utils/logger.cpp
         src/utils/server_metrics.cpp
@@ -461,6 +486,11 @@ if(BUILD_TESTS)
         src/pcg/pcg_verify.cpp
         src/pcg/interior_budget.cpp
         src/pcg/interior_generator.cpp
+        src/pcg/character_mesh_system.cpp
+        src/pcg/turret_generator.cpp
+        src/pcg/planet_generator.cpp
+        src/pcg/habitat_generator.cpp
+        src/pcg/grav_bike_generator.cpp
     )
 
     add_executable(test_systems

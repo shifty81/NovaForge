@@ -2384,6 +2384,148 @@ public:
     COMPONENT_TYPE(FleetCivilization)
 };
 
+// ==================== Rig & Equipment System ====================
+
+class RigModule : public ecs::Component {
+public:
+    enum class ModuleType {
+        LifeSupport,
+        PowerCore,
+        JetpackTank,
+        Sensor,
+        Shield,
+        EnvironFilter,
+        ToolMount,
+        WeaponMount,
+        DroneController,
+        ScannerSuite,
+        CargoPod,
+        BatteryPack,
+        SolarPanel
+    };
+
+    ModuleType type = ModuleType::LifeSupport;
+    int tier = 1;
+    float efficiency = 1.0f;
+    float durability = 100.0f;
+    float max_durability = 100.0f;
+    std::string module_name;
+
+    COMPONENT_TYPE(RigModule)
+};
+
+class RigLoadout : public ecs::Component {
+public:
+    int rack_width = 2;
+    int rack_height = 2;
+    int max_slots() const { return rack_width * rack_height; }
+    std::vector<std::string> installed_module_ids;
+
+    float total_oxygen = 0.0f;
+    float total_power = 0.0f;
+    float total_cargo = 0.0f;
+    float total_shield = 0.0f;
+    float jetpack_fuel = 0.0f;
+
+    bool canInstallModule() const {
+        return static_cast<int>(installed_module_ids.size()) < max_slots();
+    }
+
+    COMPONENT_TYPE(RigLoadout)
+};
+
+// ==================== Myth & Legend System ====================
+
+class PlayerLegend : public ecs::Component {
+public:
+    struct LegendEntry {
+        std::string event_type;
+        std::string description;
+        float timestamp;
+        std::string system_id;
+        int magnitude;
+    };
+
+    std::vector<LegendEntry> entries;
+    int legend_score = 0;
+    std::string title;
+    int max_entries = 50;
+
+    void addEntry(const std::string& type, const std::string& desc, float ts,
+                  const std::string& sys_id, int mag) {
+        LegendEntry entry{type, desc, ts, sys_id, mag};
+        entries.push_back(entry);
+        legend_score += mag;
+        if (static_cast<int>(entries.size()) > max_entries) {
+            entries.erase(entries.begin());
+        }
+    }
+
+    COMPONENT_TYPE(PlayerLegend)
+};
+
+class AncientTechModule : public ecs::Component {
+public:
+    enum class TechState { Broken, Repairing, Repaired, Upgraded };
+
+    TechState state = TechState::Broken;
+    std::string tech_type;
+    float repair_progress = 0.0f;
+    float repair_cost = 100.0f;
+    float power_multiplier = 1.5f;
+    bool reverse_engineered = false;
+    std::string blueprint_id;
+
+    bool isUsable() const { return state == TechState::Repaired || state == TechState::Upgraded; }
+
+    COMPONENT_TYPE(AncientTechModule)
+};
+
+class DockingPort : public ecs::Component {
+public:
+    enum class PortType { Airlock, DockingRing, HangarBay, RoverBay };
+
+    PortType type = PortType::Airlock;
+    bool is_extended = false;
+    bool is_pressurized = true;
+    std::string docked_entity_id;
+    float max_ship_mass = 0.0f;
+
+    bool isOccupied() const { return !docked_entity_id.empty(); }
+
+    COMPONENT_TYPE(DockingPort)
+};
+
+// ==================== Survival Module ====================
+
+class SurvivalNeeds : public ecs::Component {
+public:
+    float oxygen = 100.0f;
+    float hunger = 0.0f;
+    float fatigue = 0.0f;
+    float oxygen_drain_rate = 0.5f;
+    float hunger_rate = 0.1f;
+    float fatigue_rate = 0.05f;
+
+    bool isAlive() const { return oxygen > 0.0f; }
+    bool isStarving() const { return hunger >= 80.0f; }
+    bool isExhausted() const { return fatigue >= 80.0f; }
+
+    COMPONENT_TYPE(SurvivalNeeds)
+};
+
+class Fabricator : public ecs::Component {
+public:
+    bool is_active = false;
+    std::string current_recipe;
+    float progress = 0.0f;
+    float craft_speed = 1.0f;
+    std::vector<std::string> known_recipes;
+    int max_queue = 5;
+
+    COMPONENT_TYPE(Fabricator)
+};
+
 } // namespace components
 } // namespace atlas
 

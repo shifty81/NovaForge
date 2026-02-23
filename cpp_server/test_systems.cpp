@@ -86,6 +86,11 @@
 #include "systems/station_news_system.h"
 #include "systems/wreck_persistence_system.h"
 #include "systems/fleet_history_system.h"
+#include "systems/rig_system.h"
+#include "systems/legend_system.h"
+#include "systems/ancient_tech_system.h"
+#include "systems/docking_system.h"
+#include "systems/survival_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -106,6 +111,11 @@
 #include "pcg/station_generator.h"
 #include "pcg/salvage_system.h"
 #include "pcg/rover_system.h"
+#include "pcg/character_mesh_system.h"
+#include "pcg/turret_generator.h"
+#include "pcg/planet_generator.h"
+#include "pcg/habitat_generator.h"
+#include "pcg/grav_bike_generator.h"
 #include "pcg/collision_manager.h"
 #include "pcg/asteroid_field_generator.h"
 #include "pcg/anomaly_generator.h"
@@ -15748,6 +15758,399 @@ void testFleetHistoryByType() {
     assertTrue(static_cast<int>(losses.size()) == 1, "One ship_lost event");
 }
 
+// ==================== Character Mesh System Tests ====================
+
+void testCharacterMeshGeneration() {
+    std::cout << "\n=== Character Mesh Generation ===" << std::endl;
+    pcg::CharacterMeshSystem meshSys;
+    pcg::CharacterSliders sliders;
+    sliders.height = 0.5f;
+    auto character = meshSys.generate(12345, pcg::Race::TerranDescendant, sliders);
+    assertTrue(character.total_height >= 1.5f && character.total_height <= 2.2f, "Height in valid range");
+    assertTrue(character.arm_span > 0.0f, "Arm span positive");
+    assertTrue(character.head_radius >= 0.09f && character.head_radius <= 0.13f, "Head radius in range");
+}
+
+void testCharacterMeshDeterminism() {
+    std::cout << "\n=== Character Mesh Determinism ===" << std::endl;
+    pcg::CharacterMeshSystem meshSys;
+    pcg::CharacterSliders sliders;
+    auto c1 = meshSys.generate(99999, pcg::Race::SynthBorn, sliders);
+    auto c2 = meshSys.generate(99999, pcg::Race::SynthBorn, sliders);
+    assertTrue(approxEqual(c1.total_height, c2.total_height), "Same seed same height");
+    assertTrue(approxEqual(c1.arm_span, c2.arm_span), "Same seed same arm span");
+}
+
+void testCharacterRacialTraits() {
+    std::cout << "\n=== Character Racial Traits ===" << std::endl;
+    pcg::CharacterMeshSystem meshSys;
+    pcg::CharacterSliders sliders;
+
+    auto terran = meshSys.generate(1, pcg::Race::TerranDescendant, sliders);
+    assertTrue(approxEqual(terran.learning_rate, 1.2f), "Terran learning rate 1.2");
+    assertTrue(approxEqual(terran.diplomacy_bonus, 0.15f), "Terran diplomacy 0.15");
+
+    auto synth = meshSys.generate(2, pcg::Race::SynthBorn, sliders);
+    assertTrue(approxEqual(synth.automation_bonus, 0.25f), "SynthBorn automation 0.25");
+    assertTrue(approxEqual(synth.resilience, 0.8f), "SynthBorn resilience 0.8");
+
+    auto alien = meshSys.generate(3, pcg::Race::PureAlien, sliders);
+    assertTrue(approxEqual(alien.resilience, 1.3f), "PureAlien resilience 1.3");
+
+    auto hybrid = meshSys.generate(4, pcg::Race::HybridEvolutionary, sliders);
+    assertTrue(approxEqual(hybrid.learning_rate, 1.1f), "Hybrid learning rate 1.1");
+    assertTrue(approxEqual(hybrid.resilience, 1.1f), "Hybrid resilience 1.1");
+}
+
+// ==================== Rig System Tests ====================
+
+void testRigLoadoutDefaults() {
+    std::cout << "\n=== Rig Loadout Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rig1");
+    auto* loadout = addComp<components::RigLoadout>(e);
+    assertTrue(loadout->rack_width == 2, "Default rack width 2");
+    assertTrue(loadout->rack_height == 2, "Default rack height 2");
+    assertTrue(loadout->max_slots() == 4, "Default max slots 4");
+}
+
+void testRigInstallModule() {
+    std::cout << "\n=== Rig Install Module ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rig2");
+    addComp<components::RigLoadout>(e);
+    auto* mod = world.createEntity("mod1");
+    addComp<components::RigModule>(mod);
+
+    systems::RigSystem sys(&world);
+    assertTrue(sys.installModule("rig2", "mod1"), "Install module succeeds");
+    assertTrue(sys.getInstalledCount("rig2") == 1, "One module installed");
+}
+
+void testRigModuleFull() {
+    std::cout << "\n=== Rig Module Full ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rig3");
+    auto* loadout = addComp<components::RigLoadout>(e);
+    loadout->rack_width = 1;
+    loadout->rack_height = 1;
+
+    systems::RigSystem sys(&world);
+    auto* m1 = world.createEntity("m1");
+    addComp<components::RigModule>(m1);
+    assertTrue(sys.installModule("rig3", "m1"), "First install succeeds");
+    assertTrue(!sys.installModule("rig3", "m2"), "Second install fails (full)");
+}
+
+void testRigDerivedStats() {
+    std::cout << "\n=== Rig Derived Stats ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rig4");
+    addComp<components::RigLoadout>(e);
+    auto* mod = world.createEntity("mod_ls");
+    auto* rm = addComp<components::RigModule>(mod);
+    rm->type = components::RigModule::ModuleType::LifeSupport;
+    rm->tier = 2;
+    rm->efficiency = 1.0f;
+
+    systems::RigSystem sys(&world);
+    sys.installModule("rig4", "mod_ls");
+    sys.update(0.0f);
+
+    auto* loadout = e->getComponent<components::RigLoadout>();
+    assertTrue(approxEqual(loadout->total_oxygen, 200.0f), "LifeSupport tier 2 = 200 oxygen");
+}
+
+void testRigRemoveModule() {
+    std::cout << "\n=== Rig Remove Module ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("rig5");
+    addComp<components::RigLoadout>(e);
+
+    systems::RigSystem sys(&world);
+    auto* m1 = world.createEntity("rm1");
+    addComp<components::RigModule>(m1);
+    sys.installModule("rig5", "rm1");
+    assertTrue(sys.getInstalledCount("rig5") == 1, "One module before remove");
+    assertTrue(sys.removeModule("rig5", "rm1"), "Remove succeeds");
+    assertTrue(sys.getInstalledCount("rig5") == 0, "Zero modules after remove");
+}
+
+// ==================== Turret Generator Tests ====================
+
+void testTurretGeneration() {
+    std::cout << "\n=== Turret Generation ===" << std::endl;
+    pcg::TurretGenerator gen;
+    auto turret = gen.generate(42, pcg::TurretSize::Medium, pcg::TurretType::Energy, "Solari");
+    assertTrue(turret.profile.base_damage > 0.0f, "Turret has damage");
+    assertTrue(turret.optimal_range > 0.0f, "Turret has range");
+    assertTrue(turret.power_draw > 0.0f, "Turret has power draw");
+}
+
+void testTurretDeterminism() {
+    std::cout << "\n=== Turret Determinism ===" << std::endl;
+    pcg::TurretGenerator gen;
+    auto t1 = gen.generate(777, pcg::TurretSize::Small, pcg::TurretType::Projectile, "Veyren");
+    auto t2 = gen.generate(777, pcg::TurretSize::Small, pcg::TurretType::Projectile, "Veyren");
+    assertTrue(approxEqual(t1.profile.base_damage, t2.profile.base_damage), "Same seed same damage");
+    assertTrue(approxEqual(t1.optimal_range, t2.optimal_range), "Same seed same range");
+}
+
+void testTurretSizeScaling() {
+    std::cout << "\n=== Turret Size Scaling ===" << std::endl;
+    pcg::TurretGenerator gen;
+    auto small = gen.generate(100, pcg::TurretSize::Small, pcg::TurretType::Projectile, "");
+    auto large = gen.generate(100, pcg::TurretSize::Large, pcg::TurretType::Projectile, "");
+    assertTrue(large.profile.base_damage > small.profile.base_damage, "Large turret more damage than small");
+}
+
+// ==================== Planet Generator Tests ====================
+
+void testPlanetGeneration() {
+    std::cout << "\n=== Planet Generation ===" << std::endl;
+    pcg::PlanetGenerator gen;
+    auto planet = gen.generate(555, pcg::PlanetType::Rocky);
+    assertTrue(planet.radius >= 2000.0f && planet.radius <= 8000.0f, "Rocky radius in range");
+    assertTrue(planet.gravity > 0.0f, "Planet has gravity");
+}
+
+void testPlanetDeterminism() {
+    std::cout << "\n=== Planet Determinism ===" << std::endl;
+    pcg::PlanetGenerator gen;
+    auto p1 = gen.generate(888, pcg::PlanetType::Ice);
+    auto p2 = gen.generate(888, pcg::PlanetType::Ice);
+    assertTrue(approxEqual(p1.radius, p2.radius), "Same seed same radius");
+    assertTrue(approxEqual(p1.gravity, p2.gravity), "Same seed same gravity");
+}
+
+void testPlanetResources() {
+    std::cout << "\n=== Planet Resources ===" << std::endl;
+    pcg::PlanetGenerator gen;
+    auto planet = gen.generate(333, pcg::PlanetType::Rocky);
+    assertTrue(!planet.resources.empty(), "Rocky planet has resources");
+    assertTrue(static_cast<int>(planet.resources.size()) >= 3, "Rocky has at least 3 resources");
+}
+
+void testPlanetTerraformable() {
+    std::cout << "\n=== Planet Terraformable ===" << std::endl;
+    assertTrue(pcg::PlanetGenerator::isTerraformable(pcg::PlanetType::Rocky), "Rocky is terraformable");
+    assertTrue(pcg::PlanetGenerator::isTerraformable(pcg::PlanetType::Desert), "Desert is terraformable");
+    assertTrue(!pcg::PlanetGenerator::isTerraformable(pcg::PlanetType::Gas), "Gas is not terraformable");
+    assertTrue(!pcg::PlanetGenerator::isTerraformable(pcg::PlanetType::Lava), "Lava is not terraformable");
+}
+
+// ==================== Habitat Generator Tests ====================
+
+void testHabitatGeneration() {
+    std::cout << "\n=== Habitat Generation ===" << std::endl;
+    pcg::HabitatGenerator gen;
+    auto habitat = gen.generate(111, 5);
+    assertTrue(habitat.module_count > 0, "Habitat has modules");
+    assertTrue(habitat.total_levels == 5, "Habitat has 5 levels");
+}
+
+void testHabitatDeterminism() {
+    std::cout << "\n=== Habitat Determinism ===" << std::endl;
+    pcg::HabitatGenerator gen;
+    auto h1 = gen.generate(222, 3);
+    auto h2 = gen.generate(222, 3);
+    assertTrue(h1.module_count == h2.module_count, "Same seed same module count");
+    assertTrue(approxEqual(h1.total_power_draw, h2.total_power_draw), "Same seed same power draw");
+}
+
+void testHabitatPowerBalance() {
+    std::cout << "\n=== Habitat Power Balance ===" << std::endl;
+    pcg::HabitatGenerator gen;
+    auto habitat = gen.generate(444, 4);
+    assertTrue(habitat.total_power_draw >= 0.0f, "Power draw non-negative");
+    assertTrue(habitat.total_power_generation >= 0.0f, "Power generation non-negative");
+    assertTrue(habitat.is_self_sufficient == (habitat.total_power_generation >= habitat.total_power_draw),
+               "Self-sufficient flag matches calculation");
+}
+
+// ==================== Grav Bike Tests ====================
+
+void testGravBikeGeneration() {
+    std::cout << "\n=== Grav Bike Generation ===" << std::endl;
+    pcg::GravBikeGenerator gen;
+    auto bike = gen.generate(1000, "Solari");
+    assertTrue(bike.config.max_speed >= 30.0f, "Speed above minimum");
+    assertTrue(bike.config.fuel_capacity > 0.0f, "Has fuel capacity");
+}
+
+void testGravBikeDeterminism() {
+    std::cout << "\n=== Grav Bike Determinism ===" << std::endl;
+    pcg::GravBikeGenerator gen;
+    auto b1 = gen.generate(2000, "Veyren");
+    auto b2 = gen.generate(2000, "Veyren");
+    assertTrue(approxEqual(b1.config.max_speed, b2.config.max_speed), "Same seed same speed");
+    assertTrue(approxEqual(b1.hull_strength, b2.hull_strength), "Same seed same hull");
+}
+
+// ==================== Legend System Tests ====================
+
+void testLegendEmpty() {
+    std::cout << "\n=== Legend Empty ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("player1");
+    addComp<components::PlayerLegend>(e);
+
+    systems::LegendSystem sys(&world);
+    assertTrue(sys.getLegendScore("player1") == 0, "No score initially");
+    assertTrue(sys.getTitle("player1") == "Unknown", "Title is Unknown");
+}
+
+void testLegendRecord() {
+    std::cout << "\n=== Legend Record ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("player2");
+    addComp<components::PlayerLegend>(e);
+
+    systems::LegendSystem sys(&world);
+    sys.recordLegend("player2", "destroyed_capital", "Destroyed the Warlord", 100.0f, "sys_1", 25);
+    assertTrue(sys.getLegendScore("player2") == 25, "Score is 25 after event");
+    auto entries = sys.getLegendEntries("player2");
+    assertTrue(static_cast<int>(entries.size()) == 1, "One entry recorded");
+}
+
+void testLegendTitle() {
+    std::cout << "\n=== Legend Title ===" << std::endl;
+    assertTrue(systems::LegendSystem::computeTitle(0) == "Unknown", "Score 0 = Unknown");
+    assertTrue(systems::LegendSystem::computeTitle(10) == "Notable", "Score 10 = Notable");
+    assertTrue(systems::LegendSystem::computeTitle(50) == "Famous", "Score 50 = Famous");
+    assertTrue(systems::LegendSystem::computeTitle(100) == "Legendary", "Score 100 = Legendary");
+    assertTrue(systems::LegendSystem::computeTitle(500) == "Mythic", "Score 500 = Mythic");
+}
+
+// ==================== Ancient Tech Tests ====================
+
+void testAncientTechDefaults() {
+    std::cout << "\n=== Ancient Tech Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("tech1");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    assertTrue(tech->state == components::AncientTechModule::TechState::Broken, "Starts Broken");
+    assertTrue(!tech->isUsable(), "Not usable when broken");
+}
+
+void testAncientTechRepair() {
+    std::cout << "\n=== Ancient Tech Repair ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("tech2");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->repair_cost = 10.0f;
+
+    systems::AncientTechSystem sys(&world);
+    assertTrue(sys.startRepair("tech2"), "Start repair succeeds");
+    assertTrue(sys.getState("tech2") == components::AncientTechModule::TechState::Repairing, "State is Repairing");
+
+    // Simulate enough time to complete (repair_cost * 0.5 = 5.0 seconds needed)
+    sys.update(6.0f);
+    assertTrue(sys.getState("tech2") == components::AncientTechModule::TechState::Repaired, "State is Repaired");
+    assertTrue(sys.isUsable("tech2"), "Usable after repair");
+}
+
+void testAncientTechReverseEngineer() {
+    std::cout << "\n=== Ancient Tech Reverse Engineer ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("tech3");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->state = components::AncientTechModule::TechState::Repaired;
+    tech->blueprint_id = "bp_ancient_weapon";
+
+    systems::AncientTechSystem sys(&world);
+    std::string bp = sys.reverseEngineer("tech3");
+    assertTrue(bp == "bp_ancient_weapon", "Returns correct blueprint");
+    assertTrue(tech->reverse_engineered, "Marked as reverse engineered");
+}
+
+// ==================== Docking System Tests ====================
+
+void testDockingPortDefaults() {
+    std::cout << "\n=== Docking Port Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("port1");
+    auto* port = addComp<components::DockingPort>(e);
+    assertTrue(!port->isOccupied(), "Not occupied by default");
+}
+
+void testDockingDock() {
+    std::cout << "\n=== Docking Dock ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("port2");
+    addComp<components::DockingPort>(e);
+
+    systems::DockingSystem sys(&world);
+    assertTrue(sys.dock("port2", "ship_1"), "Dock succeeds");
+    assertTrue(sys.isOccupied("port2"), "Port is occupied");
+    assertTrue(sys.getDockedEntity("port2") == "ship_1", "Correct docked entity");
+}
+
+void testDockingUndock() {
+    std::cout << "\n=== Docking Undock ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("port3");
+    addComp<components::DockingPort>(e);
+
+    systems::DockingSystem sys(&world);
+    sys.dock("port3", "ship_2");
+    std::string undocked = sys.undock("port3");
+    assertTrue(undocked == "ship_2", "Undocked correct entity");
+    assertTrue(!sys.isOccupied("port3"), "Port is empty after undock");
+}
+
+// ==================== Survival System Tests ====================
+
+void testSurvivalDefaults() {
+    std::cout << "\n=== Survival Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("surv1");
+    auto* needs = addComp<components::SurvivalNeeds>(e);
+    assertTrue(approxEqual(needs->oxygen, 100.0f), "Full oxygen");
+    assertTrue(approxEqual(needs->hunger, 0.0f), "No hunger");
+    assertTrue(approxEqual(needs->fatigue, 0.0f), "No fatigue");
+}
+
+void testSurvivalDrain() {
+    std::cout << "\n=== Survival Drain ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("surv2");
+    addComp<components::SurvivalNeeds>(e);
+
+    systems::SurvivalSystem sys(&world);
+    sys.update(10.0f);
+
+    auto [oxy, hun, fat] = sys.getNeeds("surv2");
+    assertTrue(oxy < 100.0f, "Oxygen drained");
+    assertTrue(approxEqual(oxy, 95.0f), "Oxygen at 95 after 10s");
+}
+
+void testSurvivalRefill() {
+    std::cout << "\n=== Survival Refill ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("surv3");
+    auto* needs = addComp<components::SurvivalNeeds>(e);
+    needs->oxygen = 50.0f;
+
+    systems::SurvivalSystem sys(&world);
+    float newOxy = sys.refillOxygen("surv3", 30.0f);
+    assertTrue(approxEqual(newOxy, 80.0f), "Oxygen refilled to 80");
+}
+
+void testSurvivalHunger() {
+    std::cout << "\n=== Survival Hunger ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("surv4");
+    addComp<components::SurvivalNeeds>(e);
+
+    systems::SurvivalSystem sys(&world);
+    sys.update(20.0f);
+
+    auto [oxy, hun, fat] = sys.getNeeds("surv4");
+    assertTrue(hun > 0.0f, "Hunger increased");
+    assertTrue(approxEqual(hun, 2.0f), "Hunger at 2.0 after 20s");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "EVE OFFLINE C++ Server System Tests" << std::endl;
@@ -15782,6 +16185,8 @@ int main() {
     std::cout << "FleetProgression, StationDeployment, FleetWarpFormation, FleetCivilization," << std::endl;
     std::cout << "WarpMeditation, RumorQuestline, CaptainDeparture, CaptainTransfer," << std::endl;
     std::cout << "NPCRerouting, LocalReputation, StationNews, WreckPersistence, FleetHistory," << std::endl;
+    std::cout << "CharacterMesh, Rig, Turret, Planet, Habitat, GravBike," << std::endl;
+    std::cout << "Legend, AncientTech, Docking, Survival," << std::endl;
     std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)" << std::endl;
     std::cout << "========================================" << std::endl;
     
@@ -16784,6 +17189,59 @@ int main() {
     testFleetHistoryRecordEvent();
     testFleetHistoryMaxEvents();
     testFleetHistoryByType();
+
+    // Character Mesh System tests
+    testCharacterMeshGeneration();
+    testCharacterMeshDeterminism();
+    testCharacterRacialTraits();
+
+    // Rig System tests
+    testRigLoadoutDefaults();
+    testRigInstallModule();
+    testRigModuleFull();
+    testRigDerivedStats();
+    testRigRemoveModule();
+
+    // Turret Generator tests
+    testTurretGeneration();
+    testTurretDeterminism();
+    testTurretSizeScaling();
+
+    // Planet Generator tests
+    testPlanetGeneration();
+    testPlanetDeterminism();
+    testPlanetResources();
+    testPlanetTerraformable();
+
+    // Habitat Generator tests
+    testHabitatGeneration();
+    testHabitatDeterminism();
+    testHabitatPowerBalance();
+
+    // Grav Bike tests
+    testGravBikeGeneration();
+    testGravBikeDeterminism();
+
+    // Legend System tests
+    testLegendEmpty();
+    testLegendRecord();
+    testLegendTitle();
+
+    // Ancient Tech tests
+    testAncientTechDefaults();
+    testAncientTechRepair();
+    testAncientTechReverseEngineer();
+
+    // Docking System tests
+    testDockingPortDefaults();
+    testDockingDock();
+    testDockingUndock();
+
+    // Survival System tests
+    testSurvivalDefaults();
+    testSurvivalDrain();
+    testSurvivalRefill();
+    testSurvivalHunger();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
