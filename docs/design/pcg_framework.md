@@ -65,6 +65,12 @@ Domains isolate seed trees so that changing one generator never affects another:
 | Fleet      | Fleet compositions   |
 | Loot       | Loot tables          |
 | Mission    | Mission generation   |
+| CapitalShip| Capital ship interiors|
+| Station    | Station layout       |
+| Salvage    | Salvage/debris fields|
+| Rover      | Planetary rovers     |
+| Anomaly    | Anomaly sites        |
+| Encounter  | NPC encounters       |
 
 ---
 
@@ -112,7 +118,66 @@ Each fleet always includes exactly one **Commander**.
 
 ---
 
-## 7. General Best Practices
+## 7. Asteroid Field Generator
+
+**File:** `cpp_server/include/pcg/asteroid_field_generator.h`
+
+Generates a disc-shaped asteroid belt with mineral types determined by security level.
+
+### Ore Distribution by Security Level
+
+| Security    | Common Ores                | Rare Ores              |
+|-------------|----------------------------|------------------------|
+| High (≥0.5) | Veldspar, Scordite (75 %)  | Pyroxeres, Plagioclase |
+| Low (0.2-0.5)| Mixed (40 % common)       | Omber, Kernite         |
+| Null (≤0.2) | Sparse common (20 %)       | Jaspet, Mercoxit       |
+
+Asteroids are scattered in a disc (XZ plane) with slight vertical spread.  Radius and mineral yield scale with ore rarity.
+
+---
+
+## 8. Anomaly Generator
+
+**File:** `cpp_server/include/pcg/anomaly_generator.h`
+
+Generates exploration / combat anomaly sites with layout, difficulty, and reward scaling.
+
+### Site Types
+
+| Type              | Content              | Waves |
+|-------------------|----------------------|-------|
+| CombatSite        | Hostiles + containers| 1-6   |
+| GasSite           | Gas clouds           | 0     |
+| RelicSite         | Containers + debris  | 0     |
+| DataSite          | Data containers      | 0     |
+| OreSite           | Rich ore clusters    | 0     |
+| WormholeSignature | Wormhole entrance    | 0     |
+
+Difficulty: Trivial → Easy → Medium → Hard → Extreme (scales with lower security).
+
+---
+
+## 9. NPC Encounter Generator
+
+**File:** `cpp_server/include/pcg/npc_encounter_generator.h`
+
+Creates multi-wave hostile encounters with faction-appropriate ship compositions.
+
+### Factions
+
+| Faction   | High-Sec | Low-Sec | Null-Sec |
+|-----------|----------|---------|----------|
+| Pirate    | 60 %     | 35 %    | 25 %     |
+| Rogue     | 25 %     | 20 %    | 15 %     |
+| Mercenary | 15 %     | 25 %    | 20 %     |
+| Navy      | —        | 20 %    | 10 %     |
+| Sleeper   | —        | —       | 30 %     |
+
+Later waves spawn larger hulls; lower security spawns heavier compositions.  Each wave has a trigger delay and spawn radius.
+
+---
+
+## 10. General Best Practices
 
 * **Seeded generation** — players can share universe seeds.
 * **Control mechanisms** — tweak parameters (`max_ships`, `min_asteroid_size`).
@@ -122,11 +187,11 @@ Each fleet always includes exactly one **Commander**.
 
 ---
 
-## 8. Future Extensions
+## 11. Future Extensions
 
 * PCG debug visualiser (seed → object tree).
 * Constraint solver with retries (genetic-style fitting).
-* Capital ship generator with hangar bays.
 * Server-authoritative PCG verification for multiplayer.
 * Asteroid field noise-based mesh generation.
-* NPC trait generation using seeded mutation.
+* Procedural texturing (albedo, normal, light maps per faction).
+* Spine-based hull grammar (Phase 12 overhaul).

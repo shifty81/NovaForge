@@ -95,6 +95,9 @@
 #include "pcg/salvage_system.h"
 #include "pcg/rover_system.h"
 #include "pcg/collision_manager.h"
+#include "pcg/asteroid_field_generator.h"
+#include "pcg/anomaly_generator.h"
+#include "pcg/npc_encounter_generator.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -14342,6 +14345,219 @@ void testCollisionManagerRemove() {
     assertTrue(!mgr.testPoint(0, 0, 0), "Point no longer detected after removal");
 }
 
+// ==================== Asteroid Field Generator Tests ====================
+
+void testAsteroidFieldGeneration() {
+    std::cout << "\n=== PCG: AsteroidFieldGenerator basic generation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 5000, 1 };
+    auto field = atlas::pcg::AsteroidFieldGenerator::generate(ctx, 0.8f);
+    assertTrue(!field.asteroids.empty(), "Field has asteroids");
+    assertTrue(field.totalAsteroids >= 10, "Field has >= 10 asteroids");
+    assertTrue(field.fieldRadius > 0.0f, "Field has positive radius");
+    assertTrue(field.totalYield > 0.0f, "Field has positive yield");
+}
+
+void testAsteroidFieldDeterminism() {
+    std::cout << "\n=== PCG: AsteroidFieldGenerator determinism ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 5100, 1 };
+    auto f1 = atlas::pcg::AsteroidFieldGenerator::generate(ctx, 0.5f);
+    auto f2 = atlas::pcg::AsteroidFieldGenerator::generate(ctx, 0.5f);
+    assertTrue(f1.asteroids.size() == f2.asteroids.size(), "Same asteroid count");
+    bool allMatch = true;
+    for (size_t i = 0; i < f1.asteroids.size(); ++i) {
+        if (f1.asteroids[i].type != f2.asteroids[i].type) { allMatch = false; break; }
+        if (f1.asteroids[i].radius != f2.asteroids[i].radius) { allMatch = false; break; }
+    }
+    assertTrue(allMatch, "Same seed → identical asteroid field");
+}
+
+void testAsteroidFieldExplicitCount() {
+    std::cout << "\n=== PCG: AsteroidFieldGenerator explicit count ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 5200, 1 };
+    auto field = atlas::pcg::AsteroidFieldGenerator::generate(ctx, 25, 0.6f);
+    assertTrue(static_cast<int>(field.asteroids.size()) == 25, "Explicit count of 25 asteroids");
+    assertTrue(field.totalAsteroids == 25, "totalAsteroids matches");
+}
+
+void testAsteroidFieldHighSecTypes() {
+    std::cout << "\n=== PCG: AsteroidFieldGenerator high-sec types ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 5300, 1 };
+    auto field = atlas::pcg::AsteroidFieldGenerator::generate(ctx, 50, 0.9f);
+    // High-sec should have no Mercoxit
+    bool hasMercoxit = false;
+    int commonCount = 0;
+    for (const auto& a : field.asteroids) {
+        if (a.type == atlas::pcg::AsteroidType::Mercoxit) hasMercoxit = true;
+        if (a.type == atlas::pcg::AsteroidType::Veldspar ||
+            a.type == atlas::pcg::AsteroidType::Scordite) commonCount++;
+    }
+    assertTrue(!hasMercoxit, "High-sec belt has no Mercoxit");
+    assertTrue(commonCount > 0, "High-sec belt has common ores");
+}
+
+void testAsteroidFieldYieldCalculation() {
+    std::cout << "\n=== PCG: AsteroidFieldGenerator yield calculation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 5400, 1 };
+    auto field = atlas::pcg::AsteroidFieldGenerator::generate(ctx, 20, 0.5f);
+    float calculated = atlas::pcg::AsteroidFieldGenerator::calculateTotalYield(field);
+    assertTrue(calculated > 0.0f, "Calculated yield is positive");
+    // totalYield should match sum of individual yields.
+    float manual = 0.0f;
+    for (const auto& a : field.asteroids) manual += a.mineralYield;
+    assertTrue(std::abs(calculated - manual) < 0.01f, "calculateTotalYield matches sum");
+}
+
+void testAsteroidFieldPositiveValues() {
+    std::cout << "\n=== PCG: AsteroidFieldGenerator positive values ===" << std::endl;
+    bool allOk = true;
+    for (uint64_t i = 1; i <= 50; ++i) {
+        atlas::pcg::PCGContext ctx{ i * 97, 1 };
+        auto field = atlas::pcg::AsteroidFieldGenerator::generate(ctx, 0.5f);
+        for (const auto& a : field.asteroids) {
+            if (a.radius <= 0.0f || a.mineralYield <= 0.0f) { allOk = false; break; }
+        }
+    }
+    assertTrue(allOk, "All asteroids have positive radius and yield");
+}
+
+// ==================== Anomaly Generator Tests ====================
+
+void testAnomalyGeneration() {
+    std::cout << "\n=== PCG: AnomalyGenerator basic generation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 6000, 1 };
+    auto site = atlas::pcg::AnomalyGenerator::generate(ctx, 0.7f);
+    assertTrue(!site.nodes.empty(), "Anomaly has nodes");
+    assertTrue(site.siteRadius > 0.0f, "Anomaly has positive radius");
+    assertTrue(site.totalValue > 0.0f, "Anomaly has positive value");
+}
+
+void testAnomalyDeterminism() {
+    std::cout << "\n=== PCG: AnomalyGenerator determinism ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 6100, 1 };
+    auto s1 = atlas::pcg::AnomalyGenerator::generate(ctx, 0.5f);
+    auto s2 = atlas::pcg::AnomalyGenerator::generate(ctx, 0.5f);
+    assertTrue(s1.type == s2.type, "Same site type");
+    assertTrue(s1.difficulty == s2.difficulty, "Same difficulty");
+    assertTrue(s1.nodes.size() == s2.nodes.size(), "Same node count");
+    bool allMatch = true;
+    for (size_t i = 0; i < s1.nodes.size(); ++i) {
+        if (s1.nodes[i].value != s2.nodes[i].value) { allMatch = false; break; }
+    }
+    assertTrue(allMatch, "Same seed → identical anomaly");
+}
+
+void testAnomalyTypeOverride() {
+    std::cout << "\n=== PCG: AnomalyGenerator type override ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 6200, 1 };
+    auto site = atlas::pcg::AnomalyGenerator::generate(
+        ctx, atlas::pcg::AnomalySiteType::CombatSite, 0.5f);
+    assertTrue(site.type == atlas::pcg::AnomalySiteType::CombatSite,
+               "Type override applied");
+    assertTrue(site.waveCount > 0, "Combat site has waves");
+}
+
+void testAnomalyNonCombatNoWaves() {
+    std::cout << "\n=== PCG: AnomalyGenerator non-combat no waves ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 6300, 1 };
+    auto site = atlas::pcg::AnomalyGenerator::generate(
+        ctx, atlas::pcg::AnomalySiteType::GasSite, 0.5f);
+    assertTrue(site.type == atlas::pcg::AnomalySiteType::GasSite, "Gas site type");
+    assertTrue(site.waveCount == 0, "Gas site has no waves");
+}
+
+void testAnomalyLowSecRequiresScan() {
+    std::cout << "\n=== PCG: AnomalyGenerator low-sec requires scan ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 6400, 1 };
+    auto site = atlas::pcg::AnomalyGenerator::generate(ctx, 0.1f);
+    assertTrue(site.requiresScan, "Low-sec anomaly requires scanning");
+}
+
+void testAnomalyValueCalculation() {
+    std::cout << "\n=== PCG: AnomalyGenerator value calculation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 6500, 1 };
+    auto site = atlas::pcg::AnomalyGenerator::generate(ctx, 0.5f);
+    float calculated = atlas::pcg::AnomalyGenerator::calculateTotalValue(site);
+    float manual = 0.0f;
+    for (const auto& n : site.nodes) manual += n.value;
+    assertTrue(std::abs(calculated - manual) < 0.01f, "calculateTotalValue matches sum");
+}
+
+// ==================== NPC Encounter Generator Tests ====================
+
+void testNPCEncounterGeneration() {
+    std::cout << "\n=== PCG: NPCEncounterGenerator basic generation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 7000, 1 };
+    auto enc = atlas::pcg::NPCEncounterGenerator::generate(ctx, 0.6f);
+    assertTrue(enc.valid, "Encounter is valid");
+    assertTrue(!enc.waves.empty(), "Encounter has waves");
+    assertTrue(enc.totalShips > 0, "Encounter has ships");
+    assertTrue(enc.estimatedBounty > 0.0f, "Encounter has bounty");
+}
+
+void testNPCEncounterDeterminism() {
+    std::cout << "\n=== PCG: NPCEncounterGenerator determinism ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 7100, 1 };
+    auto e1 = atlas::pcg::NPCEncounterGenerator::generate(ctx, 0.5f);
+    auto e2 = atlas::pcg::NPCEncounterGenerator::generate(ctx, 0.5f);
+    assertTrue(e1.faction == e2.faction, "Same faction");
+    assertTrue(e1.totalShips == e2.totalShips, "Same ship count");
+    assertTrue(e1.waves.size() == e2.waves.size(), "Same wave count");
+    bool allMatch = true;
+    for (size_t w = 0; w < e1.waves.size(); ++w) {
+        if (e1.waves[w].ships.size() != e2.waves[w].ships.size()) {
+            allMatch = false; break;
+        }
+    }
+    assertTrue(allMatch, "Same seed → identical encounter");
+}
+
+void testNPCEncounterExplicitWaves() {
+    std::cout << "\n=== PCG: NPCEncounterGenerator explicit waves ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 7200, 1 };
+    auto enc = atlas::pcg::NPCEncounterGenerator::generate(ctx, 3, 0.5f);
+    assertTrue(static_cast<int>(enc.waves.size()) == 3, "Explicit 3 waves");
+}
+
+void testNPCEncounterBountyCalculation() {
+    std::cout << "\n=== PCG: NPCEncounterGenerator bounty calculation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 7300, 1 };
+    auto enc = atlas::pcg::NPCEncounterGenerator::generate(ctx, 0.5f);
+    float calculated = atlas::pcg::NPCEncounterGenerator::calculateBounty(enc);
+    assertTrue(calculated > 0.0f, "Calculated bounty is positive");
+}
+
+void testNPCEncounterDifficultyScaling() {
+    std::cout << "\n=== PCG: NPCEncounterGenerator difficulty scaling ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 7400, 1 };
+    auto highSec = atlas::pcg::NPCEncounterGenerator::generate(ctx, 0.9f);
+    auto nullSec = atlas::pcg::NPCEncounterGenerator::generate(ctx, 0.1f);
+    assertTrue(nullSec.difficultyRating > highSec.difficultyRating,
+               "Null-sec harder than high-sec");
+}
+
+void testNPCEncounterAllValid() {
+    std::cout << "\n=== PCG: NPCEncounterGenerator all valid ===" << std::endl;
+    bool allValid = true;
+    for (uint64_t i = 1; i <= 50; ++i) {
+        atlas::pcg::PCGContext ctx{ i * 83, 1 };
+        auto enc = atlas::pcg::NPCEncounterGenerator::generate(ctx, 0.5f);
+        if (!enc.valid) { allValid = false; break; }
+    }
+    assertTrue(allValid, "All 50 encounters are valid");
+}
+
+void testNPCEncounterWaveEscalation() {
+    std::cout << "\n=== PCG: NPCEncounterGenerator wave escalation ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 7500, 1 };
+    auto enc = atlas::pcg::NPCEncounterGenerator::generate(ctx, 5, 0.3f);
+    // First wave delay should be 0.
+    assertTrue(enc.waves[0].triggerDelay == 0.0f, "First wave has no delay");
+    // Subsequent waves should have positive delay.
+    if (enc.waves.size() > 1) {
+        assertTrue(enc.waves[1].triggerDelay > 0.0f, "Second wave has delay");
+    }
+}
+
 // ==================== WarpHUDTravelMode Tests ====================
 
 void testWarpHUDTravelModeDefaults() {
@@ -15494,6 +15710,31 @@ int main() {
     testCollisionManagerBasic();
     testCollisionManagerAABBQuery();
     testCollisionManagerRemove();
+
+    // Asteroid Field Generator tests
+    testAsteroidFieldGeneration();
+    testAsteroidFieldDeterminism();
+    testAsteroidFieldExplicitCount();
+    testAsteroidFieldHighSecTypes();
+    testAsteroidFieldYieldCalculation();
+    testAsteroidFieldPositiveValues();
+
+    // Anomaly Generator tests
+    testAnomalyGeneration();
+    testAnomalyDeterminism();
+    testAnomalyTypeOverride();
+    testAnomalyNonCombatNoWaves();
+    testAnomalyLowSecRequiresScan();
+    testAnomalyValueCalculation();
+
+    // NPC Encounter Generator tests
+    testNPCEncounterGeneration();
+    testNPCEncounterDeterminism();
+    testNPCEncounterExplicitWaves();
+    testNPCEncounterBountyCalculation();
+    testNPCEncounterDifficultyScaling();
+    testNPCEncounterAllValid();
+    testNPCEncounterWaveEscalation();
 
     // WarpHUDTravelMode System tests
     testWarpHUDTravelModeDefaults();
