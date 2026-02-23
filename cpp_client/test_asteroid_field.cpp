@@ -113,7 +113,7 @@ int main() {
     
     // Test 1: Small semicircle field
     std::cout << "\n=== Test 1: Small Semicircle Field ===" << std::endl;
-    std::vector<int> counts1 = {50, 30, 15, 5}; // SMALL, MEDIUM, LARGE, HUGE
+    std::vector<int> counts1 = {50, 30, 15, 5}; // SMALL, MEDIUM, LARGE, ENORMOUS
     asteroidRenderer->generateField(
         glm::vec3(0.0f, 0.0f, 0.0f),
         10000.0f,

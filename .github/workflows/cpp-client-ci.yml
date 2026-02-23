@@ -133,7 +133,7 @@ jobs:
     
     - name: List build artifacts
       working-directory: cpp_client/build
-      run: dir /s /b bin
+      run: Get-ChildItem -Recurse bin
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
