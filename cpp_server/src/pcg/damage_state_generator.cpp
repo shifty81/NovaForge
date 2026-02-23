@@ -167,11 +167,11 @@ float DamageStateGenerator::computeStructuralIntegrity(
         DamageLevel level, int breaches, int missingModules) {
     float base = 1.0f;
     switch (level) {
-        case DamageLevel::Pristine: base = 1.0f;  break;
-        case DamageLevel::Light:    base = 0.90f;  break;
-        case DamageLevel::Moderate: base = 0.70f;  break;
-        case DamageLevel::Heavy:    base = 0.40f;  break;
-        case DamageLevel::Critical: base = 0.15f;  break;
+        case DamageLevel::Pristine: base = 1.0f; break;
+        case DamageLevel::Light:    base = 0.90f; break;
+        case DamageLevel::Moderate: base = 0.70f; break;
+        case DamageLevel::Heavy:    base = 0.40f; break;
+        case DamageLevel::Critical: base = 0.15f; break;
     }
 
     // Each breach and missing module further reduces integrity.
