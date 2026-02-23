@@ -52,6 +52,9 @@ void Camera::update(float deltaTime) {
 }
 
 glm::mat4 Camera::getViewMatrix() const {
+    if (m_viewMode == ViewMode::FPS || m_viewMode == ViewMode::COCKPIT) {
+        return glm::lookAt(m_fpsPosition, m_fpsPosition + m_fpsForward, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
     return glm::lookAt(m_position, m_target, m_up);
 }
 
@@ -65,6 +68,9 @@ void Camera::setTarget(const glm::vec3& target) {
 }
 
 glm::vec3 Camera::getPosition() const {
+    if (m_viewMode == ViewMode::FPS || m_viewMode == ViewMode::COCKPIT) {
+        return m_fpsPosition;
+    }
     return m_position;
 }
 
@@ -142,6 +148,58 @@ void Camera::updateVectors() {
     m_forward = glm::normalize(m_target - m_position);
     m_right = glm::normalize(glm::cross(m_forward, glm::vec3(0.0f, 1.0f, 0.0f)));
     m_up = glm::normalize(glm::cross(m_right, m_forward));
+}
+
+// ── View-mode helpers ──────────────────────────────────────────────
+
+void Camera::setViewMode(ViewMode mode) {
+    if (mode == m_viewMode) return;
+
+    // Kill orbit inertia on any mode switch
+    m_yawVelocity   = 0.0f;
+    m_pitchVelocity = 0.0f;
+
+    if (mode == ViewMode::FPS || mode == ViewMode::COCKPIT) {
+        // Seed FPS yaw/pitch from orbit values so the transition is seamless
+        m_fpsYaw   = m_yaw;
+        m_fpsPitch = m_pitch;
+        // FPS position defaults to the current orbit target (ship center)
+        m_fpsPosition = m_target;
+        // Recompute forward from yaw/pitch
+        float yr = glm::radians(m_fpsYaw);
+        float pr = glm::radians(m_fpsPitch);
+        m_fpsForward = glm::normalize(glm::vec3(
+            std::cos(pr) * std::sin(yr),
+            std::sin(pr),
+            std::cos(pr) * std::cos(yr)
+        ));
+    }
+
+    m_viewMode = mode;
+}
+
+void Camera::setFPSPosition(const glm::vec3& eyePos, const glm::vec3& lookDir) {
+    m_fpsPosition = eyePos;
+    if (glm::length(lookDir) > 0.001f) {
+        m_fpsForward = glm::normalize(lookDir);
+        // Derive yaw/pitch from lookDir for consistent mouse-look
+        m_fpsYaw   = glm::degrees(std::atan2(m_fpsForward.x, m_fpsForward.z));
+        m_fpsPitch = glm::degrees(std::asin(std::clamp(m_fpsForward.y, -1.0f, 1.0f)));
+    }
+}
+
+void Camera::rotateFPS(float deltaYaw, float deltaPitch) {
+    m_fpsYaw   += deltaYaw;
+    m_fpsPitch += deltaPitch;
+    m_fpsPitch  = std::clamp(m_fpsPitch, MIN_PITCH, MAX_PITCH);
+
+    float yr = glm::radians(m_fpsYaw);
+    float pr = glm::radians(m_fpsPitch);
+    m_fpsForward = glm::normalize(glm::vec3(
+        std::cos(pr) * std::sin(yr),
+        std::sin(pr),
+        std::cos(pr) * std::cos(yr)
+    ));
 }
 
 } // namespace atlas

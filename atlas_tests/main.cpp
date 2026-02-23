@@ -83,6 +83,17 @@ void test_fleet_panel_set_data();
 void test_existing_panel_toggles();
 void test_overview_tab_filter();
 
+// Game State & ViewMode tests
+void test_camera_default_view_mode();
+void test_camera_set_view_mode_orbit();
+void test_camera_set_view_mode_fps();
+void test_camera_set_view_mode_cockpit();
+void test_camera_fps_position_and_forward();
+void test_camera_fps_rotate();
+void test_camera_orbit_position_unchanged_in_fps();
+void test_camera_view_mode_kills_inertia();
+void test_camera_view_matrix_differs_by_mode();
+
 int main() {
     std::cout << "=== Atlas Engine Tests ===" << std::endl;
 
@@ -179,6 +190,18 @@ int main() {
     test_fleet_panel_set_data();
     test_existing_panel_toggles();
     test_overview_tab_filter();
+
+    // Game State & ViewMode
+    std::cout << "\n--- Game State & ViewMode ---" << std::endl;
+    test_camera_default_view_mode();
+    test_camera_set_view_mode_orbit();
+    test_camera_set_view_mode_fps();
+    test_camera_set_view_mode_cockpit();
+    test_camera_fps_position_and_forward();
+    test_camera_fps_rotate();
+    test_camera_orbit_position_unchanged_in_fps();
+    test_camera_view_mode_kills_inertia();
+    test_camera_view_matrix_differs_by_mode();
 
     std::cout << "\n=== All tests passed! ===" << std::endl;
     return 0;

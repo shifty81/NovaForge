@@ -33,6 +33,10 @@ struct EntityVisual {
     float maxArmor;
     float currentHull;
     float maxHull;
+
+    // Ship type and faction (for debug / shader tinting)
+    std::string shipType;
+    std::string faction;
     
     EntityVisual() 
         : position(0.0f)

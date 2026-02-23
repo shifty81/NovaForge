@@ -6,8 +6,22 @@
 namespace atlas {
 
 /**
+ * View mode for the camera system.
+ *
+ * ORBIT  – Default EVE-style third-person orbit (RTS-style) around the ship.
+ * FPS    – First-person view for walking inside ship interiors / stations.
+ * COCKPIT – First-person cockpit view with flight controls visible.
+ */
+enum class ViewMode {
+    ORBIT,
+    FPS,
+    COCKPIT
+};
+
+/**
  * Camera class for 3D view
- * Implements EVE-style orbit camera with smooth zoom and orbit inertia
+ * Implements EVE-style orbit camera with smooth zoom and orbit inertia,
+ * plus FPS and cockpit first-person modes for interior navigation.
  */
 class Camera {
 public:
@@ -73,6 +87,37 @@ public:
     float getYaw()   const { return m_yaw; }
     float getPitch() const { return m_pitch; }
 
+    // ── View-mode API ──────────────────────────────────────────────
+
+    /**
+     * Get the current view mode.
+     */
+    ViewMode getViewMode() const { return m_viewMode; }
+
+    /**
+     * Set the view mode.
+     * Resets inertia and snaps camera parameters to sensible defaults
+     * for the new mode.
+     */
+    void setViewMode(ViewMode mode);
+
+    /**
+     * Set FPS / cockpit eye position and look direction.
+     * Only used when view mode is FPS or COCKPIT.
+     */
+    void setFPSPosition(const glm::vec3& eyePos, const glm::vec3& lookDir);
+
+    /**
+     * FPS mouse-look: rotate the first-person look direction.
+     * Only effective in FPS or COCKPIT mode.
+     */
+    void rotateFPS(float deltaYaw, float deltaPitch);
+
+    /**
+     * Get FPS forward direction (useful for movement).
+     */
+    glm::vec3 getFPSForward() const { return m_fpsForward; }
+
 private:
     void updateVectors();
 
@@ -98,6 +143,15 @@ private:
     float m_targetDistance;     // desired zoom distance
     float m_yawVelocity  = 0.0f;  // angular velocity for inertia
     float m_pitchVelocity = 0.0f;
+
+    // Current view mode
+    ViewMode m_viewMode = ViewMode::ORBIT;
+
+    // FPS / Cockpit state
+    glm::vec3 m_fpsPosition{0.0f};
+    glm::vec3 m_fpsForward{0.0f, 0.0f, -1.0f};
+    float m_fpsYaw   = 0.0f;
+    float m_fpsPitch = 0.0f;
 
     // Limits
     static constexpr float MIN_DISTANCE = 10.0f;

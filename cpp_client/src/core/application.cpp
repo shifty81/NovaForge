@@ -471,6 +471,14 @@ void Application::setupUICallbacks() {
     });
     std::cout << "  - Selected item panel callbacks wired" << std::endl;
 
+    // === Setup Station Panel Callbacks ===
+    m_atlasHUD->setStationDockCb([this]() { requestDock(); });
+    m_atlasHUD->setStationUndockCb([this]() { requestUndock(); });
+    m_atlasHUD->setStationRepairCb([this]() {
+        std::cout << "[Station] Repair requested" << std::endl;
+    });
+    std::cout << "  - Station panel callbacks wired" << std::endl;
+
     // === Setup Overview Interaction Callbacks ===
     m_atlasHUD->setOverviewSelectCb([this](const std::string& entityId) {
         targetEntity(entityId, false);
@@ -537,7 +545,20 @@ void Application::update(float deltaTime) {
     m_gameClient->update(deltaTime);
     
     // Update local movement (PVE mode — EVE-style movement commands)
-    updateLocalMovement(deltaTime);
+    // Only process flight movement when in space or docking
+    if (m_gameState == GameState::InSpace) {
+        updateLocalMovement(deltaTime);
+    }
+
+    // Docking animation timer
+    if (m_gameState == GameState::Docking) {
+        m_dockingTimer -= deltaTime;
+        if (m_dockingTimer <= 0.0f) {
+            m_dockingTimer = 0.0f;
+            requestStateTransition(GameState::Docked);
+            std::cout << "[Docking] Docking complete — entered hangar" << std::endl;
+        }
+    }
     
     // Update solar system scene (engine trail, warp visual state)
     if (m_solarSystem && m_shipPhysics) {
@@ -941,6 +962,9 @@ void Application::handleKeyInput(int key, int action, int mods) {
         // F = Engage/Recall drones (EVE standard)
         std::cout << "[Controls] Drone command: engage/recall" << std::endl;
         // TODO: Send drone engage/recall command to server
+    } else if (key == GLFW_KEY_V) {
+        // V = Toggle view mode (Orbit ↔ Cockpit ↔ FPS depending on game state)
+        toggleViewMode();
     }
     
     // Panel toggles (Atlas HUD)
@@ -1065,7 +1089,15 @@ void Application::handleMouseButton(int button, int action, int mods, double x, 
             } else if (m_dockingModeActive) {
                 // D+Click for docking/jump through
                 std::cout << "[Movement] Dock/Jump through " << pickedEntityId << std::endl;
-                // TODO: Send dock/jump command to server
+                // Check if it's a stargate → jump, otherwise try to dock
+                if (m_solarSystem) {
+                    const auto* cel = m_solarSystem->findCelestial(pickedEntityId);
+                    if (cel && cel->type == atlas::Celestial::Type::STARGATE) {
+                        commandJump(pickedEntityId);
+                    } else if (cel && cel->type == atlas::Celestial::Type::STATION) {
+                        requestDock();
+                    }
+                }
                 m_dockingModeActive = false;
                 m_activeModeText.clear();
             } else if (m_warpModeActive) {
@@ -1139,11 +1171,18 @@ void Application::handleMouseMove(double x, double y, double deltaX, double delt
     }
     
     // EVE-style camera: Right-click drag to orbit camera around ship
+    // In FPS/Cockpit mode, right-drag does mouse-look instead
     if (m_rightMouseDown) {
         if (!m_atlasConsumedMouse) {
             float sensitivity = 0.3f;
-            m_camera->rotate(static_cast<float>(deltaX) * sensitivity,
-                           static_cast<float>(-deltaY) * sensitivity);
+            if (m_camera->getViewMode() == atlas::ViewMode::FPS ||
+                m_camera->getViewMode() == atlas::ViewMode::COCKPIT) {
+                m_camera->rotateFPS(static_cast<float>(deltaX) * sensitivity,
+                                    static_cast<float>(-deltaY) * sensitivity);
+            } else {
+                m_camera->rotate(static_cast<float>(deltaX) * sensitivity,
+                               static_cast<float>(-deltaY) * sensitivity);
+            }
         }
     }
 }
@@ -1663,6 +1702,223 @@ void Application::updateLocalMovement(float deltaTime) {
     Health currentHealth = playerEntity->getHealth();
     m_gameClient->getEntityManager().updateEntityState(
         m_localPlayerId, playerPos, m_playerVelocity, rotation, currentHealth);
+}
+
+// ========================================================================
+// Game-State Management
+// ========================================================================
+
+const char* Application::gameStateName(GameState state) {
+    switch (state) {
+        case GameState::InSpace:          return "InSpace";
+        case GameState::Docking:          return "Docking";
+        case GameState::Docked:           return "Docked";
+        case GameState::StationInterior:  return "StationInterior";
+        case GameState::ShipInterior:     return "ShipInterior";
+        case GameState::Cockpit:          return "Cockpit";
+    }
+    return "Unknown";
+}
+
+void Application::requestStateTransition(GameState newState) {
+    if (newState == m_gameState) return;
+
+    std::cout << "[GameState] " << gameStateName(m_gameState)
+              << " -> " << gameStateName(newState) << std::endl;
+
+    // Validate allowed transitions
+    bool valid = false;
+    switch (m_gameState) {
+        case GameState::InSpace:
+            valid = (newState == GameState::Docking || newState == GameState::Cockpit);
+            break;
+        case GameState::Docking:
+            valid = (newState == GameState::Docked || newState == GameState::InSpace);
+            break;
+        case GameState::Docked:
+            valid = (newState == GameState::InSpace ||
+                     newState == GameState::StationInterior ||
+                     newState == GameState::ShipInterior ||
+                     newState == GameState::Cockpit);
+            break;
+        case GameState::StationInterior:
+            valid = (newState == GameState::Docked || newState == GameState::ShipInterior);
+            break;
+        case GameState::ShipInterior:
+            valid = (newState == GameState::Docked ||
+                     newState == GameState::StationInterior ||
+                     newState == GameState::Cockpit);
+            break;
+        case GameState::Cockpit:
+            valid = (newState == GameState::InSpace ||
+                     newState == GameState::ShipInterior ||
+                     newState == GameState::Docked);
+            break;
+    }
+
+    if (!valid) {
+        std::cout << "[GameState] Invalid transition — ignored" << std::endl;
+        return;
+    }
+
+    m_gameState = newState;
+
+    // Apply camera mode appropriate for the new state
+    switch (m_gameState) {
+        case GameState::InSpace:
+            m_camera->setViewMode(atlas::ViewMode::ORBIT);
+            m_activeModeText.clear();
+            break;
+        case GameState::Docking:
+            m_camera->setViewMode(atlas::ViewMode::ORBIT);
+            m_dockingTimer = DOCKING_ANIM_DURATION;
+            m_activeModeText = "DOCKING";
+            break;
+        case GameState::Docked:
+            m_camera->setViewMode(atlas::ViewMode::ORBIT);
+            m_activeModeText = "DOCKED";
+            break;
+        case GameState::StationInterior:
+            m_camera->setViewMode(atlas::ViewMode::FPS);
+            m_activeModeText = "STATION INTERIOR";
+            break;
+        case GameState::ShipInterior:
+            m_camera->setViewMode(atlas::ViewMode::FPS);
+            m_activeModeText = "SHIP INTERIOR";
+            break;
+        case GameState::Cockpit:
+            m_camera->setViewMode(atlas::ViewMode::COCKPIT);
+            m_activeModeText = "COCKPIT";
+            break;
+    }
+}
+
+void Application::toggleViewMode() {
+    switch (m_gameState) {
+        case GameState::InSpace:
+            // ORBIT ↔ COCKPIT
+            if (m_camera->getViewMode() == atlas::ViewMode::ORBIT) {
+                requestStateTransition(GameState::Cockpit);
+            } else {
+                requestStateTransition(GameState::InSpace);
+            }
+            break;
+        case GameState::Docked:
+        case GameState::ShipInterior:
+            // FPS ↔ COCKPIT
+            if (m_camera->getViewMode() == atlas::ViewMode::COCKPIT) {
+                requestStateTransition(GameState::ShipInterior);
+            } else {
+                requestStateTransition(GameState::Cockpit);
+            }
+            break;
+        case GameState::StationInterior:
+            // Must board ship first — enter ship interior, then cockpit
+            std::cout << "[ViewMode] Board your ship first to enter the cockpit" << std::endl;
+            break;
+        case GameState::Cockpit:
+            // Return to the previous logical state
+            if (m_dockedStationId.empty()) {
+                requestStateTransition(GameState::InSpace);
+            } else {
+                requestStateTransition(GameState::ShipInterior);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void Application::requestDock() {
+    if (m_gameState != GameState::InSpace) {
+        std::cout << "[Docking] Can only dock when in space" << std::endl;
+        return;
+    }
+
+    if (!m_solarSystem) return;
+
+    auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
+    if (!playerEntity) return;
+
+    glm::vec3 playerPos = playerEntity->getPosition();
+
+    // Find the nearest station within docking range
+    for (const auto& c : m_solarSystem->getCelestials()) {
+        if (c.type != atlas::Celestial::Type::STATION) continue;
+        if (m_solarSystem->isInDockingRange(playerPos, c.id)) {
+            m_dockedStationId = c.id;
+            commandStopShip();
+            requestStateTransition(GameState::Docking);
+            std::cout << "[Docking] Docking at " << c.name << std::endl;
+            return;
+        }
+    }
+
+    std::cout << "[Docking] No station within docking range" << std::endl;
+}
+
+void Application::requestUndock() {
+    if (m_gameState != GameState::Docked &&
+        m_gameState != GameState::StationInterior &&
+        m_gameState != GameState::ShipInterior &&
+        m_gameState != GameState::Cockpit) {
+        std::cout << "[Undock] Not docked" << std::endl;
+        return;
+    }
+
+    std::cout << "[Undock] Undocking from " << m_dockedStationId << std::endl;
+
+    // Place ship outside station
+    if (m_solarSystem) {
+        const auto* station = m_solarSystem->findCelestial(m_dockedStationId);
+        if (station) {
+            glm::vec3 undockPos = station->position + glm::vec3(station->radius + 500.0f, 0.0f, 0.0f);
+            auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
+            if (playerEntity) {
+                Health currentHealth = playerEntity->getHealth();
+                m_gameClient->getEntityManager().updateEntityState(
+                    m_localPlayerId, undockPos, glm::vec3(0.0f), 0.0f, currentHealth);
+            }
+        }
+    }
+
+    m_dockedStationId.clear();
+    m_playerVelocity = glm::vec3(0.0f);
+    m_playerSpeed = 0.0f;
+    m_currentMoveCommand = MoveCommand::None;
+    requestStateTransition(GameState::InSpace);
+}
+
+void Application::enterStationInterior() {
+    if (m_gameState == GameState::Docked) {
+        requestStateTransition(GameState::StationInterior);
+        // Place camera at an interior spawn point
+        m_camera->setFPSPosition(glm::vec3(0.0f, 1.8f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    }
+}
+
+void Application::enterShipInterior() {
+    if (m_gameState == GameState::Docked || m_gameState == GameState::StationInterior) {
+        requestStateTransition(GameState::ShipInterior);
+        // Place camera inside the ship bridge area
+        m_camera->setFPSPosition(glm::vec3(0.0f, 1.6f, 2.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    }
+}
+
+void Application::enterCockpit() {
+    if (m_gameState == GameState::ShipInterior || m_gameState == GameState::Docked) {
+        requestStateTransition(GameState::Cockpit);
+        // Cockpit camera: slightly elevated, looking forward
+        m_camera->setFPSPosition(glm::vec3(0.0f, 1.4f, -1.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+    }
+}
+
+void Application::returnToHangar() {
+    if (m_gameState == GameState::StationInterior ||
+        m_gameState == GameState::ShipInterior ||
+        m_gameState == GameState::Cockpit) {
+        requestStateTransition(GameState::Docked);
+    }
 }
 
 } // namespace atlas

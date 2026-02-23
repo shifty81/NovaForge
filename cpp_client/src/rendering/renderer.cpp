@@ -308,8 +308,9 @@ bool Renderer::createEntityVisual(const std::shared_ptr<Entity>& entity) {
     // Create entity visual
     EntityVisual visual;
     
-    // Create ship model
-    visual.model = Model::createShipModel(entity->getShipType(), entity->getFaction());
+    // Create ship model using the modern modular generation pipeline
+    // which applies faction-specific designs, part assembly, and visual differentiation
+    visual.model = Model::createShipModelWithRacialDesign(entity->getShipType(), entity->getFaction());
     if (!visual.model) {
         std::cerr << "Failed to create ship model for " << entity->getShipType() << std::endl;
         return false;
@@ -319,6 +320,8 @@ bool Renderer::createEntityVisual(const std::shared_ptr<Entity>& entity) {
     visual.position = entity->getPosition();
     visual.rotation = glm::vec3(0.0f, entity->getRotation(), 0.0f);
     visual.scale = 1.0f;
+    visual.shipType = entity->getShipType();
+    visual.faction = entity->getFaction();
     
     // Set health data
     const auto& health = entity->getHealth();

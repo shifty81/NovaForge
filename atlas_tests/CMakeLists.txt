@@ -11,11 +11,13 @@ add_executable(AtlasTests
     test_engine.cpp
     test_console.cpp
     test_hud_panels.cpp
+    test_game_state.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_hud.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/rendering/camera.cpp
 )
 
 target_compile_definitions(AtlasTests PRIVATE ATLAS_HEADLESS=1)

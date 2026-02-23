@@ -43,9 +43,10 @@ namespace atlas {
  * - Rendering (3D graphics, UI)
  * - Input handling (keyboard, mouse)
  * - Networking (client-server or embedded server)
- * - Camera control (EVE-style right-click camera)
+ * - Camera control (EVE-style right-click camera, FPS, cockpit)
  * - Entity management and targeting
  * - Session management (singleplayer/multiplayer)
+ * - Game state management (space flight, docking, interiors)
  * 
  * Lifecycle:
  * 1. Constructor: Create window and systems
@@ -56,9 +57,33 @@ namespace atlas {
  * Supports two modes:
  * - **Local Mode**: Single-player with demo NPCs for testing
  * - **Multiplayer Mode**: Connect to dedicated server or host embedded server
+ *
+ * Game states:
+ * - **InSpace**: Flying in a solar system (orbit camera)
+ * - **Docking**: Playing the docking approach animation
+ * - **Docked**: Inside a station hangar (orbit camera on hangar)
+ * - **StationInterior**: Walking inside the station (FPS camera)
+ * - **ShipInterior**: Walking inside the ship while docked (FPS camera)
+ * - **Cockpit**: Seated in the ship cockpit (cockpit camera)
+ *
+ * View mode transitions (V key):
+ * - InSpace: Orbit ↔ Cockpit
+ * - Docked/ShipInterior/StationInterior: FPS ↔ Cockpit (if in ship)
  */
 class Application {
 public:
+    /**
+     * High-level game state describing where the player currently is.
+     */
+    enum class GameState {
+        InSpace,          // Flying in a solar system
+        Docking,          // Docking approach animation
+        Docked,           // Inside station hangar view
+        StationInterior,  // Walking inside the station (FPS)
+        ShipInterior,     // Walking inside the ship (FPS)
+        Cockpit           // Seated in the ship cockpit
+    };
+
     Application(const std::string& title, int width, int height);
     ~Application();
 
@@ -139,6 +164,62 @@ public:
      * Activate module by slot (F1-F8)
      */
     void activateModule(int slotNumber);
+
+    /**
+     * Get the current game state.
+     */
+    GameState getGameState() const { return m_gameState; }
+
+    /**
+     * Get the name of the current game state (for display / logging).
+     */
+    static const char* gameStateName(GameState state);
+
+    /**
+     * Request a game-state transition (e.g. InSpace → Docking → Docked).
+     * Invalid transitions are logged and ignored.
+     */
+    void requestStateTransition(GameState newState);
+
+    /**
+     * Toggle the camera view mode (V key).
+     *
+     * Behaviour depends on current GameState:
+     * - InSpace:  ORBIT ↔ COCKPIT
+     * - Docked/ShipInterior: FPS ↔ COCKPIT
+     * - StationInterior: stays FPS (must board ship first)
+     */
+    void toggleViewMode();
+
+    /**
+     * Attempt to dock at the nearest station (within docking range).
+     */
+    void requestDock();
+
+    /**
+     * Undock from the current station and return to space.
+     */
+    void requestUndock();
+
+    /**
+     * Transition from docked state to walking inside the station (FPS).
+     */
+    void enterStationInterior();
+
+    /**
+     * Transition from station/docked to walking inside the ship (FPS).
+     */
+    void enterShipInterior();
+
+    /**
+     * Transition from ship interior to the cockpit view.
+     */
+    void enterCockpit();
+
+    /**
+     * Return to the hangar (orbit) view from an interior view.
+     */
+    void returnToHangar();
 
 private:
     /**
@@ -303,6 +384,16 @@ private:
     // Local/demo mode
     bool m_localPlayerSpawned = false;
     std::string m_localPlayerId = "player_local";
+
+    // ── Game-state tracking ────────────────────────────────────────
+    GameState m_gameState = GameState::InSpace;
+
+    // Station the player is currently docked at (empty when in space)
+    std::string m_dockedStationId;
+
+    // Docking animation timer (seconds remaining)
+    float m_dockingTimer = 0.0f;
+    static constexpr float DOCKING_ANIM_DURATION = 3.0f;
 };
 
 } // namespace atlas
