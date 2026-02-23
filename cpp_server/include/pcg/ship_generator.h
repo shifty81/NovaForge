@@ -10,6 +10,8 @@
 namespace atlas {
 namespace pcg {
 
+class PCGTraceRecorder;  // forward declaration
+
 // ── Hull classes ────────────────────────────────────────────────────
 enum class HullClass : uint32_t {
     Frigate,
@@ -65,7 +67,15 @@ public:
     /** Generate with an explicit hull class override. */
     static GeneratedShip generate(const PCGContext& ctx, HullClass hull);
 
+    /** Set a trace recorder for debug visualization (nullable). */
+    static void setTraceRecorder(PCGTraceRecorder* recorder);
+
+    /** Human-readable hull class name. */
+    static std::string hullClassName(HullClass hull);
+
 private:
+    static PCGTraceRecorder* traceRecorder_;
+
     static HullClass   selectHull(DeterministicRNG& rng);
     static void        deriveStats(DeterministicRNG& rng, GeneratedShip& ship);
     static void        attachEngines(DeterministicRNG& rng, GeneratedShip& ship);

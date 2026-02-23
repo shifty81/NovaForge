@@ -1,4 +1,5 @@
 #include "pcg/ship_generator.h"
+#include "pcg/pcg_trace.h"
 
 namespace atlas {
 namespace pcg {
@@ -29,6 +30,26 @@ static const HullTemplate TEMPLATES[] = {
     { 800'000, 1'500'000, 60000, 120000, 700, 1000, 50000, 90000, 0, 2, 2, 6, WeaponSize::Large },
 };
 
+// ── Static members ─────────────────────────────────────────────────
+
+PCGTraceRecorder* ShipGenerator::traceRecorder_ = nullptr;
+
+void ShipGenerator::setTraceRecorder(PCGTraceRecorder* recorder) {
+    traceRecorder_ = recorder;
+}
+
+std::string ShipGenerator::hullClassName(HullClass hull) {
+    switch (hull) {
+        case HullClass::Frigate:       return "Frigate";
+        case HullClass::Destroyer:     return "Destroyer";
+        case HullClass::Cruiser:       return "Cruiser";
+        case HullClass::Battlecruiser: return "Battlecruiser";
+        case HullClass::Battleship:    return "Battleship";
+        case HullClass::Capital:       return "Capital";
+    }
+    return "Unknown";
+}
+
 // ── Public API ─────────────────────────────────────────────────────
 
 GeneratedShip ShipGenerator::generate(const PCGContext& ctx) {
@@ -40,6 +61,22 @@ GeneratedShip ShipGenerator::generate(const PCGContext& ctx) {
     attachEngines(rng, ship);
     attachWeapons(rng, ship);
     ship.valid = validateConstraints(ship);
+
+    // Emit trace for debug visualization.
+    if (traceRecorder_) {
+        PCGTraceNode node{};
+        node.seed     = ctx.seed;
+        node.domain   = PCGDomain::Ship;
+        node.objectId = ctx.seed;
+        node.label    = "Ship";
+        node.valid    = ship.valid;
+        traceRecorder_->pushNode(node);
+        traceRecorder_->annotate("Hull: " + hullClassName(ship.hullClass));
+        traceRecorder_->annotate("Engines: " + std::to_string(ship.engineCount));
+        traceRecorder_->annotate("Turrets: " + std::to_string(ship.turretSlots));
+        traceRecorder_->popNode();
+    }
+
     return ship;
 }
 

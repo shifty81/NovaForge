@@ -130,6 +130,12 @@ set(SERVER_SOURCES
     src/pcg/asteroid_field_generator.cpp
     src/pcg/anomaly_generator.cpp
     src/pcg/npc_encounter_generator.cpp
+    src/pcg/pcg_trace.cpp
+    src/pcg/constraint_solver.cpp
+    src/pcg/weapon_socket.cpp
+    src/pcg/pcg_verify.cpp
+    src/pcg/interior_budget.cpp
+    src/pcg/interior_generator.cpp
 )
 
 set(SERVER_HEADERS
@@ -234,6 +240,13 @@ set(SERVER_HEADERS
     include/pcg/asteroid_field_generator.h
     include/pcg/anomaly_generator.h
     include/pcg/npc_encounter_generator.h
+    include/pcg/pcg_trace.h
+    include/pcg/constraint_solver.h
+    include/pcg/weapon_socket.h
+    include/pcg/pcg_version.h
+    include/pcg/pcg_verify.h
+    include/pcg/interior_budget.h
+    include/pcg/interior_generator.h
 )
 
 # Steam SDK configuration
@@ -406,6 +419,12 @@ if(BUILD_TESTS)
         src/pcg/asteroid_field_generator.cpp
         src/pcg/anomaly_generator.cpp
         src/pcg/npc_encounter_generator.cpp
+        src/pcg/pcg_trace.cpp
+        src/pcg/constraint_solver.cpp
+        src/pcg/weapon_socket.cpp
+        src/pcg/pcg_verify.cpp
+        src/pcg/interior_budget.cpp
+        src/pcg/interior_generator.cpp
     )
 
     add_executable(test_systems

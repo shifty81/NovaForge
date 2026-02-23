@@ -12,11 +12,27 @@ Built with **C++ / OpenGL** and the custom **Atlas UI** framework — an immedia
 ## ✨ At a Glance
 
 <p align="center">
-  <img src="docs/images/ui-layout.svg" alt="Atlas UI — Cockpit Interface Layout" width="900"/>
+  <img src="docs/images/concept-style-guide.png" alt="EVEOFFLINE — Procedural 3D Style Guide" width="900"/>
 </p>
 
 <p align="center">
-  <img src="docs/images/features.svg" alt="Atlas Features" width="900"/>
+  <img src="docs/images/concept-modular-ships.png" alt="Modular Ships & Interiors" width="900"/>
+</p>
+
+<p align="center">
+  <img src="docs/images/concept-interiors.png" alt="Ship Interiors & Room Generation" width="900"/>
+</p>
+
+<p align="center">
+  <img src="docs/images/concept-factions.png" alt="Faction Designs & Paint Jobs" width="900"/>
+</p>
+
+<p align="center">
+  <img src="docs/images/concept-fleet-combat.png" alt="Fleet Combat & Formations" width="900"/>
+</p>
+
+<p align="center">
+  <img src="docs/images/concept-environments.png" alt="Environments & Asteroids" width="900"/>
 </p>
 
 ---
