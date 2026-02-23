@@ -399,6 +399,18 @@ void Application::setupUICallbacks() {
     m_contextMenu->SetJumpCallback([this](const std::string& entityId) {
         commandJump(entityId);
     });
+
+    m_contextMenu->SetAlignToCallback([this](const std::string& entityId) {
+        commandAlignTo(entityId);
+    });
+
+    m_contextMenu->SetNavigateToCallback([this](float x, float y, float z) {
+        std::cout << "[Navigate] Align to position (" << x << ", " << y << ", " << z << ")" << std::endl;
+    });
+
+    m_contextMenu->SetBookmarkCallback([this](float x, float y, float z) {
+        std::cout << "[Bookmark] Saved location (" << x << ", " << y << ", " << z << ")" << std::endl;
+    });
     
     std::cout << "  - Context menu callbacks wired" << std::endl;
     
@@ -700,6 +712,7 @@ void Application::render() {
                 for (const auto& c : m_solarSystem->getCelestials()) {
                     if (c.type == atlas::Celestial::Type::SUN) continue;
                     atlas::OverviewEntry entry;
+                    entry.entityId = c.id;
                     entry.name = c.name;
                     entry.distance = glm::distance(playerPos, c.position);
                     entry.selected = false;

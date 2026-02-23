@@ -66,6 +66,7 @@ using ShowInfoCallback = std::function<void(const std::string& entity_id)>;
 using NavigateToCallback = std::function<void(float x, float y, float z)>;
 using BookmarkCallback = std::function<void(float x, float y, float z)>;
 using JumpCallback = std::function<void(const std::string& entity_id)>;
+using AlignToCallback = std::function<void(const std::string& entity_id)>;
 
 // Context menu type
 enum class ContextMenuType {
@@ -143,6 +144,7 @@ public:
     void SetNavigateToCallback(NavigateToCallback callback) { m_onNavigateTo = callback; }
     void SetBookmarkCallback(BookmarkCallback callback) { m_onBookmark = callback; }
     void SetJumpCallback(JumpCallback callback) { m_onJump = callback; }
+    void SetAlignToCallback(AlignToCallback callback) { m_onAlignTo = callback; }
 
 private:
     // Render submenu for orbit distances
@@ -177,6 +179,7 @@ private:
     NavigateToCallback m_onNavigateTo;
     BookmarkCallback m_onBookmark;
     JumpCallback m_onJump;
+    AlignToCallback m_onAlignTo;
 };
 
 } // namespace UI
