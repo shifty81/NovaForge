@@ -29,6 +29,8 @@ enum class PCGDomain : uint32_t {
     Rover       = 13,
     Anomaly     = 14,
     Encounter   = 15,
+    SpineHull   = 16,
+    Terrain     = 17,
 };
 
 /**

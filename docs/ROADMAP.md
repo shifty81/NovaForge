@@ -1092,24 +1092,24 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 ---
 
-### 📋 Phase 12: Procedural Ship Generation Overhaul (Planned)
+### 📋 Phase 12: Procedural Ship Generation Overhaul (In Progress)
 **Timeline**: 2027  
 **Priority**: High  
 **Goal**: Ships that read in silhouette — spine-based hull grammar replacing blob-assembly
 
 #### Hull Grammar System
-- [ ] **Spine selection** — Needle, Wedge, Hammer, Slab, Ring — defines ship purpose
-- [ ] **Functional zone ordering** — Command/bridge → mid-hull → engine block (always in order, parameterized)
-- [ ] **Greebles last** — Antennas, armor plates, cargo pods added only after silhouette is clean
-- [ ] **Bilateral symmetry enforcement**
-- [ ] **Aspect ratio clamping** and hull elongation (1.5×)
-- [ ] **Clear engine cluster** generation for every hull type
+- [x] **Spine selection** — Needle, Wedge, Hammer, Slab, Ring — defines ship purpose — SpineHullGenerator with hull-class-biased archetype selection (8 tests)
+- [x] **Functional zone ordering** — Command/bridge → mid-hull → engine block (always in order, parameterized) — HullZone with length fractions, Command→MidHull→Engineering (3 tests)
+- [x] **Greebles last** — Antennas, armor plates, cargo pods added only after silhouette is clean — zone greeble counts computed last, cosmetic only
+- [x] **Bilateral symmetry enforcement** — Always true for ships, enforced in SpineHullGenerator
+- [x] **Aspect ratio clamping** and hull elongation (1.5×) — Clamped to [1.5, 15] range
+- [x] **Clear engine cluster** generation for every hull type — Frigate 1-2, Capital 6-12 engines
 
 #### Faction Shape Language
-- [ ] **Solari** — Golden, elegant spires, flowing curves
-- [ ] **Veyren** — Angular, utilitarian blocks, sharp edges
-- [ ] **Aurelian** — Sleek, organic forms, swept shapes
-- [ ] **Keldari** — Rugged, industrial bulk, visible internals
+- [x] **Solari** — Golden, elegant spires, flowing curves — Narrower mid-width, elongated, extra greeble for ornate spires
+- [x] **Veyren** — Angular, utilitarian blocks, sharp edges — Wider hull, fewer cosmetic details
+- [x] **Aurelian** — Sleek, organic forms, swept shapes — Narrowed forward/aft, smooth proportions
+- [x] **Keldari** — Rugged, industrial bulk, visible internals — Wider mid/aft, extra greeble for exposed internals
 
 #### Damage & Visual States
 - [ ] **Damage decals** — Missing modules, hull breaches visible on damaged ships
@@ -1182,7 +1182,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **8 planet types** — Rocky, Gas, Ice, Lava, Ocean, Desert, Forest, Barren — PlanetGenerator with gravity, temperature, atmosphere, terraformability (4 tests)
 - [x] **Planet resources** — Procedural resource distribution with scan-to-reveal hidden deposits — PlanetResource with abundance, depth, requires_scan
 - [x] **Surface & underground POIs** — Mining outposts, ruins, alien caves — surface_poi_count, underground_poi_count
-- [ ] **Planet terrain generation** — Noise-based surface with mineable regions
+- [x] **Planet terrain generation** — Noise-based surface with mineable regions — TerrainGenerator with 8 biomes, heightmap grid, resource deposits, landing zone detection (7 tests)
 - [ ] **Space → planet transition** — Seamless zoom from orbit to surface
 - [ ] **Terraforming** — Long-term planet modification
 
@@ -1213,7 +1213,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Turret Generation
 - [x] **Procedural turrets** — 4 sizes × 5 types with faction style modifiers — TurretGenerator with range, tracking, damage, barrel count (3 tests)
 - [ ] **Turret AI + firing arcs** — Automated targeting within arc constraints
-- [ ] **Ship turret placement** — Deterministic socket-based mounting per hull
+- [x] **Ship turret placement** — Deterministic socket-based mounting per hull — TurretPlacementSystem with spine distribution, arc constraints, faction rules, coverage scoring, overlap validation (6 tests)
 
 #### Enhanced Market
 - [x] **Buy/sell orders** — Regional market with per-item orders and expiry — MarketOrder component + MarketOrderSystem (5 tests)
