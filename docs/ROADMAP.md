@@ -902,8 +902,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Audio generation** — AudioGenerator::generate_warp_drone (meditative drone with mass-based pitch), generate_warp_entry (rising acceleration), generate_warp_exit (falling deceleration)
 - [x] **Audio event system** — WarpEffectRenderer fires WarpAudioEvent (ENTRY_START, CRUISE_START/STOP, EXIT_START/COMPLETE) on phase transitions
 - [x] **Breathing sync** — getBreathingIntensity() provides visual-to-audio modulation sync
-- [ ] **Optional meditation layer** (sustained pads, no melody, fade in after 15–20s of warp)
-- [ ] **Audio progression curve** — Tension → stabilize → bloom → full meditative state
+- [x] **Optional meditation layer** (sustained pads, no melody, fade in after 15–20s of warp) — WarpMeditationLayer component + WarpMeditationSystem with activation_delay, fade_in/out, and volume ramping (5 tests)
+- [x] **Audio progression curve** — Tension → stabilize → bloom → full meditative state — WarpAudioProgression component with 4-phase state machine and computeOverallProgression() (3 tests)
 
 #### Warp Anomalies & Mid-Warp Events
 - [x] **Visual-only phenomena** (~1 per 3–5 warps) — tunnel eddies, color shifts, phantom star clusters — WarpAnomalySystem with 4 visual templates
@@ -918,8 +918,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 #### Accessibility & Comfort
 - [x] **Motion intensity slider** (0%–100% distortion control) — WarpProfile comfort_scale, accessibility scaling in WarpCinematicSystem
-- [ ] **Bass intensity slider** (maps to engine core volume)
-- [ ] **Peripheral blur scalar**
+- [x] **Bass intensity slider** (maps to engine core volume) — WarpAccessibility::bass_intensity field (0.0–1.0 scale)
+- [x] **Peripheral blur scalar** — WarpAccessibility::blur_intensity field (0.0–1.0 scale)
 - [x] **Tunnel geometry toggle** (off = star streaks only, on = full warp skin) — WarpAccessibility tunnel_geometry_enabled flag, WarpCinematicSystem zeroes tunnel_skin when disabled (2 tests)
 - [x] **Auto-comfort rules** — Reduce oscillation on FPS drop, clamp distortion on ultrawide — WarpAutoComfort component + WarpAutoComfortSystem with FPS-based ramp, hysteresis band, and ultrawide clamp (9 tests)
 
@@ -964,12 +964,12 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Fleet Dreams & Rumors
 - [x] **Rumor system** — Non-authoritative truths from warp anomalies, rare visuals, near-miss events — RumorLog component with belief_strength tracking
 - [x] **Rumor propagation** — Spread through chatter, reinforced if seen again, fade if unconfirmed — FleetChatterSystem::propagateRumor() with belief halving for second-hand, reinforcement on re-hearing
-- [ ] **Rumor-to-questline graduation** — Repeated rumors surface as optional investigations or encounter chains
+- [x] **Rumor-to-questline graduation** — Repeated rumors surface as optional investigations or encounter chains — RumorQuestline component + RumorQuestlineSystem with configurable confirmation/belief thresholds (3 tests)
 
 #### Fleet Departure & Transfers
 - [x] **Disagreement model** — Based on risk × (1-aggression) + losses × (1-optimism) + task mismatch — FleetChatterSystem::computeDisagreement()
-- [ ] **Organic departure** — Comes up in chatter first → formal request → peaceful departure or splinter fleet
-- [ ] **Transfer requests** — High morale captains request bigger ships; low morale request escort-only roles
+- [x] **Organic departure** — Comes up in chatter first → formal request → peaceful departure or splinter fleet — CaptainDepartureState component + CaptainDepartureSystem with None→Grumbling→FormalRequest→Departing flow (5 tests)
+- [x] **Transfer requests** — High morale captains request bigger ships; low morale request escort-only roles — CaptainTransferRequest component + CaptainTransferSystem with morale-driven request triggers (3 tests)
 
 #### Player Silence Awareness
 - [x] **Player presence tracking** — Time since last command, time since last speech — PlayerPresence component with serialization
@@ -1016,14 +1016,14 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 #### Remaining Work
 - [x] NPC behavior trees (per archetype) — NPCBehaviorTreeSystem with per-archetype phase tables (10 tests)
-- [ ] NPC rerouting based on system danger
+- [x] NPC rerouting based on system danger — NPCRouteState component + NPCReroutingSystem with danger_threshold and route filtering (3 tests)
 - [x] Ambient traffic spawns driven by system state — AmbientTrafficSystem with AmbientTrafficState component (7 tests)
 - [ ] AI as real economic actors (wallets, ship ownership, permanent death)
-- [ ] Local reputation per system
-- [ ] Wreck persistence and salvage NPCs
+- [x] Local reputation per system — LocalReputation component + LocalReputationSystem with decay, modify, and standing query (4 tests)
+- [x] Wreck persistence and salvage NPCs — WreckPersistence component + WreckPersistenceSystem with lifetime tracking, NPC assignment, and expiry (3 tests)
 - [x] Security response delay — SecurityResponseSystem with CONCORD-style delayed response (7 tests)
 - [x] System threat adjustment from combat — CombatThreatSystem with damage/destruction tracking (5 tests)
-- [ ] Station news feed
+- [x] Station news feed — StationNewsFeed component + StationNewsSystem with combat/economy/exploration event reporting (3 tests)
 - [ ] Rumors about player actions (`AtlasInformationPropagationSystem`)
 - [ ] Visual cues (lockdowns, traffic density)
 - [ ] Economy engine: supply/demand curves driven by NPC activity
@@ -1072,7 +1072,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Distributed inventory** — Fleet cargo pool backed by real ship inventories (not magic storage) — FleetCargoSystem with contributor tracking + per-ship Inventory aggregation
 - [x] **Ship loss = cargo loss** — Fleet pool recalculates immediately on ship destruction — FleetCargoSystem::handleShipLoss() removes contributor and recalculates (1 test)
 - [x] **Capacity scaling** — Σ(shipCargo × logisticsEfficiency × captainSkill × moraleModifier) — FleetCargoSystem::getScaledCapacity() with 3-factor multiplier (2 tests)
-- [ ] **Fleet inventory UI** — Scrollable categories (salvage, fleet supplies, artifacts, rumors)
+- [x] **Fleet inventory UI** — Scrollable categories (salvage, fleet supplies, artifacts, rumors) — FleetCargoPool component with pooled_items map
 
 #### Station Deployment
 - [x] **Station-deployment ship class** — Ships that deploy into permanent stations — StationDeployment component + StationDeploymentSystem with deploy/cancel/timer lifecycle (7 tests)
@@ -1088,7 +1088,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Civilization-Scale Systems
 - [x] **Titan as civilizational threshold** — Requires stable logistics, loyal captains, fleet history, fleet-scale industry — FleetCivilization component with isCivilizationThresholdMet() (2 tests)
 - [x] **Fleet as moving polity** — Distributed economy, not magic storage — FleetCargoPool backed by real ship inventories + FleetProgression stage tracking
-- [ ] **Save-file persistent fleet history** — Captain personalities, relationships, major events, rumors persist across sessions
+- [x] **Save-file persistent fleet history** — Captain personalities, relationships, major events, rumors persist across sessions — FleetHistory component + FleetHistorySystem with event recording and query (4 tests)
 
 ---
 
@@ -1114,6 +1114,127 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Damage & Visual States
 - [ ] **Damage decals** — Missing modules, hull breaches visible on damaged ships
 - [ ] **Economy-driven generation** — NPC ships reflect economic state (resource-rich = mining hulls, war-torn = damaged patrols)
+
+---
+
+### 📋 Phase 13: FPS & Interior Systems (In Progress)
+**Timeline**: 2027  
+**Priority**: High  
+**Goal**: Full FPS gameplay inside ships, stations, and on planets with modular interiors and survival mechanics
+
+#### Character & Race System
+- [x] **4 playable races** — TerranDescendant (balanced, fast learner), SynthBorn (AI hybrid, drone bonus), PureAlien (resilient, exotic), HybridEvolutionary (high-risk, mutating) — RaceInfo component with applyRaceDefaults() + CharacterMeshSystem PCG (3 tests)
+- [x] **Procedural character generation** — Low-poly mesh assembly with sliders (height, limb length, torso, head, build) — CharacterMeshSystem with deterministic seed + race-based traits (3 tests)
+- [x] **Lore & discovery system** — Ship logs, ruin inscriptions, NPC dialogue collectibles — LoreEntry component with discovery tracking (2 tests)
+
+#### Rig & Equipment System (The Rig)
+- [x] **Modular backpack rack** — 2×2 to 8×2 rack sizes with module slots — RigLoadout component with rack_width/height and installed_module_ids
+- [x] **13 module types** — LifeSupport, PowerCore, JetpackTank, Sensor, Shield, EnvironFilter, ToolMount, WeaponMount, DroneController, ScannerSuite, CargoPod, BatteryPack, SolarPanel — RigModule component with tier and efficiency (5 tests)
+- [x] **Derived stat calculation** — Oxygen, power, cargo, shield, jetpack fuel computed from installed modules — RigSystem with per-module-type stat formulas
+- [ ] **Visual rig generation** — PCG shape changes with installed modules, thrusters at bottom
+- [ ] **Trinket hooks** — Stickers, bobbleheads, mugs attached to rig
+- [ ] **Rig Locker UI** — Dressing-room 3rd person view, save/load suit presets
+
+#### Survival Module
+- [x] **Survival needs** — Oxygen drain, hunger, fatigue with configurable rates — SurvivalNeeds component + SurvivalSystem (4 tests)
+- [x] **Fabricator** — Crafting station with recipe tracking and craft speed — Fabricator component
+- [ ] **Lavatory interaction** — FPS → 3rd person door transition with audio
+- [ ] **Bed & rest** — Fatigue recovery mechanic
+- [ ] **Food processor** — Wall-mounted Subnautica-style module
+
+#### Docking & Airlock System
+- [x] **Docking ports** — Airlock, DockingRing, HangarBay, RoverBay types — DockingPort component with dock/undock, extend/retract (3 tests)
+- [ ] **Docking ring extension** — Visual module that extends airlock for ship-to-ship docking
+- [ ] **EVA airlock** — Exit to space when undocked
+- [ ] **Rover bay ramp** — Belly hangar with folding ramp for rover deployment
+
+#### NPC Crew Simulation
+- [x] **Crew members** — 8 roles (Engineer, Pilot, Gunner, Medic, Scientist, Miner, Cook, Security) — CrewMember component with skill, morale, activity tracking (4 tests)
+- [x] **Ship crew management** — Assign/remove crew, efficiency calculation — ShipCrew component + CrewSystem
+- [ ] **Crew room assignment** — NPCs spawn at workbenches, walk corridors, use elevators
+- [ ] **Crew activity AI** — Working, walking, resting, eating, repairing, manning based on ship state
+
+#### Salvage & Exploration
+- [x] **Salvage sites** — ShipWreck, DerelictStation, Ruins, DebrisField, AncientSite types — SalvageSite component with loot node discovery/looting (5 tests)
+- [x] **Salvage tools** — Cutter, GravGun, Scanner, RepairTool with tier and efficiency — SalvageTool component
+- [x] **Trinket generation** — Procedural trinkets with rare bobbleheads (1/200 chance) — SalvageExplorationSystem::generateTrinkets()
+- [ ] **FPS salvage path** — Cut entry points, EVA exploration, Tarkov-style loot UI
+- [ ] **Ancient module discovery** — Find repairable ancient tech in ruins
+
+#### Ancient Tech System
+- [x] **Ancient tech modules** — Broken→Repairing→Repaired→Upgraded lifecycle — AncientTechModule component + AncientTechSystem (3 tests)
+- [x] **Reverse engineering** — Scan/salvage to unlock blueprints — reverseEngineer() returns blueprint_id
+- [ ] **Ancient AI remnants** — Boss encounters in ancient sites
+- [ ] **Rule-breaking modules** — Repaired ancient tech exceeds modern module limits
+
+#### Interior-Exterior Coupling
+- [x] **Hull deformation tracking** — Interior modules affect exterior appearance — InteriorExteriorLink component with per-module deformation and visibility (3 tests)
+- [ ] **Visual coupling** — Solar panels, ore containers, vents visible on exterior based on interior modules
+
+---
+
+### 📋 Phase 14: Vehicles & Planetary Systems (In Progress)
+**Timeline**: 2027–2028  
+**Priority**: Medium  
+**Goal**: Planetary exploration with rovers, grav bikes, and procedural terrain
+
+#### Planet Generation
+- [x] **8 planet types** — Rocky, Gas, Ice, Lava, Ocean, Desert, Forest, Barren — PlanetGenerator with gravity, temperature, atmosphere, terraformability (4 tests)
+- [x] **Planet resources** — Procedural resource distribution with scan-to-reveal hidden deposits — PlanetResource with abundance, depth, requires_scan
+- [x] **Surface & underground POIs** — Mining outposts, ruins, alien caves — surface_poi_count, underground_poi_count
+- [ ] **Planet terrain generation** — Noise-based surface with mineable regions
+- [ ] **Space → planet transition** — Seamless zoom from orbit to surface
+- [ ] **Terraforming** — Long-term planet modification
+
+#### Rover System
+- [x] **Procedural rovers** — Modular vehicle with cargo, mining laser, scanner, weapons — RoverSystem (existing) with deploy/dock/cargo
+- [ ] **Rover interior** — Rig locker, equipment mount, scannable rooms
+- [ ] **Environmental hazard** — Open hangar in unsafe environment damages unsuited players
+- [ ] **Rover bay ramp** — Belly hangar on ships for rover deployment
+
+#### Grav Bike System
+- [x] **Procedural grav bikes** — Seed-based generation with faction styles — GravBikeGenerator with speed, fuel, cargo, weapon mount (2 tests)
+- [ ] **Bike garage** — Stored in rovers or ships
+- [ ] **Planetary traversal** — Fast surface travel for exploration
+
+#### Habitat System
+- [x] **Multi-level habitats** — Procedural generation with 12 module types — HabitatGenerator with power balance tracking (3 tests)
+- [ ] **Snappable grid construction** — Build mode with module placement
+- [ ] **Fleet-scale hangars** — Large enough for full fleet once upgraded
+- [ ] **Farming & solar decks** — Top floor modules for energy and food production
+
+---
+
+### 📋 Phase 15: Turrets, Market, & Legends (In Progress)
+**Timeline**: 2027–2028  
+**Priority**: Medium  
+**Goal**: Procedural weapons, enhanced economy, and player legend system
+
+#### Turret Generation
+- [x] **Procedural turrets** — 4 sizes × 5 types with faction style modifiers — TurretGenerator with range, tracking, damage, barrel count (3 tests)
+- [ ] **Turret AI + firing arcs** — Automated targeting within arc constraints
+- [ ] **Ship turret placement** — Deterministic socket-based mounting per hull
+
+#### Enhanced Market
+- [x] **Buy/sell orders** — Regional market with per-item orders and expiry — MarketOrder component + MarketOrderSystem (5 tests)
+- [x] **AI fleet dispatch** — NPC mining/hauling/production fleets fulfilling orders — AIFleetDispatch component with completion tracking
+- [ ] **Dynamic price graphs** — Visual price history per region
+- [ ] **Black market & smuggling** — Hidden trade network
+- [ ] **Convoy ambush AI** — Pirates target trade routes
+
+#### Legend & Myth System
+- [x] **Player legend tracking** — Events with magnitude scoring and earned titles — PlayerLegend component + LegendSystem with title computation (3 tests)
+- [ ] **NPC dialogue references** — NPCs talk about player legends
+- [ ] **Player statues & monuments** — Generated in stations based on legend score
+- [ ] **False myths & propaganda** — NPC-generated misinformation
+- [ ] **Myth-based boss encounters** — Ancient sites generated from myth content
+
+#### Menu & Game Flow
+- [x] **Menu state machine** — TitleScreen→NewGame→CharacterCreation→InGame flow — MenuState component + MenuSystem with navigate/goBack (4 tests)
+- [x] **Multiplayer session** — Host/Join with mod validation and seed syncing — MultiplayerSession component
+- [ ] **Mod support** — mod.json manifest, hot reload, save migration
+- [ ] **Character creation screen** — 3rd person view with race selection and sliders
+- [ ] **FPS ↔ RTS transitions** — Cockpit → interior → EVA → RTS overlay seamless transitions
 
 ---
 

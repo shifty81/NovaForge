@@ -281,11 +281,14 @@ See the [Modding Guide](docs/MODDING_GUIDE.md) for details.
 | Phase | Milestone | Focus |
 |:-----:|-----------|:-----:|
 | 🎯 | **Vertical Slice** — One full star system, playable loop | 🔜 |
-| 8 | **Cinematic Warp** — Tunnel shaders, audio, anomalies | 📋 |
-| 9 | **Fleet AI** — Captain personalities, morale, chatter | 📋 |
-| 10 | **Tactical Overlay** — 2.5D strategy view, distance rings | 📋 |
-| 11 | **Fleet Civilization** — 25-ship fleets, station deployment | 🔄 |
+| 8 | **Cinematic Warp** — Tunnel shaders, audio, anomalies, meditation | 🔄 |
+| 9 | **Fleet AI** — Captain personalities, morale, departure, transfers | 🔄 |
+| 10 | **Tactical Overlay** — 2.5D strategy view, distance rings | 🔄 |
+| 11 | **Fleet Civilization** — 25-ship fleets, station deployment, history | 🔄 |
 | 12 | **Ship Gen v2** — Spine-based hulls, silhouette-first design | 📋 |
+| 13 | **FPS & Interiors** — Rigs, survival, crews, salvage, ancient tech | 🔄 |
+| 14 | **Vehicles & Planets** — Rovers, grav bikes, planet generation | 🔄 |
+| 15 | **Turrets, Market, Legends** — Procedural weapons, economy, myths | 🔄 |
 
 </td>
 </tr>
