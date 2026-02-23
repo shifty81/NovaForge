@@ -17,6 +17,7 @@
 #include "data/world_persistence.h"
 #include "utils/server_metrics.h"
 #include "ui/server_console.h"
+#include "pcg/pcg_manager.h"
 
 namespace atlas {
 
@@ -68,6 +69,7 @@ private:
     systems::StationSystem* station_system_ = nullptr;
     systems::MovementSystem* movement_system_ = nullptr;
     systems::CombatSystem* combat_system_ = nullptr;
+    pcg::PCGManager pcg_manager_;
     
     std::atomic<bool> running_;
     

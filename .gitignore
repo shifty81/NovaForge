@@ -65,6 +65,7 @@ temp/
 build/
 build_cpp/
 build_test/
+build_client/
 build_server/
 cpp_server/build/
 cpp_server/external/steamworks_sdk/

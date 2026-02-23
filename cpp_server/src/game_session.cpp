@@ -10,6 +10,12 @@
 #include "systems/mission_generator_system.h"
 #include "systems/snapshot_replication_system.h"
 #include "systems/interest_management_system.h"
+#include "pcg/pcg_manager.h"
+#include "pcg/pcg_context.h"
+#include "pcg/capital_ship_generator.h"
+#include "pcg/station_generator.h"
+#include "pcg/salvage_system.h"
+#include "pcg/snappable_grid.h"
 #include <iostream>
 #include <sstream>
 #include <cmath>
@@ -629,6 +635,152 @@ void GameSession::spawnInitialNPCs() {
              -800.0f,  0.0f,  600.0f);
     spawnNPC("npc_crimson_1",    "Crimson Order Seeker", "Sentinel",  "Crimson Order",
              500.0f,   0.0f,  1200.0f);
+
+    // --- Procedural content generation ---
+    if (pcg_manager_ && pcg_manager_->isInitialized()) {
+        // Generate a procedural capital ship (derelict wreck to explore)
+        {
+            auto ctx = pcg_manager_->makeRootContext(
+                pcg::PCGDomain::CapitalShip, 1, 1);
+            auto capShip = pcg::CapitalShipGenerator::generate(ctx, 4);
+
+            auto* entity = world_->createEntity("pcg_capital_wreck_1");
+            if (entity) {
+                auto pos = std::make_unique<components::Position>();
+                pos->x = 3000.0f; pos->y = 200.0f; pos->z = -2000.0f;
+                entity->addComponent(std::move(pos));
+
+                auto hp = std::make_unique<components::Health>();
+                hp->hull_hp = 0.0f; hp->hull_max = 50000.0f;
+                hp->armor_hp = 0.0f; hp->armor_max = 30000.0f;
+                hp->shield_hp = 0.0f; hp->shield_max = 20000.0f;
+                entity->addComponent(std::move(hp));
+
+                auto ship = std::make_unique<components::Ship>();
+                ship->ship_name = "Derelict Battleship";
+                ship->ship_class = "Battleship";
+                ship->ship_type = "Capital_Wreck";
+                entity->addComponent(std::move(ship));
+
+                auto interior = std::make_unique<components::ProceduralInterior>();
+                interior->shipClass = capShip.shipClass;
+                interior->deckCount = static_cast<int>(capShip.decks.size());
+                int rooms = 0;
+                for (const auto& d : capShip.decks) rooms += static_cast<int>(d.rooms.size());
+                interior->roomCount = rooms;
+                interior->elevatorCount = static_cast<int>(capShip.elevators.size());
+                interior->pcgSeed = ctx.seed;
+                entity->addComponent(std::move(interior));
+
+                auto fac = std::make_unique<components::Faction>();
+                fac->faction_name = "Ancient Fleet";
+                entity->addComponent(std::move(fac));
+
+                std::cout << "[PCG] Spawned capital wreck: " << capShip.decks.size()
+                          << " decks, " << rooms << " rooms, "
+                          << capShip.elevators.size() << " elevators" << std::endl;
+            }
+        }
+
+        // Generate a procedural station
+        {
+            auto ctx = pcg_manager_->makeRootContext(
+                pcg::PCGDomain::Station, 1, 1);
+            auto station = pcg::StationGenerator::generate(ctx, 8);
+
+            auto* entity = world_->createEntity("pcg_station_1");
+            if (entity) {
+                auto pos = std::make_unique<components::Position>();
+                pos->x = -2000.0f; pos->y = 0.0f; pos->z = 1500.0f;
+                entity->addComponent(std::move(pos));
+
+                auto hp = std::make_unique<components::Health>();
+                hp->hull_hp = hp->hull_max = 100000.0f;
+                hp->armor_hp = hp->armor_max = 80000.0f;
+                hp->shield_hp = hp->shield_max = 60000.0f;
+                entity->addComponent(std::move(hp));
+
+                auto stComp = std::make_unique<components::ProceduralStation>();
+                stComp->moduleCount = static_cast<int>(station.modules.size());
+                stComp->totalPowerConsumption = station.totalPowerConsumption;
+                stComp->totalPowerProduction = station.totalPowerProduction;
+                stComp->pcgSeed = ctx.seed;
+                entity->addComponent(std::move(stComp));
+
+                auto fac = std::make_unique<components::Faction>();
+                fac->faction_name = "Independent";
+                entity->addComponent(std::move(fac));
+
+                std::cout << "[PCG] Spawned station: " << station.modules.size()
+                          << " modules, power " << station.totalPowerProduction
+                          << "/" << station.totalPowerConsumption << std::endl;
+            }
+        }
+
+        // Generate a salvage field (debris from old battle)
+        {
+            auto ctx = pcg_manager_->makeRootContext(
+                pcg::PCGDomain::Salvage, 1, 1);
+            auto field = pcg::SalvageSystem::generateSalvageField(ctx, 30);
+
+            auto* entity = world_->createEntity("pcg_salvage_field_1");
+            if (entity) {
+                auto pos = std::make_unique<components::Position>();
+                pos->x = 5000.0f; pos->y = -100.0f; pos->z = 4000.0f;
+                entity->addComponent(std::move(pos));
+
+                auto sf = std::make_unique<components::SalvageFieldComponent>();
+                sf->totalNodes = field.totalNodes;
+                sf->hiddenNodes = field.hiddenNodes;
+                sf->totalValue = pcg::SalvageSystem::calculateTotalValue(field);
+                sf->pcgSeed = ctx.seed;
+                entity->addComponent(std::move(sf));
+
+                auto fac = std::make_unique<components::Faction>();
+                fac->faction_name = "None";
+                entity->addComponent(std::move(fac));
+
+                std::cout << "[PCG] Spawned salvage field: " << field.totalNodes
+                          << " nodes (" << field.hiddenNodes << " hidden), value "
+                          << sf->totalValue << std::endl;
+            }
+        }
+
+        // Generate sector grid (asteroid belt)
+        {
+            auto ctx = pcg_manager_->makeRootContext(
+                pcg::PCGDomain::Sector, 1, 1);
+            pcg::SnappableGrid grid(16, 8, 16, 50.0f);
+            grid.generateSector(ctx);
+
+            int occupied = 0;
+            for (int x = 0; x < 16; ++x)
+                for (int y = 0; y < 8; ++y)
+                    for (int z = 0; z < 16; ++z) {
+                        auto* c = grid.getCell(x, y, z);
+                        if (c && c->occupied) ++occupied;
+                    }
+
+            auto* entity = world_->createEntity("pcg_asteroid_belt_1");
+            if (entity) {
+                auto pos = std::make_unique<components::Position>();
+                pos->x = -4000.0f; pos->y = 0.0f; pos->z = -3000.0f;
+                entity->addComponent(std::move(pos));
+
+                auto sg = std::make_unique<components::SectorGrid>();
+                sg->gridWidth = 16;
+                sg->gridHeight = 8;
+                sg->gridDepth = 16;
+                sg->cellSize = 50.0f;
+                sg->occupiedCells = occupied;
+                sg->pcgSeed = ctx.seed;
+                entity->addComponent(std::move(sg));
+
+                std::cout << "[PCG] Spawned asteroid belt: 16x8x16 grid, "
+                          << occupied << " occupied cells" << std::endl;
+            }
+        }
+    }
 }
 
 void GameSession::spawnNPC(const std::string& id, const std::string& name,

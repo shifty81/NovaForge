@@ -291,6 +291,10 @@ set(CLIENT_SOURCES
     src/ui/atlas/atlas_title_screen.cpp
     src/core/solar_system_scene.cpp
     src/core/ship_physics.cpp
+    src/characters/character_mesh_system.cpp
+    src/characters/character_animation_system.cpp
+    src/characters/fps_hand_system.cpp
+    src/characters/equipment_attachment_system.cpp
     ${GLAD_SOURCES}
     ${AUDIO_SOURCES}
 )
@@ -344,6 +348,11 @@ set(CLIENT_HEADERS
     include/ui/atlas/atlas_title_screen.h
     include/core/solar_system_scene.h
     include/core/ship_physics.h
+    include/characters/character_mesh_system.h
+    include/characters/character_skeleton.h
+    include/characters/character_animation_system.h
+    include/characters/fps_hand_system.h
+    include/characters/equipment_attachment_system.h
     ${AUDIO_HEADERS}
 )
 

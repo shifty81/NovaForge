@@ -13,6 +13,7 @@
 namespace atlas {
 
 // Forward declarations
+namespace pcg { class PCGManager; }
 namespace systems { 
     class TargetingSystem;
     class StationSystem;
@@ -80,6 +81,9 @@ public:
 
     /// Set pointer to the InterestManagementSystem for per-client entity filtering
     void setInterestManagementSystem(systems::InterestManagementSystem* ims) { interest_management_ = ims; }
+
+    /// Set pointer to the PCGManager for procedural content generation
+    void setPCGManager(pcg::PCGManager* mgr) { pcg_manager_ = mgr; }
 
     /// Get the ship database (read-only)
     const data::ShipDatabase& getShipDatabase() const { return ship_db_; }
@@ -376,6 +380,7 @@ private:
     systems::MissionGeneratorSystem* mission_generator_ = nullptr;
     systems::SnapshotReplicationSystem* snapshot_replication_ = nullptr;
     systems::InterestManagementSystem* interest_management_ = nullptr;
+    pcg::PCGManager* pcg_manager_ = nullptr;
 
     // Map socket → entity_id for connected players
     struct PlayerInfo {

@@ -1943,6 +1943,63 @@ public:
     COMPONENT_TYPE(AmbientTrafficState)
 };
 
+// ==================== Procedural Content Generation ====================
+
+/**
+ * @brief Procedural capital ship interior data
+ * Carries generated deck/room/elevator layout for a capital ship entity.
+ */
+class ProceduralInterior : public ecs::Component {
+public:
+    int shipClass = 0;
+    int deckCount = 0;
+    int roomCount = 0;
+    int elevatorCount = 0;
+    uint64_t pcgSeed = 0;
+    COMPONENT_TYPE(ProceduralInterior)
+};
+
+/**
+ * @brief Procedural station data
+ * Carries module layout and power grid info for a station entity.
+ */
+class ProceduralStation : public ecs::Component {
+public:
+    int moduleCount = 0;
+    int totalPowerConsumption = 0;
+    int totalPowerProduction = 0;
+    uint64_t pcgSeed = 0;
+    COMPONENT_TYPE(ProceduralStation)
+};
+
+/**
+ * @brief Salvage field data
+ * Marks an entity as a salvageable wreck/debris field with loot nodes.
+ */
+class SalvageFieldComponent : public ecs::Component {
+public:
+    int totalNodes = 0;
+    int hiddenNodes = 0;
+    float totalValue = 0.0f;
+    uint64_t pcgSeed = 0;
+    COMPONENT_TYPE(SalvageFieldComponent)
+};
+
+/**
+ * @brief Sector grid data
+ * Marks an entity as a procedural sector with asteroid/debris grid.
+ */
+class SectorGrid : public ecs::Component {
+public:
+    int gridWidth = 0;
+    int gridHeight = 0;
+    int gridDepth = 0;
+    float cellSize = 0.0f;
+    int occupiedCells = 0;
+    uint64_t pcgSeed = 0;
+    COMPONENT_TYPE(SectorGrid)
+};
+
 } // namespace components
 } // namespace atlas
 

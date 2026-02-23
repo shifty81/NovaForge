@@ -114,6 +114,17 @@ set(SERVER_SOURCES
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
+    src/pcg/room_graph.cpp
+    src/pcg/deck_graph.cpp
+    src/pcg/elevator_system.cpp
+    src/pcg/hull_mesher.cpp
+    src/pcg/capital_ship_generator.cpp
+    src/pcg/ship_designer.cpp
+    src/pcg/snappable_grid.cpp
+    src/pcg/station_generator.cpp
+    src/pcg/salvage_system.cpp
+    src/pcg/rover_system.cpp
+    src/pcg/collision_manager.cpp
 )
 
 set(SERVER_HEADERS
@@ -202,6 +213,17 @@ set(SERVER_HEADERS
     include/pcg/pcg_manager.h
     include/pcg/ship_generator.h
     include/pcg/fleet_doctrine.h
+    include/pcg/room_graph.h
+    include/pcg/deck_graph.h
+    include/pcg/elevator_system.h
+    include/pcg/hull_mesher.h
+    include/pcg/capital_ship_generator.h
+    include/pcg/ship_designer.h
+    include/pcg/snappable_grid.h
+    include/pcg/station_generator.h
+    include/pcg/salvage_system.h
+    include/pcg/rover_system.h
+    include/pcg/collision_manager.h
 )
 
 # Steam SDK configuration
@@ -358,6 +380,17 @@ if(BUILD_TESTS)
         src/pcg/pcg_manager.cpp
         src/pcg/ship_generator.cpp
         src/pcg/fleet_doctrine.cpp
+        src/pcg/room_graph.cpp
+        src/pcg/deck_graph.cpp
+        src/pcg/elevator_system.cpp
+        src/pcg/hull_mesher.cpp
+        src/pcg/capital_ship_generator.cpp
+        src/pcg/ship_designer.cpp
+        src/pcg/snappable_grid.cpp
+        src/pcg/station_generator.cpp
+        src/pcg/salvage_system.cpp
+        src/pcg/rover_system.cpp
+        src/pcg/collision_manager.cpp
     )
 
     add_executable(test_systems

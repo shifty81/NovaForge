@@ -23,6 +23,10 @@ enum class PCGDomain : uint32_t {
     Fleet       = 7,
     Loot        = 8,
     Mission     = 9,
+    CapitalShip = 10,
+    Station     = 11,
+    Salvage     = 12,
+    Rover       = 13,
 };
 
 /**
