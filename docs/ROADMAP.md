@@ -912,16 +912,16 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Legendary events** (ultra-rare, opt-in) — collapsed gate scars, ancient battlefield echoes — WarpAnomalySystem with 1 legendary template (1/200 chance)
 
 #### HUD Travel Mode
-- [ ] **Soft edge treatment** — Edges soften, bright colors desaturate, tactical warnings muted during warp
-- [ ] **Safe-area padding** — 32–48px bottom margin, HUD scaled inward to 95%
-- [ ] **Optional UI flair** (player toggle) — Animated brackets, UI glow synced to engine bass, subtle HUD parallax
+- [x] **Soft edge treatment** — Edges soften, bright colors desaturate, tactical warnings muted during warp — WarpHUDTravelMode component with edge_softness, color_desaturation, warning_mute + WarpHUDTravelModeSystem (10 tests)
+- [x] **Safe-area padding** — 32–48px bottom margin, HUD scaled inward to 95% — WarpHUDTravelMode safe_area_padding + hud_scale, phase-driven ramp via WarpHUDTravelModeSystem
+- [x] **Optional UI flair** (player toggle) — Animated brackets, UI glow synced to engine bass, subtle HUD parallax — WarpHUDTravelMode ui_flair_enabled + computeUIFlair() static method
 
 #### Accessibility & Comfort
 - [x] **Motion intensity slider** (0%–100% distortion control) — WarpProfile comfort_scale, accessibility scaling in WarpCinematicSystem
 - [ ] **Bass intensity slider** (maps to engine core volume)
 - [ ] **Peripheral blur scalar**
-- [ ] **Tunnel geometry toggle** (off = star streaks only, on = full warp skin)
-- [ ] **Auto-comfort rules** — Reduce oscillation on FPS drop, clamp distortion on ultrawide
+- [x] **Tunnel geometry toggle** (off = star streaks only, on = full warp skin) — WarpAccessibility tunnel_geometry_enabled flag, WarpCinematicSystem zeroes tunnel_skin when disabled (2 tests)
+- [x] **Auto-comfort rules** — Reduce oscillation on FPS drop, clamp distortion on ultrawide — WarpAutoComfort component + WarpAutoComfortSystem with FPS-based ramp, hysteresis band, and ultrawide clamp (9 tests)
 
 #### Warp ECS Components
 - [x] `WarpStateComponent` (phase, warpTime, distanceRemaining) — WarpState component with WarpPhase enum

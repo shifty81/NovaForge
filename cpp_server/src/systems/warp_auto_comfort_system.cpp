@@ -14,20 +14,22 @@ float WarpAutoComfortSystem::computeComfortReduction(float current_fps, float ta
                                                       float current_reduction, float delta_time) {
     if (target_fps <= 0.0f) return 0.0f;
 
-    float low_threshold  = target_fps * 0.8f;   // Below this → increase reduction
-    float high_threshold = target_fps * 0.95f;   // Above this → decrease reduction
+    static constexpr float kLowThresholdMul  = 0.8f;    // Below this % of target → increase reduction
+    static constexpr float kHighThresholdMul  = 0.95f;   // Above this % of target → decrease reduction
+    static constexpr float kRampUpSpeed       = 0.5f;    // Reduction increases at this rate per second
+    static constexpr float kRampDownSpeed     = 0.3f;    // Reduction decreases at this rate per second
 
-    float ramp_up_speed   = 0.5f;   // Reduction increases at this rate/sec
-    float ramp_down_speed = 0.3f;   // Reduction decreases at this rate/sec
+    float low_threshold  = target_fps * kLowThresholdMul;
+    float high_threshold = target_fps * kHighThresholdMul;
 
     float result = current_reduction;
 
     if (current_fps < low_threshold) {
         // Performance is suffering — increase comfort reduction
-        result += ramp_up_speed * delta_time;
+        result += kRampUpSpeed * delta_time;
     } else if (current_fps >= high_threshold) {
         // Performance is fine — decrease comfort reduction
-        result -= ramp_down_speed * delta_time;
+        result -= kRampDownSpeed * delta_time;
     }
     // Between thresholds: hold current value (hysteresis)
 
@@ -37,8 +39,10 @@ float WarpAutoComfortSystem::computeComfortReduction(float current_fps, float ta
 void WarpAutoComfortSystem::applyComfort(float comfort_reduction, bool ultrawide,
                                           float max_distortion_uw,
                                           float& motion, float& blur) {
-    // Reduce effects proportionally to comfort_reduction
-    float scale = 1.0f - comfort_reduction * 0.6f;   // At max reduction, 40% of original
+    // At max reduction (1.0), effects scale to 40% of original
+    static constexpr float kMaxReductionScale = 0.6f;
+
+    float scale = 1.0f - comfort_reduction * kMaxReductionScale;
     motion *= scale;
     blur   *= scale;
 
