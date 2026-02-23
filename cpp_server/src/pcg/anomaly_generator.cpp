@@ -11,6 +11,7 @@ namespace pcg {
 static constexpr int   MIN_NODES      = 5;
 static constexpr int   MAX_NODES      = 30;
 static constexpr float BASE_RADIUS    = 50.0f;
+static constexpr float TWO_PI         = 6.2831853f;
 
 // ── Public API ─────────────────────────────────────────────────────
 
@@ -145,7 +146,7 @@ AnomalyNode AnomalyGenerator::generateNode(DeterministicRNG& rng,
     node.nodeId = nodeId;
 
     // Position within a sphere.
-    float angle = rng.rangeFloat(0.0f, 6.2831853f);
+    float angle = rng.rangeFloat(0.0f, TWO_PI);
     float dist  = rng.rangeFloat(0.0f, siteRadius);
     float elev  = rng.rangeFloat(-0.5f, 0.5f);
     node.posX = dist * std::cos(angle);

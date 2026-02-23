@@ -11,6 +11,7 @@ namespace pcg {
 static constexpr int   MIN_ASTEROIDS   = 10;
 static constexpr int   MAX_ASTEROIDS   = 80;
 static constexpr float DEFAULT_RADIUS  = 200.0f;  // field bounding radius (m)
+static constexpr float TWO_PI          = 6.2831853f;
 
 // ── Public API ─────────────────────────────────────────────────────
 
@@ -47,7 +48,7 @@ AsteroidField AsteroidFieldGenerator::generate(const PCGContext& ctx,
         node.mineralYield = rollYield(rng, node.type);
 
         // Scatter in a disc (Y is "up", XZ is the belt plane).
-        float angle  = rng.rangeFloat(0.0f, 6.2831853f);
+        float angle  = rng.rangeFloat(0.0f, TWO_PI);
         float dist   = rng.rangeFloat(0.0f, fieldRadius);
         node.posX = dist * std::cos(angle);
         node.posY = rng.rangeFloat(-20.0f, 20.0f);  // slight vertical spread
