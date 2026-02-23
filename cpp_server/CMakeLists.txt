@@ -114,6 +114,8 @@ set(SERVER_SOURCES
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
+    src/pcg/snappable_grid.cpp
+    src/pcg/station_generator.cpp
 )
 
 set(SERVER_HEADERS
@@ -202,6 +204,8 @@ set(SERVER_HEADERS
     include/pcg/pcg_manager.h
     include/pcg/ship_generator.h
     include/pcg/fleet_doctrine.h
+    include/pcg/snappable_grid.h
+    include/pcg/station_generator.h
 )
 
 # Steam SDK configuration
@@ -358,6 +362,8 @@ if(BUILD_TESTS)
         src/pcg/pcg_manager.cpp
         src/pcg/ship_generator.cpp
         src/pcg/fleet_doctrine.cpp
+        src/pcg/snappable_grid.cpp
+        src/pcg/station_generator.cpp
     )
 
     add_executable(test_systems
