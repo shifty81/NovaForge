@@ -240,6 +240,52 @@ void test_archp_generate_preview_with_modules();
 void test_archp_save_load_string();
 void test_archp_draw_does_not_crash();
 
+// Editor Panel tests — ECS Inspector
+void test_ecsi_defaults();
+void test_ecsi_select_entity();
+void test_ecsi_select_dead_entity_ignored();
+void test_ecsi_destroy_selected();
+void test_ecsi_clear_selection();
+void test_ecsi_search_filter_by_id();
+void test_ecsi_search_filter_empty_shows_all();
+void test_ecsi_draw_clears_dead_selection();
+void test_ecsi_name();
+void test_ecsi_visibility();
+
+// Editor Panel tests — Network Inspector
+void test_neti_defaults();
+void test_neti_mode_to_string();
+void test_neti_select_peer();
+void test_neti_select_nonexistent_peer_ignored();
+void test_neti_clear_peer_selection();
+void test_neti_stats_with_peers();
+void test_neti_draw_clears_disconnected_peer();
+void test_neti_name();
+
+// Editor Panel tests — Game Packager
+void test_pkg_defaults();
+void test_pkg_set_settings();
+void test_pkg_start_package();
+void test_pkg_advance_full_pipeline();
+void test_pkg_cancel_package();
+void test_pkg_empty_output_path_fails();
+void test_pkg_is_packaging();
+void test_pkg_step_to_string();
+void test_pkg_target_to_string();
+void test_pkg_mode_to_string();
+void test_pkg_log_messages();
+
+// Editor Panel tests — AI Aggregator
+void test_ai_no_backends();
+void test_ai_register_null_ignored();
+void test_ai_single_backend();
+void test_ai_best_confidence_wins();
+
+// Editor Panel tests — Dock Layout
+void test_dock_tab_draw();
+void test_dock_tab_switch();
+void test_dock_register_panels();
+
 // Viewport Panel tests
 void test_viewport_defaults();
 void test_viewport_load_ship();
@@ -556,6 +602,57 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_viewport_draw_does_not_crash);
     RUN_TEST(test_viewport_log_entries);
     RUN_TEST(test_viewport_no_op_without_selection);
+
+    // ECS Inspector
+    log.BeginSection("ECS Inspector");
+    RUN_TEST(test_ecsi_defaults);
+    RUN_TEST(test_ecsi_select_entity);
+    RUN_TEST(test_ecsi_select_dead_entity_ignored);
+    RUN_TEST(test_ecsi_destroy_selected);
+    RUN_TEST(test_ecsi_clear_selection);
+    RUN_TEST(test_ecsi_search_filter_by_id);
+    RUN_TEST(test_ecsi_search_filter_empty_shows_all);
+    RUN_TEST(test_ecsi_draw_clears_dead_selection);
+    RUN_TEST(test_ecsi_name);
+    RUN_TEST(test_ecsi_visibility);
+
+    // Network Inspector
+    log.BeginSection("Network Inspector");
+    RUN_TEST(test_neti_defaults);
+    RUN_TEST(test_neti_mode_to_string);
+    RUN_TEST(test_neti_select_peer);
+    RUN_TEST(test_neti_select_nonexistent_peer_ignored);
+    RUN_TEST(test_neti_clear_peer_selection);
+    RUN_TEST(test_neti_stats_with_peers);
+    RUN_TEST(test_neti_draw_clears_disconnected_peer);
+    RUN_TEST(test_neti_name);
+
+    // Game Packager
+    log.BeginSection("Game Packager");
+    RUN_TEST(test_pkg_defaults);
+    RUN_TEST(test_pkg_set_settings);
+    RUN_TEST(test_pkg_start_package);
+    RUN_TEST(test_pkg_advance_full_pipeline);
+    RUN_TEST(test_pkg_cancel_package);
+    RUN_TEST(test_pkg_empty_output_path_fails);
+    RUN_TEST(test_pkg_is_packaging);
+    RUN_TEST(test_pkg_step_to_string);
+    RUN_TEST(test_pkg_target_to_string);
+    RUN_TEST(test_pkg_mode_to_string);
+    RUN_TEST(test_pkg_log_messages);
+
+    // AI Aggregator
+    log.BeginSection("AI Aggregator");
+    RUN_TEST(test_ai_no_backends);
+    RUN_TEST(test_ai_register_null_ignored);
+    RUN_TEST(test_ai_single_backend);
+    RUN_TEST(test_ai_best_confidence_wins);
+
+    // Dock Layout
+    log.BeginSection("Dock Layout");
+    RUN_TEST(test_dock_tab_draw);
+    RUN_TEST(test_dock_tab_switch);
+    RUN_TEST(test_dock_register_panels);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
