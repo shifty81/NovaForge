@@ -176,6 +176,9 @@ set(SERVER_SOURCES
     src/pcg/economy_driven_generator.cpp
     src/pcg/star_system_generator.cpp
     src/pcg/galaxy_generator.cpp
+    src/pcg/generation_style.cpp
+    src/pcg/pcg_asset_style.cpp
+    src/pcg/ship_archetype.cpp
 )
 
 set(SERVER_HEADERS
@@ -327,6 +330,9 @@ set(SERVER_HEADERS
     include/pcg/economy_driven_generator.h
     include/pcg/star_system_generator.h
     include/pcg/galaxy_generator.h
+    include/pcg/generation_style.h
+    include/pcg/pcg_asset_style.h
+    include/pcg/ship_archetype.h
 )
 
 # Steam SDK configuration
@@ -545,6 +551,9 @@ if(BUILD_TESTS)
         src/pcg/economy_driven_generator.cpp
         src/pcg/star_system_generator.cpp
         src/pcg/galaxy_generator.cpp
+        src/pcg/generation_style.cpp
+        src/pcg/pcg_asset_style.cpp
+        src/pcg/ship_archetype.cpp
     )
 
     add_executable(test_systems

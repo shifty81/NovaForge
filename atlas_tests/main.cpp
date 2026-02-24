@@ -145,6 +145,96 @@ void test_pcg_preview_character_override_archetype();
 void test_pcg_preview_character_override_gender();
 void test_pcg_preview_character_clear();
 
+// Generation Style Engine tests
+void test_gs_create_default_ship_style();
+void test_gs_create_default_station_style();
+void test_gs_create_all_default_styles();
+void test_gs_validate_valid_style();
+void test_gs_validate_empty_name_fails();
+void test_gs_validate_out_of_range_param_fails();
+void test_gs_validate_duplicate_slots_fails();
+void test_gs_available_parameters();
+void test_gs_find_parameter();
+void test_gs_style_type_names();
+void test_gs_generate_ship_style();
+void test_gs_generate_station_style();
+void test_gs_generate_station_with_placements();
+void test_gs_generate_interior_style();
+void test_gs_generate_determinism();
+void test_gs_serialize_roundtrip();
+void test_gs_ship_parameter_overrides();
+
+// Generation Style Panel tests
+void test_gsp_defaults();
+void test_gsp_new_style();
+void test_gsp_add_remove_placement();
+void test_gsp_set_parameter();
+void test_gsp_enable_disable_parameter();
+void test_gsp_generate();
+void test_gsp_generate_with_asset_style();
+void test_gsp_save_load_string();
+void test_gsp_draw_does_not_crash();
+
+// Asset Style Library tests
+void test_as_library_add_find();
+void test_as_library_replace();
+void test_as_library_remove();
+void test_as_library_list_by_type();
+void test_as_library_clear();
+void test_as_shape_apply_to_ship();
+void test_as_shape_apply_to_station();
+void test_as_surface_treatment_names();
+void test_as_serialize_roundtrip();
+
+// Asset Style Panel tests
+void test_asp_defaults();
+void test_asp_new_style();
+void test_asp_shape_control_points();
+void test_asp_mirror_and_smoothing();
+void test_asp_palette_colors();
+void test_asp_palette_materials();
+void test_asp_surface_treatment();
+void test_asp_detail_level();
+void test_asp_apply_and_preview_ship();
+void test_asp_apply_and_preview_station();
+void test_asp_library_save_load();
+void test_asp_serialize_roundtrip();
+void test_asp_draw_does_not_crash();
+
+// Ship Archetype Engine tests
+void test_arch_create_default_frigate();
+void test_arch_create_all_hull_classes();
+void test_arch_capital_bigger_than_frigate();
+void test_arch_validate_valid();
+void test_arch_validate_empty_name_fails();
+void test_arch_validate_no_rooms_fails();
+void test_arch_validate_no_hardpoints_fails();
+void test_arch_validate_duplicate_hardpoint_ids_fails();
+void test_arch_validate_door_bad_room_ref_fails();
+void test_arch_generate_from_archetype();
+void test_arch_generate_determinism();
+void test_arch_apply_subsystems();
+void test_arch_apply_module_visuals();
+void test_arch_subsystem_type_names();
+void test_arch_serialize_roundtrip();
+void test_arch_different_seeds_differ();
+
+// Ship Archetype Panel tests
+void test_archp_defaults();
+void test_archp_select_hull_class();
+void test_archp_add_remove_hull_control_point();
+void test_archp_add_remove_room();
+void test_archp_add_remove_door();
+void test_archp_add_remove_hardpoint();
+void test_archp_subsystem_editing();
+void test_archp_module_visual_rules();
+void test_archp_variation_bounds();
+void test_archp_generate_preview();
+void test_archp_generate_preview_with_subsystems();
+void test_archp_generate_preview_with_modules();
+void test_archp_save_load_string();
+void test_archp_draw_does_not_crash();
+
 int main() {
     std::cout << "=== Atlas Engine Tests ===" << std::endl;
 
@@ -307,6 +397,102 @@ int main() {
     test_pcg_preview_character_override_archetype();
     test_pcg_preview_character_override_gender();
     test_pcg_preview_character_clear();
+
+    // Generation Style Engine
+    std::cout << "\n--- Generation Style Engine ---" << std::endl;
+    test_gs_create_default_ship_style();
+    test_gs_create_default_station_style();
+    test_gs_create_all_default_styles();
+    test_gs_validate_valid_style();
+    test_gs_validate_empty_name_fails();
+    test_gs_validate_out_of_range_param_fails();
+    test_gs_validate_duplicate_slots_fails();
+    test_gs_available_parameters();
+    test_gs_find_parameter();
+    test_gs_style_type_names();
+    test_gs_generate_ship_style();
+    test_gs_generate_station_style();
+    test_gs_generate_station_with_placements();
+    test_gs_generate_interior_style();
+    test_gs_generate_determinism();
+    test_gs_serialize_roundtrip();
+    test_gs_ship_parameter_overrides();
+
+    // Generation Style Panel
+    std::cout << "\n--- Generation Style Panel ---" << std::endl;
+    test_gsp_defaults();
+    test_gsp_new_style();
+    test_gsp_add_remove_placement();
+    test_gsp_set_parameter();
+    test_gsp_enable_disable_parameter();
+    test_gsp_generate();
+    test_gsp_generate_with_asset_style();
+    test_gsp_save_load_string();
+    test_gsp_draw_does_not_crash();
+
+    // Asset Style Library
+    std::cout << "\n--- Asset Style Library ---" << std::endl;
+    test_as_library_add_find();
+    test_as_library_replace();
+    test_as_library_remove();
+    test_as_library_list_by_type();
+    test_as_library_clear();
+    test_as_shape_apply_to_ship();
+    test_as_shape_apply_to_station();
+    test_as_surface_treatment_names();
+    test_as_serialize_roundtrip();
+
+    // Asset Style Panel
+    std::cout << "\n--- Asset Style Panel ---" << std::endl;
+    test_asp_defaults();
+    test_asp_new_style();
+    test_asp_shape_control_points();
+    test_asp_mirror_and_smoothing();
+    test_asp_palette_colors();
+    test_asp_palette_materials();
+    test_asp_surface_treatment();
+    test_asp_detail_level();
+    test_asp_apply_and_preview_ship();
+    test_asp_apply_and_preview_station();
+    test_asp_library_save_load();
+    test_asp_serialize_roundtrip();
+    test_asp_draw_does_not_crash();
+
+    // Ship Archetype Engine
+    std::cout << "\n--- Ship Archetype Engine ---" << std::endl;
+    test_arch_create_default_frigate();
+    test_arch_create_all_hull_classes();
+    test_arch_capital_bigger_than_frigate();
+    test_arch_validate_valid();
+    test_arch_validate_empty_name_fails();
+    test_arch_validate_no_rooms_fails();
+    test_arch_validate_no_hardpoints_fails();
+    test_arch_validate_duplicate_hardpoint_ids_fails();
+    test_arch_validate_door_bad_room_ref_fails();
+    test_arch_generate_from_archetype();
+    test_arch_generate_determinism();
+    test_arch_apply_subsystems();
+    test_arch_apply_module_visuals();
+    test_arch_subsystem_type_names();
+    test_arch_serialize_roundtrip();
+    test_arch_different_seeds_differ();
+
+    // Ship Archetype Panel
+    std::cout << "\n--- Ship Archetype Panel ---" << std::endl;
+    test_archp_defaults();
+    test_archp_select_hull_class();
+    test_archp_add_remove_hull_control_point();
+    test_archp_add_remove_room();
+    test_archp_add_remove_door();
+    test_archp_add_remove_hardpoint();
+    test_archp_subsystem_editing();
+    test_archp_module_visual_rules();
+    test_archp_variation_bounds();
+    test_archp_generate_preview();
+    test_archp_generate_preview_with_subsystems();
+    test_archp_generate_preview_with_modules();
+    test_archp_save_load_string();
+    test_archp_draw_does_not_crash();
 
     std::cout << "\n=== All tests passed! ===" << std::endl;
     return 0;

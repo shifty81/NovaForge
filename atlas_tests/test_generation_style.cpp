@@ -4,6 +4,7 @@
 #include <cmath>
 #include "../editor/tools/GenerationStylePanel.h"
 #include "../editor/tools/AssetStylePanel.h"
+#include "../editor/tools/ShipArchetypePanel.h"
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -901,4 +902,477 @@ void test_asp_draw_does_not_crash() {
     panel.ApplyAndPreview();
     panel.Draw();
     ok("test_asp_draw_does_not_crash");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Ship Archetype Engine tests
+// ═══════════════════════════════════════════════════════════════════
+
+void test_arch_create_default_frigate() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Frigate);
+
+    assert(!arch.name.empty());
+    assert(arch.hullClass == atlas::pcg::HullClass::Frigate);
+    assert(arch.version == 1);
+    assert(!arch.hullShape.controlPoints.empty());
+    assert(!arch.rooms.empty());
+    assert(!arch.doors.empty());
+    assert(!arch.hardpoints.empty());
+    assert(arch.subsystems.size() == atlas::pcg::SUBSYSTEM_TYPE_COUNT);
+    assert(!arch.moduleVisuals.empty());
+    assert(arch.shapeVariation > 0.0f);
+    ok("test_arch_create_default_frigate");
+}
+
+void test_arch_create_all_hull_classes() {
+    atlas::pcg::HullClass classes[] = {
+        atlas::pcg::HullClass::Frigate,
+        atlas::pcg::HullClass::Destroyer,
+        atlas::pcg::HullClass::Cruiser,
+        atlas::pcg::HullClass::Battlecruiser,
+        atlas::pcg::HullClass::Battleship,
+        atlas::pcg::HullClass::Capital,
+    };
+    for (auto hull : classes) {
+        auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(hull);
+        assert(!arch.name.empty());
+        assert(arch.hullClass == hull);
+        assert(!arch.rooms.empty());
+        assert(!arch.hardpoints.empty());
+    }
+    ok("test_arch_create_all_hull_classes");
+}
+
+void test_arch_capital_bigger_than_frigate() {
+    auto frigate = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Frigate);
+    auto capital = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Capital);
+
+    assert(capital.rooms.size() > frigate.rooms.size());
+    assert(capital.hardpoints.size() > frigate.hardpoints.size());
+    assert(capital.deckCount > frigate.deckCount);
+    ok("test_arch_capital_bigger_than_frigate");
+}
+
+void test_arch_validate_valid() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    bool valid = atlas::pcg::ShipArchetypeEngine::validate(arch);
+    assert(valid);
+    assert(arch.valid);
+    ok("test_arch_validate_valid");
+}
+
+void test_arch_validate_empty_name_fails() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    arch.name = "";
+    assert(!atlas::pcg::ShipArchetypeEngine::validate(arch));
+    ok("test_arch_validate_empty_name_fails");
+}
+
+void test_arch_validate_no_rooms_fails() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    arch.rooms.clear();
+    assert(!atlas::pcg::ShipArchetypeEngine::validate(arch));
+    ok("test_arch_validate_no_rooms_fails");
+}
+
+void test_arch_validate_no_hardpoints_fails() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    arch.hardpoints.clear();
+    assert(!atlas::pcg::ShipArchetypeEngine::validate(arch));
+    ok("test_arch_validate_no_hardpoints_fails");
+}
+
+void test_arch_validate_duplicate_hardpoint_ids_fails() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    if (arch.hardpoints.size() >= 2) {
+        arch.hardpoints[1].hardpointId = arch.hardpoints[0].hardpointId;
+        assert(!atlas::pcg::ShipArchetypeEngine::validate(arch));
+    }
+    ok("test_arch_validate_duplicate_hardpoint_ids_fails");
+}
+
+void test_arch_validate_door_bad_room_ref_fails() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    atlas::pcg::DoorPlacement badDoor{};
+    badDoor.doorId     = 999;
+    badDoor.fromRoomId = 9998;
+    badDoor.toRoomId   = 9999;
+    arch.doors.push_back(badDoor);
+    assert(!atlas::pcg::ShipArchetypeEngine::validate(arch));
+    ok("test_arch_validate_door_bad_room_ref_fails");
+}
+
+void test_arch_generate_from_archetype() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    atlas::pcg::ShipArchetypeEngine::validate(arch);
+
+    atlas::pcg::PCGManager mgr;
+    mgr.initialize(42);
+    auto ctx = mgr.makeRootContext(atlas::pcg::PCGDomain::Ship, 1, 1);
+
+    auto variant = atlas::pcg::ShipArchetypeEngine::generateFromArchetype(
+        ctx, arch);
+    assert(variant.valid);
+    assert(!variant.ship.shipName.empty());
+    assert(variant.ship.mass > 0.0f);
+    assert(!variant.hardpoints.empty());
+    assert(!variant.doors.empty());
+    assert(!variant.interior.rooms.empty());
+    assert(variant.archetypeName == arch.name);
+    ok("test_arch_generate_from_archetype");
+}
+
+void test_arch_generate_determinism() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Battleship);
+    atlas::pcg::ShipArchetypeEngine::validate(arch);
+
+    atlas::pcg::PCGManager mgr1, mgr2;
+    mgr1.initialize(42);
+    mgr2.initialize(42);
+    auto ctx1 = mgr1.makeRootContext(atlas::pcg::PCGDomain::Ship, 1, 1);
+    auto ctx2 = mgr2.makeRootContext(atlas::pcg::PCGDomain::Ship, 1, 1);
+
+    auto v1 = atlas::pcg::ShipArchetypeEngine::generateFromArchetype(ctx1, arch);
+    auto v2 = atlas::pcg::ShipArchetypeEngine::generateFromArchetype(ctx2, arch);
+
+    assert(v1.ship.shipName == v2.ship.shipName);
+    assert(v1.ship.mass == v2.ship.mass);
+    assert(v1.hardpoints.size() == v2.hardpoints.size());
+    ok("test_arch_generate_determinism");
+}
+
+void test_arch_apply_subsystems() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    atlas::pcg::ShipArchetypeEngine::validate(arch);
+
+    atlas::pcg::PCGManager mgr;
+    mgr.initialize(42);
+    auto ctx = mgr.makeRootContext(atlas::pcg::PCGDomain::Ship, 1, 1);
+
+    auto variant = atlas::pcg::ShipArchetypeEngine::generateFromArchetype(
+        ctx, arch);
+    float preShield = variant.ship.shieldHP;
+    float preArmor  = variant.ship.armorHP;
+
+    // Activate "Shield Amplifier" (variant 0 in Defensive slot).
+    std::vector<int> active(arch.subsystems.size(), -1);
+    for (size_t i = 0; i < arch.subsystems.size(); ++i) {
+        if (arch.subsystems[i].type == atlas::pcg::SubsystemType::Defensive) {
+            active[i] = 0;  // Shield Amplifier
+            break;
+        }
+    }
+
+    atlas::pcg::ShipArchetypeEngine::applySubsystems(
+        variant, arch, active);
+
+    // Shield should have increased.
+    assert(variant.ship.shieldHP > preShield);
+    ok("test_arch_apply_subsystems");
+}
+
+void test_arch_apply_module_visuals() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    atlas::pcg::ShipArchetypeEngine::validate(arch);
+
+    atlas::pcg::PCGManager mgr;
+    mgr.initialize(42);
+    auto ctx = mgr.makeRootContext(atlas::pcg::PCGDomain::Ship, 1, 1);
+
+    auto variant = atlas::pcg::ShipArchetypeEngine::generateFromArchetype(
+        ctx, arch);
+    float preMass = variant.ship.mass;
+
+    std::vector<std::string> modules = {"shield", "armor", "weapon"};
+    atlas::pcg::ShipArchetypeEngine::applyModuleVisuals(
+        variant, arch, modules);
+
+    // Mass should have changed (module visuals add geometry).
+    assert(variant.ship.mass != preMass);
+    ok("test_arch_apply_module_visuals");
+}
+
+void test_arch_subsystem_type_names() {
+    assert(std::string(atlas::pcg::ShipArchetypeEngine::subsystemTypeName(
+        atlas::pcg::SubsystemType::Offensive)) == "Offensive");
+    assert(std::string(atlas::pcg::ShipArchetypeEngine::subsystemTypeName(
+        atlas::pcg::SubsystemType::Propulsion)) == "Propulsion");
+    assert(std::string(atlas::pcg::ShipArchetypeEngine::subsystemTypeName(
+        atlas::pcg::SubsystemType::Core)) == "Core");
+    ok("test_arch_subsystem_type_names");
+}
+
+void test_arch_serialize_roundtrip() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Destroyer);
+
+    std::string data = atlas::pcg::ShipArchetypeEngine::serialize(arch);
+    assert(!data.empty());
+
+    auto loaded = atlas::pcg::ShipArchetypeEngine::deserialize(data);
+    assert(loaded.name == arch.name);
+    assert(loaded.hullClass == atlas::pcg::HullClass::Destroyer);
+    assert(loaded.rooms.size() == arch.rooms.size());
+    assert(loaded.doors.size() == arch.doors.size());
+    assert(loaded.hardpoints.size() == arch.hardpoints.size());
+    assert(loaded.subsystems.size() == arch.subsystems.size());
+    assert(loaded.valid);
+    ok("test_arch_serialize_roundtrip");
+}
+
+void test_arch_different_seeds_differ() {
+    auto arch = atlas::pcg::ShipArchetypeEngine::createDefault(
+        atlas::pcg::HullClass::Cruiser);
+    atlas::pcg::ShipArchetypeEngine::validate(arch);
+
+    atlas::pcg::PCGManager mgr1, mgr2;
+    mgr1.initialize(100);
+    mgr2.initialize(200);
+    auto ctx1 = mgr1.makeRootContext(atlas::pcg::PCGDomain::Ship, 1, 1);
+    auto ctx2 = mgr2.makeRootContext(atlas::pcg::PCGDomain::Ship, 1, 1);
+
+    auto v1 = atlas::pcg::ShipArchetypeEngine::generateFromArchetype(ctx1, arch);
+    auto v2 = atlas::pcg::ShipArchetypeEngine::generateFromArchetype(ctx2, arch);
+
+    // Different seeds should produce different ships.
+    assert(v1.ship.shipName != v2.ship.shipName ||
+           v1.ship.mass != v2.ship.mass);
+    ok("test_arch_different_seeds_differ");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Ship Archetype Panel tests
+// ═══════════════════════════════════════════════════════════════════
+
+void test_archp_defaults() {
+    atlas::editor::ShipArchetypePanel panel;
+    assert(std::string(panel.Name()) == "Ship Archetype");
+    assert(panel.GetHullClass() == atlas::pcg::HullClass::Frigate);
+    assert(panel.RoomCount() > 0);
+    assert(panel.DoorCount() > 0);
+    assert(panel.HardpointCount() > 0);
+    assert(panel.SubsystemSlotCount() == atlas::pcg::SUBSYSTEM_TYPE_COUNT);
+    assert(!panel.HasPreview());
+    ok("test_archp_defaults");
+}
+
+void test_archp_select_hull_class() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.SelectHullClass(atlas::pcg::HullClass::Battleship);
+    assert(panel.GetHullClass() == atlas::pcg::HullClass::Battleship);
+    assert(panel.RoomCount() > 5);
+    assert(panel.HardpointCount() > 5);
+    assert(!panel.Log().empty());
+    ok("test_archp_select_hull_class");
+}
+
+void test_archp_add_remove_hull_control_point() {
+    atlas::editor::ShipArchetypePanel panel;
+    size_t initial = panel.HullControlPointCount();
+
+    atlas::pcg::ShapeControlPoint cp{};
+    cp.posX = 10; cp.posY = 0; cp.posZ = 5;
+    cp.scaleX = 1.2f; cp.scaleY = 1.0f; cp.scaleZ = 1.0f;
+    cp.weight = 0.8f;
+    panel.AddHullControlPoint(cp);
+    assert(panel.HullControlPointCount() == initial + 1);
+
+    bool removed = panel.RemoveHullControlPoint(initial);
+    assert(removed);
+    assert(panel.HullControlPointCount() == initial);
+    assert(!panel.RemoveHullControlPoint(999));
+    ok("test_archp_add_remove_hull_control_point");
+}
+
+void test_archp_add_remove_room() {
+    atlas::editor::ShipArchetypePanel panel;
+    size_t initial = panel.RoomCount();
+
+    atlas::pcg::InteriorRoom room{};
+    room.roomId = 100;
+    room.type   = atlas::pcg::InteriorRoomType::Hangar;
+    room.posX   = 20.0f;
+    room.dimX   = 10.0f;
+    room.dimY   = 8.0f;
+    room.dimZ   = 5.0f;
+    panel.AddRoom(room);
+    assert(panel.RoomCount() == initial + 1);
+
+    bool removed = panel.RemoveRoom(100);
+    assert(removed);
+    assert(panel.RoomCount() == initial);
+    assert(!panel.RemoveRoom(9999));
+    ok("test_archp_add_remove_room");
+}
+
+void test_archp_add_remove_door() {
+    atlas::editor::ShipArchetypePanel panel;
+    size_t initial = panel.DoorCount();
+
+    atlas::pcg::DoorPlacement door{};
+    door.doorId     = 100;
+    door.fromRoomId = 0;
+    door.toRoomId   = 1;
+    door.posX = 5.0f;
+    door.width  = 1.5f;
+    door.height = 2.5f;
+    door.isAirlock = true;
+    door.locked    = true;
+    panel.AddDoor(door);
+    assert(panel.DoorCount() == initial + 1);
+
+    bool removed = panel.RemoveDoor(100);
+    assert(removed);
+    assert(panel.DoorCount() == initial);
+    assert(!panel.RemoveDoor(9999));
+    ok("test_archp_add_remove_door");
+}
+
+void test_archp_add_remove_hardpoint() {
+    atlas::editor::ShipArchetypePanel panel;
+    size_t initial = panel.HardpointCount();
+
+    atlas::pcg::HardpointDefinition hp{};
+    hp.hardpointId = 100;
+    hp.posX = 15.0f; hp.posY = 3.0f; hp.posZ = 2.0f;
+    hp.facingDeg = 0.0f;
+    hp.arcDeg    = 120.0f;
+    hp.size      = atlas::pcg::WeaponSize::Large;
+    hp.isDorsal  = true;
+    hp.groupTag  = "broadside";
+    panel.AddHardpoint(hp);
+    assert(panel.HardpointCount() == initial + 1);
+
+    // Update.
+    hp.arcDeg = 180.0f;
+    bool updated = panel.UpdateHardpoint(100, hp);
+    assert(updated);
+    assert(!panel.UpdateHardpoint(9999, hp));
+
+    bool removed = panel.RemoveHardpoint(100);
+    assert(removed);
+    assert(panel.HardpointCount() == initial);
+    assert(!panel.RemoveHardpoint(9999));
+    ok("test_archp_add_remove_hardpoint");
+}
+
+void test_archp_subsystem_editing() {
+    atlas::editor::ShipArchetypePanel panel;
+
+    // Add a custom variant to the first subsystem slot.
+    atlas::pcg::SubsystemVariant var{};
+    var.name       = "Custom Variant";
+    var.type       = atlas::pcg::SubsystemType::Offensive;
+    var.dpsBonus   = 0.25f;
+    var.shapeModifier.name = "Custom Shape";
+    var.shapeModifier.smoothing = 0.5f;
+
+    bool added = panel.AddSubsystemVariant(0, var);
+    assert(added);
+    assert(!panel.AddSubsystemVariant(999, var));
+
+    // Set active variant.
+    bool set = panel.SetActiveVariant(0, 0);
+    assert(set);
+    assert(!panel.SetActiveVariant(999, 0));
+    ok("test_archp_subsystem_editing");
+}
+
+void test_archp_module_visual_rules() {
+    atlas::editor::ShipArchetypePanel panel;
+    size_t initial = panel.ModuleVisualRuleCount();
+
+    atlas::pcg::ModuleVisualRule rule{};
+    rule.moduleCategory = "drone";
+    rule.effectType     = "bay";
+    rule.scaleMin = 0.5f;
+    rule.scaleMax = 1.5f;
+    panel.AddModuleVisualRule(rule);
+    assert(panel.ModuleVisualRuleCount() == initial + 1);
+
+    bool removed = panel.RemoveModuleVisualRule(initial);
+    assert(removed);
+    assert(panel.ModuleVisualRuleCount() == initial);
+    assert(!panel.RemoveModuleVisualRule(999));
+    ok("test_archp_module_visual_rules");
+}
+
+void test_archp_variation_bounds() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.SetVariationBounds(0.3f, 0.2f, 0.4f);
+    assert(std::fabs(panel.GetArchetype().shapeVariation - 0.3f) < 0.01f);
+    assert(std::fabs(panel.GetArchetype().sizeVariation - 0.2f) < 0.01f);
+    assert(std::fabs(panel.GetArchetype().detailVariation - 0.4f) < 0.01f);
+    ok("test_archp_variation_bounds");
+}
+
+void test_archp_generate_preview() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.SelectHullClass(atlas::pcg::HullClass::Cruiser);
+    panel.GeneratePreview();
+    assert(panel.HasPreview());
+    assert(panel.GetPreview().valid);
+    assert(!panel.GetPreview().ship.shipName.empty());
+    assert(!panel.GetPreview().hardpoints.empty());
+    assert(!panel.Log().empty());
+    ok("test_archp_generate_preview");
+}
+
+void test_archp_generate_preview_with_subsystems() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.SelectHullClass(atlas::pcg::HullClass::Cruiser);
+
+    // Activate variant 0 for all subsystem slots.
+    std::vector<int> active(atlas::pcg::SUBSYSTEM_TYPE_COUNT, 0);
+    panel.GeneratePreviewWithSubsystems(active);
+    assert(panel.HasPreview());
+    assert(panel.GetPreview().valid);
+    ok("test_archp_generate_preview_with_subsystems");
+}
+
+void test_archp_generate_preview_with_modules() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.SelectHullClass(atlas::pcg::HullClass::Battleship);
+
+    std::vector<std::string> modules = {"shield", "weapon", "engine"};
+    panel.GeneratePreviewWithModules(modules);
+    assert(panel.HasPreview());
+    assert(!panel.Log().empty());
+    ok("test_archp_generate_preview_with_modules");
+}
+
+void test_archp_save_load_string() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.SelectHullClass(atlas::pcg::HullClass::Destroyer);
+
+    std::string data = panel.SaveToString();
+    assert(!data.empty());
+
+    atlas::editor::ShipArchetypePanel panel2;
+    panel2.LoadFromString(data);
+    assert(panel2.GetArchetype().hullClass ==
+           atlas::pcg::HullClass::Destroyer);
+    assert(panel2.RoomCount() == panel.RoomCount());
+    assert(panel2.HardpointCount() == panel.HardpointCount());
+    ok("test_archp_save_load_string");
+}
+
+void test_archp_draw_does_not_crash() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.GeneratePreview();
+    panel.Draw();
+    ok("test_archp_draw_does_not_crash");
 }

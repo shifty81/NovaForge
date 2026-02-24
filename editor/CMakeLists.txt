@@ -6,6 +6,9 @@ add_executable(AtlasEditor
     panels/ConsolePanel.cpp
     tools/GamePackagerPanel.cpp
     tools/PCGPreviewPanel.cpp
+    tools/GenerationStylePanel.cpp
+    tools/AssetStylePanel.cpp
+    tools/ShipArchetypePanel.cpp
 )
 
 target_link_libraries(AtlasEditor AtlasEngine)
