@@ -69,6 +69,7 @@ endif()
 
 target_link_libraries(AtlasTests AtlasEngine)
 target_include_directories(AtlasTests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/editor
     ${CMAKE_SOURCE_DIR}/cpp_client/include
     ${CMAKE_SOURCE_DIR}/cpp_server/include

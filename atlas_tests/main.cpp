@@ -1,4 +1,7 @@
 #include <iostream>
+#include <string>
+#include <cstring>
+#include "test_log.h"
 
 // GraphVM tests
 void test_basic_arithmetic();
@@ -259,11 +262,20 @@ void test_viewport_draw_does_not_crash();
 void test_viewport_log_entries();
 void test_viewport_no_op_without_selection();
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::string logPath;
+    for (int i = 1; i < argc; ++i) {
+        if ((std::strcmp(argv[i], "--log") == 0) && i + 1 < argc) {
+            logPath = argv[++i];
+        }
+    }
+
+    auto& log = atlas::test::TestLog::Instance();
+
     std::cout << "=== Atlas Engine Tests ===" << std::endl;
 
     // GraphVM
-    std::cout << "\n--- Graph VM ---" << std::endl;
+    log.BeginSection("Graph VM");
     test_basic_arithmetic();
     test_subtraction();
     test_multiplication();
@@ -274,13 +286,13 @@ int main() {
     test_variables();
 
     // ECS
-    std::cout << "\n--- ECS ---" << std::endl;
+    log.BeginSection("ECS");
     test_create_entity();
     test_destroy_entity();
     test_tick_callback();
 
     // ECS Components
-    std::cout << "\n--- ECS Components ---" << std::endl;
+    log.BeginSection("ECS Components");
     test_add_and_get_component();
     test_has_component();
     test_remove_component();
@@ -289,18 +301,18 @@ int main() {
     test_component_update();
 
     // Assets
-    std::cout << "\n--- Asset System ---" << std::endl;
+    log.BeginSection("Asset System");
     test_asset_binary_roundtrip();
     test_asset_registry_scan();
 
     // Networking
-    std::cout << "\n--- Networking ---" << std::endl;
+    log.BeginSection("Networking");
     test_net_init();
     test_net_authority();
     test_net_shutdown();
 
     // Network Queue
-    std::cout << "\n--- Network Queue ---" << std::endl;
+    log.BeginSection("Network Queue");
     test_net_add_peer();
     test_net_remove_peer();
     test_net_send_receive();
@@ -308,7 +320,7 @@ int main() {
     test_net_shutdown_clears_queues();
 
     // Network Quality Monitor
-    std::cout << "\n--- Network Quality Monitor ---" << std::endl;
+    log.BeginSection("Network Quality Monitor");
     test_nqm_initial_rtt();
     test_nqm_rtt_ewma();
     test_nqm_stable_rtt_low_jitter();
@@ -327,7 +339,7 @@ int main() {
     test_net_sequence_resets_on_init();
 
     // World
-    std::cout << "\n--- World Layout ---" << std::endl;
+    log.BeginSection("World Layout");
     test_cube_sphere_projection();
     test_cube_sphere_chunk_roundtrip();
     test_cube_sphere_neighbors();
@@ -336,20 +348,20 @@ int main() {
     test_voxel_neighbors();
 
     // Compiler
-    std::cout << "\n--- Graph Compiler ---" << std::endl;
+    log.BeginSection("Graph Compiler");
     test_compile_constants_and_add();
     test_compile_and_execute_full();
     test_compile_multiply();
 
     // Engine
-    std::cout << "\n--- Engine ---" << std::endl;
+    log.BeginSection("Engine");
     test_engine_init_and_shutdown();
     test_engine_run_loop_ticks();
     test_engine_capabilities();
     test_engine_net_mode_from_config();
 
     // Console
-    std::cout << "\n--- Console ---" << std::endl;
+    log.BeginSection("Console");
     test_console_spawn_entity();
     test_console_ecs_dump();
     test_console_set_tickrate();
@@ -358,7 +370,7 @@ int main() {
     test_console_unknown_command();
 
     // HUD Panels
-    std::cout << "\n--- HUD Panels ---" << std::endl;
+    log.BeginSection("HUD Panels");
     test_station_panel_defaults();
     test_station_panel_toggle();
     test_station_panel_set_data();
@@ -377,7 +389,7 @@ int main() {
 
     // Game State & ViewMode
 #ifndef ATLAS_NO_GLM
-    std::cout << "\n--- Game State & ViewMode ---" << std::endl;
+    log.BeginSection("Game State & ViewMode");
     test_camera_default_view_mode();
     test_camera_set_view_mode_orbit();
     test_camera_set_view_mode_fps();
@@ -388,11 +400,11 @@ int main() {
     test_camera_view_mode_kills_inertia();
     test_camera_view_matrix_differs_by_mode();
 #else
-    std::cout << "\n--- Game State & ViewMode (SKIPPED — GLM not available) ---" << std::endl;
+    log.BeginSection("Game State & ViewMode (SKIPPED — GLM not available)");
 #endif
 
     // PCG Preview Panel
-    std::cout << "\n--- PCG Preview Panel ---" << std::endl;
+    log.BeginSection("PCG Preview Panel");
     test_pcg_preview_defaults();
     test_pcg_preview_generate_ship();
     test_pcg_preview_generate_ship_override_hull();
@@ -407,7 +419,7 @@ int main() {
     test_pcg_preview_draw_does_not_crash();
 
     // Low-Poly Character Generator
-    std::cout << "\n--- Low-Poly Character Generator ---" << std::endl;
+    log.BeginSection("Low-Poly Character Generator");
     test_lowpoly_char_generate_default();
     test_lowpoly_char_body_slot_count();
     test_lowpoly_char_override_archetype();
@@ -427,7 +439,7 @@ int main() {
     test_pcg_preview_character_clear();
 
     // Generation Style Engine
-    std::cout << "\n--- Generation Style Engine ---" << std::endl;
+    log.BeginSection("Generation Style Engine");
     test_gs_create_default_ship_style();
     test_gs_create_default_station_style();
     test_gs_create_all_default_styles();
@@ -447,7 +459,7 @@ int main() {
     test_gs_ship_parameter_overrides();
 
     // Generation Style Panel
-    std::cout << "\n--- Generation Style Panel ---" << std::endl;
+    log.BeginSection("Generation Style Panel");
     test_gsp_defaults();
     test_gsp_new_style();
     test_gsp_add_remove_placement();
@@ -459,7 +471,7 @@ int main() {
     test_gsp_draw_does_not_crash();
 
     // Asset Style Library
-    std::cout << "\n--- Asset Style Library ---" << std::endl;
+    log.BeginSection("Asset Style Library");
     test_as_library_add_find();
     test_as_library_replace();
     test_as_library_remove();
@@ -471,7 +483,7 @@ int main() {
     test_as_serialize_roundtrip();
 
     // Asset Style Panel
-    std::cout << "\n--- Asset Style Panel ---" << std::endl;
+    log.BeginSection("Asset Style Panel");
     test_asp_defaults();
     test_asp_new_style();
     test_asp_shape_control_points();
@@ -487,7 +499,7 @@ int main() {
     test_asp_draw_does_not_crash();
 
     // Ship Archetype Engine
-    std::cout << "\n--- Ship Archetype Engine ---" << std::endl;
+    log.BeginSection("Ship Archetype Engine");
     test_arch_create_default_frigate();
     test_arch_create_all_hull_classes();
     test_arch_capital_bigger_than_frigate();
@@ -506,7 +518,7 @@ int main() {
     test_arch_different_seeds_differ();
 
     // Ship Archetype Panel
-    std::cout << "\n--- Ship Archetype Panel ---" << std::endl;
+    log.BeginSection("Ship Archetype Panel");
     test_archp_defaults();
     test_archp_select_hull_class();
     test_archp_add_remove_hull_control_point();
@@ -523,7 +535,7 @@ int main() {
     test_archp_draw_does_not_crash();
 
     // Viewport Panel
-    std::cout << "\n--- Viewport Panel ---" << std::endl;
+    log.BeginSection("Viewport Panel");
     test_viewport_defaults();
     test_viewport_load_ship();
     test_viewport_load_station();
@@ -545,6 +557,11 @@ int main() {
     test_viewport_log_entries();
     test_viewport_no_op_without_selection();
 
-    std::cout << "\n=== All tests passed! ===" << std::endl;
-    return 0;
+    if (!logPath.empty()) {
+        log.WriteLogFile(logPath);
+    }
+
+    int exitCode = log.PrintSummary();
+    atlas::test::TestLog::WaitOnWindows();
+    return exitCode;
 }
