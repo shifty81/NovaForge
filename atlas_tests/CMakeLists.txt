@@ -31,7 +31,11 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/AssetStylePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ShipArchetypePanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/GamePackagerPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
+    ${CMAKE_SOURCE_DIR}/editor/panels/ECSInspectorPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/panels/NetInspectorPanel.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
