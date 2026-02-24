@@ -436,6 +436,148 @@ def test_engine_archetypes():
     return all_valid
 
 
+def test_exterior_influence_definitions():
+    """Test that EXTERIOR_INFLUENCE is defined for every MODULE_TYPE"""
+    print("\nTesting exterior influence definitions...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    ms_path = os.path.join(addon_path, 'module_system.py')
+
+    with open(ms_path, 'r') as f:
+        content = f.read()
+
+    # Basic structure checks
+    checks = {
+        'EXTERIOR_INFLUENCE': 'EXTERIOR_INFLUENCE dict',
+        'def get_exterior_influence(': 'get_exterior_influence function',
+        'def collect_fitted_module_types(': 'collect_fitted_module_types function',
+        'def apply_exterior_influence(': 'apply_exterior_influence function',
+        '"module_type"': 'module_type custom property on modules',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    # Verify every MODULE_TYPE has a matching EXTERIOR_INFLUENCE entry
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("module_system_check", ms_path)
+    # module_system imports bpy which is unavailable outside Blender, so
+    # we parse the AST instead.
+    tree = ast.parse(content)
+    module_keys = set()
+    exterior_keys = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == 'MODULE_TYPES':
+                    if isinstance(node.value, ast.Dict):
+                        for k in node.value.keys:
+                            if isinstance(k, ast.Constant):
+                                module_keys.add(k.value)
+                if isinstance(target, ast.Name) and target.id == 'EXTERIOR_INFLUENCE':
+                    if isinstance(node.value, ast.Dict):
+                        for k in node.value.keys:
+                            if isinstance(k, ast.Constant):
+                                exterior_keys.add(k.value)
+
+    if module_keys and exterior_keys:
+        missing = module_keys - exterior_keys
+        if missing:
+            print(f"✗ MODULE_TYPES without EXTERIOR_INFLUENCE: {missing}")
+            all_valid = False
+        else:
+            print(f"✓ All {len(module_keys)} module types have exterior influence")
+    else:
+        print("✗ Could not parse MODULE_TYPES or EXTERIOR_INFLUENCE")
+        all_valid = False
+
+    return all_valid
+
+
+def test_module_room_types():
+    """Test that MODULE_ROOM_TYPES covers every module type in interior_generator"""
+    print("\nTesting module-specific interior rooms...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    ig_path = os.path.join(addon_path, 'interior_generator.py')
+
+    with open(ig_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'MODULE_ROOM_TYPES': 'MODULE_ROOM_TYPES dict',
+        'def generate_module_rooms(': 'generate_module_rooms function',
+        'def generate_module_room(': 'generate_module_room function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    # Parse MODULE_ROOM_TYPES keys
+    tree = ast.parse(content)
+    room_keys = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == 'MODULE_ROOM_TYPES':
+                    if isinstance(node.value, ast.Dict):
+                        for k in node.value.keys:
+                            if isinstance(k, ast.Constant):
+                                room_keys.add(k.value)
+
+    expected = {'CARGO', 'WEAPON', 'SHIELD', 'HANGAR', 'SENSOR', 'POWER'}
+    if room_keys == expected:
+        print(f"✓ MODULE_ROOM_TYPES covers all {len(expected)} module types")
+    else:
+        missing = expected - room_keys
+        extra = room_keys - expected
+        if missing:
+            print(f"✗ Missing room types: {missing}")
+        if extra:
+            print(f"✗ Unexpected room types: {extra}")
+        all_valid = False
+
+    return all_valid
+
+
+def test_pipeline_stages():
+    """Test that ship_generator includes the module-driven stages"""
+    print("\nTesting pipeline stages in ship_generator...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    sg_path = os.path.join(addon_path, 'ship_generator.py')
+
+    with open(sg_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'collect_fitted_module_types': 'collect fitted module types call',
+        'apply_exterior_influence': 'apply exterior influence call',
+        'generate_module_rooms': 'generate module rooms call',
+        'Module-driven exterior influence': 'exterior influence stage comment',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    return all_valid
+
+
 def run_tests():
     """Run all validation tests"""
     print("=" * 60)
@@ -454,6 +596,9 @@ def run_tests():
         ("Brick System", test_brick_system),
         ("Hull Taper & Cleanup", test_hull_taper_and_cleanup),
         ("Engine Archetypes", test_engine_archetypes),
+        ("Exterior Influence Definitions", test_exterior_influence_definitions),
+        ("Module Room Types", test_module_room_types),
+        ("Pipeline Stages", test_pipeline_stages),
     ]
     
     results = []

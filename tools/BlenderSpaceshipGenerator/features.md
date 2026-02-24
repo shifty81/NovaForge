@@ -141,9 +141,10 @@ Everything else hangs off this core.
 | 4 | Engines (archetype-varied) | Main thrust, maneuvering, utility |
 | 5 | Weapons & turrets | Hardpoint-based placement |
 | 6 | Detail modules | Cargo, shields, sensors, etc. |
-| 7 | Interior (optional) | FPV-ready rooms and corridors |
-| 8 | Hull taper / deform pass | Silhouette shaping |
-| 9 | Bevel + auto-smooth cleanup | Manufactured look |
+| 7 | Module-driven exterior influence | Hull features per fitted module |
+| 8 | Interior + module rooms (optional) | FPV-ready rooms, corridors, and module-specific rooms |
+| 9 | Hull taper / deform pass | Silhouette shaping |
+| 10 | Bevel + auto-smooth cleanup | Manufactured look |
 
 ### Why Spine-First Matters
 
@@ -353,6 +354,19 @@ in Blender.  It can also be exported to standalone `.json` files.
 | Cargo Bay      | Open area with cargo containers |
 | Engine Room    | Reactor core with orange glow material |
 
+### Module-Specific Rooms
+
+When a module is fitted, a dedicated interior room is generated:
+
+| Module  | Interior Room    | Key Prop |
+|---------|-----------------|----------|
+| CARGO   | Cargo Hold       | Floor area |
+| WEAPON  | Armory           | Weapon racks |
+| SHIELD  | Shield Control   | Holographic emitter (emissive sphere) |
+| HANGAR  | Hangar Bay       | Landing pad marker |
+| SENSOR  | Sensor Ops       | Console desk |
+| POWER   | Power Core Room  | Glowing core cylinder |
+
 ### Progressive Complexity
 
 | Ship Size      | Interior Layout |
@@ -360,6 +374,8 @@ in Blender.  It can also be exported to standalone `.json` files.
 | Shuttle/Fighter | Cockpit only |
 | Corvette/Frigate | Cockpit + corridor + crew quarters |
 | Destroyer+     | Bridge + corridor network + quarters + cargo + engine room |
+
+All sizes additionally receive module-specific rooms for any fitted modules.
 
 ---
 
@@ -381,6 +397,24 @@ in Blender.  It can also be exported to standalone `.json` files.
 - **Small** (Shuttle, Fighter): Weapon, Shield, Sensor
 - **Medium** (Corvette, Frigate): + Cargo, Power
 - **Large** (Cruiser+): All module types including Hangar
+
+### Exterior Influence
+
+Fitted modules visibly change the ship's exterior hull.  Each module type
+adds a distinctive surface feature with an accent material:
+
+| Module  | Hull Feature    | Accent Colour |
+|---------|----------------|--------------|
+| CARGO   | Container rails | Brown |
+| WEAPON  | Weapon port     | Red |
+| SHIELD  | Shield strip    | Blue |
+| HANGAR  | Bay recess      | Grey |
+| SENSOR  | Antenna array   | Green |
+| POWER   | Power vent      | Orange |
+
+Features are placed on the dorsal hull surface and parented to the hull
+object.  Each feature stores ``source_module_type`` and ``hull_feature``
+custom properties for engine mapping.
 
 ---
 
@@ -583,7 +617,7 @@ the SDF hull skin wraps around them automatically.
 ### ✅ Implemented
 
 - [x] 18 ship classes (Shuttle → Titan + utility + NMS variants)
-- [x] 9-stage spine-first assembly pipeline
+- [x] 9-stage spine-first assembly pipeline (now 10 stages)
 - [x] Brick taxonomy (18 types, 5 categories)
 - [x] Scale hierarchy (primary / structural / detail)
 - [x] Grid snapping per ship class
@@ -593,7 +627,9 @@ the SDF hull skin wraps around them automatically.
 - [x] Hull taper pass
 - [x] Bevel + auto-smooth cleanup pass
 - [x] Interior generation (cockpit, bridge, corridors, quarters, cargo, engine room)
+- [x] Module-specific interior rooms (armory, shield control, sensor ops, power core, hangar bay)
 - [x] Module system (6 types, progressive availability)
+- [x] Module-driven exterior influence (hull features per fitted module type)
 - [x] 4 game-inspired styles + 4 EVEOFFLINE factions + NMS
 - [x] Procedural PBR textures with weathering
 - [x] Station generation (8 types, 4 faction architectures)

@@ -8,8 +8,10 @@ Generation pipeline (spine-first ordered assembly):
   3. Engines (archetype-varied)
   4. Weapons & turrets
   5. Detail modules
-  6. Hull taper / deform pass
-  7. Bevel + auto-smooth cleanup pass
+  6. Module-driven exterior influence (hull features per fitted module)
+  7. Interior + module-specific rooms
+  8. Hull taper / deform pass
+  9. Bevel + auto-smooth cleanup pass
 """
 
 import bpy
@@ -213,9 +215,10 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
       4. Engines (archetype-varied)
       5. Weapons & turrets
       6. Detail modules
-      7. Interior (optional)
-      8. Hull taper / deform pass
-      9. Bevel + auto-smooth cleanup pass
+      7. Module-driven exterior influence (hull features per fitted module)
+      8. Interior + module-specific rooms (optional)
+      9. Hull taper / deform pass
+     10. Bevel + auto-smooth cleanup pass
 
     Args:
         ship_class: Type of ship to generate
@@ -343,6 +346,7 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
     # ------------------------------------------------------------------
     # Stage 6 – Detail modules
     # ------------------------------------------------------------------
+    modules = []
     if module_slots > 0:
         modules = module_system.generate_modules(
             count=module_slots,
@@ -358,7 +362,18 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
             })
 
     # ------------------------------------------------------------------
-    # Stage 7 – Interior (optional)
+    # Stage 7 – Module-driven exterior influence
+    # ------------------------------------------------------------------
+    fitted_types = module_system.collect_fitted_module_types(modules)
+    if fitted_types:
+        ext_features = module_system.apply_exterior_influence(
+            hull, fitted_types, scale=scale, naming_prefix=naming_prefix,
+        )
+        for feat in ext_features:
+            collection.objects.link(feat)
+
+    # ------------------------------------------------------------------
+    # Stage 8 – Interior + module-specific rooms (optional)
     # ------------------------------------------------------------------
     if generate_interior:
         interior_objects = interior_generator.generate_interior(
@@ -370,18 +385,26 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
         for obj in interior_objects:
             collection.objects.link(obj)
 
+        # Module-specific rooms
+        if fitted_types:
+            module_rooms = interior_generator.generate_module_rooms(
+                fitted_types, scale=scale, naming_prefix=naming_prefix,
+            )
+            for obj in module_rooms:
+                collection.objects.link(obj)
+
     # Parent all objects to the hull
     for obj in collection.objects:
         if obj != hull:
             obj.parent = hull
 
     # ------------------------------------------------------------------
-    # Stage 8 – Hull taper / deform pass
+    # Stage 9 – Hull taper / deform pass
     # ------------------------------------------------------------------
     taper_hull(hull, factor=hull_taper)
 
     # ------------------------------------------------------------------
-    # Stage 9 – Bevel + auto-smooth cleanup pass
+    # Stage 10 – Bevel + auto-smooth cleanup pass
     # ------------------------------------------------------------------
     apply_cleanup_pass(hull)
 

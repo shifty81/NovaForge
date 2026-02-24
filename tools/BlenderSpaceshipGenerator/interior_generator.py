@@ -2,6 +2,13 @@
 Interior generation module
 Generates ship interiors with rooms, corridors, and access points
 Designed for FPV exploration
+
+Module-aware rooms
+------------------
+When a module is fitted, a dedicated interior room is generated for that
+module type (e.g. a WEAPON module adds an armory, SHIELD adds a shield
+control room, etc.).  Call :func:`generate_module_room` with the module
+type string to produce the appropriate room geometry.
 """
 
 import bpy
@@ -16,6 +23,41 @@ DOOR_WIDTH = 1.0
 CORRIDOR_WIDTH = 1.5
 CORRIDOR_HEIGHT = 2.5
 ROOM_HEIGHT = 3.0
+
+
+# Mapping from module type to interior room metadata
+MODULE_ROOM_TYPES = {
+    'CARGO': {
+        'room_name': 'Cargo_Hold',
+        'width_factor': 0.35,
+        'depth_factor': 0.25,
+    },
+    'WEAPON': {
+        'room_name': 'Armory',
+        'width_factor': 0.25,
+        'depth_factor': 0.20,
+    },
+    'SHIELD': {
+        'room_name': 'Shield_Control',
+        'width_factor': 0.20,
+        'depth_factor': 0.18,
+    },
+    'HANGAR': {
+        'room_name': 'Hangar_Bay',
+        'width_factor': 0.45,
+        'depth_factor': 0.35,
+    },
+    'SENSOR': {
+        'room_name': 'Sensor_Ops',
+        'width_factor': 0.18,
+        'depth_factor': 0.15,
+    },
+    'POWER': {
+        'room_name': 'Power_Core',
+        'width_factor': 0.22,
+        'depth_factor': 0.20,
+    },
+}
 
 
 def _prefixed_name(prefix, name):
@@ -403,6 +445,256 @@ def generate_doorway(position=(0, 0, 0), rotation=(0, 0, 0), naming_prefix=''):
     bpy.ops.object.transform_apply(scale=True, rotation=True)
     
     return doorway
+
+
+# ---------------------------------------------------------------------------
+# Module-specific interior rooms
+# ---------------------------------------------------------------------------
+
+
+def generate_module_rooms(fitted_module_types, scale=1.0, naming_prefix=''):
+    """Generate interior rooms for every unique fitted module type.
+
+    Args:
+        fitted_module_types: Iterable of module type strings
+            (e.g. ``['WEAPON', 'SHIELD']``).
+        scale: Ship scale factor.
+        naming_prefix: Project naming prefix.
+
+    Returns:
+        List of Blender objects comprising all generated rooms.
+    """
+    all_objects = []
+    type_list = list(fitted_module_types)
+    for idx, module_type in enumerate(type_list):
+        room_objects = generate_module_room(
+            module_type, scale, idx, len(type_list),
+            naming_prefix=naming_prefix,
+        )
+        all_objects.extend(room_objects)
+    return all_objects
+
+
+def generate_module_room(module_type, scale=1.0, index=0, total=1,
+                         naming_prefix=''):
+    """Generate a single interior room for *module_type*.
+
+    The room is placed along the port (negative-X) side of the ship so it
+    doesn't overlap with the main corridor or standard rooms.  Multiple
+    module rooms are spread along the Y axis.
+
+    Args:
+        module_type: One of the keys in :data:`MODULE_ROOM_TYPES`.
+        scale: Ship scale factor.
+        index: Room index (for positioning among peers).
+        total: Total number of module rooms being generated.
+        naming_prefix: Project naming prefix.
+
+    Returns:
+        List of Blender objects for the room.
+    """
+    room_info = MODULE_ROOM_TYPES.get(module_type)
+    if room_info is None:
+        return []
+
+    room_width = scale * room_info['width_factor']
+    room_depth = scale * room_info['depth_factor']
+
+    # Distribute rooms along port side
+    y_spread = scale * 0.5
+    y_pos = -y_spread / 2 + (index + 0.5) * y_spread / max(total, 1)
+    x_pos = -scale * 0.3  # port side
+
+    base_pos = (x_pos, y_pos, -scale * 0.15)
+    room_name = room_info['room_name']
+
+    # Dispatch to specialised room builders
+    if module_type == 'WEAPON':
+        return _generate_armory(base_pos, room_width, room_depth, scale,
+                                naming_prefix)
+    elif module_type == 'SHIELD':
+        return _generate_shield_control(base_pos, room_width, room_depth,
+                                        scale, naming_prefix)
+    elif module_type == 'SENSOR':
+        return _generate_sensor_ops(base_pos, room_width, room_depth, scale,
+                                    naming_prefix)
+    elif module_type == 'POWER':
+        return _generate_power_core_room(base_pos, room_width, room_depth,
+                                         scale, naming_prefix)
+    elif module_type == 'HANGAR':
+        return _generate_hangar_bay_interior(base_pos, room_width, room_depth,
+                                             scale, naming_prefix)
+    else:
+        # CARGO and any unknown types get a generic room
+        return _generate_generic_module_room(base_pos, room_width, room_depth,
+                                             room_name, scale, naming_prefix)
+
+
+# -- Armory (WEAPON) --------------------------------------------------------
+
+def _generate_armory(pos, width, depth, scale, naming_prefix):
+    objects = []
+
+    # Floor
+    bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
+    floor = bpy.context.active_object
+    floor.name = _prefixed_name(naming_prefix, "Armory_Floor")
+    floor.scale = (width, depth, 0.05)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(floor)
+
+    # Weapon rack (a series of thin vertical cubes)
+    rack_x = pos[0] - width * 0.4
+    for i in range(3):
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(rack_x, pos[1] - depth * 0.3 + i * depth * 0.3,
+                      pos[2] + ROOM_HEIGHT * 0.4),
+        )
+        rack = bpy.context.active_object
+        rack.name = _prefixed_name(naming_prefix, f"Weapon_Rack_{i+1}")
+        rack.scale = (0.15, 0.6, ROOM_HEIGHT * 0.7)
+        bpy.ops.object.transform_apply(scale=True)
+        objects.append(rack)
+
+    return objects
+
+
+# -- Shield Control (SHIELD) ------------------------------------------------
+
+def _generate_shield_control(pos, width, depth, scale, naming_prefix):
+    objects = []
+
+    # Floor
+    bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
+    floor = bpy.context.active_object
+    floor.name = _prefixed_name(naming_prefix, "Shield_Control_Floor")
+    floor.scale = (width, depth, 0.05)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(floor)
+
+    # Central holographic emitter (sphere with emissive material)
+    emitter_pos = (pos[0], pos[1], pos[2] + ROOM_HEIGHT * 0.5)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=width * 0.2,
+                                          location=emitter_pos)
+    emitter = bpy.context.active_object
+    emitter.name = _prefixed_name(naming_prefix, "Shield_Emitter_Holo")
+    mat = bpy.data.materials.new(name="Shield_Holo_Mat")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    emission = nodes.new(type='ShaderNodeEmission')
+    emission.inputs['Color'].default_value = (0.2, 0.5, 1.0, 1.0)
+    emission.inputs['Strength'].default_value = 2.5
+    output = nodes.get('Material Output')
+    mat.node_tree.links.new(emission.outputs['Emission'], output.inputs['Surface'])
+    emitter.data.materials.append(mat)
+    objects.append(emitter)
+
+    return objects
+
+
+# -- Sensor Ops (SENSOR) ----------------------------------------------------
+
+def _generate_sensor_ops(pos, width, depth, scale, naming_prefix):
+    objects = []
+
+    # Floor
+    bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
+    floor = bpy.context.active_object
+    floor.name = _prefixed_name(naming_prefix, "Sensor_Ops_Floor")
+    floor.scale = (width, depth, 0.05)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(floor)
+
+    # Console desk
+    bpy.ops.mesh.primitive_cube_add(
+        size=1,
+        location=(pos[0], pos[1] + depth * 0.3, pos[2] + ROOM_HEIGHT * 0.25),
+    )
+    console = bpy.context.active_object
+    console.name = _prefixed_name(naming_prefix, "Sensor_Console")
+    console.scale = (width * 0.6, 0.15, ROOM_HEIGHT * 0.3)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(console)
+
+    return objects
+
+
+# -- Power Core Room (POWER) ------------------------------------------------
+
+def _generate_power_core_room(pos, width, depth, scale, naming_prefix):
+    objects = []
+
+    # Floor
+    bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
+    floor = bpy.context.active_object
+    floor.name = _prefixed_name(naming_prefix, "Power_Core_Floor")
+    floor.scale = (width, depth, 0.05)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(floor)
+
+    # Power core cylinder with glow
+    core_pos = (pos[0], pos[1], pos[2] + ROOM_HEIGHT * 0.45)
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=width * 0.25, depth=ROOM_HEIGHT * 0.8, location=core_pos,
+    )
+    core = bpy.context.active_object
+    core.name = _prefixed_name(naming_prefix, "Power_Core_Unit")
+    mat = bpy.data.materials.new(name="Power_Core_Glow")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    emission = nodes.new(type='ShaderNodeEmission')
+    emission.inputs['Color'].default_value = (0.9, 0.6, 0.1, 1.0)
+    emission.inputs['Strength'].default_value = 3.5
+    output = nodes.get('Material Output')
+    mat.node_tree.links.new(emission.outputs['Emission'], output.inputs['Surface'])
+    core.data.materials.append(mat)
+    objects.append(core)
+
+    return objects
+
+
+# -- Hangar Bay Interior (HANGAR) -------------------------------------------
+
+def _generate_hangar_bay_interior(pos, width, depth, scale, naming_prefix):
+    objects = []
+
+    bay_height = ROOM_HEIGHT * 1.8
+
+    # Floor
+    bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
+    floor = bpy.context.active_object
+    floor.name = _prefixed_name(naming_prefix, "Hangar_Interior_Floor")
+    floor.scale = (width, depth, 0.1)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(floor)
+
+    # Landing pad marker
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=width * 0.3, depth=0.05,
+        location=(pos[0], pos[1], pos[2] + 0.06),
+    )
+    pad = bpy.context.active_object
+    pad.name = _prefixed_name(naming_prefix, "Landing_Pad")
+    objects.append(pad)
+
+    return objects
+
+
+# -- Generic Module Room (fallback) -----------------------------------------
+
+def _generate_generic_module_room(pos, width, depth, room_name, scale,
+                                  naming_prefix):
+    objects = []
+
+    bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
+    floor = bpy.context.active_object
+    floor.name = _prefixed_name(naming_prefix, f"{room_name}_Floor")
+    floor.scale = (width, depth, 0.05)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(floor)
+
+    return objects
 
 
 def register():

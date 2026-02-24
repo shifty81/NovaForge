@@ -1,6 +1,10 @@
 """
 Module system for progressive ship expansion
-Allows ships to have additional modules attached
+Allows ships to have additional modules attached.
+
+Modules influence both the ship interior (dedicated rooms are generated
+for each fitted module) and the exterior hull (visible surface features
+such as antenna arrays, armor plating, and weapon ports are added).
 """
 
 import bpy
@@ -39,6 +43,48 @@ MODULE_TYPES = {
         'name': 'Power Module',
         'scale_factor': 0.9,
         'shape': 'cylinder',
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Exterior influence definitions
+# ---------------------------------------------------------------------------
+# Each module type declares how it visibly affects the hull exterior.
+#   hull_feature  – type of surface detail added to the hull
+#   accent_color  – RGBA used for the feature material
+#   hull_scale    – relative size of the exterior feature (fraction of ship scale)
+
+EXTERIOR_INFLUENCE = {
+    'CARGO': {
+        'hull_feature': 'container_rails',
+        'accent_color': (0.45, 0.35, 0.2, 1.0),
+        'hull_scale': 0.12,
+    },
+    'WEAPON': {
+        'hull_feature': 'weapon_port',
+        'accent_color': (0.6, 0.15, 0.15, 1.0),
+        'hull_scale': 0.10,
+    },
+    'SHIELD': {
+        'hull_feature': 'shield_strip',
+        'accent_color': (0.2, 0.4, 0.9, 1.0),
+        'hull_scale': 0.08,
+    },
+    'HANGAR': {
+        'hull_feature': 'bay_recess',
+        'accent_color': (0.5, 0.5, 0.5, 1.0),
+        'hull_scale': 0.18,
+    },
+    'SENSOR': {
+        'hull_feature': 'antenna_array',
+        'accent_color': (0.3, 0.8, 0.3, 1.0),
+        'hull_scale': 0.07,
+    },
+    'POWER': {
+        'hull_feature': 'power_vent',
+        'accent_color': (0.9, 0.6, 0.1, 1.0),
+        'hull_scale': 0.09,
     },
 }
 
@@ -136,6 +182,9 @@ def create_module(module_type, scale=1.0, index=0, naming_prefix=''):
     else:
         module = create_box_module(position, module_scale, module_name)
     
+    # Store module type for downstream lookups (interior / exterior influence)
+    module["module_type"] = module_type
+
     # Add module-specific details
     add_module_details(module, module_type, module_scale, naming_prefix=naming_prefix)
     
@@ -300,6 +349,172 @@ def add_hangar_doors(parent, scale, naming_prefix=''):
     right_door.scale = (scale * 0.1, scale * 0.8, scale * 0.8)
     bpy.ops.object.transform_apply(scale=True)
     right_door.parent = parent
+
+
+# ---------------------------------------------------------------------------
+# Exterior influence helpers
+# ---------------------------------------------------------------------------
+
+
+def get_exterior_influence(module_type):
+    """Return the exterior influence dict for *module_type*, or ``None``."""
+    return EXTERIOR_INFLUENCE.get(module_type)
+
+
+def collect_fitted_module_types(modules):
+    """Deduplicate module types from a list of placed module objects.
+
+    Each module object is expected to carry a ``module_type`` custom property
+    set during :func:`create_module`.
+
+    Returns:
+        Sorted list of unique module type strings.
+    """
+    seen = set()
+    for mod in modules:
+        mt = mod.get("module_type")
+        if mt and mt in EXTERIOR_INFLUENCE:
+            seen.add(mt)
+    return sorted(seen)
+
+
+def apply_exterior_influence(hull, fitted_types, scale=1.0, naming_prefix=''):
+    """Add visible hull features for each fitted module type.
+
+    For every unique module type present on the ship a small exterior detail
+    is generated on the hull surface.  The feature type and colour are
+    determined by :data:`EXTERIOR_INFLUENCE`.
+
+    Args:
+        hull: The hull Blender object (features are parented to it).
+        fitted_types: Iterable of module type strings (e.g. ``['WEAPON', 'SHIELD']``).
+        scale: Ship scale factor.
+        naming_prefix: Project naming prefix.
+
+    Returns:
+        List of newly created feature objects.
+    """
+    features = []
+    type_list = list(fitted_types)
+    for idx, module_type in enumerate(type_list):
+        influence = EXTERIOR_INFLUENCE.get(module_type)
+        if influence is None:
+            continue
+        feature = _create_hull_feature(
+            hull, module_type, influence, scale, idx, len(type_list),
+            naming_prefix=naming_prefix,
+        )
+        if feature is not None:
+            features.append(feature)
+    return features
+
+
+def _create_hull_feature(hull, module_type, influence, scale, index, total,
+                         naming_prefix=''):
+    """Create a single hull-surface feature for a module type.
+
+    The feature is placed on the dorsal (top) surface of the hull and
+    distributed along the Y axis so that multiple features don't overlap.
+    """
+    feature_scale = scale * influence['hull_scale']
+    y_spread = scale * 0.6
+    y_pos = -y_spread / 2 + (index + 0.5) * y_spread / max(total, 1)
+    z_pos = scale * 0.16  # slightly above hull surface
+
+    feature_name = _prefixed_name(
+        naming_prefix,
+        f"Hull_{influence['hull_feature']}_{module_type}",
+    )
+
+    feature = None
+    hull_feature = influence['hull_feature']
+
+    if hull_feature == 'container_rails':
+        # Pair of rails along the hull
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(0, y_pos, z_pos),
+        )
+        feature = bpy.context.active_object
+        feature.name = feature_name
+        feature.scale = (scale * 0.35, feature_scale * 2, feature_scale * 0.3)
+        bpy.ops.object.transform_apply(scale=True)
+
+    elif hull_feature == 'weapon_port':
+        # Recessed weapon port
+        bpy.ops.mesh.primitive_cylinder_add(
+            radius=feature_scale * 0.8,
+            depth=feature_scale * 0.5,
+            location=(0, y_pos, z_pos),
+        )
+        feature = bpy.context.active_object
+        feature.name = feature_name
+
+    elif hull_feature == 'shield_strip':
+        # Glowing strip along hull
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(0, y_pos, z_pos),
+        )
+        feature = bpy.context.active_object
+        feature.name = feature_name
+        feature.scale = (scale * 0.4, feature_scale * 0.4, feature_scale * 0.15)
+        bpy.ops.object.transform_apply(scale=True)
+
+    elif hull_feature == 'bay_recess':
+        # Large bay opening outline
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(0, y_pos, z_pos),
+        )
+        feature = bpy.context.active_object
+        feature.name = feature_name
+        feature.scale = (scale * 0.25, feature_scale * 2.5, feature_scale * 0.2)
+        bpy.ops.object.transform_apply(scale=True)
+
+    elif hull_feature == 'antenna_array':
+        # Antenna mast on dorsal surface
+        bpy.ops.mesh.primitive_cone_add(
+            radius1=feature_scale * 0.6,
+            depth=feature_scale * 2.0,
+            location=(0, y_pos, z_pos + feature_scale),
+        )
+        feature = bpy.context.active_object
+        feature.name = feature_name
+
+    elif hull_feature == 'power_vent':
+        # Exhaust vent grille
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(0, y_pos, z_pos),
+        )
+        feature = bpy.context.active_object
+        feature.name = feature_name
+        feature.scale = (scale * 0.15, feature_scale * 1.2, feature_scale * 0.2)
+        bpy.ops.object.transform_apply(scale=True)
+
+    if feature is None:
+        return None
+
+    # Apply accent material
+    mat = bpy.data.materials.new(name=f"{feature_name}_Mat")
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    bsdf = nodes.get('Principled BSDF')
+    if bsdf:
+        bsdf.inputs['Base Color'].default_value = influence['accent_color']
+        bsdf.inputs['Metallic'].default_value = 0.8
+        bsdf.inputs['Roughness'].default_value = 0.35
+    feature.data.materials.append(mat)
+
+    # Store module type for engine mapping
+    feature["source_module_type"] = module_type
+    feature["hull_feature"] = influence['hull_feature']
+
+    # Parent to hull
+    feature.parent = hull
+
+    return feature
 
 
 def register():
