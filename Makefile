@@ -22,11 +22,11 @@ help: ## Show this help message
 	@echo ""
 
 .PHONY: build
-build: ## Build both client and server (Release)
+build: ## Build client, server, engine, and editor (Release)
 	./build.sh Release
 
 .PHONY: build-debug
-build-debug: ## Build both client and server (Debug)
+build-debug: ## Build client, server, engine, and editor (Debug)
 	./build.sh Debug
 
 .PHONY: build-client

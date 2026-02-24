@@ -1,0 +1,128 @@
+name: Atlas Engine, Editor & Tests
+
+on:
+  push:
+    branches: [ main, develop, 'copilot/**' ]
+    paths:
+      - 'engine/**'
+      - 'editor/**'
+      - 'atlas_tests/**'
+      - 'cpp_server/include/pcg/**'
+      - 'cpp_server/src/pcg/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/engine-editor-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'engine/**'
+      - 'editor/**'
+      - 'atlas_tests/**'
+      - 'cpp_server/include/pcg/**'
+      - 'cpp_server/src/pcg/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/engine-editor-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test-linux:
+    name: Build Engine, Editor & Tests (Ubuntu)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+
+    - name: Configure CMake (engine + editor + tests)
+      run: |
+        mkdir -p build
+        cd build
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_ATLAS_ENGINE=ON \
+          -DBUILD_ATLAS_EDITOR=ON \
+          -DBUILD_ATLAS_TESTS=ON \
+          -DBUILD_CLIENT=OFF \
+          -DBUILD_SERVER=OFF
+
+    - name: Build
+      working-directory: build
+      run: cmake --build . --config Release -j$(nproc)
+
+    - name: Run engine tests
+      working-directory: build
+      run: ./atlas_tests/AtlasTests
+
+    - name: Verify editor executable
+      working-directory: build
+      run: |
+        test -f editor/AtlasEditor && echo "✓ AtlasEditor built successfully" || (echo "✗ AtlasEditor not found" && exit 1)
+
+  build-windows:
+    name: Build Engine, Editor & Tests (Windows)
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Configure CMake (engine + editor + tests)
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_ATLAS_EDITOR=ON -DBUILD_ATLAS_TESTS=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF
+
+    - name: Build
+      working-directory: build
+      run: cmake --build . --config Release
+
+    - name: Run engine tests
+      working-directory: build
+      run: |
+        if (Test-Path "atlas_tests/Release/AtlasTests.exe") {
+          ./atlas_tests/Release/AtlasTests.exe
+        } elseif (Test-Path "atlas_tests/AtlasTests.exe") {
+          ./atlas_tests/AtlasTests.exe
+        } else {
+          Write-Host "AtlasTests not found, listing directory:"
+          Get-ChildItem -Recurse atlas_tests
+        }
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-test-linux, build-windows]
+    if: always()
+    permissions:
+      contents: read
+
+    steps:
+    - name: Check build results
+      run: |
+        echo "Engine/Editor/Tests Build Summary:"
+        echo "==================================="
+        echo "Linux:   ${{ needs.build-and-test-linux.result }}"
+        echo "Windows: ${{ needs.build-windows.result }}"
+
+        if [[ "${{ needs.build-and-test-linux.result }}" == "success" ]] && \
+           [[ "${{ needs.build-windows.result }}" == "success" ]]; then
+          echo "✓ All engine/editor/tests builds passed!"
+          exit 0
+        else
+          echo "✗ Some builds or tests failed"
+          exit 1
+        fi

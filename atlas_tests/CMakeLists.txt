@@ -25,11 +25,13 @@ set(ATLAS_TEST_SOURCES
     test_pcg_preview.cpp
     test_lowpoly_character.cpp
     test_generation_style.cpp
+    test_viewport.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/AssetStylePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ShipArchetypePanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp

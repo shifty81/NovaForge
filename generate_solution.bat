@@ -119,6 +119,7 @@ cmake .. ^
     -G "%VS_GENERATOR%" ^
     -A x64 ^
     -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
+    -DBUILD_ATLAS_EDITOR=ON ^
     %VCPKG_TOOLCHAIN%
 
 if %ERRORLEVEL% NEQ 0 (
