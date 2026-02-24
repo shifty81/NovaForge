@@ -4,13 +4,19 @@
 
 set -e
 
+# --- Logging Setup ---
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+LOG_DIR="$SCRIPT_DIR/logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/server_tests_$(date '+%Y%m%d_%H%M%S').log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+echo "Log file: $LOG_FILE"
+echo ""
+
 echo "========================================="
 echo "Nova Forge Server Test Runner"
 echo "========================================="
 echo ""
-
-# Get the script's directory (cpp_server/)
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Repository root is one level up from cpp_server/
 REPO_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
