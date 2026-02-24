@@ -10,6 +10,7 @@
 #include "tools/GamePackagerPanel.h"
 #include "tools/ViewportPanel.h"
 #include "tools/LiveSceneManager.h"
+#include "tools/CharacterSelectPanel.h"
 #include "assets/AssetRegistry.h"
 #include "../cpp_client/include/ui/atlas/atlas_context.h"
 #include <iostream>
@@ -38,6 +39,7 @@ int main() {
     atlas::editor::ConsolePanel console(engine.GetWorld(), engine.GetNet(),
                                         engine.GetScheduler());
     atlas::editor::GamePackagerPanel packager;
+    atlas::editor::CharacterSelectPanel characterSelect;
 
     // ── Live scene manager: connects viewport ↔ PCG ──────────
     // This is the core of the in-engine content creation workflow.
@@ -68,6 +70,7 @@ int main() {
     layout.RegisterPanel(&netInspector);
     layout.RegisterPanel(&console);
     layout.RegisterPanel(&packager);
+    layout.RegisterPanel(&characterSelect);
     layout.RegisterPanel(&liveScene);
 
     // Root: horizontal split — left (viewport area) | right (tool panels)
@@ -99,7 +102,9 @@ int main() {
     root.b->a->splitRatio = 0.33f;
     root.b->a->a = std::make_unique<atlas::editor::DockNode>();
     root.b->a->b = std::make_unique<atlas::editor::DockNode>();
-    root.b->a->a->panel = &pcgPreview;
+    root.b->a->a->split = atlas::editor::DockSplit::Tab;
+    root.b->a->a->tabs = {&pcgPreview, &characterSelect};
+    root.b->a->a->activeTab = 0;
     root.b->a->b->split = atlas::editor::DockSplit::Vertical;
     root.b->a->b->splitRatio = 0.50f;
     root.b->a->b->a = std::make_unique<atlas::editor::DockNode>();
@@ -117,7 +122,8 @@ int main() {
 
     std::cout << "[Editor] Layout built with " << layout.Panels().size()
               << " panels" << std::endl;
-    std::cout << "[Editor] Panels: Viewport, PCG Preview, Generation Style, "
+    std::cout << "[Editor] Panels: Viewport, PCG Preview, Character Select, "
+              << "Generation Style, "
               << "Asset Style, Ship Archetype, ECS Inspector, Net Inspector, "
               << "Console, Game Packager, Live Scene Manager" << std::endl;
 

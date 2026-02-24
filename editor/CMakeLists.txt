@@ -10,6 +10,7 @@ add_executable(AtlasEditor
     tools/AssetStylePanel.cpp
     tools/ShipArchetypePanel.cpp
     tools/ViewportPanel.cpp
+    tools/CharacterSelectPanel.cpp
     tools/PCGOverrideStore.cpp
     tools/LiveSceneManager.cpp
     ai/AIAggregator.cpp
@@ -28,6 +29,8 @@ add_executable(AtlasEditor
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/spine_hull_generator.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_placement_system.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_generator.cpp
+    # Character mesh system used by Character Select panel
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/characters/character_mesh_system.cpp
     # Atlas UI sources used by editor panels
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp

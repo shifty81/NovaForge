@@ -160,6 +160,25 @@ void test_pcg_preview_character_override_archetype();
 void test_pcg_preview_character_override_gender();
 void test_pcg_preview_character_clear();
 
+// Character Select Panel tests
+#ifndef ATLAS_NO_GLM
+void test_charsel_defaults();
+void test_charsel_generate();
+void test_charsel_set_archetype();
+void test_charsel_set_gender();
+void test_charsel_body_sliders();
+void test_charsel_randomize();
+void test_charsel_clear_preview();
+void test_charsel_orbit_camera();
+void test_charsel_orbit_camera_pitch_clamp();
+void test_charsel_camera_distance();
+void test_charsel_reference_mesh_archive();
+void test_charsel_determinism();
+void test_charsel_draw_does_not_crash();
+void test_charsel_panel_name();
+void test_charsel_log_entries();
+#endif
+
 // Generation Style Engine tests
 void test_gs_create_default_ship_style();
 void test_gs_create_default_station_style();
@@ -550,6 +569,28 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_pcg_preview_character_override_archetype);
     RUN_TEST(test_pcg_preview_character_override_gender);
     RUN_TEST(test_pcg_preview_character_clear);
+
+    // Character Select Panel
+#ifndef ATLAS_NO_GLM
+    log.BeginSection("Character Select Panel");
+    RUN_TEST(test_charsel_defaults);
+    RUN_TEST(test_charsel_generate);
+    RUN_TEST(test_charsel_set_archetype);
+    RUN_TEST(test_charsel_set_gender);
+    RUN_TEST(test_charsel_body_sliders);
+    RUN_TEST(test_charsel_randomize);
+    RUN_TEST(test_charsel_clear_preview);
+    RUN_TEST(test_charsel_orbit_camera);
+    RUN_TEST(test_charsel_orbit_camera_pitch_clamp);
+    RUN_TEST(test_charsel_camera_distance);
+    RUN_TEST(test_charsel_reference_mesh_archive);
+    RUN_TEST(test_charsel_determinism);
+    RUN_TEST(test_charsel_draw_does_not_crash);
+    RUN_TEST(test_charsel_panel_name);
+    RUN_TEST(test_charsel_log_entries);
+#else
+    log.BeginSection("Character Select Panel (SKIPPED — GLM not available)");
+#endif
 
     // Generation Style Engine
     log.BeginSection("Generation Style Engine");

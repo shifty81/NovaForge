@@ -24,6 +24,7 @@ set(ATLAS_TEST_SOURCES
     test_hud_panels.cpp
     test_pcg_preview.cpp
     test_lowpoly_character.cpp
+    test_character_select.cpp
     test_generation_style.cpp
     test_viewport.cpp
     test_editor_panels.cpp
@@ -66,8 +67,10 @@ if(glm_FOUND OR GLM_FOUND)
     list(APPEND ATLAS_TEST_SOURCES
         test_game_state.cpp
         ${CMAKE_SOURCE_DIR}/cpp_client/src/rendering/camera.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/CharacterSelectPanel.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_client/src/characters/character_mesh_system.cpp
     )
-    message(STATUS "GLM found -- camera tests enabled")
+    message(STATUS "GLM found -- camera & character select tests enabled")
 else()
     message(STATUS "GLM not found -- camera tests disabled (test_game_state skipped)")
 endif()
