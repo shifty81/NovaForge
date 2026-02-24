@@ -22,7 +22,7 @@ void TitanAssemblySystem::tick(TitanAssemblyComponent& comp) const {
     if (!comp.disrupted) {
         comp.progress += comp.resourceRate;
     } else {
-        // Disrupted ticks still advance, but at 25 % rate.
+        // Disrupted ticks still advance, but at 25% rate.
         comp.progress += comp.resourceRate * 0.25f;
         comp.disrupted = false; // reset flag after processing
     }

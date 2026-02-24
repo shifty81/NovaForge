@@ -195,7 +195,10 @@ void ShipGenerator::attachEngines(DeterministicRNG& rng, GeneratedShip& ship) {
     ship.alignTime = ship.mass / ship.thrust;
 }
 
-// File-scope state for ConstraintSolver callbacks (single-threaded PCG).
+// File-scope state for ConstraintSolver callbacks.
+// NOTE: PCG generation is intentionally single-threaded (deterministic by
+// design).  These statics exist because ConstraintSolver::MutateFn and
+// FallbackFn are plain function pointers that cannot capture state.
 static int*   s_turretSlots = nullptr;
 static float  s_pgPerTurret = 0.0f;
 static float* s_usedPg      = nullptr;
