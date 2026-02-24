@@ -32,7 +32,6 @@ void test_station_panel_defaults() {
     assert(data.hullPct == 1.0f);
     assert(data.repairCostIsk == 0.0f);
 
-    std::cout << "[PASS] test_station_panel_defaults" << std::endl;
 }
 
 void test_station_panel_toggle() {
@@ -45,7 +44,6 @@ void test_station_panel_toggle() {
     hud.toggleStation();
     assert(!hud.isStationOpen());
 
-    std::cout << "[PASS] test_station_panel_toggle" << std::endl;
 }
 
 void test_station_panel_set_data() {
@@ -73,7 +71,6 @@ void test_station_panel_set_data() {
     assert(d.hullPct == 1.0f);
     assert(d.repairCostIsk == 25000.0f);
 
-    std::cout << "[PASS] test_station_panel_set_data" << std::endl;
 }
 
 void test_station_panel_callbacks() {
@@ -93,7 +90,6 @@ void test_station_panel_callbacks() {
     assert(!undockCalled);
     assert(!repairCalled);
 
-    std::cout << "[PASS] test_station_panel_callbacks" << std::endl;
 }
 
 // ── Inventory panel tests ──────────────────────────────────────────
@@ -108,7 +104,6 @@ void test_inventory_panel_defaults() {
     assert(data.activeTab == 0);
     assert(data.items.empty());
 
-    std::cout << "[PASS] test_inventory_panel_defaults" << std::endl;
 }
 
 void test_inventory_panel_set_data() {
@@ -147,7 +142,6 @@ void test_inventory_panel_set_data() {
     assert(d.items[1].name == "1MN Afterburner II");
     assert(d.items[1].volume == 5.0f);
 
-    std::cout << "[PASS] test_inventory_panel_set_data" << std::endl;
 }
 
 // ── Fitting panel tests ────────────────────────────────────────────
@@ -170,7 +164,6 @@ void test_fitting_panel_defaults() {
     assert(data.dps == 0.0f);
     assert(!data.capStable);
 
-    std::cout << "[PASS] test_fitting_panel_defaults" << std::endl;
 }
 
 void test_fitting_panel_set_data() {
@@ -221,7 +214,6 @@ void test_fitting_panel_set_data() {
     assert(d.dps == 350.5f);
     assert(d.capStable == true);
 
-    std::cout << "[PASS] test_fitting_panel_set_data" << std::endl;
 }
 
 // ── Market panel tests ──────────────────────────────────────────────
@@ -235,7 +227,6 @@ void test_market_panel_defaults() {
     assert(data.sellOrders.empty());
     assert(data.buyOrders.empty());
 
-    std::cout << "[PASS] test_market_panel_defaults" << std::endl;
 }
 
 void test_market_panel_set_data() {
@@ -271,7 +262,6 @@ void test_market_panel_set_data() {
     assert(d.buyOrders[0].price == 4.20f);
     assert(d.buyOrders[0].quantity == 50000);
 
-    std::cout << "[PASS] test_market_panel_set_data" << std::endl;
 }
 
 // ── Fleet panel tests ──────────────────────────────────────────────
@@ -288,7 +278,6 @@ void test_fleet_panel_defaults() {
     assert(data.memberCount == 0);
     assert(data.members.empty());
 
-    std::cout << "[PASS] test_fleet_panel_defaults" << std::endl;
 }
 
 void test_fleet_panel_toggle() {
@@ -301,7 +290,6 @@ void test_fleet_panel_toggle() {
     hud.toggleFleet();
     assert(!hud.isFleetOpen());
 
-    std::cout << "[PASS] test_fleet_panel_toggle" << std::endl;
 }
 
 void test_fleet_panel_set_data() {
@@ -350,7 +338,6 @@ void test_fleet_panel_set_data() {
     assert(d.members[1].shieldPct == 0.6f);
     assert(d.members[2].inRange == false);
 
-    std::cout << "[PASS] test_fleet_panel_set_data" << std::endl;
 }
 
 // ── Existing panel toggle tests ────────────────────────────────────
@@ -397,7 +384,6 @@ void test_existing_panel_toggles() {
     hud.toggleProbeScanner();
     assert(hud.isProbeScannerOpen());
 
-    std::cout << "[PASS] test_existing_panel_toggles" << std::endl;
 }
 
 // ── Overview tab filter test ──────────────────────────────────────
@@ -418,5 +404,4 @@ void test_overview_tab_filter() {
     // Unknown tab shows everything
     assert(AtlasHUD::matchesOverviewTab("Custom", "anything") == true);
 
-    std::cout << "[PASS] test_overview_tab_filter" << std::endl;
 }

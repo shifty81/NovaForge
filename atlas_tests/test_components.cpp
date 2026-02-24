@@ -35,7 +35,6 @@ void test_add_and_get_component() {
     assert(retrieved->y == 2.0f);
     assert(retrieved->z == 3.0f);
 
-    std::cout << "[PASS] test_add_and_get_component" << std::endl;
 }
 
 void test_has_component() {
@@ -50,7 +49,6 @@ void test_has_component() {
     assert(world.HasComponent<Position>(e));
     assert(!world.HasComponent<Velocity>(e));
 
-    std::cout << "[PASS] test_has_component" << std::endl;
 }
 
 void test_remove_component() {
@@ -65,7 +63,6 @@ void test_remove_component() {
     assert(!world.HasComponent<Position>(e));
     assert(world.GetComponent<Position>(e) == nullptr);
 
-    std::cout << "[PASS] test_remove_component" << std::endl;
 }
 
 void test_multiple_components() {
@@ -95,7 +92,6 @@ void test_multiple_components() {
     auto types = world.GetComponentTypes(e);
     assert(types.size() == 3);
 
-    std::cout << "[PASS] test_multiple_components" << std::endl;
 }
 
 void test_destroy_entity_removes_components() {
@@ -111,7 +107,6 @@ void test_destroy_entity_removes_components() {
     // Components should be cleaned up
     assert(!world.HasComponent<Position>(e));
 
-    std::cout << "[PASS] test_destroy_entity_removes_components" << std::endl;
 }
 
 void test_component_update() {
@@ -133,5 +128,4 @@ void test_component_update() {
     assert(p2->x == 10.0f);
     assert(p2->y == 20.0f);
 
-    std::cout << "[PASS] test_component_update" << std::endl;
 }

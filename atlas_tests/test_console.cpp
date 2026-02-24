@@ -28,7 +28,6 @@ void test_console_spawn_entity() {
     assert(history.size() == 2); // "> spawn_entity" and "Created entity N"
     assert(history[0] == "> spawn_entity");
 
-    std::cout << "[PASS] test_console_spawn_entity" << std::endl;
 }
 
 void test_console_ecs_dump() {
@@ -49,7 +48,6 @@ void test_console_ecs_dump() {
     assert(history.size() == 4);
     assert(history[1] == "Entities: 2");
 
-    std::cout << "[PASS] test_console_ecs_dump" << std::endl;
 }
 
 void test_console_set_tickrate() {
@@ -69,7 +67,6 @@ void test_console_set_tickrate() {
     assert(history.size() == 2);
     assert(history[1] == "Tick rate set to 60");
 
-    std::cout << "[PASS] test_console_set_tickrate" << std::endl;
 }
 
 void test_console_net_mode() {
@@ -86,7 +83,6 @@ void test_console_net_mode() {
     assert(history.size() == 2);
     assert(history[1] == "Net mode: Server");
 
-    std::cout << "[PASS] test_console_net_mode" << std::endl;
 }
 
 void test_console_help() {
@@ -103,7 +99,6 @@ void test_console_help() {
     assert(history.size() == 2);
     assert(history[0] == "> help");
 
-    std::cout << "[PASS] test_console_help" << std::endl;
 }
 
 void test_console_unknown_command() {
@@ -120,5 +115,4 @@ void test_console_unknown_command() {
     assert(history.size() == 2);
     assert(history[1] == "Unknown command: foobar");
 
-    std::cout << "[PASS] test_console_unknown_command" << std::endl;
 }

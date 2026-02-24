@@ -12,7 +12,6 @@ void test_net_init() {
     assert(net.IsAuthority());
     assert(net.Peers().empty());
 
-    std::cout << "[PASS] test_net_init" << std::endl;
 }
 
 void test_net_authority() {
@@ -33,7 +32,6 @@ void test_net_authority() {
     net.Init(NetMode::Standalone);
     assert(!net.IsAuthority());
 
-    std::cout << "[PASS] test_net_authority" << std::endl;
 }
 
 void test_net_shutdown() {
@@ -44,5 +42,4 @@ void test_net_shutdown() {
     assert(net.Mode() == NetMode::Standalone);
     assert(net.Peers().empty());
 
-    std::cout << "[PASS] test_net_shutdown" << std::endl;
 }

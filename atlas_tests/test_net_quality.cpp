@@ -18,7 +18,6 @@ void test_nqm_initial_rtt() {
     assert(std::abs(mon.getSmoothedRTT() - 0.1f) < 1e-6f);
     assert(mon.getJitter() == 0.0f);
 
-    std::cout << "[PASS] test_nqm_initial_rtt" << std::endl;
 }
 
 void test_nqm_rtt_ewma() {
@@ -34,7 +33,6 @@ void test_nqm_rtt_ewma() {
     // Jitter should be non-zero now
     assert(mon.getJitter() > 0.0f);
 
-    std::cout << "[PASS] test_nqm_rtt_ewma" << std::endl;
 }
 
 void test_nqm_stable_rtt_low_jitter() {
@@ -46,7 +44,6 @@ void test_nqm_stable_rtt_low_jitter() {
     // Jitter should converge to ~0
     assert(mon.getJitter() < 0.001f);
 
-    std::cout << "[PASS] test_nqm_stable_rtt_low_jitter" << std::endl;
 }
 
 void test_nqm_negative_rtt_ignored() {
@@ -55,7 +52,6 @@ void test_nqm_negative_rtt_ignored() {
     mon.recordRTT(-0.05f);   // invalid
     assert(std::abs(mon.getSmoothedRTT() - 0.1f) < 1e-6f);
 
-    std::cout << "[PASS] test_nqm_negative_rtt_ignored" << std::endl;
 }
 
 // ---- Packet loss tracking ----
@@ -65,7 +61,6 @@ void test_nqm_no_loss() {
     for (uint32_t i = 0; i < 20; ++i) mon.recordPacketArrival(i);
     assert(mon.getPacketLossRate() == 0.0f);
 
-    std::cout << "[PASS] test_nqm_no_loss" << std::endl;
 }
 
 void test_nqm_50_percent_loss() {
@@ -77,7 +72,6 @@ void test_nqm_50_percent_loss() {
     // Window should contain received + gaps
     assert(loss > 0.4f && loss < 0.6f);
 
-    std::cout << "[PASS] test_nqm_50_percent_loss" << std::endl;
 }
 
 void test_nqm_window_trims() {
@@ -88,14 +82,12 @@ void test_nqm_window_trims() {
 
     assert(mon.getPacketLossRate() == 0.0f);
 
-    std::cout << "[PASS] test_nqm_window_trims" << std::endl;
 }
 
 void test_nqm_empty_loss_rate() {
     NetworkQualityMonitor mon;
     assert(mon.getPacketLossRate() == 0.0f);
 
-    std::cout << "[PASS] test_nqm_empty_loss_rate" << std::endl;
 }
 
 // ---- Adaptive interpolation ----
@@ -109,7 +101,6 @@ void test_nqm_interp_floor() {
     assert(interp >= NetworkQualityMonitor::kMinInterpTime);
     assert(interp <= NetworkQualityMonitor::kMaxInterpTime);
 
-    std::cout << "[PASS] test_nqm_interp_floor" << std::endl;
 }
 
 void test_nqm_interp_ceiling() {
@@ -122,7 +113,6 @@ void test_nqm_interp_ceiling() {
     float interp = mon.getAdaptiveInterpolationTime();
     assert(interp <= NetworkQualityMonitor::kMaxInterpTime);
 
-    std::cout << "[PASS] test_nqm_interp_ceiling" << std::endl;
 }
 
 void test_nqm_interp_increases_with_jitter() {
@@ -139,7 +129,6 @@ void test_nqm_interp_increases_with_jitter() {
 
     assert(jitteryInterp > stableInterp);
 
-    std::cout << "[PASS] test_nqm_interp_increases_with_jitter" << std::endl;
 }
 
 void test_nqm_interp_increases_with_loss() {
@@ -157,7 +146,6 @@ void test_nqm_interp_increases_with_loss() {
 
     assert(withLoss > noLoss);
 
-    std::cout << "[PASS] test_nqm_interp_increases_with_loss" << std::endl;
 }
 
 // ---- Reset ----
@@ -174,7 +162,6 @@ void test_nqm_reset() {
     assert(mon.getPacketLossRate() == 0.0f);
     assert(mon.getAdaptiveInterpolationTime() == NetworkQualityMonitor::kMinInterpTime);
 
-    std::cout << "[PASS] test_nqm_reset" << std::endl;
 }
 
 // ---- NetContext sequence numbers ----
@@ -197,7 +184,6 @@ void test_net_send_assigns_sequence() {
     assert(r1.sequence == 1);
     assert(r2.sequence == 2);
 
-    std::cout << "[PASS] test_net_send_assigns_sequence" << std::endl;
 }
 
 void test_net_broadcast_assigns_sequence() {
@@ -214,7 +200,6 @@ void test_net_broadcast_assigns_sequence() {
     assert(net.Receive(r));
     assert(r.sequence == 1);
 
-    std::cout << "[PASS] test_net_broadcast_assigns_sequence" << std::endl;
 }
 
 void test_net_sequence_resets_on_init() {
@@ -240,5 +225,4 @@ void test_net_sequence_resets_on_init() {
     assert(net.Receive(r));
     assert(r.sequence == 1);
 
-    std::cout << "[PASS] test_net_sequence_resets_on_init" << std::endl;
 }

@@ -39,7 +39,6 @@ void test_asset_binary_roundtrip() {
     }
 
     std::filesystem::remove(path);
-    std::cout << "[PASS] test_asset_binary_roundtrip" << std::endl;
 }
 
 void test_asset_registry_scan() {
@@ -58,5 +57,4 @@ void test_asset_registry_scan() {
     assert(registry.Get("nonexistent") == nullptr);
 
     std::filesystem::remove_all(testDir);
-    std::cout << "[PASS] test_asset_registry_scan" << std::endl;
 }

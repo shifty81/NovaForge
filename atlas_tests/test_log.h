@@ -166,3 +166,18 @@ private:
 
 #define ATLAS_ASSERT_MSG(expr, msg) \
     do { if (!(expr)) throw std::runtime_error(std::string("Assertion failed: ") + msg); } while(0)
+
+// Wrap an existing test function call: records pass/fail and timing
+// The wrapped function may still use raw assert() — if it aborts, the process
+// terminates before RecordFail can fire.  For graceful failure handling,
+// prefer ATLAS_ASSERT inside ATLAS_TEST_BEGIN/END blocks.
+#define RUN_TEST(fn) \
+    { atlas::test::TestTimer _t; \
+      try { fn(); \
+        atlas::test::TestLog::Instance().RecordPass(#fn, _t.ElapsedMs()); \
+      } catch (const std::exception& e) { \
+        atlas::test::TestLog::Instance().RecordFail(#fn, e.what(), _t.ElapsedMs()); \
+      } catch (...) { \
+        atlas::test::TestLog::Instance().RecordFail(#fn, "Unknown exception", _t.ElapsedMs()); \
+      } \
+    }

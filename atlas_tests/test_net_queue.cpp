@@ -16,7 +16,6 @@ void test_net_add_peer() {
     assert(net.Peers()[0].connected);
     assert(net.Peers()[1].connected);
 
-    std::cout << "[PASS] test_net_add_peer" << std::endl;
 }
 
 void test_net_remove_peer() {
@@ -30,7 +29,6 @@ void test_net_remove_peer() {
     net.RemovePeer(id1);
     assert(net.Peers().size() == 1);
 
-    std::cout << "[PASS] test_net_remove_peer" << std::endl;
 }
 
 void test_net_send_receive() {
@@ -63,7 +61,6 @@ void test_net_send_receive() {
     // No more packets
     assert(!net.Receive(received));
 
-    std::cout << "[PASS] test_net_send_receive" << std::endl;
 }
 
 void test_net_broadcast_receive() {
@@ -86,7 +83,6 @@ void test_net_broadcast_receive() {
     // Only one broadcast packet in the queue
     assert(!net.Receive(received));
 
-    std::cout << "[PASS] test_net_broadcast_receive" << std::endl;
 }
 
 void test_net_shutdown_clears_queues() {
@@ -107,5 +103,4 @@ void test_net_shutdown_clears_queues() {
     assert(net.Peers().empty());
     assert(net.Mode() == NetMode::Standalone);
 
-    std::cout << "[PASS] test_net_shutdown_clears_queues" << std::endl;
 }
