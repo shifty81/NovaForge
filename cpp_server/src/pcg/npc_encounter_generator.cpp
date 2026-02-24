@@ -141,6 +141,23 @@ float NPCEncounterGenerator::bountyForShip(const GeneratedShip& ship) {
         case HullClass::Battlecruiser: return 150000.0f;
         case HullClass::Battleship:    return 500000.0f;
         case HullClass::Capital:       return 2000000.0f;
+        // T2 variants carry higher bounties than their T1 base.
+        case HullClass::Interceptor:   return 10000.0f;
+        case HullClass::CovertOps:     return 12000.0f;
+        case HullClass::AssaultFrigate:return 15000.0f;
+        case HullClass::StealthBomber: return 18000.0f;
+        case HullClass::Logistics:     return 80000.0f;
+        case HullClass::Recon:         return 90000.0f;
+        case HullClass::CommandShip:   return 250000.0f;
+        case HullClass::Marauder:      return 800000.0f;
+        // Industrial / mining — low bounty (non-combat).
+        case HullClass::Industrial:    return 8000.0f;
+        case HullClass::MiningBarge:   return 10000.0f;
+        case HullClass::Exhumer:       return 20000.0f;
+        // Capital (specific) — very high bounties.
+        case HullClass::Carrier:       return 3000000.0f;
+        case HullClass::Dreadnought:   return 5000000.0f;
+        case HullClass::Titan:         return 20000000.0f;
     }
     return 0.0f;
 }

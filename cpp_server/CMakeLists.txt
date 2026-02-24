@@ -170,6 +170,8 @@ set(SERVER_SOURCES
     src/pcg/turret_placement_system.cpp
     src/pcg/damage_state_generator.cpp
     src/pcg/economy_driven_generator.cpp
+    src/pcg/star_system_generator.cpp
+    src/pcg/galaxy_generator.cpp
 )
 
 set(SERVER_HEADERS
@@ -315,6 +317,8 @@ set(SERVER_HEADERS
     include/pcg/turret_placement_system.h
     include/pcg/damage_state_generator.h
     include/pcg/economy_driven_generator.h
+    include/pcg/star_system_generator.h
+    include/pcg/galaxy_generator.h
 )
 
 # Steam SDK configuration
@@ -527,6 +531,8 @@ if(BUILD_TESTS)
         src/pcg/turret_placement_system.cpp
         src/pcg/damage_state_generator.cpp
         src/pcg/economy_driven_generator.cpp
+        src/pcg/star_system_generator.cpp
+        src/pcg/galaxy_generator.cpp
     )
 
     add_executable(test_systems

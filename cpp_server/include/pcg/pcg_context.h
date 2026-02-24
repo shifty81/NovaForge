@@ -33,6 +33,7 @@ enum class PCGDomain : uint32_t {
     Terrain      = 17,
     DamageState  = 18,
     EconomyFleet = 19,
+    Character    = 20,
 };
 
 /**

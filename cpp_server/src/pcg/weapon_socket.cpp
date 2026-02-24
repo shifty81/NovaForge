@@ -58,7 +58,9 @@ WeaponLayout WeaponSocketUtil::generateLayout(const PCGContext& ctx,
     float baseArc      = 0.0f;
     float baseTracking = 0.0f;
 
-    switch (ship.hullClass) {
+    // Use base hull class for geometry-related decisions.
+    HullClass base = baseHullClass(ship.hullClass);
+    switch (base) {
         case HullClass::Frigate:
         case HullClass::Destroyer:
             // Escort / tackle — wide arcs, fast tracking.
@@ -80,6 +82,10 @@ WeaponLayout WeaponSocketUtil::generateLayout(const PCGContext& ctx,
             // Capitals — very limited traverse.
             baseArc      = rng.rangeFloat(20.0f, 60.0f);
             baseTracking = rng.rangeFloat(0.005f, 0.02f);
+            break;
+        default: // Safety fallback for invalid enum values.
+            baseArc      = rng.rangeFloat(60.0f, 120.0f);
+            baseTracking = rng.rangeFloat(0.04f, 0.08f);
             break;
     }
 
@@ -109,6 +115,7 @@ WeaponLayout WeaponSocketUtil::generateLayout(const PCGContext& ctx,
             case WeaponSize::Small:  dps = rng.rangeFloat(30.0f, 60.0f);   break;
             case WeaponSize::Medium: dps = rng.rangeFloat(100.0f, 200.0f); break;
             case WeaponSize::Large:  dps = rng.rangeFloat(300.0f, 600.0f); break;
+            case WeaponSize::XLarge: dps = rng.rangeFloat(800.0f, 1500.0f); break;
         }
         totalDPS += dps;
         if (isInArc(0.0f, s)) forwardDPS += dps;

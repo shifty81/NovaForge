@@ -24,13 +24,14 @@ int DamageStateGenerator::computeBreachCount(DeterministicRNG& rng,
                                               HullClass hull) {
     // Bigger ships can sustain more breaches before being critical.
     int hullScale = 1;
-    switch (hull) {
+    switch (baseHullClass(hull)) {
         case HullClass::Frigate:       hullScale = 1; break;
         case HullClass::Destroyer:     hullScale = 1; break;
         case HullClass::Cruiser:       hullScale = 2; break;
         case HullClass::Battlecruiser: hullScale = 2; break;
         case HullClass::Battleship:    hullScale = 3; break;
         case HullClass::Capital:       hullScale = 4; break;
+        default:                       hullScale = 2; break;
     }
 
     switch (level) {
@@ -49,13 +50,14 @@ int DamageStateGenerator::computeMissingModules(DeterministicRNG& rng,
                                                  DamageLevel level,
                                                  HullClass hull) {
     int maxModules = 2;
-    switch (hull) {
+    switch (baseHullClass(hull)) {
         case HullClass::Frigate:       maxModules = 2; break;
         case HullClass::Destroyer:     maxModules = 3; break;
         case HullClass::Cruiser:       maxModules = 4; break;
         case HullClass::Battlecruiser: maxModules = 5; break;
         case HullClass::Battleship:    maxModules = 6; break;
         case HullClass::Capital:       maxModules = 8; break;
+        default:                       maxModules = 4; break;
     }
 
     switch (level) {
@@ -87,13 +89,14 @@ std::vector<DamageDecal> DamageStateGenerator::generateDecals(
 
     // Bigger ships have more surface area → more decals.
     int hullMultiplier = 1;
-    switch (hull) {
+    switch (baseHullClass(hull)) {
         case HullClass::Frigate:       hullMultiplier = 1; break;
         case HullClass::Destroyer:     hullMultiplier = 1; break;
         case HullClass::Cruiser:       hullMultiplier = 2; break;
         case HullClass::Battlecruiser: hullMultiplier = 2; break;
         case HullClass::Battleship:    hullMultiplier = 3; break;
         case HullClass::Capital:       hullMultiplier = 4; break;
+        default:                       hullMultiplier = 2; break;
     }
 
     int totalDecals = baseCount * hullMultiplier;
@@ -134,13 +137,14 @@ std::vector<DamageDecal> DamageStateGenerator::generateDecals(
 
         // Size scales with ship class.
         float baseSize = 0.5f;
-        switch (hull) {
+        switch (baseHullClass(hull)) {
             case HullClass::Frigate:       baseSize = 0.3f; break;
             case HullClass::Destroyer:     baseSize = 0.4f; break;
             case HullClass::Cruiser:       baseSize = 0.6f; break;
             case HullClass::Battlecruiser: baseSize = 0.8f; break;
             case HullClass::Battleship:    baseSize = 1.2f; break;
             case HullClass::Capital:       baseSize = 2.0f; break;
+            default:                       baseSize = 0.6f; break;
         }
         d.size = baseSize * rng.rangeFloat(0.5f, 1.5f);
 

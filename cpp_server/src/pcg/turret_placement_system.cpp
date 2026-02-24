@@ -33,7 +33,7 @@ static float pairwiseOverlap(const TurretMount& a, const TurretMount& b) {
 
 TurretSize TurretPlacementSystem::sizeForHull(DeterministicRNG& rng,
                                                HullClass hull) {
-    switch (hull) {
+    switch (baseHullClass(hull)) {
         case HullClass::Frigate:
         case HullClass::Destroyer:
             return TurretSize::Small;
@@ -44,8 +44,9 @@ TurretSize TurretPlacementSystem::sizeForHull(DeterministicRNG& rng,
             return rng.chance(0.6f) ? TurretSize::Large : TurretSize::Medium;
         case HullClass::Capital:
             return TurretSize::Capital;
+        default: // Safety fallback for invalid enum values.
+            return TurretSize::Small;
     }
-    return TurretSize::Small;
 }
 
 // ── Mount distribution ──────────────────────────────────────────────
@@ -59,7 +60,7 @@ void TurretPlacementSystem::distributeMounts(DeterministicRNG& rng,
 
     // Role-dependent base arc and spread.
     float baseArc = 0.0f;
-    switch (hull) {
+    switch (baseHullClass(hull)) {
         case HullClass::Frigate:
         case HullClass::Destroyer:
             baseArc = rng.rangeFloat(100.0f, 180.0f);
@@ -73,6 +74,9 @@ void TurretPlacementSystem::distributeMounts(DeterministicRNG& rng,
             break;
         case HullClass::Capital:
             baseArc = rng.rangeFloat(30.0f, 70.0f);
+            break;
+        default: // Safety fallback for invalid enum values.
+            baseArc = rng.rangeFloat(60.0f, 110.0f);
             break;
     }
 

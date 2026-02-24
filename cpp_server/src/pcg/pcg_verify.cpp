@@ -24,6 +24,8 @@ uint64_t PCGVerify::hashShip(const GeneratedShip& ship) {
     h = hashCombine(h, static_cast<uint64_t>(ship.launcherSlots));
     h = hashCombine(h, static_cast<uint64_t>(ship.engineCount));
     h = hashCombine(h, static_cast<uint64_t>(ship.maxWeaponSize));
+    h = hashCombine(h, static_cast<uint64_t>(ship.cargoCapacity));
+    h = hashCombine(h, static_cast<uint64_t>(ship.techLevel));
 
     return h;
 }

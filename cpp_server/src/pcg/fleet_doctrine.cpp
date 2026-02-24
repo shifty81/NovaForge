@@ -28,24 +28,47 @@ HullClass FleetDoctrineGenerator::hullForRole(FleetRole role,
                                                DeterministicRNG& rng) {
     switch (role) {
         case FleetRole::Tackle:
+            // Interceptors are the preferred tackle ship (T2).
+            if (rng.chance(0.4f)) return HullClass::Interceptor;
+            return rng.chance(0.5f) ? HullClass::Frigate : HullClass::Destroyer;
+
         case FleetRole::Scout:
-            // Fast, small ships.
-            return rng.chance(0.6f) ? HullClass::Frigate : HullClass::Destroyer;
+            // Covert ops for scouting.
+            if (rng.chance(0.5f)) return HullClass::CovertOps;
+            return rng.chance(0.6f) ? HullClass::Frigate : HullClass::Interceptor;
 
         case FleetRole::Logistics:
-            // Cruiser-sized logistics.
+            // T2 logistics cruisers are preferred.
+            if (rng.chance(0.6f)) return HullClass::Logistics;
             return rng.chance(0.7f) ? HullClass::Cruiser : HullClass::Battlecruiser;
 
         case FleetRole::DPS:
-            if (doctrine == FleetDoctrine::CapitalSupport && rng.chance(0.25f))
-                return HullClass::Capital;
-            if (doctrine == FleetDoctrine::Brawler)
+            if (doctrine == FleetDoctrine::CapitalSupport) {
+                float r = rng.nextFloat();
+                if (r < 0.15f) return HullClass::Dreadnought;
+                if (r < 0.25f) return HullClass::Carrier;
+                if (r < 0.50f) return HullClass::Battleship;
+                return HullClass::Battlecruiser;
+            }
+            if (doctrine == FleetDoctrine::Brawler) {
+                if (rng.chance(0.2f)) return HullClass::Marauder;
                 return rng.chance(0.5f) ? HullClass::Battleship : HullClass::Battlecruiser;
-            if (doctrine == FleetDoctrine::Sniper)
+            }
+            if (doctrine == FleetDoctrine::Sniper) {
+                if (rng.chance(0.15f)) return HullClass::Marauder;
                 return rng.chance(0.6f) ? HullClass::Battleship : HullClass::Cruiser;
+            }
+            if (doctrine == FleetDoctrine::Kite) {
+                float r = rng.nextFloat();
+                if (r < 0.25f) return HullClass::AssaultFrigate;
+                if (r < 0.50f) return HullClass::Cruiser;
+                return HullClass::Battlecruiser;
+            }
             return rng.chance(0.5f) ? HullClass::Cruiser : HullClass::Battlecruiser;
 
         case FleetRole::Commander:
+            // Command ships are the ideal FC platform.
+            if (rng.chance(0.6f)) return HullClass::CommandShip;
             return HullClass::Battlecruiser;
     }
     return HullClass::Cruiser;

@@ -49,34 +49,38 @@ HullClass EconomyDrivenGenerator::hullForRole(DeterministicRNG& rng,
     float r = rng.nextFloat();
     switch (role) {
         case EconomyShipRole::Miner:
-            // Mining vessels: mostly cruiser / battlecruiser sized.
-            if (r < 0.3f)  return HullClass::Cruiser;
-            if (r < 0.7f)  return HullClass::Battlecruiser;
-            return HullClass::Battleship;
+            // Mining vessels use dedicated mining hulls.
+            if (r < 0.35f) return HullClass::MiningBarge;
+            if (r < 0.60f) return HullClass::Exhumer;
+            return HullClass::Industrial;
         case EconomyShipRole::Hauler:
-            if (r < 0.3f)  return HullClass::Destroyer;
-            if (r < 0.7f)  return HullClass::Cruiser;
+            // Haulers use dedicated industrial hulls.
+            if (r < 0.60f) return HullClass::Industrial;
+            if (r < 0.85f) return HullClass::Cruiser;
             return HullClass::Battleship;
         case EconomyShipRole::Patrol:
-            if (r < 0.4f)  return HullClass::Frigate;
-            if (r < 0.7f)  return HullClass::Destroyer;
+            if (r < 0.3f) return HullClass::Interceptor;
+            if (r < 0.5f) return HullClass::Frigate;
+            if (r < 0.7f) return HullClass::Destroyer;
             return HullClass::Cruiser;
         case EconomyShipRole::Pirate:
-            if (r < 0.5f)  return HullClass::Frigate;
-            if (r < 0.8f)  return HullClass::Destroyer;
+            if (r < 0.3f) return HullClass::StealthBomber;
+            if (r < 0.6f) return HullClass::Frigate;
+            if (r < 0.85f) return HullClass::Destroyer;
             return HullClass::Cruiser;
         case EconomyShipRole::Scavenger:
-            if (r < 0.5f)  return HullClass::Frigate;
-            if (r < 0.8f)  return HullClass::Destroyer;
+            if (r < 0.5f) return HullClass::Frigate;
+            if (r < 0.8f) return HullClass::Destroyer;
             return HullClass::Cruiser;
         case EconomyShipRole::Trader:
-            if (r < 0.2f)  return HullClass::Destroyer;
-            if (r < 0.6f)  return HullClass::Cruiser;
+            if (r < 0.5f) return HullClass::Industrial;
+            if (r < 0.75f) return HullClass::Cruiser;
             return HullClass::Battlecruiser;
         case EconomyShipRole::MilitaryEscort:
-            if (r < 0.2f)  return HullClass::Destroyer;
-            if (r < 0.5f)  return HullClass::Cruiser;
-            if (r < 0.8f)  return HullClass::Battlecruiser;
+            if (r < 0.2f) return HullClass::Destroyer;
+            if (r < 0.4f) return HullClass::Recon;
+            if (r < 0.6f) return HullClass::Cruiser;
+            if (r < 0.8f) return HullClass::CommandShip;
             return HullClass::Battleship;
     }
     return HullClass::Cruiser;

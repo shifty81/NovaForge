@@ -11,8 +11,9 @@ namespace pcg {
 
 SpineType SpineHullGenerator::selectSpine(DeterministicRNG& rng,
                                            HullClass hull) {
-    // Hull class biases the spine archetype.
-    switch (hull) {
+    // Use base hull class for geometry decisions.
+    HullClass base = baseHullClass(hull);
+    switch (base) {
         case HullClass::Frigate:
         case HullClass::Destroyer:
             // Fast, nimble → favour Needle / Wedge.
@@ -28,8 +29,9 @@ SpineType SpineHullGenerator::selectSpine(DeterministicRNG& rng,
             return rng.chance(0.6f) ? SpineType::Hammer : SpineType::Slab;
         case HullClass::Capital:
             return rng.chance(0.4f) ? SpineType::Slab : SpineType::Ring;
+        default:
+            return SpineType::Wedge;
     }
-    return SpineType::Wedge;
 }
 
 // ── Width profile derivation ────────────────────────────────────────
@@ -40,13 +42,15 @@ SpineProfile SpineHullGenerator::deriveProfile(DeterministicRNG& rng,
     SpineProfile p{};
 
     // Base length by hull class.
-    switch (hull) {
+    HullClass base = baseHullClass(hull);
+    switch (base) {
         case HullClass::Frigate:       p.length = rng.rangeFloat(30.0f, 60.0f);      break;
         case HullClass::Destroyer:     p.length = rng.rangeFloat(60.0f, 100.0f);     break;
         case HullClass::Cruiser:       p.length = rng.rangeFloat(100.0f, 200.0f);    break;
         case HullClass::Battlecruiser: p.length = rng.rangeFloat(200.0f, 350.0f);    break;
         case HullClass::Battleship:    p.length = rng.rangeFloat(350.0f, 600.0f);    break;
         case HullClass::Capital:       p.length = rng.rangeFloat(800.0f, 2000.0f);   break;
+        default:                       p.length = rng.rangeFloat(100.0f, 200.0f);    break;
     }
 
     // Width ratios driven by spine archetype.
@@ -97,7 +101,8 @@ std::vector<HullZone> SpineHullGenerator::layoutZones(DeterministicRNG& rng,
     // Fraction of spine length per zone varies by hull class.
     float cmd_frac = 0.0f, mid_frac = 0.0f, eng_frac = 0.0f;
 
-    switch (hull) {
+    HullClass base = baseHullClass(hull);
+    switch (base) {
         case HullClass::Frigate:
         case HullClass::Destroyer:
             cmd_frac = rng.rangeFloat(0.20f, 0.30f);
@@ -116,6 +121,10 @@ std::vector<HullZone> SpineHullGenerator::layoutZones(DeterministicRNG& rng,
             cmd_frac = rng.rangeFloat(0.08f, 0.15f);
             eng_frac = rng.rangeFloat(0.15f, 0.25f);
             break;
+        default:
+            cmd_frac = rng.rangeFloat(0.15f, 0.25f);
+            eng_frac = rng.rangeFloat(0.20f, 0.30f);
+            break;
     }
     mid_frac = 1.0f - cmd_frac - eng_frac;
 
@@ -125,13 +134,14 @@ std::vector<HullZone> SpineHullGenerator::layoutZones(DeterministicRNG& rng,
 
     // Greeble counts scale with hull class (cosmetic only).
     int base_greeble = 0;
-    switch (hull) {
+    switch (baseHullClass(hull)) {
         case HullClass::Frigate:       base_greeble = 2; break;
         case HullClass::Destroyer:     base_greeble = 3; break;
         case HullClass::Cruiser:       base_greeble = 5; break;
         case HullClass::Battlecruiser: base_greeble = 7; break;
         case HullClass::Battleship:    base_greeble = 10; break;
         case HullClass::Capital:       base_greeble = 15; break;
+        default:                       base_greeble = 5; break;
     }
 
     zones[0].greeble_count = rng.range(1, base_greeble);
@@ -145,15 +155,16 @@ std::vector<HullZone> SpineHullGenerator::layoutZones(DeterministicRNG& rng,
 
 int SpineHullGenerator::generateEngineCluster(DeterministicRNG& rng,
                                                HullClass hull) {
-    switch (hull) {
+    switch (baseHullClass(hull)) {
         case HullClass::Frigate:       return rng.range(1, 2);
         case HullClass::Destroyer:     return rng.range(2, 3);
         case HullClass::Cruiser:       return rng.range(2, 4);
         case HullClass::Battlecruiser: return rng.range(3, 5);
         case HullClass::Battleship:    return rng.range(4, 6);
         case HullClass::Capital:       return rng.range(6, 12);
+        default: // Safety fallback for invalid enum values.
+            return rng.range(2, 4);
     }
-    return 2;
 }
 
 // ── Faction shape language ──────────────────────────────────────────
@@ -245,12 +256,26 @@ GeneratedSpineHull SpineHullGenerator::generate(const PCGContext& ctx) {
     // Auto-select hull class using same probabilities as ShipGenerator.
     float r = rng.nextFloat();
     HullClass hull;
-    if      (r < 0.30f) hull = HullClass::Frigate;
-    else if (r < 0.50f) hull = HullClass::Destroyer;
-    else if (r < 0.70f) hull = HullClass::Cruiser;
-    else if (r < 0.85f) hull = HullClass::Battlecruiser;
-    else if (r < 0.97f) hull = HullClass::Battleship;
-    else                 hull = HullClass::Capital;
+    if      (r < 0.15f) hull = HullClass::Frigate;
+    else if (r < 0.27f) hull = HullClass::Destroyer;
+    else if (r < 0.39f) hull = HullClass::Cruiser;
+    else if (r < 0.47f) hull = HullClass::Battlecruiser;
+    else if (r < 0.53f) hull = HullClass::Battleship;
+    else if (r < 0.55f) hull = HullClass::Capital;
+    else if (r < 0.59f) hull = HullClass::Interceptor;
+    else if (r < 0.62f) hull = HullClass::CovertOps;
+    else if (r < 0.65f) hull = HullClass::AssaultFrigate;
+    else if (r < 0.67f) hull = HullClass::StealthBomber;
+    else if (r < 0.71f) hull = HullClass::Logistics;
+    else if (r < 0.74f) hull = HullClass::Recon;
+    else if (r < 0.77f) hull = HullClass::CommandShip;
+    else if (r < 0.79f) hull = HullClass::Marauder;
+    else if (r < 0.84f) hull = HullClass::Industrial;
+    else if (r < 0.88f) hull = HullClass::MiningBarge;
+    else if (r < 0.90f) hull = HullClass::Exhumer;
+    else if (r < 0.93f) hull = HullClass::Carrier;
+    else if (r < 0.97f) hull = HullClass::Dreadnought;
+    else                 hull = HullClass::Titan;
 
     return generate(ctx, hull);
 }
