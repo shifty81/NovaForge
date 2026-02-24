@@ -1,4 +1,4 @@
-# EVE OFFLINE - Visual and GUI Capabilities
+# Nova Forge - Visual and GUI Capabilities
 
 ## Current Implementation Status
 
@@ -184,7 +184,7 @@ The `interactive_demo.py` provides a menu-driven interface:
 
 **Example Output:**
 ```
-[Client] Connected! Welcome to EVE OFFLINE!
+[Client] Connected! Welcome to Nova Forge!
 [Chat] Commander_Shepard: Ready for mission
 [Client] Entity spawned: player_ship_abc123
 --- Game State (Tick) ---
@@ -284,7 +284,7 @@ Players interact with the game by:
 ```
 $ python interactive_demo.py
 
-EVE OFFLINE - Interactive Gameplay Demo
+Nova Forge - Interactive Gameplay Demo
 Your ship: Vexor (Gallente Cruiser)
 
 📋 Select a command:
@@ -348,4 +348,4 @@ All of these provide **text-based visual feedback** in the console.
 | HUD/UI | ❌ Not Implemented | Planned Phase 2 |
 | Visual Effects | ❌ Not Implemented | Planned Phase 3+ |
 
-**Conclusion:** EVE OFFLINE is currently a **feature-rich text-based space simulation** with comprehensive gameplay mechanics but **no graphical interface**. All "visuals" are delivered through formatted console text output with Unicode symbols for visual appeal.
+**Conclusion:** Nova Forge is currently a **feature-rich text-based space simulation** with comprehensive gameplay mechanics but **no graphical interface**. All "visuals" are delivered through formatted console text output with Unicode symbols for visual appeal.

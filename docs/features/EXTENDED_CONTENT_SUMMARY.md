@@ -1,8 +1,8 @@
-# EVE OFFLINE - Extended Content Pack Summary
+# Nova Forge - Extended Content Pack Summary
 
 ## 🎉 What's New
 
-This document summarizes the extensive content additions made to EVE OFFLINE, bringing the game much closer to the EVE Online experience while maintaining accessibility for small groups.
+This document summarizes the extensive content additions made to Nova Forge, bringing the game much closer to the EVE Online experience while maintaining accessibility for small groups.
 
 ---
 
@@ -374,7 +374,7 @@ The Extended Content Pack represents a **5x expansion** of game content:
 - NPCs increased from 4 to 13 (**+225%**)
 - Missions increased from 5 to 15 (**+200%**)
 
-This brings EVE OFFLINE significantly closer to the EVE Online experience while maintaining the simplified, accessible approach suitable for small-group PVE gameplay.
+This brings Nova Forge significantly closer to the EVE Online experience while maintaining the simplified, accessible approach suitable for small-group PVE gameplay.
 
 ---
 

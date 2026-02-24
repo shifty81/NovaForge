@@ -10,7 +10,7 @@ This document summarizes the GUI integration work completed to wire up the exist
 
 ## Problem Statement
 
-The EVE OFFLINE C++ client had fully implemented Context Menu and Radial Menu UI components (visual rendering, widget framework, and callback infrastructure), but they were not integrated with the application's input handling or game logic. The menus existed as "shell implementations" - pretty UI with no functional backbone.
+The Nova Forge C++ client had fully implemented Context Menu and Radial Menu UI components (visual rendering, widget framework, and callback infrastructure), but they were not integrated with the application's input handling or game logic. The menus existed as "shell implementations" - pretty UI with no functional backbone.
 
 ## Solution Implemented
 

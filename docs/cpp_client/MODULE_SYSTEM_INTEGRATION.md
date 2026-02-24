@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation plan for integrating the module system with the server, including UI clicks, state synchronization, and visual feedback in the EVE OFFLINE C++ client.
+This document outlines the implementation plan for integrating the module system with the server, including UI clicks, state synchronization, and visual feedback in the Nova Forge C++ client.
 
 ## Phase 4: Module System Integration
 

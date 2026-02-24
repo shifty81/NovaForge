@@ -4,7 +4,7 @@
 
 ## Overview
 
-EVE OFFLINE is a PVE-focused space MMO inspired by EVE ONLINE, designed for small groups of players (2-20). Built with C++ and OpenGL, this project recreates the core EVE ONLINE experience while simplifying for smaller-scale cooperative gameplay. This design document is structured around the systems described in the EVE ONLINE game manual.
+Nova Forge is a PVE-focused space MMO inspired by EVE ONLINE, designed for small groups of players (2-20). Built with C++ and OpenGL, this project recreates the core EVE ONLINE experience while simplifying for smaller-scale cooperative gameplay. This design document is structured around the systems described in the EVE ONLINE game manual.
 
 ## Core Game Systems
 
@@ -204,7 +204,7 @@ EVE OFFLINE is a PVE-focused space MMO inspired by EVE ONLINE, designed for smal
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     EVE OFFLINE Engine                   │
+│                     Nova Forge Engine                   │
 ├─────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
 │  │   Client    │  │   Server    │  │   Shared    │    │

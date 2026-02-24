@@ -1,14 +1,14 @@
 # UI Framework Evaluation: Beyond ImGui
 
 **Date**: February 9, 2026  
-**Project**: EVE OFFLINE C++ Client  
+**Project**: Nova Forge C++ Client  
 **Purpose**: Evaluate UI framework alternatives to replace ImGui for Photon UI replication
 
 ---
 
 ## Why ImGui Is Insufficient
 
-ImGui (Immediate Mode GUI) has served as the initial UI framework for EVE OFFLINE,
+ImGui (Immediate Mode GUI) has served as the initial UI framework for Nova Forge,
 but it falls short for faithfully replicating EVE Online's Photon UI. The core
 limitations are:
 
@@ -198,7 +198,7 @@ void Application::RenderUI() {
 
 ---
 
-## RmlUi Key Concepts for EVE OFFLINE
+## RmlUi Key Concepts for Nova Forge
 
 ### RML Documents (HTML-like)
 
@@ -280,6 +280,6 @@ UI. ImGui should be retained only for debug/developer tools.
 
 ---
 
-**Author**: EVE OFFLINE Development Team  
+**Author**: Nova Forge Development Team  
 **Date**: February 9, 2026  
 **Document Version**: 1.0

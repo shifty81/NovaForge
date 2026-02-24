@@ -1,6 +1,6 @@
-# EVE OFFLINE - Cloud Deployment Guide
+# Nova Forge - Cloud Deployment Guide
 
-This guide covers deploying the EVE OFFLINE dedicated server to popular cloud platforms.
+This guide covers deploying the Nova Forge dedicated server to popular cloud platforms.
 
 ## Table of Contents
 1. [Docker Deployment](#docker-deployment)
@@ -19,7 +19,7 @@ The server includes a multi-stage Dockerfile for optimized deployment.
 ### Build the Docker Image
 
 ```bash
-cd /path/to/EVEOFFLINE
+cd /path/to/NovaForge
 docker build -t novaforge-server:latest .
 ```
 
@@ -414,7 +414,7 @@ docker stats eve-server
 
 ## Additional Resources
 
-- [EVE OFFLINE Documentation](../README.md)
+- [Nova Forge Documentation](../README.md)
 - [Server Configuration Guide](../../cpp_server/docs/SERVER_CONFIG.md)
 - [Troubleshooting Guide](TROUBLESHOOTING.md)
 - [Docker Documentation](https://docs.docker.com/)

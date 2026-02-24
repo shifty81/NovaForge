@@ -1,4 +1,4 @@
-# EVE OFFLINE - Content Guide
+# Nova Forge - Content Guide
 
 This guide provides comprehensive information about all available game content, helping players and modders understand what's available in the game.
 

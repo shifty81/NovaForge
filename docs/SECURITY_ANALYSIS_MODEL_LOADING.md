@@ -1,7 +1,7 @@
 # Security Analysis - External Model Loading Implementation
 
 ## Overview
-This document provides a security analysis of the external model loading implementation added to the EVE OFFLINE client.
+This document provides a security analysis of the external model loading implementation added to the Nova Forge client.
 
 ## Changes Summary
 - Added support for loading .obj, .gltf, and .glb 3D model files
@@ -244,5 +244,5 @@ The implementation is production-ready from a security perspective. The minor re
 
 **Analysis Date:** February 7, 2026
 **Analyzed By:** GitHub Copilot Security Review
-**Version:** EVE OFFLINE v1.0.0
+**Version:** Nova Forge v1.0.0
 **Status:** ✅ APPROVED FOR MERGE

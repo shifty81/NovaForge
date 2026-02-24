@@ -7,7 +7,7 @@
 
 ## Overview
 
-This guide helps you get started with the new 3D client for EVE OFFLINE. The 3D client uses **Panda3D** to provide a modern 3D graphical interface while connecting to the existing Python server.
+This guide helps you get started with the new 3D client for Nova Forge. The 3D client uses **Panda3D** to provide a modern 3D graphical interface while connecting to the existing Python server.
 
 ---
 
@@ -33,7 +33,7 @@ The 3D client requires Panda3D in addition to the base game requirements.
 
 ```bash
 # Navigate to project directory
-cd EVEOFFLINE
+cd NovaForge
 
 # Install all dependencies (includes Panda3D)
 pip install -r requirements.txt
@@ -63,7 +63,7 @@ python server/server.py
 
 You should see:
 ```
-[Server] Initializing EVE OFFLINE Server
+[Server] Initializing Nova Forge Server
 [Server] Host: localhost:8765
 [Server] Server initialized successfully
 ```
@@ -295,14 +295,14 @@ python client/client_3d.py "TestPilot" --debug
 - [Panda3D Manual](https://docs.panda3d.org/1.10/python/index)
 - [Panda3D Forums](https://discourse.panda3d.org/)
 - [Phase 5 Technical Specification](../design/PHASE5_3D_SPECIFICATION.md)
-- [EVE OFFLINE Documentation](../README.md)
+- [Nova Forge Documentation](../README.md)
 
 ---
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/shifty81/EVEOFFLINE/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/shifty81/EVEOFFLINE/discussions)
+- **Issues**: [GitHub Issues](https://github.com/shifty81/NovaForge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/shifty81/NovaForge/discussions)
 
 ---
 

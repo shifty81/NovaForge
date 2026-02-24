@@ -260,8 +260,8 @@ Comprehensive integration test that:
 
 1. Start Python server:
 ```bash
-cd EVEOFFLINE
-PYTHONPATH=/path/to/EVEOFFLINE python3 server/server.py
+cd NovaForge
+PYTHONPATH=/path/to/NovaForge python3 server/server.py
 ```
 
 2. Run C++ test:
@@ -272,7 +272,7 @@ cd cpp_client
 
 **Example Output**:
 ```
-=== EVE OFFLINE Network Test ===
+=== Nova Forge Network Test ===
 
 Server: localhost:8765
 Character: TestPilot
@@ -350,7 +350,7 @@ C++ Client                          Python Server
   "timestamp": 1770249934.9,
   "data": {
     "success": true,
-    "message": "Welcome to EVE OFFLINE",
+    "message": "Welcome to Nova Forge",
     "player_entity_id": 1
   }
 }

@@ -1,4 +1,4 @@
-# Implementation Summary: GUI and Visual Features for EVE OFFLINE
+# Implementation Summary: GUI and Visual Features for Nova Forge
 
 ## Problem Addressed
 

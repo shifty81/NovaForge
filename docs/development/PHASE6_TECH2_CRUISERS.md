@@ -370,7 +370,7 @@ Phase 6 Tech II Cruiser implementation successfully delivers:
 ✅ **Zero Bugs** - All existing tests passing  
 ✅ **Comprehensive Documentation** - Complete technical reference
 
-This expansion completes the Tech II cruiser lineup, providing players with specialized ships for every role: heavy assault, interdiction, electronic warfare, and fleet logistics. Combined with the existing Battlecruisers and Battleships, EVE OFFLINE now has a complete progression path from frigates to capital-class ships.
+This expansion completes the Tech II cruiser lineup, providing players with specialized ships for every role: heavy assault, interdiction, electronic warfare, and fleet logistics. Combined with the existing Battlecruisers and Battleships, Nova Forge now has a complete progression path from frigates to capital-class ships.
 
 **Total Development Time**: ~2.5 hours  
 **Code Quality**: Production-ready  
@@ -382,7 +382,7 @@ This expansion completes the Tech II cruiser lineup, providing players with spec
 
 ## Comparison to EVE Online
 
-| Feature | EVE Online | EVE OFFLINE | Notes |
+| Feature | EVE Online | Nova Forge | Notes |
 |---------|-----------|-------------|-------|
 | HAC Count | 8 (2 per race) | 4 (1 per race) | Simplified for initial release |
 | HIC Count | 4 (1 per race) | 4 (1 per race) | ✅ Complete |

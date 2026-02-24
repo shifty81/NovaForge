@@ -1,6 +1,6 @@
 # VS2022 Build Troubleshooting Guide
 
-This document provides solutions to common issues when building EVE OFFLINE in Visual Studio 2022.
+This document provides solutions to common issues when building Nova Forge in Visual Studio 2022.
 
 ## Table of Contents
 - [Script Errors](#script-errors)
@@ -39,7 +39,7 @@ If still experiencing issues, the problem might be with your local modifications
 
 **Solution**: Always run from the repository root:
 ```cmd
-cd C:\path\to\EVEOFFLINE
+cd C:\path\to\NovaForge
 .\build_vs.bat
 ```
 
@@ -416,7 +416,7 @@ If none of these solutions work:
    - [docs/development/VISUAL_STUDIO_BUILD.md](docs/development/VISUAL_STUDIO_BUILD.md)
 
 2. **Search GitHub Issues**:
-   https://github.com/shifty81/EVEOFFLINE/issues
+   https://github.com/shifty81/NovaForge/issues
 
 3. **Create a new issue** with:
    - Windows version

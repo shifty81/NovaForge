@@ -1,6 +1,6 @@
 # New Gameplay Systems - Phase 3
 
-This document describes all the new gameplay systems added in Phase 3 to bring EVE OFFLINE closer to the full EVE Online experience.
+This document describes all the new gameplay systems added in Phase 3 to bring Nova Forge closer to the full EVE Online experience.
 
 ## 🏭 Manufacturing System
 
@@ -432,4 +432,4 @@ Recommended update rates:
 
 ---
 
-*EVE OFFLINE - Bringing the EVE Online experience to small groups*
+*Nova Forge - Bringing the EVE Online experience to small groups*

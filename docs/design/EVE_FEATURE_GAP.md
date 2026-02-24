@@ -1,7 +1,7 @@
 # EVE Online Feature Gap Analysis
 
 ## Overview
-This document analyzes gameplay features from EVE Online that are missing or incomplete in EVE OFFLINE, prioritized by importance for a complete PVE experience.
+This document analyzes gameplay features from EVE Online that are missing or incomplete in Nova Forge, prioritized by importance for a complete PVE experience.
 
 ## Critical Missing Features (High Priority)
 

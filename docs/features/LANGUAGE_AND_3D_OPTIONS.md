@@ -156,7 +156,7 @@ int main() {
 
 ## Recommended Path: **Option 2B - Python Server + C++20 3D Client**
 
-### Why This Works Best for EVE OFFLINE
+### Why This Works Best for Nova Forge
 
 1. **Keep What Works**: Python server handles game logic (already done!)
 2. **Add What's Missing**: C++20 client for beautiful 3D graphics
@@ -386,7 +386,7 @@ class EVEStyleCamera {
 
 ## Final Recommendation
 
-### For Your Project (EVE OFFLINE)
+### For Your Project (Nova Forge)
 
 **Short Term (Next 1-2 months)**:
 ✅ **Stay with Python**

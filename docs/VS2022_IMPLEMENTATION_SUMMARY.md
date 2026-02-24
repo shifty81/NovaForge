@@ -101,8 +101,8 @@ We've added comprehensive Visual Studio 2022 build support with:
 
 1. **Clone Repository**
    ```cmd
-   git clone https://github.com/shifty81/EVEOFFLINE.git
-   cd EVEOFFLINE
+   git clone https://github.com/shifty81/NovaForge.git
+   cd NovaForge
    ```
 
 2. **Read Documentation**
@@ -118,7 +118,7 @@ We've added comprehensive Visual Studio 2022 build support with:
 
 4. **Build Project**
    ```cmd
-   cd C:\path\to\EVEOFFLINE
+   cd C:\path\to\NovaForge
    build_vs.bat
    ```
 
@@ -147,7 +147,7 @@ We've added comprehensive Visual Studio 2022 build support with:
 ## File Structure After Build
 
 ```
-EVEOFFLINE/
+NovaForge/
 ├── VS2022_SETUP_GUIDE.md          # Complete setup guide (NEW)
 ├── QUICKSTART_VS2022.md            # Quick reference (NEW)
 ├── TROUBLESHOOTING_VS2022.md      # Troubleshooting (NEW)
@@ -254,7 +254,7 @@ While the current implementation is complete, potential future improvements coul
 
 ## Conclusion
 
-The EVE OFFLINE project now has comprehensive Visual Studio 2022 build support. Users can clone from Git and immediately start building and testing on their PC with clear documentation guiding them through every step.
+The Nova Forge project now has comprehensive Visual Studio 2022 build support. Users can clone from Git and immediately start building and testing on their PC with clear documentation guiding them through every step.
 
 All changes are minimal, focused, and well-documented. The existing build infrastructure was already good - we've enhanced it with:
 - Fixed critical bug (batch file syntax)

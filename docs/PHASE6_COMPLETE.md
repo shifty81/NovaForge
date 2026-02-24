@@ -238,7 +238,7 @@ Successfully implemented and integrated:
 - 0 security vulnerabilities
 - 100% backward compatibility
 
-The EVE OFFLINE project now has:
+The Nova Forge project now has:
 - Professional server infrastructure
 - Enhanced client experience
 - Enterprise-grade features

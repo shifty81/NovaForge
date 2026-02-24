@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the EVE Online Photon UI enhancements implemented in the EVEOFFLINE 3D client. The UI has been redesigned to closely mimic EVE Online's official interface, including color schemes, panel layouts, and visual styling.
+This document describes the EVE Online Photon UI enhancements implemented in the NovaForge 3D client. The UI has been redesigned to closely mimic EVE Online's official interface, including color schemes, panel layouts, and visual styling.
 
 ## Visual Design Philosophy
 
@@ -331,4 +331,4 @@ Based on research from:
 ## Credits
 
 UI design inspired by CCP Games' EVE Online Photon UI.
-Implementation created for the EVEOFFLINE project.
+Implementation created for the NovaForge project.

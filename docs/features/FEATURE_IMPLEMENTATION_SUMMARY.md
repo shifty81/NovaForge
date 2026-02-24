@@ -62,7 +62,7 @@ Complete guide to the gameplay demos including:
 
 ## 📸 Gameplay Screenshot
 
-![EVE OFFLINE Gameplay](https://github.com/user-attachments/assets/1eae502f-875d-4fd0-a7e1-2dd3b1b60244)
+![Nova Forge Gameplay](https://github.com/user-attachments/assets/1eae502f-875d-4fd0-a7e1-2dd3b1b60244)
 
 The screenshot showcases:
 - **Ship Status**: Vexor (Gallente Cruiser) with full HP display
@@ -301,7 +301,7 @@ This implementation successfully:
 5. ✅ Maintained code quality and architecture
 6. ✅ Validated all systems working correctly
 
-**EVE OFFLINE now has a fully functional, interactive gameplay experience that demonstrates the complete EVE Online-inspired feature set!**
+**Nova Forge now has a fully functional, interactive gameplay experience that demonstrates the complete EVE Online-inspired feature set!**
 
 ---
 

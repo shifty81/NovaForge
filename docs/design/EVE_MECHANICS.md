@@ -1,6 +1,6 @@
 # EVE Online Mechanics Reference
 
-This document provides detailed information about EVE Online game mechanics for implementation in EVE OFFLINE.
+This document provides detailed information about EVE Online game mechanics for implementation in Nova Forge.
 
 ## 📋 Table of Contents
 1. [Combat Mechanics](#combat-mechanics)
@@ -416,11 +416,11 @@ Time = 256,000 / 30 = 8,533 minutes = 5.9 days
 ### Neural Remapping
 - In EVE Online: Can remap once per year
 - Optimize for skill plan
-- EVE OFFLINE: Simplified or removed
+- Nova Forge: Simplified or removed
 
 ---
 
-## 🎮 Simplified Mechanics for EVE OFFLINE
+## 🎮 Simplified Mechanics for Nova Forge
 
 ### Recommendations for Implementation
 
@@ -470,4 +470,4 @@ Time = 256,000 / 30 = 8,533 minutes = 5.9 days
 ---
 
 *This document is for implementation reference. Actual EVE Online is significantly more complex.*
-*EVE OFFLINE aims to capture the feel while remaining accessible for small groups.*
+*Nova Forge aims to capture the feel while remaining accessible for small groups.*

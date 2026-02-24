@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of realistic EVE Online-style universe layout, station types, asteroid field mechanics, and travel/warp systems in EVE OFFLINE.
+This document describes the implementation of realistic EVE Online-style universe layout, station types, asteroid field mechanics, and travel/warp systems in Nova Forge.
 
 ## Table of Contents
 
@@ -18,7 +18,7 @@ This document describes the implementation of realistic EVE Online-style univers
 
 ### Station Types
 
-EVE OFFLINE implements 6 primary station types based on EVE Online:
+Nova Forge implements 6 primary station types based on EVE Online:
 
 #### 1. **Industrial Stations**
 - **Services**: Market, Repair, Fitting, Manufacturing, Research
@@ -369,7 +369,7 @@ Time required to align ship for warp entry:
 
 ---
 
-## Implementation in EVE OFFLINE
+## Implementation in Nova Forge
 
 ### Data Files
 

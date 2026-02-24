@@ -25,7 +25,7 @@ cd vcpkg
 
 Then build using:
 ```cmd
-cd C:\path\to\EVEOFFLINE
+cd C:\path\to\NovaForge
 .\build_vs.bat
 ```
 

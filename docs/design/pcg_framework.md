@@ -1,6 +1,6 @@
 # Procedural Content Generation (PCG) Framework
 
-> Design document for the deterministic PCG systems used in EVE OFFLINE.
+> Design document for the deterministic PCG systems used in Nova Forge.
 
 ## Core Principle
 

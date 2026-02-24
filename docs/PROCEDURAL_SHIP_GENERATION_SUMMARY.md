@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the modular procedural ship generation system implemented for EVE OFFLINE, designed to create diverse ship hulls from frigates to capital ships while adhering to faction-specific and class-specific design rules.
+This document summarizes the modular procedural ship generation system implemented for Nova Forge, designed to create diverse ship hulls from frigates to capital ships while adhering to faction-specific and class-specific design rules.
 
 ## System Architecture
 

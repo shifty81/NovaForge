@@ -1,7 +1,7 @@
 # Atlas UI - Complete Implementation Roadmap
 
 **Date**: February 11, 2026  
-**Project**: EVE OFFLINE C++ Client  
+**Project**: Nova Forge C++ Client  
 **Goal**: Implement a complete Atlas UI system for the game client
 
 ---

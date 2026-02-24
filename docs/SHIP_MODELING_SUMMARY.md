@@ -2,7 +2,7 @@
 
 ## Work Completed
 
-This document summarizes the ship modeling enhancements made to the EVE OFFLINE project.
+This document summarizes the ship modeling enhancements made to the Nova Forge project.
 
 ## Overview
 
@@ -272,7 +272,7 @@ The procedural modeling system captures the essence of EVE Online's iconic ship 
 
 ## Impact
 
-This work transforms EVE OFFLINE from having basic placeholder geometry to having a proper ship modeling system that evokes the look and feel of EVE Online. Players can now:
+This work transforms Nova Forge from having basic placeholder geometry to having a proper ship modeling system that evokes the look and feel of EVE Online. Players can now:
 - Command capital ships (carriers, dreadnoughts, titans)
 - See ships with distinctive class-based appearances
 - Recognize factions by their characteristic colors
@@ -298,4 +298,4 @@ All work is original procedural code inspired by EVE Online's design language bu
 **Documentation Created**: ~20KB
 **Ship Data Added**: ~15KB
 
-This represents a significant enhancement to the EVE OFFLINE project's visual systems.
+This represents a significant enhancement to the Nova Forge project's visual systems.

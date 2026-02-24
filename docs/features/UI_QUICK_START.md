@@ -2,7 +2,7 @@
 
 ## Overview
 
-EVEOFFLINE now features a comprehensive EVE Online Photon UI styled interface! The new UI matches the official EVE Online look and feel with dark blue panels, teal accents, and circular displays.
+NovaForge now features a comprehensive EVE Online Photon UI styled interface! The new UI matches the official EVE Online look and feel with dark blue panels, teal accents, and circular displays.
 
 ## What's New?
 
@@ -260,7 +260,7 @@ For more details, see:
 ## Credits
 
 - **Design**: Based on CCP Games' EVE Online Photon UI
-- **Implementation**: EVEOFFLINE Project
+- **Implementation**: NovaForge Project
 - **Research**: EVE Online documentation and community resources
 
 ---

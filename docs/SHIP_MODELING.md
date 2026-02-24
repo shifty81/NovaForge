@@ -1,6 +1,6 @@
 # Ship Modeling System
 
-This document describes the procedural ship modeling system used in EVE OFFLINE to generate 3D models for ships, stations, and asteroids that are inspired by EVE Online's iconic designs.
+This document describes the procedural ship modeling system used in Nova Forge to generate 3D models for ships, stations, and asteroids that are inspired by EVE Online's iconic designs.
 
 > **See Also:** [SCALE_AND_DETAIL_SYSTEM.md](SCALE_AND_DETAIL_SYSTEM.md) for comprehensive scale information and the enhanced detail generation system.
 
@@ -273,4 +273,4 @@ asteroid->draw();
 
 Ship modeling system designed to evoke EVE Online's iconic ship designs without using CCP Games assets. All models are procedurally generated approximations inspired by EVE Online's design language.
 
-**Note**: EVE OFFLINE is an independent fan project and is not affiliated with or endorsed by CCP Games.
+**Note**: Nova Forge is an independent fan project and is not affiliated with or endorsed by CCP Games.

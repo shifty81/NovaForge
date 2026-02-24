@@ -2,7 +2,7 @@
 
 ## Overview
 
-The EVE OFFLINE C++ client features a complete 3D audio system built on **OpenAL**. The audio system provides spatial audio, dynamic sound effects, music playback, and comprehensive volume controls.
+The Nova Forge C++ client features a complete 3D audio system built on **OpenAL**. The audio system provides spatial audio, dynamic sound effects, music playback, and comprehensive volume controls.
 
 ## Architecture
 
@@ -283,7 +283,7 @@ The test demonstrates:
 
 ```
 ========================================
-  EVE OFFLINE - Audio System Test
+  Nova Forge - Audio System Test
 ========================================
 
 === Generating Test Sounds ===
@@ -524,4 +524,4 @@ The audio system provides a complete, production-ready solution for game audio w
 - ✅ Cross-platform support
 - ✅ Simple, intuitive API
 
-The system integrates seamlessly with the EVE OFFLINE client and is ready for use in gameplay!
+The system integrates seamlessly with the Nova Forge client and is ready for use in gameplay!

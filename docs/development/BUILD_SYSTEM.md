@@ -2,7 +2,7 @@
 
 ## Overview
 
-EVE OFFLINE now has a comprehensive automated build and test system that can be run after pulling from Git to verify everything works correctly.
+Nova Forge now has a comprehensive automated build and test system that can be run after pulling from Git to verify everything works correctly.
 
 ## Quick Start
 
@@ -166,12 +166,12 @@ make build
 
 ```
 ======================================================================
-                   EVE OFFLINE - BUILD AND TEST                      
+                   Nova Forge - BUILD AND TEST                      
 ======================================================================
 
 Platform: Linux
 Python: 3.11.0
-Directory: /home/user/EVEOFFLINE
+Directory: /home/user/NovaForge
 
 ▶ Checking Python version...
 ✓ Python 3.11.0
@@ -240,7 +240,7 @@ Passed (10):
 
 ```
 ======================================================================
-                   EVE OFFLINE - BUILD AND TEST                      
+                   Nova Forge - BUILD AND TEST                      
 ======================================================================
 
 ...

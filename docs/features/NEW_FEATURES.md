@@ -1,8 +1,8 @@
-# EVE OFFLINE - New Features Summary
+# Nova Forge - New Features Summary
 
 ## 🎉 Newly Implemented Features
 
-This document summarizes all the new features and systems added to bring the full EVE Online experience to EVE OFFLINE.
+This document summarizes all the new features and systems added to bring the full EVE Online experience to Nova Forge.
 
 ---
 

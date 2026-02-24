@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the enhanced procedural ship generation system in EVE OFFLINE, including the proper scale relationships between entities and the new detail generation system that creates EVE-like ship designs.
+This document describes the enhanced procedural ship generation system in Nova Forge, including the proper scale relationships between entities and the new detail generation system that creates EVE-like ship designs.
 
 ## Scale System
 

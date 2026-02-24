@@ -1,4 +1,4 @@
-# EVE OFFLINE — Architecture Comparison & Viability Assessment
+# Nova Forge — Architecture Comparison & Viability Assessment
 
 This document compares the current EVEOFFLINE project architecture against a comprehensive
 EVE-like PVE game development blueprint, organized by core development pillars.

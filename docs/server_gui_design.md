@@ -6,7 +6,7 @@
 
 ## Overview
 
-The EVE OFFLINE dedicated server currently runs as a headless console application.
+The Nova Forge dedicated server currently runs as a headless console application.
 This document outlines the design for a future **Server Admin Console GUI** that will
 provide real-time monitoring, on-the-fly configuration, and administrative controls
 for server operators.
@@ -31,7 +31,7 @@ rich console interface that works in any terminal emulator. No windowing
 system required.
 
 ```
-┌─── EVE OFFLINE Server Console ──────────────────────────────────────┐
+┌─── Nova Forge Server Console ──────────────────────────────────────┐
 │ Status: Running │ Players: 12/20 │ Tick: 30Hz │ Uptime: 02:45:13   │
 ├─────────────────────────────────────────────────────────────────────-┤
 │ [Console Output]                                          [Filter ▾]│

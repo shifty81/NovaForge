@@ -161,4 +161,4 @@ python interactive_demo.py      # Text-based gameplay
 
 ---
 
-*EVE OFFLINE - Now with complete gameplay loops!*
+*Nova Forge - Now with complete gameplay loops!*

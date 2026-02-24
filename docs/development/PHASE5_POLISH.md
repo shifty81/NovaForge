@@ -642,7 +642,7 @@ Phase 5 Polish successfully adds three critical systems:
 2. **PBR Materials** (18 tests ✅) - Realistic material rendering
 3. **Audio System** (15 tests ✅) - Immersive sound experience
 
-These systems transform the 3D client from a tech demo into a polished, production-ready application suitable for EVE OFFLINE's space combat experience.
+These systems transform the 3D client from a tech demo into a polished, production-ready application suitable for Nova Forge's space combat experience.
 
 **Total Tests**: 46 (all passing)  
 **Total Code**: ~2,900 lines  

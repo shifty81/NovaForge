@@ -1,6 +1,6 @@
-# Visual Studio 2022 Setup Guide for EVE OFFLINE
+# Visual Studio 2022 Setup Guide for Nova Forge
 
-This guide will help you set up and build the EVE OFFLINE project in Visual Studio 2022 after cloning from Git.
+This guide will help you set up and build the Nova Forge project in Visual Studio 2022 after cloning from Git.
 
 > **⚡ Quick Reference**: See [QUICKSTART_VS2022.md](QUICKSTART_VS2022.md) for a concise command reference.
 
@@ -30,8 +30,8 @@ Before starting, ensure you have:
 ### 2. Clone the Repository
 
 ```cmd
-git clone https://github.com/shifty81/EVEOFFLINE.git
-cd EVEOFFLINE
+git clone https://github.com/shifty81/NovaForge.git
+cd NovaForge
 ```
 
 ### 3. Install Dependencies (vcpkg - Recommended)
@@ -75,7 +75,7 @@ From the repository root directory:
 
 ```cmd
 # Navigate to repository root
-cd C:\path\to\EVEOFFLINE
+cd C:\path\to\NovaForge
 
 # Run the build script
 build_vs.bat
@@ -174,7 +174,7 @@ To run a test:
 After building, you'll have:
 
 ```
-EVEOFFLINE/
+NovaForge/
 ├── cpp_client/
 │   ├── build_vs/              # Build directory (created by CMake)
 │   │   ├── EVEOfflineClient.sln  # Visual Studio solution file
@@ -352,8 +352,8 @@ The server executable will be at: `cpp_server\build\bin\Release\eve_dedicated_se
 
 ```cmd
 # Clone repository
-git clone https://github.com/shifty81/EVEOFFLINE.git
-cd EVEOFFLINE
+git clone https://github.com/shifty81/NovaForge.git
+cd NovaForge
 
 # Build C++ client only
 build_vs.bat
@@ -381,7 +381,7 @@ If you encounter issues:
 1. Check the **Troubleshooting** section above
 2. Review [cpp_client/SETUP.md](cpp_client/SETUP.md) for Linux/macOS setup
 3. Check [docs/development/VISUAL_STUDIO_BUILD.md](docs/development/VISUAL_STUDIO_BUILD.md) for advanced topics
-4. Search existing [GitHub Issues](https://github.com/shifty81/EVEOFFLINE/issues)
+4. Search existing [GitHub Issues](https://github.com/shifty81/NovaForge/issues)
 5. Create a new issue with:
    - Visual Studio version
    - CMake version
@@ -399,4 +399,4 @@ Once you have successfully built and run the client:
 4. **Read the documentation** - Learn about systems and features
 5. **Contribute** - See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
-Enjoy developing EVE OFFLINE! 🚀
+Enjoy developing Nova Forge! 🚀

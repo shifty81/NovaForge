@@ -1,6 +1,6 @@
 # EVE Online UI Style Reference
 
-This document serves as the visual design reference for making EVE OFFLINE's
+This document serves as the visual design reference for making Nova Forge's
 UI closely mimic EVE Online's **Photon UI** (the current default interface).
 All UI code in `cpp_client/src/ui/` and `client_3d/ui/` should follow these
 guidelines.

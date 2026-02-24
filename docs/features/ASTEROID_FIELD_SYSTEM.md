@@ -1,4 +1,4 @@
-# Asteroid Field System for EVE OFFLINE
+# Asteroid Field System for Nova Forge
 
 **Version**: 1.0  
 **Date**: February 2, 2026  

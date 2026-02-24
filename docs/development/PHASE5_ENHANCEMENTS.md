@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the Phase 5 enhancements made to the EVE OFFLINE 3D client, focusing on ship models, performance optimization, and advanced particle effects.
+This document summarizes the Phase 5 enhancements made to the Nova Forge 3D client, focusing on ship models, performance optimization, and advanced particle effects.
 
 ## Completed Features
 
@@ -328,4 +328,4 @@ The Phase 5 enhancements significantly improve the 3D client's visual quality an
 ✅ **Full Testing** - All features validated, no regressions  
 ✅ **Production Ready** - Stable, efficient, and well-documented  
 
-These enhancements move the EVE OFFLINE 3D client from basic placeholders to a polished, performant 3D experience that can scale to large multiplayer battles while maintaining smooth frame rates.
+These enhancements move the Nova Forge 3D client from basic placeholders to a polished, performant 3D experience that can scale to large multiplayer battles while maintaining smooth frame rates.

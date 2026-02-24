@@ -1,4 +1,4 @@
-# EVE OFFLINE - Visual and Gameplay Enhancements
+# Nova Forge - Visual and Gameplay Enhancements
 
 **Status**: 🚧 IN PROGRESS  
 **Date**: February 6, 2026  
@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document outlines the visual and gameplay enhancements made to EVE OFFLINE to closely mimic EVE Online's appearance, feel, and mechanics. All implementations are based on extensive research of EVE Online wikis, gameplay videos, and official documentation.
+This document outlines the visual and gameplay enhancements made to Nova Forge to closely mimic EVE Online's appearance, feel, and mechanics. All implementations are based on extensive research of EVE Online wikis, gameplay videos, and official documentation.
 
 ## Implemented Features
 
@@ -311,7 +311,7 @@ data/
 
 ## Conclusion
 
-These enhancements bring EVE OFFLINE significantly closer to the look and feel of EVE Online. The implementation focuses on:
+These enhancements bring Nova Forge significantly closer to the look and feel of EVE Online. The implementation focuses on:
 
 1. **Authentic mechanics** - Physics and navigation matching EVE
 2. **Visual fidelity** - Color schemes and UI matching EVE's style

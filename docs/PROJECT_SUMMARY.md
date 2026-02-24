@@ -1,8 +1,8 @@
-# EVE OFFLINE - Project Summary
+# Nova Forge - Project Summary
 
 ## 🎯 Mission Accomplished!
 
-This document summarizes the complete implementation of the EVE OFFLINE custom game engine based on the requirements.
+This document summarizes the complete implementation of the Nova Forge custom game engine based on the requirements.
 
 ## 📋 Original Requirements
 
@@ -274,7 +274,7 @@ Edit JSON files in `data/` directory:
 
 **Mission Accomplished!** 
 
-We have successfully created a custom game engine for EVE OFFLINE that:
+We have successfully created a custom game engine for Nova Forge that:
 - Recreates EVE ONLINE mechanics at smaller scale
 - Supports small group PVE multiplayer
 - Uses a custom-built Python engine

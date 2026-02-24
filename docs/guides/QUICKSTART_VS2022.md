@@ -1,6 +1,6 @@
 # Quick Start - Visual Studio 2022 / 2019
 
-This is a quick reference for building EVE OFFLINE in Visual Studio 2022 or 2019. For complete instructions, see [VS2022_SETUP_GUIDE.md](VS2022_SETUP_GUIDE.md).
+This is a quick reference for building Nova Forge in Visual Studio 2022 or 2019. For complete instructions, see [VS2022_SETUP_GUIDE.md](VS2022_SETUP_GUIDE.md).
 
 ## ⚠️ Important: Install Dependencies FIRST
 
@@ -28,8 +28,8 @@ Before running any build scripts, you must install the required dependencies usi
 
 ```cmd
 # 1. Clone repository
-git clone https://github.com/shifty81/EVEOFFLINE.git
-cd EVEOFFLINE
+git clone https://github.com/shifty81/NovaForge.git
+cd NovaForge
 
 # 2. Install vcpkg (if not already installed)
 cd C:\
@@ -44,7 +44,7 @@ cd vcpkg
 .\vcpkg install openal-soft:x64-windows
 
 # 5. Return to repository and generate Visual Studio solution
-cd C:\path\to\EVEOFFLINE
+cd C:\path\to\NovaForge
 build_vs.bat
 ```
 

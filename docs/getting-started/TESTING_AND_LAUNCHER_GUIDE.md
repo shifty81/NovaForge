@@ -1,4 +1,4 @@
-# EVE OFFLINE - Testing & Launcher Guide
+# Nova Forge - Testing & Launcher Guide
 
 **Version**: 1.0  
 **Date**: February 2, 2026
@@ -7,7 +7,7 @@
 
 ## Overview
 
-This guide explains the new automated testing and launcher tools that make it easy to run, test, and debug EVE OFFLINE.
+This guide explains the new automated testing and launcher tools that make it easy to run, test, and debug Nova Forge.
 
 ---
 
@@ -23,7 +23,7 @@ This guide explains the new automated testing and launcher tools that make it ea
 
 ### What It Does
 
-The Easy Launcher provides a user-friendly menu interface to access all features of EVE OFFLINE without memorizing commands.
+The Easy Launcher provides a user-friendly menu interface to access all features of Nova Forge without memorizing commands.
 
 ### How to Use
 
@@ -53,7 +53,7 @@ python launcher.py
 
 ```
 ===========================================================
-           EVE OFFLINE - Easy Launcher
+           Nova Forge - Easy Launcher
 ===========================================================
 
 What would you like to do?
@@ -91,7 +91,7 @@ Press Ctrl+C to stop
 
 ### What It Does
 
-Runs comprehensive tests to verify all components of EVE OFFLINE are working correctly.
+Runs comprehensive tests to verify all components of Nova Forge are working correctly.
 
 ### How to Use
 
@@ -509,7 +509,7 @@ rm logs/*.log
 
 ## Conclusion
 
-These tools make EVE OFFLINE much easier to use and debug:
+These tools make Nova Forge much easier to use and debug:
 
 - **Launcher**: Easy access to all features
 - **Automated Tests**: Verify everything works
@@ -520,4 +520,4 @@ Use them to ensure a smooth experience!
 ---
 
 **Last Updated**: February 2, 2026  
-**Author**: EVE OFFLINE Development Team
+**Author**: Nova Forge Development Team

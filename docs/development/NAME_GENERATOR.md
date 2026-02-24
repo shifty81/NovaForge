@@ -2,7 +2,7 @@
 
 ## Overview
 
-The EVE OFFLINE name generator provides procedurally generated names for various game elements, similar to EVE Online's naming conventions but with unique variations.
+The Nova Forge name generator provides procedurally generated names for various game elements, similar to EVE Online's naming conventions but with unique variations.
 
 ## Usage in Python
 

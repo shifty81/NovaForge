@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document provides a detailed, actionable roadmap for migrating the EVEOFFLINE client from Python to C++ with embedded server capabilities.
+This document provides a detailed, actionable roadmap for migrating the NovaForge client from Python to C++ with embedded server capabilities.
 
 **Timeline**: 15-25 weeks  
 **Complexity**: High  
@@ -43,7 +43,7 @@ vcpkg install panda3d boost-asio nlohmann-json spdlog
 ### 3. Create Initial Project Structure
 
 ```bash
-cd /path/to/EVEOFFLINE
+cd /path/to/NovaForge
 mkdir -p cpp_client/{src,include,tests,assets,external}
 cd cpp_client
 ```
@@ -102,13 +102,13 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
 #include <load_prc_file.h>
 
 int main(int argc, char *argv[]) {
-    std::cout << "EVE OFFLINE - C++ Client\n";
+    std::cout << "Nova Forge - C++ Client\n";
     std::cout << "Version: 0.1.0\n";
     
     // Initialize Panda3D
     PandaFramework framework;
     framework.open_framework(argc, argv);
-    framework.set_window_title("EVE OFFLINE");
+    framework.set_window_title("Nova Forge");
     
     // Open window
     WindowFramework *window = framework.open_window();

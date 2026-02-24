@@ -8,7 +8,7 @@
 
 ## Overview
 
-Phase 5 brings 3D graphics to EVE OFFLINE using **Panda3D**, a powerful open-source 3D engine. The goal is to create an immersive 3D experience while maintaining the existing Python server architecture.
+Phase 5 brings 3D graphics to Nova Forge using **Panda3D**, a powerful open-source 3D engine. The goal is to create an immersive 3D experience while maintaining the existing Python server architecture.
 
 ---
 
@@ -495,5 +495,5 @@ Want to help with Phase 5? Here are great starting points:
 ---
 
 **Last Updated**: February 2, 2026  
-**Author**: EVE OFFLINE Development Team  
+**Author**: Nova Forge Development Team  
 **Status**: Phase 5B Complete, Ready for Phase 5C

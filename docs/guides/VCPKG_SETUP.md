@@ -1,4 +1,4 @@
-# vcpkg Setup for EVE OFFLINE C++ Client
+# vcpkg Setup for Nova Forge C++ Client
 
 ## Problem
 After installing dependencies with vcpkg, CMake was failing with errors about missing `external/imgui/imgui.cpp` and other source files.
@@ -59,7 +59,7 @@ openal-soft:x64-windows
 
 ### 4. Build the Project
 ```cmd
-cd C:\path\to\EVEOFFLINE
+cd C:\path\to\NovaForge
 .\build_vs.bat
 ```
 

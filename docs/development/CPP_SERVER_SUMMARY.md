@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation adds a high-performance C++ dedicated server with Steam integration and a comprehensive random name generator system to EVE OFFLINE.
+This implementation adds a high-performance C++ dedicated server with Steam integration and a comprehensive random name generator system to Nova Forge.
 
 ## What Was Implemented
 

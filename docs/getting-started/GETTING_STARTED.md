@@ -1,12 +1,12 @@
-# EVE OFFLINE - Getting Started Guide
+# Nova Forge - Getting Started Guide
 
-## Welcome to EVE OFFLINE!
+## Welcome to Nova Forge!
 
-This guide will help you get started with the EVE OFFLINE custom game engine.
+This guide will help you get started with the Nova Forge custom game engine.
 
-## What is EVE OFFLINE?
+## What is Nova Forge?
 
-EVE OFFLINE is a PVE-focused space MMO inspired by EVE ONLINE and Astrox Imperium, designed for small groups of players (2-20). It features:
+Nova Forge is a PVE-focused space MMO inspired by EVE ONLINE and Astrox Imperium, designed for small groups of players (2-20). It features:
 
 - Custom-built Python game engine with ECS architecture
 - Server-authoritative multiplayer
@@ -24,8 +24,8 @@ EVE OFFLINE is a PVE-focused space MMO inspired by EVE ONLINE and Astrox Imperiu
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/shifty81/EVEOFFLINE.git
-cd EVEOFFLINE
+git clone https://github.com/shifty81/NovaForge.git
+cd NovaForge
 ```
 
 2. **Optional: Create a virtual environment:**
@@ -75,7 +75,7 @@ python server/server.py
 
 You should see:
 ```
-[Server] Initializing EVE OFFLINE Server
+[Server] Initializing Nova Forge Server
 [DataLoader] Loading game data...
 [Server] Server running on ('127.0.0.1', 8765)
 ```
@@ -88,7 +88,7 @@ python client/client.py "YourCharacterName"
 You should see:
 ```
 [Client] Connecting to localhost:8765...
-[Client] Connected! Welcome to EVE OFFLINE!
+[Client] Connected! Welcome to Nova Forge!
 ```
 
 **Terminal 3+ - More Clients (Optional):**
@@ -212,7 +212,7 @@ This is an open-source project. Contributions welcome!
 
 - Inspired by **EVE ONLINE** (CCP Games)
 - Modding approach inspired by **Astrox Imperium** (Jace Masula)
-- Built by the EVE OFFLINE community
+- Built by the Nova Forge community
 
 ---
 

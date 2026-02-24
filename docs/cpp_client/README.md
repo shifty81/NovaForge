@@ -1,6 +1,6 @@
-# EVE OFFLINE C++ OpenGL Client
+# Nova Forge C++ OpenGL Client
 
-A high-performance C++ client with modern OpenGL graphics for EVE OFFLINE.
+A high-performance C++ client with modern OpenGL graphics for Nova Forge.
 
 ## Overview
 

@@ -23,7 +23,7 @@
 
 ## Overview
 
-The post-processing system provides high-quality visual enhancements for the EVE OFFLINE C++ client, including:
+The post-processing system provides high-quality visual enhancements for the Nova Forge C++ client, including:
 
 - **HDR (High Dynamic Range) Rendering**: Capture and preserve bright values beyond 0-1 range
 - **Tone Mapping**: Convert HDR colors to displayable LDR range with multiple operators
@@ -670,7 +670,7 @@ PostProcessingBuffer buffer(width, height, true);  // true = HDR
 
 ## Conclusion
 
-The post-processing system provides professional-quality visual effects for the EVE OFFLINE C++ client:
+The post-processing system provides professional-quality visual effects for the Nova Forge C++ client:
 
 - **HDR Rendering**: Realistic bright lights and explosions
 - **Bloom**: Cinematic glow effects

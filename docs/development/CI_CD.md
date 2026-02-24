@@ -2,7 +2,7 @@
 
 ## Overview
 
-EVE OFFLINE uses GitHub Actions for automated building and testing of the C++ client across multiple platforms.
+Nova Forge uses GitHub Actions for automated building and testing of the C++ client across multiple platforms.
 
 ## Workflows
 
@@ -116,7 +116,7 @@ eve_client.exe "YourName"
 Add to README.md:
 
 ```markdown
-[![C++ Client Build](https://github.com/shifty81/EVEOFFLINE/actions/workflows/cpp-client-ci.yml/badge.svg)](https://github.com/shifty81/EVEOFFLINE/actions/workflows/cpp-client-ci.yml)
+[![C++ Client Build](https://github.com/shifty81/NovaForge/actions/workflows/cpp-client-ci.yml/badge.svg)](https://github.com/shifty81/NovaForge/actions/workflows/cpp-client-ci.yml)
 ```
 
 ## Local CI Testing

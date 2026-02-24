@@ -1,4 +1,4 @@
-# Building EVE OFFLINE C++ Client with Visual Studio
+# Building Nova Forge C++ Client with Visual Studio
 
 This guide covers building the C++ client using Visual Studio on Windows.
 

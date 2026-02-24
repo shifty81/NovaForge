@@ -1,8 +1,8 @@
-# EVE OFFLINE - GUI Quick Start Guide
+# Nova Forge - GUI Quick Start Guide
 
 ## 🎨 Visual Gameplay is Now Available!
 
-EVE OFFLINE now includes a **graphical user interface** using Pygame for visual gameplay!
+Nova Forge now includes a **graphical user interface** using Pygame for visual gameplay!
 
 ## Installation
 
@@ -171,7 +171,7 @@ If the game runs slowly:
 
 Make sure you're running from the repository root:
 ```bash
-cd /path/to/EVEOFFLINE
+cd /path/to/NovaForge
 python gui_demo.py
 ```
 

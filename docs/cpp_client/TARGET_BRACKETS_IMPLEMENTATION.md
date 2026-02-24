@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation plan for in-space target brackets and combat feedback notifications in the EVE OFFLINE C++ client.
+This document outlines the implementation plan for in-space target brackets and combat feedback notifications in the Nova Forge C++ client.
 
 ## Phase 3: Target Brackets & Combat Feedback
 

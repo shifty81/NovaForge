@@ -1,4 +1,4 @@
-# EVE OFFLINE - Developer Documentation
+# Nova Forge - Developer Documentation
 
 ## Table of Contents
 1. [Getting Started](#getting-started)
@@ -17,8 +17,8 @@
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/shifty81/EVEOFFLINE.git
-cd EVEOFFLINE
+git clone https://github.com/shifty81/NovaForge.git
+cd NovaForge
 ```
 
 2. Create a virtual environment (recommended):

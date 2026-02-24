@@ -8,7 +8,7 @@
 
 ## Overview
 
-The Research & Invention system allows players to invent Tech II blueprint copies from Tech I blueprint copies using datacores and optional decryptors. This system is based on EVE Online's invention mechanics with appropriate simplifications for EVE OFFLINE.
+The Research & Invention system allows players to invent Tech II blueprint copies from Tech I blueprint copies using datacores and optional decryptors. This system is based on EVE Online's invention mechanics with appropriate simplifications for Nova Forge.
 
 ## Features
 

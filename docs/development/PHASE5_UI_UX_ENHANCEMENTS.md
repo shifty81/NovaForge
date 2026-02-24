@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document describes the new UI/UX enhancements added to the EVE OFFLINE 3D client in Phase 5. These enhancements provide EVE-styled interface panels for inventory management, ship fitting, market trading, station services, tactical overlay, and enhanced targeting.
+This document describes the new UI/UX enhancements added to the Nova Forge 3D client in Phase 5. These enhancements provide EVE-styled interface panels for inventory management, ship fitting, market trading, station services, tactical overlay, and enhanced targeting.
 
 ---
 

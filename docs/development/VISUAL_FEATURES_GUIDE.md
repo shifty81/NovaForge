@@ -1,4 +1,4 @@
-# EVE OFFLINE - Visual Features Implementation Guide
+# Nova Forge - Visual Features Implementation Guide
 
 ## Quick Reference: What Has Been Implemented
 
@@ -204,7 +204,7 @@ Minmatar Style:
 ## File Organization
 
 ```
-EVEOFFLINE/
+NovaForge/
 ├── cpp_client/
 │   ├── include/
 │   │   ├── ui/

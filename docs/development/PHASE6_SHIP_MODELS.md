@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the integration of new ship classes into the EVE OFFLINE 3D client, specifically:
+This document describes the integration of new ship classes into the Nova Forge 3D client, specifically:
 - Tech II Assault Frigates
 - Battlecruisers
 - Battleships
@@ -369,4 +369,4 @@ The Phase 6 ship model integration successfully adds support for 14 new ship typ
 
 **Document Version:** 1.0  
 **Last Updated:** February 3, 2026  
-**Author:** EVE OFFLINE Development Team
+**Author:** Nova Forge Development Team

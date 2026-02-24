@@ -1,4 +1,4 @@
-# EVE OFFLINE C++ Client - Build Automation
+# Nova Forge C++ Client - Build Automation
 
 This directory contains automated build tools for the C++ OpenGL client.
 

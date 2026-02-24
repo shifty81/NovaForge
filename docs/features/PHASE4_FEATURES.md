@@ -6,7 +6,7 @@
 
 ## Overview
 
-Phase 4 introduces comprehensive Corporation and Social features to EVE OFFLINE, enabling players to form corporations, communicate, and trade with each other. These features are essential for multiplayer cooperation and building a thriving player community.
+Phase 4 introduces comprehensive Corporation and Social features to Nova Forge, enabling players to form corporations, communicate, and trade with each other. These features are essential for multiplayer cooperation and building a thriving player community.
 
 ---
 

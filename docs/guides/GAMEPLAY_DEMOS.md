@@ -1,6 +1,6 @@
-# EVE OFFLINE - Gameplay Demos
+# Nova Forge - Gameplay Demos
 
-This document describes the interactive gameplay demonstrations available in EVE OFFLINE.
+This document describes the interactive gameplay demonstrations available in Nova Forge.
 
 ## 🎮 Interactive Demo (`interactive_demo.py`)
 
@@ -100,7 +100,7 @@ The script runs automatically and displays all features in sequence.
 
 ## 🎯 Gameplay Screenshot
 
-![EVE OFFLINE Gameplay](https://github.com/user-attachments/assets/1eae502f-875d-4fd0-a7e1-2dd3b1b60244)
+![Nova Forge Gameplay](https://github.com/user-attachments/assets/1eae502f-875d-4fd0-a7e1-2dd3b1b60244)
 
 The screenshot above shows the gameplay interface with all major features demonstrated:
 - Ship status display with Shield/Armor/Hull HP
@@ -177,7 +177,7 @@ The screenshot above shows the gameplay interface with all major features demons
 
 ## 📝 Development Notes
 
-The demos were created to showcase the full EVE OFFLINE experience:
+The demos were created to showcase the full Nova Forge experience:
 - Built on custom ECS (Entity Component System) engine
 - Data-driven architecture with JSON files
 - Server-authoritative multiplayer support
@@ -198,5 +198,5 @@ The interactive demo (`interactive_demo.py`) provides a command-line interface w
 
 ---
 
-**EVE OFFLINE** - A PVE-focused space MMO inspired by EVE ONLINE
+**Nova Forge** - A PVE-focused space MMO inspired by EVE ONLINE
 Built with ❤️ using Python and custom ECS architecture

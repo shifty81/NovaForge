@@ -320,4 +320,4 @@ The clients now provide a professional, user-friendly experience that matches mo
 - 100% feature parity with C++ server capabilities
 - Full backward compatibility
 
-The EVE OFFLINE clients are now production-ready with enterprise-grade features for configuration, connection management, and user experience.
+The Nova Forge clients are now production-ready with enterprise-grade features for configuration, connection management, and user experience.

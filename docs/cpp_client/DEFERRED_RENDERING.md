@@ -484,7 +484,7 @@ Deferred rendering is a powerful technique for games with many lights, providing
 - **Flexibility**: Easy to add post-processing effects
 - **Scalability**: Works well with light culling optimizations
 
-The implementation in the EVE OFFLINE C++ client provides a solid foundation for Phase 3 advanced rendering features. The next steps are:
+The implementation in the Nova Forge C++ client provides a solid foundation for Phase 3 advanced rendering features. The next steps are:
 1. Test the implementation
 2. Add post-processing effects (bloom, HDR)
 3. Optimize with light culling

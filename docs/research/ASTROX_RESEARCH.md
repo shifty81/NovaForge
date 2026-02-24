@@ -36,7 +36,7 @@
 
 ### Game Features Comparison
 
-| Feature | EVE Online | Astrox Imperium | EVE OFFLINE (Recommended) |
+| Feature | EVE Online | Astrox Imperium | Nova Forge (Recommended) |
 |---------|-----------|-----------------|---------------------------|
 | **Player Mode** | MMO | Single-player | Small group multiplayer (2-20) |
 | **Economy** | Player-driven | NPC/AI simulated | Hybrid (NPC + player trading) |
@@ -50,7 +50,7 @@
 
 ## Recommended Implementation Path
 
-Based on Astrox Imperium's success and EVE OFFLINE's requirements for **multiplayer**, here's the optimal approach:
+Based on Astrox Imperium's success and Nova Forge's requirements for **multiplayer**, here's the optimal approach:
 
 ### 1. Engine Selection: **Python + Pygame/Pyglet OR Unity**
 
@@ -186,7 +186,7 @@ data/
 - Instance-based mission deadspaces (like both games)
 - Stargates for system travel
 
-### 5. Networking Strategy (EVE OFFLINE Specific)
+### 5. Networking Strategy (Nova Forge Specific)
 
 Since Astrox is single-player, we need a different approach:
 

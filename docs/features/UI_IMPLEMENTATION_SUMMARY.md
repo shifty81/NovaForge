@@ -1,7 +1,7 @@
 # EVE Online UI Enhancement - Implementation Summary
 
 ## Project Goal
-Implement UI enhancements for EVEOFFLINE that closely mimic EVE Online's Photon UI interface, comparing with pictures from the web to make it as accurate as possible.
+Implement UI enhancements for NovaForge that closely mimic EVE Online's Photon UI interface, comparing with pictures from the web to make it as accurate as possible.
 
 ## Research Phase
 
@@ -335,12 +335,12 @@ Successfully implemented comprehensive EVE Online Photon UI enhancements that cl
 - **Extensible**: Factory pattern supports multiple styles
 - **Performant**: Efficient rendering with minimal overhead
 
-The UI enhancement brings EVEOFFLINE significantly closer to the EVE Online experience, providing players with a familiar and polished interface that matches the quality of the official game.
+The UI enhancement brings NovaForge significantly closer to the EVE Online experience, providing players with a familiar and polished interface that matches the quality of the official game.
 
 ## Credits
 
 - **Visual Design**: Based on CCP Games' EVE Online Photon UI
-- **Implementation**: Created for EVEOFFLINE project
+- **Implementation**: Created for NovaForge project
 - **Research**: EVE Online documentation, community guides, tutorials
 - **Testing**: Comprehensive unit tests and validation
 

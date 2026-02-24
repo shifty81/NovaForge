@@ -1,6 +1,6 @@
-# EVE OFFLINE - Development Chat Log
+# Nova Forge - Development Chat Log
 
-> A centralized log of external development conversations (ChatGPT, Discord, etc.) used during the development of EVE OFFLINE. Each entry links to the original conversation (when available) and summarizes decisions, action items, and outcomes.
+> A centralized log of external development conversations (ChatGPT, Discord, etc.) used during the development of Nova Forge. Each entry links to the original conversation (when available) and summarizes decisions, action items, and outcomes.
 
 ---
 
@@ -49,7 +49,7 @@ When adding a new chat session, copy this template:
 - **Platform**: ChatGPT
 - **Link**: [ChatGPT Conversation](https://chatgpt.com/c/698b9abf-2ba0-8330-8f76-2c9eac843f1d) _(private)_
 - **Participants**: @shifty81
-- **Summary**: Comprehensive project review and Phase 8 planning session covering current project status, completed milestones (Phases 1-7, Quick Wins, Medium-Term Tasks), and next steps for the EVE OFFLINE C++/OpenGL space MMO.
+- **Summary**: Comprehensive project review and Phase 8 planning session covering current project status, completed milestones (Phases 1-7, Quick Wins, Medium-Term Tasks), and next steps for the Nova Forge C++/OpenGL space MMO.
 - **Decisions Made**:
   - Maintain a chat log in the repository for development tracking
   - Document all external development conversations for team reference

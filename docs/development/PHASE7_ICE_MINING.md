@@ -574,7 +574,7 @@ The Ice Mining system provides a complete, EVE-Online-authentic ice harvesting e
 ✅ **Comprehensive tests** (25 tests, 100% pass)  
 ✅ **Production ready** code
 
-The system is ready for integration into the EVE OFFLINE universe and provides a solid foundation for capital ship operations, POS management, and advanced manufacturing chains.
+The system is ready for integration into the Nova Forge universe and provides a solid foundation for capital ship operations, POS management, and advanced manufacturing chains.
 
 ---
 

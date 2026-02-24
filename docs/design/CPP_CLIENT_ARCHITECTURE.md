@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the architecture for transitioning the EVEOFFLINE client from Python to C++, including:
+This document outlines the architecture for transitioning the NovaForge client from Python to C++, including:
 1. Standalone executable client
 2. Embedded server capability (optional in-game toggle)
 3. Dedicated server remains standalone
@@ -230,7 +230,7 @@ public:
 ## Directory Structure
 
 ```
-EVEOFFLINE_CPP/
+NovaForge_CPP/
 ├── CMakeLists.txt
 ├── README.md
 ├── src/

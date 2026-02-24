@@ -2,7 +2,7 @@
 
 ## Overview
 
-EVE OFFLINE's C++ client includes integrated multiplayer hosting capabilities, allowing players to host game sessions directly from the client without needing to set up a dedicated server. This feature makes multiplayer gaming more accessible and enables easy co-op play with friends.
+Nova Forge's C++ client includes integrated multiplayer hosting capabilities, allowing players to host game sessions directly from the client without needing to set up a dedicated server. This feature makes multiplayer gaming more accessible and enables easy co-op play with friends.
 
 ## Features
 
@@ -410,7 +410,7 @@ Yes! A C++ client can host a game that Python clients join, and vice versa. All 
 
 ```cpp
 // 1. Create application
-Application app("EVE OFFLINE", 1920, 1080);
+Application app("Nova Forge", 1920, 1080);
 
 // 2. Host multiplayer game
 bool hosting = app.hostMultiplayerGame("Weekend Mining Party", 10);
@@ -436,7 +436,7 @@ if (hosting) {
 
 ```cpp
 // 1. Create application
-Application app("EVE OFFLINE", 1920, 1080);
+Application app("Nova Forge", 1920, 1080);
 
 // 2. Scan for games
 SessionManager* sm = app.getSessionManager();
@@ -461,7 +461,7 @@ if (!sessions.empty()) {
 
 ## Summary
 
-The integrated multiplayer hosting system in EVE OFFLINE makes it easy to:
+The integrated multiplayer hosting system in Nova Forge makes it easy to:
 - Host games without dedicated server setup
 - Join friend's games quickly
 - Discover LAN games automatically

@@ -21,7 +21,7 @@
 
 ## Overview
 
-Phase 5 focuses on implementing 3D graphics and polishing the visual experience of EVE OFFLINE. The goal is to create a modern 3D client that connects to the existing Python server while maintaining the EVE Online-inspired aesthetic.
+Phase 5 focuses on implementing 3D graphics and polishing the visual experience of Nova Forge. The goal is to create a modern 3D client that connects to the existing Python server while maintaining the EVE Online-inspired aesthetic.
 
 ### Core Objectives
 - Implement high-quality 3D graphics
@@ -594,5 +594,5 @@ The 3D client must:
 ---
 
 **Last Updated**: February 2, 2026  
-**Author**: EVE OFFLINE Development Team  
+**Author**: Nova Forge Development Team  
 **Status**: Ready for implementation

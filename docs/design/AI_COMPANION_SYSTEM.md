@@ -857,7 +857,7 @@ def test_combat_support():
 
 ## Conclusion
 
-The AI Companion System adds a new dimension to EVEOFFLINE, allowing players to build their own crew and automate routine tasks while maintaining the challenge and engagement of the game. The system is designed to be:
+The AI Companion System adds a new dimension to NovaForge, allowing players to build their own crew and automate routine tasks while maintaining the challenge and engagement of the game. The system is designed to be:
 
 - **Intuitive**: Simple commands, clear feedback
 - **Scalable**: From 1 to many AI pilots

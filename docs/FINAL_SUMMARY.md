@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully integrated core and advanced rendering features from the Python/Panda3D client into a high-performance C++ OpenGL client for the EVE OFFLINE project.
+Successfully integrated core and advanced rendering features from the Python/Panda3D client into a high-performance C++ OpenGL client for the Nova Forge project.
 
 ## Accomplishments
 

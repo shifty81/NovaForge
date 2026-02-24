@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of external 3D model loading in EVE OFFLINE. The implementation adds support for loading .obj, .gltf, and .glb model files, complementing the existing procedural ship generation system.
+This document describes the implementation of external 3D model loading in Nova Forge. The implementation adds support for loading .obj, .gltf, and .glb model files, complementing the existing procedural ship generation system.
 
 ## Implementation Details
 
