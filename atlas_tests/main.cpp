@@ -112,6 +112,20 @@ void test_camera_orbit_position_unchanged_in_fps();
 void test_camera_view_mode_kills_inertia();
 void test_camera_view_matrix_differs_by_mode();
 
+// PCG Preview Panel tests
+void test_pcg_preview_defaults();
+void test_pcg_preview_generate_ship();
+void test_pcg_preview_generate_ship_override_hull();
+void test_pcg_preview_generate_station();
+void test_pcg_preview_generate_station_override_count();
+void test_pcg_preview_generate_interior();
+void test_pcg_preview_determinism();
+void test_pcg_preview_randomize_changes_seed();
+void test_pcg_preview_clear();
+void test_pcg_preview_set_settings();
+void test_pcg_preview_different_seeds_differ();
+void test_pcg_preview_draw_does_not_crash();
+
 int main() {
     std::cout << "=== Atlas Engine Tests ===" << std::endl;
 
@@ -239,6 +253,21 @@ int main() {
     test_camera_orbit_position_unchanged_in_fps();
     test_camera_view_mode_kills_inertia();
     test_camera_view_matrix_differs_by_mode();
+
+    // PCG Preview Panel
+    std::cout << "\n--- PCG Preview Panel ---" << std::endl;
+    test_pcg_preview_defaults();
+    test_pcg_preview_generate_ship();
+    test_pcg_preview_generate_ship_override_hull();
+    test_pcg_preview_generate_station();
+    test_pcg_preview_generate_station_override_count();
+    test_pcg_preview_generate_interior();
+    test_pcg_preview_determinism();
+    test_pcg_preview_randomize_changes_seed();
+    test_pcg_preview_clear();
+    test_pcg_preview_set_settings();
+    test_pcg_preview_different_seeds_differ();
+    test_pcg_preview_draw_does_not_crash();
 
     std::cout << "\n=== All tests passed! ===" << std::endl;
     return 0;

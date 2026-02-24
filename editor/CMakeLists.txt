@@ -5,6 +5,10 @@ add_executable(AtlasEditor
     panels/NetInspectorPanel.cpp
     panels/ConsolePanel.cpp
     tools/GamePackagerPanel.cpp
+    tools/PCGPreviewPanel.cpp
 )
 
 target_link_libraries(AtlasEditor AtlasEngine)
+target_include_directories(AtlasEditor PRIVATE
+    ${CMAKE_SOURCE_DIR}/cpp_server/include
+)
