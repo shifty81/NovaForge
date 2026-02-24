@@ -11,6 +11,7 @@
 #include "tools/ViewportPanel.h"
 #include "tools/LiveSceneManager.h"
 #include "assets/AssetRegistry.h"
+#include "../cpp_client/include/ui/atlas/atlas_context.h"
 #include <iostream>
 #include <memory>
 
@@ -120,6 +121,14 @@ int main() {
               << "Asset Style, Ship Archetype, ECS Inspector, Net Inspector, "
               << "Console, Game Packager, Live Scene Manager" << std::endl;
 
+    // ── Atlas UI context for editor panels ────────────────────
+    atlas::AtlasContext uiContext;
+    uiContext.init();
+    layout.SetContext(&uiContext);
+
+    std::cout << "[Editor] Atlas UI context initialized for "
+              << layout.Panels().size() << " panels" << std::endl;
+
     // ── Live-reload: watch asset files for changes ────────────
     atlas::asset::AssetRegistry assetRegistry;
     assetRegistry.Scan(engine.Config().assetRoot);
@@ -148,6 +157,10 @@ int main() {
 
     // ── Run editor loop ───────────────────────────────────────
     engine.Run();
+
+    // ── Cleanup ───────────────────────────────────────────────
+    layout.SetContext(nullptr);
+    uiContext.shutdown();
 
     return 0;
 }
