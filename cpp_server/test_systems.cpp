@@ -137,6 +137,9 @@
 #include "systems/alliance_system.h"
 #include "systems/sovereignty_system.h"
 #include "systems/war_declaration_system.h"
+#include "systems/convoy_ambush_system.h"
+#include "systems/npc_dialogue_system.h"
+#include "systems/station_monument_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -18377,6 +18380,310 @@ void testWarInsufficientFunds() {
     assertTrue(approxEqual(aggPlayer->credits, 50000000.0), "Credits not deducted on failure");
 }
 
+// ==================== Convoy Ambush System tests ====================
+
+void testConvoyRegisterRoute() {
+    std::cout << "\n=== Convoy Register Route ===" << std::endl;
+    ecs::World world;
+    systems::ConvoyAmbushSystem convoysSys(&world);
+
+    std::string routeId = convoysSys.registerRoute("Jita", "Amarr", "Tritanium",
+                                                    500000000.0, 0.9f);
+    assertTrue(!routeId.empty(), "Route registered successfully");
+    assertTrue(convoysSys.getRouteRisk(routeId) > 0.0f, "Route has pirate interest");
+}
+
+void testConvoyPlanAmbush() {
+    std::cout << "\n=== Convoy Plan Ambush ===" << std::endl;
+    ecs::World world;
+    systems::ConvoyAmbushSystem convoysSys(&world);
+
+    world.createEntity("pirate1");
+    std::string routeId = convoysSys.registerRoute("Jita", "Amarr", "Tritanium",
+                                                    500000000.0, 0.5f);
+    std::string ambushId = convoysSys.planAmbush("pirate1", routeId);
+    assertTrue(!ambushId.empty(), "Ambush planned");
+    assertTrue(convoysSys.getAmbushState(ambushId) == "planned", "Ambush state is planned");
+    assertTrue(convoysSys.getPlannedAmbushes().size() == 1, "One planned ambush");
+}
+
+void testConvoyExecuteAmbushLowSec() {
+    std::cout << "\n=== Convoy Execute Ambush Low-Sec ===" << std::endl;
+    ecs::World world;
+    systems::ConvoyAmbushSystem convoysSys(&world);
+
+    world.createEntity("pirate1");
+    // Low-sec route (security < 0.7) — ambush should succeed
+    std::string routeId = convoysSys.registerRoute("Amamake", "Rancer", "Plex",
+                                                    1000000000.0, 0.3f);
+    std::string ambushId = convoysSys.planAmbush("pirate1", routeId);
+    bool success = convoysSys.executeAmbush(ambushId);
+    assertTrue(success, "Ambush succeeded on low-sec route");
+    assertTrue(convoysSys.getAmbushState(ambushId) == "active", "Ambush state is active");
+}
+
+void testConvoyExecuteAmbushHighSec() {
+    std::cout << "\n=== Convoy Execute Ambush High-Sec ===" << std::endl;
+    ecs::World world;
+    systems::ConvoyAmbushSystem convoysSys(&world);
+
+    world.createEntity("pirate1");
+    // High-sec route (security >= 0.7) — ambush should fail
+    std::string routeId = convoysSys.registerRoute("Jita", "Amarr", "Tritanium",
+                                                    500000000.0, 0.9f);
+    std::string ambushId = convoysSys.planAmbush("pirate1", routeId);
+    bool success = convoysSys.executeAmbush(ambushId);
+    assertTrue(!success, "Ambush failed on high-sec route");
+    assertTrue(convoysSys.getAmbushState(ambushId) == "failed", "Ambush state is failed");
+}
+
+void testConvoyDisperseAmbush() {
+    std::cout << "\n=== Convoy Disperse Ambush ===" << std::endl;
+    ecs::World world;
+    systems::ConvoyAmbushSystem convoysSys(&world);
+
+    world.createEntity("pirate1");
+    std::string routeId = convoysSys.registerRoute("Amamake", "Rancer", "Plex",
+                                                    1000000000.0, 0.2f);
+    std::string ambushId = convoysSys.planAmbush("pirate1", routeId);
+    convoysSys.executeAmbush(ambushId);
+    assertTrue(convoysSys.disperseAmbush(ambushId), "Ambush dispersed");
+    assertTrue(convoysSys.getAmbushState(ambushId) == "dispersed", "State is dispersed");
+}
+
+void testConvoyAmbushLootValue() {
+    std::cout << "\n=== Convoy Ambush Loot Value ===" << std::endl;
+    ecs::World world;
+    systems::ConvoyAmbushSystem convoysSys(&world);
+
+    world.createEntity("pirate1");
+    // Security 0.0 (fully lawless) means 50% of cargo captured
+    std::string routeId = convoysSys.registerRoute("Null-A", "Null-B", "Platinum",
+                                                    1000000000.0, 0.0f);
+    std::string ambushId = convoysSys.planAmbush("pirate1", routeId);
+    convoysSys.executeAmbush(ambushId);
+    auto* ambushEnt = world.getEntity(ambushId);
+    auto* ambush = ambushEnt->getComponent<components::ConvoyAmbush>();
+    assertTrue(ambush->loot_value > 0.0, "Loot value captured");
+    assertTrue(ambush->ships_attacked == 1, "One ship attacked");
+}
+
+void testConvoyAmbushCannotExecuteTwice() {
+    std::cout << "\n=== Convoy Ambush Cannot Execute Twice ===" << std::endl;
+    ecs::World world;
+    systems::ConvoyAmbushSystem convoysSys(&world);
+
+    world.createEntity("pirate1");
+    std::string routeId = convoysSys.registerRoute("Amamake", "Rancer", "Plex",
+                                                    1000000000.0, 0.2f);
+    std::string ambushId = convoysSys.planAmbush("pirate1", routeId);
+    convoysSys.executeAmbush(ambushId);
+    assertTrue(!convoysSys.executeAmbush(ambushId), "Cannot execute active ambush again");
+}
+
+// ==================== NPC Dialogue System tests ====================
+
+void testNPCDialogueUnknownPlayer() {
+    std::cout << "\n=== NPC Dialogue Unknown Player ===" << std::endl;
+    ecs::World world;
+    systems::NPCDialogueSystem dialogueSys(&world);
+
+    auto* npcEnt = world.createEntity("npc1");
+    addComp<components::NPCDialogue>(npcEnt);
+
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 0;
+
+    std::string line = dialogueSys.generateDialogue("npc1", "player1");
+    assertTrue(!line.empty(), "Dialogue generated for unknown player");
+    assertTrue(line.find("new") != std::string::npos, "Line mentions being new");
+    assertTrue(dialogueSys.getDialogueCount("npc1") == 1, "One line generated");
+}
+
+void testNPCDialogueFamousPlayer() {
+    std::cout << "\n=== NPC Dialogue Famous Player ===" << std::endl;
+    ecs::World world;
+    systems::NPCDialogueSystem dialogueSys(&world);
+
+    auto* npcEnt = world.createEntity("npc1");
+    addComp<components::NPCDialogue>(npcEnt);
+
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 60; // Famous
+
+    std::string line = dialogueSys.generateDialogue("npc1", "player1");
+    assertTrue(!line.empty(), "Dialogue generated for famous player");
+    assertTrue(line.find("Famous") != std::string::npos, "Line mentions Famous title");
+}
+
+void testNPCDialogueLegendaryPlayer() {
+    std::cout << "\n=== NPC Dialogue Legendary Player ===" << std::endl;
+    ecs::World world;
+    systems::NPCDialogueSystem dialogueSys(&world);
+
+    auto* npcEnt = world.createEntity("npc1");
+    addComp<components::NPCDialogue>(npcEnt);
+
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 150; // Legendary
+
+    std::string line = dialogueSys.generateDialogue("npc1", "player1");
+    assertTrue(!line.empty(), "Dialogue generated for legendary player");
+    assertTrue(line.find("Legendary") != std::string::npos, "Line mentions Legendary title");
+}
+
+void testNPCDialogueMythicPlayer() {
+    std::cout << "\n=== NPC Dialogue Mythic Player ===" << std::endl;
+    ecs::World world;
+    systems::NPCDialogueSystem dialogueSys(&world);
+
+    auto* npcEnt = world.createEntity("npc1");
+    addComp<components::NPCDialogue>(npcEnt);
+
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 600; // Mythic
+
+    std::string line = dialogueSys.generateDialogue("npc1", "player1");
+    assertTrue(!line.empty(), "Dialogue generated for mythic player");
+    assertTrue(line.find("Mythic") != std::string::npos, "Line mentions Mythic title");
+}
+
+void testNPCDialogueObserveLegend() {
+    std::cout << "\n=== NPC Dialogue Observe Legend ===" << std::endl;
+    ecs::World world;
+    systems::NPCDialogueSystem dialogueSys(&world);
+
+    auto* npcEnt = world.createEntity("npc1");
+    addComp<components::NPCDialogue>(npcEnt);
+
+    dialogueSys.observeLegend("npc1", "player1", "titan_kill", 100.0f);
+    auto* npc = npcEnt->getComponent<components::NPCDialogue>();
+    assertTrue(npc->getObservedCount() == 1, "NPC observed one legend event");
+}
+
+void testNPCDialogueMissingComponents() {
+    std::cout << "\n=== NPC Dialogue Missing Components ===" << std::endl;
+    ecs::World world;
+    systems::NPCDialogueSystem dialogueSys(&world);
+
+    // No entity created — should return empty string safely
+    std::string line = dialogueSys.generateDialogue("no_npc", "no_player");
+    assertTrue(line.empty(), "No crash with missing entities");
+    assertTrue(dialogueSys.getDialogueCount("no_npc") == 0, "Count is 0 for missing entity");
+}
+
+// ==================== Station Monument System tests ====================
+
+void testMonumentBelowMinScore() {
+    std::cout << "\n=== Monument Below Min Score ===" << std::endl;
+    ecs::World world;
+    systems::StationMonumentSystem monumentSys(&world);
+
+    world.createEntity("station1");
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 10; // Below kMonumentMinScore (25)
+
+    std::string monumentId = monumentSys.checkAndCreateMonument("station1", "player1", 0.0f);
+    assertTrue(monumentId.empty(), "No monument for score below threshold");
+    assertTrue(monumentSys.getMonumentCount("station1") == 0, "Zero monuments in station");
+}
+
+void testMonumentCreatedForNotable() {
+    std::cout << "\n=== Monument Created for Notable ===" << std::endl;
+    ecs::World world;
+    systems::StationMonumentSystem monumentSys(&world);
+
+    world.createEntity("station1");
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 30; // Notable, above threshold
+
+    std::string monumentId = monumentSys.checkAndCreateMonument("station1", "player1", 0.0f);
+    assertTrue(!monumentId.empty(), "Monument created for notable player");
+    assertTrue(monumentSys.getMonumentCount("station1") == 1, "One monument in station");
+    assertTrue(monumentSys.getMonumentType("station1", "player1") == "Plaque",
+               "Monument type is Plaque");
+}
+
+void testMonumentTypeScaling() {
+    std::cout << "\n=== Monument Type Scaling ===" << std::endl;
+    ecs::World world;
+    systems::StationMonumentSystem monumentSys(&world);
+
+    world.createEntity("station1");
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 110; // Statue tier
+
+    std::string monumentId = monumentSys.checkAndCreateMonument("station1", "player1", 0.0f);
+    assertTrue(!monumentId.empty(), "Monument created for statue-tier score");
+    assertTrue(monumentSys.getMonumentType("station1", "player1") == "Statue",
+               "Monument type is Statue for score 110");
+}
+
+void testMonumentUpgrade() {
+    std::cout << "\n=== Monument Upgrade ===" << std::endl;
+    ecs::World world;
+    systems::StationMonumentSystem monumentSys(&world);
+
+    world.createEntity("station1");
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 30; // Plaque
+
+    monumentSys.checkAndCreateMonument("station1", "player1", 0.0f);
+    assertTrue(monumentSys.getMonumentType("station1", "player1") == "Plaque",
+               "Initially a Plaque");
+
+    // Player becomes more famous
+    legend->legend_score = 60; // Bust
+    std::string upgradeId = monumentSys.checkAndCreateMonument("station1", "player1", 1.0f);
+    assertTrue(!upgradeId.empty(), "Monument upgraded");
+    assertTrue(monumentSys.getMonumentType("station1", "player1") == "Bust",
+               "Upgraded to Bust");
+    assertTrue(monumentSys.getMonumentCount("station1") == 1, "Still only one monument");
+}
+
+void testMonumentNoUpgradeIfSameType() {
+    std::cout << "\n=== Monument No Upgrade If Same Type ===" << std::endl;
+    ecs::World world;
+    systems::StationMonumentSystem monumentSys(&world);
+
+    world.createEntity("station1");
+    auto* playerEnt = world.createEntity("player1");
+    auto* legend = addComp<components::PlayerLegend>(playerEnt);
+    legend->legend_score = 30; // Plaque
+
+    monumentSys.checkAndCreateMonument("station1", "player1", 0.0f);
+    // Same score — should not change
+    std::string result = monumentSys.checkAndCreateMonument("station1", "player1", 1.0f);
+    assertTrue(result.empty(), "No monument id returned when no change");
+    assertTrue(monumentSys.getMonumentCount("station1") == 1, "Count unchanged");
+}
+
+void testMonumentMultiplePlayers() {
+    std::cout << "\n=== Monument Multiple Players ===" << std::endl;
+    ecs::World world;
+    systems::StationMonumentSystem monumentSys(&world);
+
+    world.createEntity("station1");
+
+    for (int i = 1; i <= 3; ++i) {
+        std::string pid = "player" + std::to_string(i);
+        auto* ent = world.createEntity(pid);
+        auto* legend = addComp<components::PlayerLegend>(ent);
+        legend->legend_score = 50 * i;
+        monumentSys.checkAndCreateMonument("station1", pid, 0.0f);
+    }
+    assertTrue(monumentSys.getMonumentCount("station1") == 3, "Three monuments for three players");
+    assertTrue(monumentSys.getMonuments("station1").size() == 3, "getMonuments returns 3");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -18417,7 +18724,8 @@ int main() {
     std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)," << std::endl;
     std::cout << "SpineHullGenerator, TerrainGenerator, TurretPlacementSystem," << std::endl;
     std::cout << "AIEconomicActor, TurretAI," << std::endl;
-    std::cout << "Alliance, Sovereignty, WarDeclaration" << std::endl;
+    std::cout << "Alliance, Sovereignty, WarDeclaration," << std::endl;
+    std::cout << "ConvoyAmbush, NPCDialogue, StationMonument" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -19655,6 +19963,31 @@ int main() {
     testWarRecordKill();
     testWarAutoFinish();
     testWarInsufficientFunds();
+
+    // Convoy Ambush System tests
+    testConvoyRegisterRoute();
+    testConvoyPlanAmbush();
+    testConvoyExecuteAmbushLowSec();
+    testConvoyExecuteAmbushHighSec();
+    testConvoyDisperseAmbush();
+    testConvoyAmbushLootValue();
+    testConvoyAmbushCannotExecuteTwice();
+
+    // NPC Dialogue System tests
+    testNPCDialogueUnknownPlayer();
+    testNPCDialogueFamousPlayer();
+    testNPCDialogueLegendaryPlayer();
+    testNPCDialogueMythicPlayer();
+    testNPCDialogueObserveLegend();
+    testNPCDialogueMissingComponents();
+
+    // Station Monument System tests
+    testMonumentBelowMinScore();
+    testMonumentCreatedForNotable();
+    testMonumentTypeScaling();
+    testMonumentUpgrade();
+    testMonumentNoUpgradeIfSameType();
+    testMonumentMultiplePlayers();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

@@ -2881,6 +2881,128 @@ public:
     COMPONENT_TYPE(WarDeclaration)
 };
 
+// ==================== Phase 15: Convoy Ambush AI ====================
+
+/**
+ * @brief Represents a trade route between two systems with associated cargo info.
+ */
+class ConvoyRoute : public ecs::Component {
+public:
+    std::string route_id;
+    std::string origin_system;
+    std::string destination_system;
+    std::string cargo_type;
+    double cargo_value = 0.0;
+    float security_level = 0.5f;    // 0.0 (lawless) to 1.0 (high-sec)
+    int active_convoys = 0;          // currently travelling this route
+    float pirate_interest = 0.0f;   // 0.0 to 1.0, grows with cargo value
+
+    COMPONENT_TYPE(ConvoyRoute)
+};
+
+/**
+ * @brief Represents a planned or active pirate ambush on a convoy route.
+ */
+class ConvoyAmbush : public ecs::Component {
+public:
+    enum class AmbushState { Planned, Active, Successful, Failed, Dispersed };
+
+    std::string ambush_id;
+    std::string pirate_entity_id;
+    std::string route_id;
+    AmbushState state = AmbushState::Planned;
+    float cooldown_remaining = 0.0f;
+    double loot_value = 0.0;         // Credits value captured
+    int ships_attacked = 0;
+
+    static std::string stateToString(AmbushState s) {
+        switch (s) {
+            case AmbushState::Planned:     return "planned";
+            case AmbushState::Active:      return "active";
+            case AmbushState::Successful:  return "successful";
+            case AmbushState::Failed:      return "failed";
+            case AmbushState::Dispersed:   return "dispersed";
+            default:                       return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(ConvoyAmbush)
+};
+
+// ==================== Phase 15: NPC Dialogue (Legend References) ====================
+
+/**
+ * @brief NPC dialogue component that records observed player legend events
+ *        and generates contextual remarks about legendary players.
+ */
+class NPCDialogue : public ecs::Component {
+public:
+    struct ObservedLegend {
+        std::string player_id;
+        std::string event_type;
+        float timestamp = 0.0f;
+    };
+
+    std::vector<ObservedLegend> observed_legends;
+    std::vector<std::string> generated_lines;
+    int max_lines = 20;
+
+    void observeLegend(const std::string& player_id, const std::string& event_type, float ts) {
+        observed_legends.push_back({player_id, event_type, ts});
+    }
+
+    void addLine(const std::string& line) {
+        generated_lines.push_back(line);
+        if (static_cast<int>(generated_lines.size()) > max_lines) {
+            generated_lines.erase(generated_lines.begin());
+        }
+    }
+
+    int getLineCount() const { return static_cast<int>(generated_lines.size()); }
+    int getObservedCount() const { return static_cast<int>(observed_legends.size()); }
+
+    COMPONENT_TYPE(NPCDialogue)
+};
+
+// ==================== Phase 15: Station Monuments ====================
+
+/**
+ * @brief Represents a monument or statue erected in a station for a legendary player.
+ */
+class StationMonument : public ecs::Component {
+public:
+    enum class MonumentType { Plaque, Bust, Statue, HeroicStatue, MythicShrine };
+
+    std::string station_id;
+    std::string player_id;
+    std::string player_name;
+    MonumentType type = MonumentType::Plaque;
+    int legend_score_at_creation = 0;
+    float creation_timestamp = 0.0f;
+    std::string inscription;
+
+    static MonumentType scoreToType(int score) {
+        if (score >= 500) return MonumentType::MythicShrine;
+        if (score >= 200) return MonumentType::HeroicStatue;
+        if (score >= 100) return MonumentType::Statue;
+        if (score >= 50)  return MonumentType::Bust;
+        return MonumentType::Plaque;
+    }
+
+    static std::string typeToString(MonumentType t) {
+        switch (t) {
+            case MonumentType::Plaque:        return "Plaque";
+            case MonumentType::Bust:          return "Bust";
+            case MonumentType::Statue:        return "Statue";
+            case MonumentType::HeroicStatue:  return "HeroicStatue";
+            case MonumentType::MythicShrine:  return "MythicShrine";
+            default:                          return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(StationMonument)
+};
+
 } // namespace components
 } // namespace atlas
 

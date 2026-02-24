@@ -1264,12 +1264,12 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **AI fleet dispatch** — NPC mining/hauling/production fleets fulfilling orders — AIFleetDispatch component with completion tracking
 - [ ] **Dynamic price graphs** — Visual price history per region
 - [ ] **Black market & smuggling** — Hidden trade network
-- [ ] **Convoy ambush AI** — Pirates target trade routes
+- [x] **Convoy ambush AI** — Pirates target trade routes — ConvoyAmbushSystem with ConvoyRoute + ConvoyAmbush components, security-level-gated success, loot capture, disperse on security response (7 tests)
 
 #### Legend & Myth System
 - [x] **Player legend tracking** — Events with magnitude scoring and earned titles — PlayerLegend component + LegendSystem with title computation (3 tests)
-- [ ] **NPC dialogue references** — NPCs talk about player legends
-- [ ] **Player statues & monuments** — Generated in stations based on legend score
+- [x] **NPC dialogue references** — NPCs talk about player legends — NPCDialogueSystem with NPCDialogue component, title-aware generated lines, observe-legend event recording (6 tests)
+- [x] **Player statues & monuments** — Generated in stations based on legend score — StationMonumentSystem with StationMonument component, 5 monument tiers (Plaque→MythicShrine), upgrade logic (6 tests)
 - [ ] **False myths & propaganda** — NPC-generated misinformation
 - [ ] **Myth-based boss encounters** — Ancient sites generated from myth content
 

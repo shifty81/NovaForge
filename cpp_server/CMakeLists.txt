@@ -502,6 +502,9 @@ if(BUILD_TESTS)
         src/systems/alliance_system.cpp
         src/systems/sovereignty_system.cpp
         src/systems/war_declaration_system.cpp
+        src/systems/convoy_ambush_system.cpp
+        src/systems/npc_dialogue_system.cpp
+        src/systems/station_monument_system.cpp
         src/data/world_persistence.cpp
         src/utils/logger.cpp
         src/utils/server_metrics.cpp
