@@ -165,7 +165,7 @@ void StarSystemGenerator::generateOrbits(DeterministicRNG& rng,
 
         if (isBelt[static_cast<size_t>(i)]) {
             slot.type       = OrbitSlotType::Belt;
-            slot.planetType = PlanetType::Barren;  // unused for belts
+            slot.planetType = SystemPlanetType::Barren;  // unused for belts
         } else {
             slot.type = OrbitSlotType::Planet;
 
@@ -175,23 +175,23 @@ void StarSystemGenerator::generateOrbits(DeterministicRNG& rng,
 
             if (r < 0.8f) {
                 // Inner zone: Lava / Barren
-                slot.planetType = (roll < 0.6f) ? PlanetType::Lava
-                                                 : PlanetType::Barren;
+                slot.planetType = (roll < 0.6f) ? SystemPlanetType::Lava
+                                                 : SystemPlanetType::Barren;
             } else if (r < 3.0f) {
                 // Habitable zone: Temperate / Oceanic / Barren
-                if (roll < 0.40f)      slot.planetType = PlanetType::Temperate;
-                else if (roll < 0.70f) slot.planetType = PlanetType::Oceanic;
-                else                   slot.planetType = PlanetType::Barren;
+                if (roll < 0.40f)      slot.planetType = SystemPlanetType::Temperate;
+                else if (roll < 0.70f) slot.planetType = SystemPlanetType::Oceanic;
+                else                   slot.planetType = SystemPlanetType::Barren;
             } else if (r < 10.0f) {
                 // Mid-outer zone: Gas / Storm
-                if (roll < 0.55f)      slot.planetType = PlanetType::Gas;
-                else if (roll < 0.85f) slot.planetType = PlanetType::Storm;
-                else                   slot.planetType = PlanetType::Ice;
+                if (roll < 0.55f)      slot.planetType = SystemPlanetType::Gas;
+                else if (roll < 0.85f) slot.planetType = SystemPlanetType::Storm;
+                else                   slot.planetType = SystemPlanetType::Ice;
             } else {
                 // Outer zone: Ice / Gas
-                if (roll < 0.60f)      slot.planetType = PlanetType::Ice;
-                else if (roll < 0.90f) slot.planetType = PlanetType::Gas;
-                else                   slot.planetType = PlanetType::Storm;
+                if (roll < 0.60f)      slot.planetType = SystemPlanetType::Ice;
+                else if (roll < 0.90f) slot.planetType = SystemPlanetType::Gas;
+                else                   slot.planetType = SystemPlanetType::Storm;
             }
         }
 

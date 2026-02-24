@@ -132,6 +132,8 @@
 #include "pcg/asteroid_field_generator.h"
 #include "pcg/anomaly_generator.h"
 #include "pcg/npc_encounter_generator.h"
+#include "pcg/star_system_generator.h"
+#include "pcg/galaxy_generator.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -14265,6 +14267,352 @@ void testTitanAssemblyPhaseName() {
     assertTrue(TitanAssemblySystem::phaseName(TitanPhase::Acceptance) == "Acceptance", "Acceptance name");
 }
 
+// ==================== Expanded Ship Class Tests ====================
+
+void testShipGeneratorAllHullClasses() {
+    std::cout << "\n=== PCG: ShipGenerator all 20 hull classes ===" << std::endl;
+    using atlas::pcg::HullClass;
+    using atlas::pcg::ShipGenerator;
+    using atlas::pcg::PCGContext;
+
+    HullClass allClasses[] = {
+        HullClass::Frigate, HullClass::Destroyer, HullClass::Cruiser,
+        HullClass::Battlecruiser, HullClass::Battleship, HullClass::Capital,
+        HullClass::Interceptor, HullClass::CovertOps, HullClass::AssaultFrigate,
+        HullClass::StealthBomber, HullClass::Logistics, HullClass::Recon,
+        HullClass::CommandShip, HullClass::Marauder, HullClass::Industrial,
+        HullClass::MiningBarge, HullClass::Exhumer, HullClass::Carrier,
+        HullClass::Dreadnought, HullClass::Titan,
+    };
+
+    for (int i = 0; i < 20; ++i) {
+        PCGContext ctx{ static_cast<uint64_t>(i * 1337 + 42), 1 };
+        auto ship = ShipGenerator::generate(ctx, allClasses[i]);
+        assertTrue(ship.valid, ("Valid ship for " + ShipGenerator::hullClassName(allClasses[i])).c_str());
+        assertTrue(ship.hullClass == allClasses[i],
+                   ("Hull class matches for " + ShipGenerator::hullClassName(allClasses[i])).c_str());
+        assertTrue(ship.mass > 0.0f, ("Positive mass for " + ShipGenerator::hullClassName(allClasses[i])).c_str());
+        assertTrue(ship.thrust > 0.0f, ("Positive thrust for " + ShipGenerator::hullClassName(allClasses[i])).c_str());
+    }
+}
+
+void testShipGeneratorTechLevels() {
+    std::cout << "\n=== PCG: ShipGenerator tech levels ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 555, 1 };
+    auto frigate = ShipGenerator::generate(ctx, HullClass::Frigate);
+    assertTrue(frigate.techLevel == 1, "Frigate is Tech I");
+
+    auto interceptor = ShipGenerator::generate(ctx, HullClass::Interceptor);
+    assertTrue(interceptor.techLevel == 2, "Interceptor is Tech II");
+
+    auto marauder = ShipGenerator::generate(ctx, HullClass::Marauder);
+    assertTrue(marauder.techLevel == 2, "Marauder is Tech II");
+
+    auto industrial = ShipGenerator::generate(ctx, HullClass::Industrial);
+    assertTrue(industrial.techLevel == 1, "Industrial is Tech I");
+
+    auto exhumer = ShipGenerator::generate(ctx, HullClass::Exhumer);
+    assertTrue(exhumer.techLevel == 2, "Exhumer is Tech II");
+
+    auto titan = ShipGenerator::generate(ctx, HullClass::Titan);
+    assertTrue(titan.techLevel == 1, "Titan is Tech I");
+}
+
+void testShipGeneratorCargoCapacity() {
+    std::cout << "\n=== PCG: ShipGenerator cargo capacity ===" << std::endl;
+    using namespace atlas::pcg;
+
+    // Industrials should have much larger cargo than combat ships.
+    float industrialCargoSum = 0.0f;
+    float frigateCargoSum = 0.0f;
+    for (int i = 0; i < 20; ++i) {
+        PCGContext ctx{ static_cast<uint64_t>(i * 99 + 7), 1 };
+        auto ind = ShipGenerator::generate(ctx, HullClass::Industrial);
+        industrialCargoSum += static_cast<float>(ind.cargoCapacity);
+        auto frig = ShipGenerator::generate(ctx, HullClass::Frigate);
+        frigateCargoSum += static_cast<float>(frig.cargoCapacity);
+    }
+    assertTrue(industrialCargoSum > frigateCargoSum * 5.0f,
+               "Industrials have much larger cargo than frigates");
+}
+
+void testShipGeneratorXLargeWeapons() {
+    std::cout << "\n=== PCG: ShipGenerator XLarge weapons ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 777, 1 };
+    auto dread = ShipGenerator::generate(ctx, HullClass::Dreadnought);
+    assertTrue(dread.maxWeaponSize == WeaponSize::XLarge, "Dreadnought has XLarge weapons");
+
+    auto titan = ShipGenerator::generate(ctx, HullClass::Titan);
+    assertTrue(titan.maxWeaponSize == WeaponSize::XLarge, "Titan has XLarge weapons");
+
+    auto frigate = ShipGenerator::generate(ctx, HullClass::Frigate);
+    assertTrue(frigate.maxWeaponSize == WeaponSize::Small, "Frigate has Small weapons");
+}
+
+void testShipGeneratorStealthBomberLaunchers() {
+    std::cout << "\n=== PCG: ShipGenerator stealth bomber launchers ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 888, 1 };
+    auto bomber = ShipGenerator::generate(ctx, HullClass::StealthBomber);
+    assertTrue(bomber.launcherSlots >= 3, "StealthBomber has 3+ launcher slots");
+    assertTrue(bomber.maxWeaponSize == WeaponSize::Large, "StealthBomber uses Large launchers");
+}
+
+void testShipGeneratorCarrierNoDPS() {
+    std::cout << "\n=== PCG: ShipGenerator carrier has no turrets ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 999, 1 };
+    auto carrier = ShipGenerator::generate(ctx, HullClass::Carrier);
+    assertTrue(carrier.turretSlots == 0, "Carrier has 0 turret slots");
+    assertTrue(carrier.launcherSlots == 0, "Carrier has 0 launcher slots");
+    assertTrue(carrier.droneBay >= 200, "Carrier has large drone bay (200+)");
+}
+
+void testShipGeneratorHullClassNames() {
+    std::cout << "\n=== PCG: ShipGenerator all hull class names ===" << std::endl;
+    using namespace atlas::pcg;
+
+    assertTrue(ShipGenerator::hullClassName(HullClass::Interceptor) == "Interceptor", "Interceptor name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::CovertOps) == "CovertOps", "CovertOps name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::AssaultFrigate) == "AssaultFrigate", "AssaultFrigate name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::StealthBomber) == "StealthBomber", "StealthBomber name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Logistics) == "Logistics", "Logistics name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Recon) == "Recon", "Recon name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::CommandShip) == "CommandShip", "CommandShip name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Marauder) == "Marauder", "Marauder name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Industrial) == "Industrial", "Industrial name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::MiningBarge) == "MiningBarge", "MiningBarge name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Exhumer) == "Exhumer", "Exhumer name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Carrier) == "Carrier", "Carrier name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Dreadnought) == "Dreadnought", "Dreadnought name");
+    assertTrue(ShipGenerator::hullClassName(HullClass::Titan) == "Titan", "Titan name");
+}
+
+void testBaseHullClassMapping() {
+    std::cout << "\n=== PCG: baseHullClass mapping ===" << std::endl;
+    using namespace atlas::pcg;
+
+    assertTrue(baseHullClass(HullClass::Interceptor) == HullClass::Frigate, "Interceptor base is Frigate");
+    assertTrue(baseHullClass(HullClass::CovertOps) == HullClass::Frigate, "CovertOps base is Frigate");
+    assertTrue(baseHullClass(HullClass::AssaultFrigate) == HullClass::Frigate, "AssaultFrigate base is Frigate");
+    assertTrue(baseHullClass(HullClass::StealthBomber) == HullClass::Frigate, "StealthBomber base is Frigate");
+    assertTrue(baseHullClass(HullClass::Logistics) == HullClass::Cruiser, "Logistics base is Cruiser");
+    assertTrue(baseHullClass(HullClass::Recon) == HullClass::Cruiser, "Recon base is Cruiser");
+    assertTrue(baseHullClass(HullClass::CommandShip) == HullClass::Battlecruiser, "CommandShip base is Battlecruiser");
+    assertTrue(baseHullClass(HullClass::Marauder) == HullClass::Battleship, "Marauder base is Battleship");
+    assertTrue(baseHullClass(HullClass::Industrial) == HullClass::Cruiser, "Industrial base is Cruiser");
+    assertTrue(baseHullClass(HullClass::Carrier) == HullClass::Capital, "Carrier base is Capital");
+    assertTrue(baseHullClass(HullClass::Dreadnought) == HullClass::Capital, "Dreadnought base is Capital");
+    assertTrue(baseHullClass(HullClass::Titan) == HullClass::Capital, "Titan base is Capital");
+    assertTrue(baseHullClass(HullClass::Frigate) == HullClass::Frigate, "Frigate base is Frigate");
+}
+
+// ==================== Star System Generator Tests ====================
+
+void testStarSystemGeneration() {
+    std::cout << "\n=== PCG: StarSystemGenerator basic ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 12345, 1 };
+    auto sys = StarSystemGenerator::generate(ctx, 0.8f);
+    assertTrue(sys.valid, "Generated system is valid");
+    assertTrue(sys.totalPlanets >= 3, "At least 3 planets");
+    assertTrue(sys.securityLevel > 0.0f, "Security level positive");
+    assertTrue(!sys.orbitSlots.empty(), "Has orbit slots");
+}
+
+void testStarSystemDeterminism() {
+    std::cout << "\n=== PCG: StarSystemGenerator determinism ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 54321, 1 };
+    auto sys1 = StarSystemGenerator::generate(ctx, 0.5f);
+    auto sys2 = StarSystemGenerator::generate(ctx, 0.5f);
+    assertTrue(sys1.totalPlanets == sys2.totalPlanets, "Same planet count");
+    assertTrue(sys1.totalBelts == sys2.totalBelts, "Same belt count");
+    assertTrue(sys1.star.starClass == sys2.star.starClass, "Same star class");
+}
+
+void testStarSystemSecurityAffectsStations() {
+    std::cout << "\n=== PCG: StarSystem security affects stations ===" << std::endl;
+    using namespace atlas::pcg;
+
+    int highSecStations = 0, nullSecStations = 0;
+    for (int i = 0; i < 20; ++i) {
+        PCGContext ctx{ static_cast<uint64_t>(i * 137), 1 };
+        auto hs = StarSystemGenerator::generate(ctx, 0.9f);
+        highSecStations += static_cast<int>(hs.stations.size());
+        auto ns = StarSystemGenerator::generate(ctx, 0.05f);
+        nullSecStations += static_cast<int>(ns.stations.size());
+    }
+    assertTrue(highSecStations > nullSecStations,
+               "High-sec has more stations than null-sec");
+}
+
+void testStarSystemStarClassName() {
+    std::cout << "\n=== PCG: StarSystem star class names ===" << std::endl;
+    using namespace atlas::pcg;
+
+    assertTrue(StarSystemGenerator::starClassName(StarClass::G) == "G", "G star name");
+    assertTrue(StarSystemGenerator::starClassName(StarClass::M) == "M", "M star name");
+    assertTrue(StarSystemGenerator::starClassName(StarClass::O) == "O", "O star name");
+}
+
+// ==================== Galaxy Generator Tests ====================
+
+void testGalaxyGeneration() {
+    std::cout << "\n=== PCG: GalaxyGenerator basic ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 77777, 1 };
+    auto galaxy = GalaxyGenerator::generate(ctx, 30);
+    assertTrue(galaxy.valid, "Galaxy is valid");
+    assertTrue(galaxy.total_systems == 30, "Correct system count");
+    assertTrue(!galaxy.nodes.empty(), "Has nodes");
+    assertTrue(!galaxy.routes.empty(), "Has routes");
+    assertTrue(galaxy.highsec_count > 0, "Has high-sec systems");
+}
+
+void testGalaxyDeterminism() {
+    std::cout << "\n=== PCG: GalaxyGenerator determinism ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 88888, 1 };
+    auto g1 = GalaxyGenerator::generate(ctx, 20);
+    auto g2 = GalaxyGenerator::generate(ctx, 20);
+    assertTrue(g1.total_systems == g2.total_systems, "Same system count");
+    assertTrue(g1.highsec_count == g2.highsec_count, "Same highsec count");
+    assertTrue(g1.routes.size() == g2.routes.size(), "Same route count");
+}
+
+void testGalaxySecurityZones() {
+    std::cout << "\n=== PCG: GalaxyGenerator security zones ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 99999, 1 };
+    auto galaxy = GalaxyGenerator::generate(ctx, 50);
+    assertTrue(galaxy.highsec_count + galaxy.lowsec_count + galaxy.nullsec_count
+               == galaxy.total_systems, "Security counts sum to total");
+    assertTrue(galaxy.highsec_count > 0, "Has high-sec");
+    assertTrue(galaxy.lowsec_count > 0, "Has low-sec");
+    assertTrue(galaxy.nullsec_count > 0, "Has null-sec");
+}
+
+void testGalaxyConnectivity() {
+    std::cout << "\n=== PCG: GalaxyGenerator all nodes connected ===" << std::endl;
+    using namespace atlas::pcg;
+
+    PCGContext ctx{ 11111, 1 };
+    auto galaxy = GalaxyGenerator::generate(ctx, 25);
+    // Every node should have at least one neighbor.
+    bool allConnected = true;
+    for (const auto& node : galaxy.nodes) {
+        if (node.neighbor_ids.empty()) { allConnected = false; break; }
+    }
+    assertTrue(allConnected, "All nodes have at least one connection");
+}
+
+void testGalaxyZoneNames() {
+    std::cout << "\n=== PCG: GalaxyGenerator zone names ===" << std::endl;
+    using namespace atlas::pcg;
+
+    assertTrue(GalaxyGenerator::securityZoneName(SecurityZone::HighSec) == "High-Sec", "HighSec name");
+    assertTrue(GalaxyGenerator::securityZoneName(SecurityZone::LowSec) == "Low-Sec", "LowSec name");
+    assertTrue(GalaxyGenerator::securityZoneName(SecurityZone::NullSec) == "Null-Sec", "NullSec name");
+}
+
+// ==================== Character Mesh Cybernetics Tests ====================
+
+void testCharacterBodyTypeOrganic() {
+    std::cout << "\n=== PCG: Character organic body type ===" << std::endl;
+    using namespace atlas::pcg;
+
+    CharacterMeshSystem cms;
+    CharacterSliders sl;
+    auto ch = cms.generate(42, Race::TerranDescendant, BodyType::Organic, sl);
+    assertTrue(ch.cyber_percentage < 0.01f, "Organic has 0% cyber");
+    assertTrue(ch.cyberLimbs.empty(), "Organic has no cyber limbs");
+    assertTrue(ch.integrated_weapon_count == 0, "Organic has no weapon limbs");
+}
+
+void testCharacterBodyTypeAugmented() {
+    std::cout << "\n=== PCG: Character augmented body type ===" << std::endl;
+    using namespace atlas::pcg;
+
+    CharacterMeshSystem cms;
+    CharacterSliders sl;
+    auto ch = cms.generate(100, Race::SynthBorn, BodyType::Augmented, sl);
+    assertTrue(ch.cyber_percentage > 0.0f, "Augmented has some cyber");
+    assertTrue(ch.cyber_percentage < 0.5f, "Augmented is less than 50% cyber");
+    assertTrue(!ch.cyberLimbs.empty(), "Augmented has cyber limbs");
+    assertTrue(static_cast<int>(ch.cyberLimbs.size()) <= 2, "Augmented has 1-2 limbs");
+}
+
+void testCharacterBodyTypeCybernetic() {
+    std::cout << "\n=== PCG: Character cybernetic body type ===" << std::endl;
+    using namespace atlas::pcg;
+
+    CharacterMeshSystem cms;
+    CharacterSliders sl;
+    auto ch = cms.generate(200, Race::PureAlien, BodyType::Cybernetic, sl);
+    assertTrue(ch.cyber_percentage >= 0.5f, "Cybernetic is 50%+ cyber");
+    assertTrue(static_cast<int>(ch.cyberLimbs.size()) >= 3, "Cybernetic has 3+ limbs");
+}
+
+void testCharacterBodyTypeFullSynth() {
+    std::cout << "\n=== PCG: Character full synth body type ===" << std::endl;
+    using namespace atlas::pcg;
+
+    CharacterMeshSystem cms;
+    CharacterSliders sl;
+    auto ch = cms.generate(300, Race::HybridEvolutionary, BodyType::FullSynth, sl);
+    assertTrue(ch.cyber_percentage >= 0.99f, "FullSynth is 100% cyber");
+    assertTrue(static_cast<int>(ch.cyberLimbs.size()) == 6, "FullSynth has all 6 limbs replaced");
+}
+
+void testCharacterBodyTypeMechFrame() {
+    std::cout << "\n=== PCG: Character mech frame body type ===" << std::endl;
+    using namespace atlas::pcg;
+
+    CharacterMeshSystem cms;
+    CharacterSliders sl;
+    sl.height = 0.5f;
+    auto organic = cms.generate(400, Race::TerranDescendant, BodyType::Organic, sl);
+    auto mech    = cms.generate(400, Race::TerranDescendant, BodyType::MechFrame, sl);
+    assertTrue(mech.total_height > organic.total_height, "MechFrame is taller than organic");
+    assertTrue(mech.strength_multiplier > 1.5f, "MechFrame has high strength");
+    assertTrue(mech.speed_multiplier < 1.0f, "MechFrame is slower");
+}
+
+void testCharacterBodyTypeNames() {
+    std::cout << "\n=== PCG: Character body type names ===" << std::endl;
+    using namespace atlas::pcg;
+
+    assertTrue(CharacterMeshSystem::bodyTypeName(BodyType::Organic) == "Organic", "Organic name");
+    assertTrue(CharacterMeshSystem::bodyTypeName(BodyType::Augmented) == "Augmented", "Augmented name");
+    assertTrue(CharacterMeshSystem::bodyTypeName(BodyType::Cybernetic) == "Cybernetic", "Cybernetic name");
+    assertTrue(CharacterMeshSystem::bodyTypeName(BodyType::FullSynth) == "FullSynth", "FullSynth name");
+    assertTrue(CharacterMeshSystem::bodyTypeName(BodyType::MechFrame) == "MechFrame", "MechFrame name");
+}
+
+void testCharacterBackwardCompatibility() {
+    std::cout << "\n=== PCG: Character backward compat ===" << std::endl;
+    using namespace atlas::pcg;
+
+    CharacterMeshSystem cms;
+    CharacterSliders sl;
+    // Old API (no body type) should still work and produce Organic.
+    auto ch = cms.generate(42, Race::TerranDescendant, sl);
+    assertTrue(ch.bodyType == BodyType::Organic, "Old API defaults to Organic");
+    assertTrue(ch.cyberLimbs.empty(), "Old API has no cyber limbs");
+}
+
 void testFleetDoctrineGeneration() {
     std::cout << "\n=== PCG: FleetDoctrine basic generation ===" << std::endl;
     atlas::pcg::PCGContext ctx{ 999, 1 };
@@ -18672,6 +19020,38 @@ int main() {
     testTitanAssemblyClamped();
     testTitanAssemblyDisruptFloor();
     testTitanAssemblyPhaseName();
+
+    // Expanded Ship Class tests
+    testShipGeneratorAllHullClasses();
+    testShipGeneratorTechLevels();
+    testShipGeneratorCargoCapacity();
+    testShipGeneratorXLargeWeapons();
+    testShipGeneratorStealthBomberLaunchers();
+    testShipGeneratorCarrierNoDPS();
+    testShipGeneratorHullClassNames();
+    testBaseHullClassMapping();
+
+    // Star System Generator tests
+    testStarSystemGeneration();
+    testStarSystemDeterminism();
+    testStarSystemSecurityAffectsStations();
+    testStarSystemStarClassName();
+
+    // Galaxy Generator tests
+    testGalaxyGeneration();
+    testGalaxyDeterminism();
+    testGalaxySecurityZones();
+    testGalaxyConnectivity();
+    testGalaxyZoneNames();
+
+    // Character Mesh Cybernetics tests
+    testCharacterBodyTypeOrganic();
+    testCharacterBodyTypeAugmented();
+    testCharacterBodyTypeCybernetic();
+    testCharacterBodyTypeFullSynth();
+    testCharacterBodyTypeMechFrame();
+    testCharacterBodyTypeNames();
+    testCharacterBackwardCompatibility();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

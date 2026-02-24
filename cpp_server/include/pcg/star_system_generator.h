@@ -23,8 +23,10 @@ enum class StarClass : uint32_t {
 
 static constexpr int STAR_CLASS_COUNT = 7;
 
-// ── Planet types ────────────────────────────────────────────────────
-enum class PlanetType : uint32_t {
+// ── Planet types (for star system generation) ───────────────────────
+// Note: distinct from planet_generator.h PlanetType for orbit-level
+// classification vs. detailed planet generation.
+enum class SystemPlanetType : uint32_t {
     Barren    = 0,
     Temperate = 1,
     Oceanic   = 2,
@@ -55,7 +57,7 @@ struct OrbitSlot {
     int          orbitIndex;
     float        orbitRadius;  ///< AU from the star.
     OrbitSlotType type;
-    PlanetType   planetType;   ///< Only meaningful when type == Planet.
+    SystemPlanetType   planetType;   ///< Only meaningful when type == Planet.
 };
 
 // ── System station ──────────────────────────────────────────────────
