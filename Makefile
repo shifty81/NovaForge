@@ -10,6 +10,10 @@ else
     RMDIR := rm -rf
 endif
 
+# Logging setup
+LOG_DIR := logs
+TIMESTAMP := $(shell date '+%Y%m%d_%H%M%S')
+
 # Default target
 .DEFAULT_GOAL := help
 
@@ -31,13 +35,15 @@ build-debug: ## Build client, server, engine, and editor (Debug)
 
 .PHONY: build-client
 build-client: ## Build C++ client only
+	@mkdir -p $(LOG_DIR)
 	@mkdir -p cpp_client/build
-	cd cpp_client/build && cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON && cmake --build . --config Release
+	(cd cpp_client/build && cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON && cmake --build . --config Release) 2>&1 | tee $(LOG_DIR)/build-client_$(TIMESTAMP).log
 
 .PHONY: build-server
 build-server: ## Build C++ server only
+	@mkdir -p $(LOG_DIR)
 	@mkdir -p cpp_server/build
-	cd cpp_server/build && cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build . --config Release
+	(cd cpp_server/build && cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build . --config Release) 2>&1 | tee $(LOG_DIR)/build-server_$(TIMESTAMP).log
 
 .PHONY: clean
 clean: ## Clean all build artifacts
@@ -70,16 +76,18 @@ docs: ## Show documentation location
 
 .PHONY: build-engine
 build-engine: ## Build Atlas Engine library only
+	@mkdir -p $(LOG_DIR)
 	@mkdir -p build
-	cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_ATLAS_TESTS=OFF && cmake --build . --config Release --target AtlasEngine -j$$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+	(cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_ATLAS_TESTS=OFF && cmake --build . --config Release --target AtlasEngine -j$$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)) 2>&1 | tee $(LOG_DIR)/build-engine_$(TIMESTAMP).log
 
 .PHONY: build-editor
 build-editor: ## Build Atlas Editor (PCG design tools)
+	@mkdir -p $(LOG_DIR)
 	@mkdir -p build
-	cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_ATLAS_EDITOR=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_ATLAS_TESTS=OFF && cmake --build . --config Release --target AtlasEditor -j$$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+	(cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_ATLAS_EDITOR=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF -DBUILD_ATLAS_TESTS=OFF && cmake --build . --config Release --target AtlasEditor -j$$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)) 2>&1 | tee $(LOG_DIR)/build-editor_$(TIMESTAMP).log
 	@echo ""
 	@echo "Atlas Editor built successfully!"
-	@echo "Run with: ./build/editor/AtlasEditor"
+	@echo "Run with: ./build/bin/AtlasEditor"
 	@echo ""
 	@echo "Available editor panels:"
 	@echo "  - Ship Archetype    (design reference ships per hull class)"

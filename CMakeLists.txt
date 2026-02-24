@@ -16,6 +16,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Unified output directories so all executables (client, server, editor) land together
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
 # Options
 option(BUILD_CLIENT "Build C++ OpenGL client" ON)
 option(BUILD_SERVER "Build C++ dedicated server" ON)

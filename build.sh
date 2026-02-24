@@ -2,13 +2,21 @@
 # Nova Forge - Unix Build Script
 # Builds the C++ client and server using CMake
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# --- Logging Setup ---
+LOG_DIR="$SCRIPT_DIR/logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/build_$(date '+%Y%m%d_%H%M%S').log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+echo "Log file: $LOG_FILE"
+echo ""
+
 echo "================================================"
 echo "Nova Forge - Build"
 echo "================================================"
 echo ""
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
 
 # Check for CMake
 if ! command -v cmake &> /dev/null; then

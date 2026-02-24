@@ -2,6 +2,24 @@
 REM Nova Forge C++ Client - Visual Studio Build Script
 REM Generates Visual Studio solution and builds the project
 
+setlocal
+
+REM --- Logging Setup ---
+set "SCRIPT_DIR=%~dp0"
+if not exist "%SCRIPT_DIR%logs" mkdir "%SCRIPT_DIR%logs"
+for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "datetime=%%I"
+set "LOG_FILE=%SCRIPT_DIR%logs\build_vs_%datetime:~0,8%_%datetime:~8,6%.log"
+echo Build log will be saved to: %LOG_FILE%
+call :main %* > "%LOG_FILE%" 2>&1
+set "EXIT_CODE=%ERRORLEVEL%"
+echo Build finished. Log saved to: %LOG_FILE%
+pause
+exit /b %EXIT_CODE%
+
+:main
+echo Log file: %LOG_FILE%
+echo.
+
 echo ================================================
 echo Nova Forge C++ Client - Visual Studio Build
 echo ================================================
@@ -12,7 +30,6 @@ where cmake >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: CMake not found!
     echo Please install CMake from https://cmake.org/download/
-    pause
     exit /b 1
 )
 
@@ -47,7 +64,6 @@ if %VS_FOUND% EQU 0 (
     echo   - C:\Program Files ^(x86^)\Microsoft Visual Studio\2019\
     echo   - C:\Program Files ^(x86^)\Microsoft Visual Studio\2017\
     echo.
-    pause
     exit /b 1
 )
 
@@ -147,7 +163,6 @@ if "%VS_GENERATOR%"=="" (
 if "%VS_GENERATOR%"=="" (
     echo ERROR: Could not detect Visual Studio installation.
     echo Please install Visual Studio 2019 or 2022 with "Desktop development with C++" workload.
-    pause
     exit /b 1
 )
 
@@ -192,7 +207,6 @@ if %ERRORLEVEL% NEQ 0 (
     echo CMake version:
     cmake --version
     echo.
-    pause
     exit /b 1
 )
 
@@ -209,7 +223,6 @@ cmake --build . --config %BUILD_TYPE% -- /m
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo ERROR: Build failed!
-    pause
     exit /b 1
 )
 
@@ -241,4 +254,4 @@ echo   build_vs.bat --debug          # Debug build
 echo   build_vs.bat --open           # Open in Visual Studio after build
 echo.
 
-pause
+exit /b 0

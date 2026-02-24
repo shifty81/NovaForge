@@ -2,6 +2,24 @@
 REM Nova Forge - Generate Root-Level Visual Studio Solution
 REM This script creates a solution that includes both C++ client and server
 
+setlocal
+
+REM --- Logging Setup ---
+set "SCRIPT_DIR=%~dp0"
+if not exist "%SCRIPT_DIR%logs" mkdir "%SCRIPT_DIR%logs"
+for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "datetime=%%I"
+set "LOG_FILE=%SCRIPT_DIR%logs\generate_solution_%datetime:~0,8%_%datetime:~8,6%.log"
+echo Build log will be saved to: %LOG_FILE%
+call :main %* > "%LOG_FILE%" 2>&1
+set "EXIT_CODE=%ERRORLEVEL%"
+echo Build finished. Log saved to: %LOG_FILE%
+pause
+exit /b %EXIT_CODE%
+
+:main
+echo Log file: %LOG_FILE%
+echo.
+
 echo ================================================
 echo Nova Forge - Visual Studio Solution Generator
 echo ================================================
@@ -12,7 +30,6 @@ where cmake >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: CMake not found!
     echo Please install CMake from https://cmake.org/download/
-    pause
     exit /b 1
 )
 
@@ -108,7 +125,6 @@ if "%VS_GENERATOR%"=="" (
 if "%VS_GENERATOR%"=="" (
     echo ERROR: Could not detect Visual Studio installation.
     echo Please install Visual Studio 2019 or 2022 with "Desktop development with C++" workload.
-    pause
     exit /b 1
 )
 
@@ -149,7 +165,6 @@ if %ERRORLEVEL% NEQ 0 (
     echo.
     echo For more information, see: docs/guides/VS2022_SETUP_GUIDE.md
     echo.
-    pause
     exit /b 1
 )
 
@@ -183,4 +198,4 @@ echo   cpp_client\build_vs\EVEOfflineClient.sln
 echo   cpp_server\build\EVEOfflineDedicatedServer.sln
 echo.
 
-pause
+exit /b 0
