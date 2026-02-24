@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - C++ Client Build Automation Script
+Nova Forge - C++ Client Build Automation Script
 Automatically builds and tests the C++ client on any platform
 """
 
@@ -348,7 +348,7 @@ class CPPClientBuilder:
     
     def run(self) -> int:
         """Run the complete build process"""
-        self.print_header("EVE OFFLINE - C++ Client Builder")
+        self.print_header("Nova Forge - C++ Client Builder")
         
         print(f"Platform: {self.platform}")
         print(f"Build Type: {'Debug' if self.args.debug else 'Release'}")
@@ -388,7 +388,7 @@ class CPPClientBuilder:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="EVE OFFLINE C++ Client Build Automation",
+        description="Nova Forge C++ Client Build Automation",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

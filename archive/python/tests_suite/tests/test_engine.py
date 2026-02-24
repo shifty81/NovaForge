@@ -291,7 +291,7 @@ def test_skill_system():
 def run_all_tests():
     """Run all tests"""
     print("\n" + "="*50)
-    print("EVE OFFLINE - Engine Tests")
+    print("Nova Forge - Engine Tests")
     print("="*50)
     
     try:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - Easy Launcher
+Nova Forge - Easy Launcher
 Simple launcher to help users run and test the software
 """
 
@@ -28,7 +28,7 @@ def print_header(text: str):
 
 def print_menu():
     """Print main menu"""
-    print_header("EVE OFFLINE - Easy Launcher")
+    print_header("Nova Forge - Easy Launcher")
     
     print(f"{Colors.OKBLUE}What would you like to do?{Colors.ENDC}\n")
     

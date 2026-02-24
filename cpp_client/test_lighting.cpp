@@ -150,7 +150,7 @@ int main() {
     
     // Test 1: Astralis-style lighting (3 directional lights)
     std::cout << "\n=== Test 1: Astralis-Style Lighting ===" << std::endl;
-    lightManager->setupEVEStyleLighting();
+    lightManager->setupAstralisStyleLighting();
     
     // Create some test objects (spheres)
     std::vector<std::unique_ptr<Model>> testObjects;
@@ -189,7 +189,7 @@ int main() {
         // Check for test changes
         if (glfwGetKey(window.getHandle(), GLFW_KEY_1) == GLFW_PRESS && currentTest != 1) {
             std::cout << "\n=== Test 1: Astralis-Style Lighting ===" << std::endl;
-            lightManager->setupEVEStyleLighting();
+            lightManager->setupAstralisStyleLighting();
             currentTest = 1;
         }
         else if (glfwGetKey(window.getHandle(), GLFW_KEY_2) == GLFW_PRESS && currentTest != 2) {

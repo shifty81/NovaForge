@@ -1,5 +1,5 @@
 """
-EVE-Style Capacitor Display
+Astralis-Style Capacitor Display
 Circular energy gauge mimicking Astralis's capacitor ring
 """
 
@@ -12,12 +12,12 @@ from panda3d.core import Vec3, Vec4
 import math
 from typing import Optional
 
-from .novaforge_style import EVEColorScheme, get_capacitor_color, get_health_color
+from .novaforge_style import AstralisColorScheme, get_capacitor_color, get_health_color
 
 
 class CapacitorDisplay:
     """
-    EVE-style circular capacitor gauge
+    Astralis-style circular capacitor gauge
     Shows energy level as a circular ring around the ship
     """
     
@@ -50,7 +50,7 @@ class CapacitorDisplay:
         
         self._create_capacitor_ring()
         
-        print("[Capacitor] EVE-style capacitor display created")
+        print("[Capacitor] Astralis-style capacitor display created")
     
     def _create_capacitor_ring(self):
         """Create the capacitor ring geometry"""
@@ -75,7 +75,7 @@ class CapacitorDisplay:
             self.radius,
             self.thickness,
             self.segments,
-            EVEColorScheme.CAPACITOR_FULL,
+            AstralisColorScheme.CAPACITOR_FULL,
             0, 360  # Will be updated based on percentage
         )
         self.foreground_ring.reparentTo(self.cap_node)
@@ -113,7 +113,7 @@ class CapacitorDisplay:
         inner_r = radius - thickness
         
         # Convert angles to radians and adjust
-        # EVE capacitor starts at top (90°) and goes clockwise
+        # Astralis capacitor starts at top (90°) and goes clockwise
         angle_start = math.radians(90 - start_angle)
         angle_end = math.radians(90 - end_angle)
         angle_range = angle_end - angle_start
@@ -182,7 +182,7 @@ class CapacitorDisplay:
         color = get_capacitor_color(self.current_cap, self.max_cap)
         
         # Create new ring with updated angle
-        # EVE capacitor depletes clockwise from top
+        # Astralis capacitor depletes clockwise from top
         end_angle = 360 * self.percentage
         
         self.foreground_ring = self._create_ring_geometry(
@@ -216,7 +216,7 @@ class CapacitorDisplay:
 
 class ShipHealthRings:
     """
-    EVE-style concentric rings showing shield/armor/hull
+    Astralis-style concentric rings showing shield/armor/hull
     Displayed around the ship in the center of the screen
     """
     
@@ -253,7 +253,7 @@ class ShipHealthRings:
         
         self._create_health_rings()
         
-        print("[HealthRings] EVE-style health rings created")
+        print("[HealthRings] Astralis-style health rings created")
     
     def _create_health_rings(self):
         """Create the three concentric health rings"""
@@ -276,15 +276,15 @@ class ShipHealthRings:
         # Create foreground rings (will update based on health)
         self.hull_ring = self._create_ring_geometry(
             "hull", hull_radius, self.ring_thickness, 40,
-            EVEColorScheme.HULL_COLOR, 0, 360
+            AstralisColorScheme.HULL_COLOR, 0, 360
         )
         self.armor_ring = self._create_ring_geometry(
             "armor", armor_radius, self.ring_thickness, 40,
-            EVEColorScheme.ARMOR_COLOR, 0, 360
+            AstralisColorScheme.ARMOR_COLOR, 0, 360
         )
         self.shield_ring = self._create_ring_geometry(
             "shield", shield_radius, self.ring_thickness, 40,
-            EVEColorScheme.SHIELD_COLOR, 0, 360
+            AstralisColorScheme.SHIELD_COLOR, 0, 360
         )
         
         self.health_node.setTransparency(TransparencyAttrib.MAlpha)

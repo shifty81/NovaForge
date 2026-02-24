@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - Gameplay Showcase
+Nova Forge - Gameplay Showcase
 Demonstrates all features in a scripted format for screenshots
 """
 
@@ -159,7 +159,7 @@ def main():
   ✅ NPC Enemies with AI
   ✅ Space Stations & Celestial Objects
   
-  🎮 EVE OFFLINE - Full Astralis Experience!
+  🎮 Nova Forge - Full Astralis Experience!
 """)
     
     print("=" * 80)

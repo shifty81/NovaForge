@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - Standalone GUI Demo
+Nova Forge - Standalone GUI Demo
 Demonstrates visual capabilities without requiring server
 """
 
@@ -98,7 +98,7 @@ class GUIDemo:
         """Initialize Pygame and create entities"""
         pygame.init()
         self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("EVE OFFLINE - GUI Demo")
+        pygame.display.set_caption("Nova Forge - GUI Demo")
         self.clock = pygame.time.Clock()
         
         # Fonts
@@ -324,7 +324,7 @@ class GUIDemo:
         self.screen.blit(ui_surface, (0, 0))
         
         # Title
-        title = self.font_large.render("EVE OFFLINE - GUI Demo", True, self.COLOR_TEXT_BRIGHT)
+        title = self.font_large.render("Nova Forge - GUI Demo", True, self.COLOR_TEXT_BRIGHT)
         self.screen.blit(title, (10, 10))
         
         # Status
@@ -405,14 +405,14 @@ class GUIDemo:
                         (help_x, help_y, help_width, help_height), 3)
         
         # Title
-        title = self.font_large.render("EVE OFFLINE - GUI Demo Help", True, self.COLOR_TEXT_BRIGHT)
+        title = self.font_large.render("Nova Forge - GUI Demo Help", True, self.COLOR_TEXT_BRIGHT)
         title_rect = title.get_rect(center=(self.width // 2, help_y + 30))
         self.screen.blit(title, title_rect)
         
         # Help content
         y = help_y + 80
         help_lines = [
-            "WELCOME TO EVE OFFLINE GUI DEMO",
+            "WELCOME TO Nova Forge GUI DEMO",
             "",
             "This demo showcases the visual capabilities of the game engine.",
             "",
@@ -575,7 +575,7 @@ class GUIDemo:
     def run(self):
         """Main game loop"""
         self.initialize()
-        self.add_log("Welcome to EVE OFFLINE GUI Demo!")
+        self.add_log("Welcome to Nova Forge GUI Demo!")
         self.add_log("Press H for help")
         
         while self.running:
@@ -601,12 +601,12 @@ class GUIDemo:
             pygame.display.flip()
         
         pygame.quit()
-        print("Demo closed. Thank you for trying EVE OFFLINE!")
+        print("Demo closed. Thank you for trying Nova Forge!")
 
 
 if __name__ == "__main__":
     print("=" * 80)
-    print("EVE OFFLINE - GUI Demo")
+    print("Nova Forge - GUI Demo")
     print("=" * 80)
     print()
     

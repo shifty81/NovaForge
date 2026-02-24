@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE Demo
+Nova Forge Demo
 Demonstrates the server and client working together
 """
 
@@ -12,7 +12,7 @@ import os
 def print_banner():
     banner = """
     ╔══════════════════════════════════════════════════════════╗
-    ║                    EVE OFFLINE                           ║
+    ║                    Nova Forge                           ║
     ║         Custom Game Engine Demo                          ║
     ║                                                          ║
     ║  A PVE-focused space MMO inspired by EVE ONLINE         ║

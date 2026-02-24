@@ -9,13 +9,13 @@ from panda3d.core import TextNode, Vec3, Vec4, TransparencyAttrib
 from typing import Optional, Dict, Any, List
 
 from .novaforge_style import (
-    EVEColorScheme, EVEPanelStyle, EVELayoutPresets,
+    AstralisColorScheme, AstralisPanelStyle, EVELayoutPresets,
     get_health_color, get_capacitor_color
 )
 from .capacitor_display import CapacitorDisplay, ShipHealthRings
 
 
-class EVEStyledHUD:
+class AstralisStyledHUD:
     """
     Enhanced HUD system with Astralis Photon UI styling
     Provides complete interface similar to Astralis
@@ -23,7 +23,7 @@ class EVEStyledHUD:
     
     def __init__(self, aspect2d, render2d):
         """
-        Initialize EVE-styled HUD
+        Initialize Astralis-styled HUD
         
         Args:
             aspect2d: Panda3D aspect2d node for 2D UI
@@ -40,7 +40,7 @@ class EVEStyledHUD:
         self.overview_panel = None
         self.nexcom_panel = None
         
-        # EVE-style circular displays
+        # Astralis-style circular displays
         self.capacitor_display = None
         self.health_rings = None
         
@@ -56,7 +56,7 @@ class EVEStyledHUD:
         # Initialize all UI components
         self._create_all_panels()
         
-        print("[EVEStyledHUD] Enhanced EVE-style HUD initialized")
+        print("[AstralisStyledHUD] Enhanced Astralis-style HUD initialized")
     
     def _create_all_panels(self):
         """Create all HUD panels and components"""
@@ -69,7 +69,7 @@ class EVEStyledHUD:
         self._create_speed_panel()
         self._create_combat_log_panel()
         
-        # Create EVE-style overview panel
+        # Create Astralis-style overview panel
         self._create_overview_panel()
         
         # Create Nexcom menu (left sidebar)
@@ -77,7 +77,7 @@ class EVEStyledHUD:
     
     def _create_center_hud(self):
         """Create the center HUD with capacitor and health rings"""
-        # EVE-style capacitor ring
+        # Astralis-style capacitor ring
         self.capacitor_display = CapacitorDisplay(
             parent=self.aspect2d,
             pos=(0, 0, -0.6),
@@ -102,7 +102,7 @@ class EVEStyledHUD:
         """Create a small indicator for the ship in the center"""
         # Small frame representing the ship
         self.ship_indicator = DirectFrame(
-            frameColor=EVEColorScheme.ACCENT_PRIMARY,
+            frameColor=AstralisColorScheme.ACCENT_PRIMARY,
             frameSize=(-0.015, 0.015, -0.015, 0.015),
             pos=(0, 0, -0.6),
             parent=self.aspect2d
@@ -110,12 +110,12 @@ class EVEStyledHUD:
         self.ship_indicator.setTransparency(TransparencyAttrib.MAlpha)
     
     def _create_ship_status_panel(self):
-        """Create EVE-style ship status panel (bottom left)"""
+        """Create Astralis-style ship status panel (bottom left)"""
         layout = EVELayoutPresets.SHIP_STATUS
         
-        # Main panel background with EVE styling
+        # Main panel background with Astralis styling
         self.ship_status_panel = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PANEL,
+            frameColor=AstralisColorScheme.BACKGROUND_PANEL,
             frameSize=(-0.3, 0.3, -0.2, 0.2),
             pos=layout['pos'],
             parent=self.aspect2d
@@ -124,7 +124,7 @@ class EVEStyledHUD:
         
         # Panel header
         self.ship_header = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PRIMARY,
+            frameColor=AstralisColorScheme.BACKGROUND_PRIMARY,
             frameSize=(-0.3, 0.3, -0.025, 0.025),
             pos=(0, 0, 0.175),
             parent=self.ship_status_panel
@@ -133,7 +133,7 @@ class EVEStyledHUD:
         
         # Border accent (top)
         self.ship_border = DirectFrame(
-            frameColor=EVEColorScheme.BORDER_HIGHLIGHT,
+            frameColor=AstralisColorScheme.BORDER_HIGHLIGHT,
             frameSize=(-0.3, 0.3, -0.002, 0.002),
             pos=(0, 0, 0.2),
             parent=self.ship_status_panel
@@ -144,8 +144,8 @@ class EVEStyledHUD:
         self.ship_title = OnscreenText(
             text="◢ SHIP STATUS",
             pos=(-0.28, 0.16),
-            scale=EVEPanelStyle.FONT_SIZE_NORMAL,
-            fg=EVEColorScheme.ACCENT_PRIMARY,
+            scale=AstralisPanelStyle.FONT_SIZE_NORMAL,
+            fg=AstralisColorScheme.ACCENT_PRIMARY,
             align=TextNode.ALeft,
             parent=self.ship_status_panel
         )
@@ -154,8 +154,8 @@ class EVEStyledHUD:
         self.ship_name_text = OnscreenText(
             text="Ship: Loading...",
             pos=(-0.28, 0.10),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.TEXT_PRIMARY,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.TEXT_PRIMARY,
             align=TextNode.ALeft,
             parent=self.ship_status_panel
         )
@@ -164,16 +164,16 @@ class EVEStyledHUD:
         self.shield_label = OnscreenText(
             text="SHIELD",
             pos=(-0.28, 0.04),
-            scale=EVEPanelStyle.FONT_SIZE_TINY,
-            fg=EVEColorScheme.SHIELD_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_TINY,
+            fg=AstralisColorScheme.SHIELD_COLOR,
             align=TextNode.ALeft,
             parent=self.ship_status_panel
         )
         self.shield_text = OnscreenText(
             text="0 / 0 (0%)",
             pos=(0.28, 0.04),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.SHIELD_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.SHIELD_COLOR,
             align=TextNode.ARight,
             parent=self.ship_status_panel
         )
@@ -182,16 +182,16 @@ class EVEStyledHUD:
         self.armor_label = OnscreenText(
             text="ARMOR",
             pos=(-0.28, -0.02),
-            scale=EVEPanelStyle.FONT_SIZE_TINY,
-            fg=EVEColorScheme.ARMOR_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_TINY,
+            fg=AstralisColorScheme.ARMOR_COLOR,
             align=TextNode.ALeft,
             parent=self.ship_status_panel
         )
         self.armor_text = OnscreenText(
             text="0 / 0 (0%)",
             pos=(0.28, -0.02),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.ARMOR_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.ARMOR_COLOR,
             align=TextNode.ARight,
             parent=self.ship_status_panel
         )
@@ -200,16 +200,16 @@ class EVEStyledHUD:
         self.hull_label = OnscreenText(
             text="STRUCTURE",
             pos=(-0.28, -0.08),
-            scale=EVEPanelStyle.FONT_SIZE_TINY,
-            fg=EVEColorScheme.HULL_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_TINY,
+            fg=AstralisColorScheme.HULL_COLOR,
             align=TextNode.ALeft,
             parent=self.ship_status_panel
         )
         self.hull_text = OnscreenText(
             text="0 / 0 (0%)",
             pos=(0.28, -0.08),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.HULL_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.HULL_COLOR,
             align=TextNode.ARight,
             parent=self.ship_status_panel
         )
@@ -218,27 +218,27 @@ class EVEStyledHUD:
         self.cap_label = OnscreenText(
             text="CAPACITOR",
             pos=(-0.28, -0.14),
-            scale=EVEPanelStyle.FONT_SIZE_TINY,
-            fg=EVEColorScheme.CAPACITOR_FULL,
+            scale=AstralisPanelStyle.FONT_SIZE_TINY,
+            fg=AstralisColorScheme.CAPACITOR_FULL,
             align=TextNode.ALeft,
             parent=self.ship_status_panel
         )
         self.cap_text = OnscreenText(
             text="100 / 100 (100%)",
             pos=(0.28, -0.14),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.CAPACITOR_FULL,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.CAPACITOR_FULL,
             align=TextNode.ARight,
             parent=self.ship_status_panel
         )
     
     def _create_target_info_panel(self):
-        """Create EVE-style target info panel (top right)"""
+        """Create Astralis-style target info panel (top right)"""
         layout = EVELayoutPresets.TARGET_INFO
         
         # Main panel
         self.target_info_panel = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PANEL,
+            frameColor=AstralisColorScheme.BACKGROUND_PANEL,
             frameSize=(-0.3, 0.3, -0.2, 0.2),
             pos=layout['pos'],
             parent=self.aspect2d
@@ -247,7 +247,7 @@ class EVEStyledHUD:
         
         # Header
         self.target_header = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PRIMARY,
+            frameColor=AstralisColorScheme.BACKGROUND_PRIMARY,
             frameSize=(-0.3, 0.3, -0.025, 0.025),
             pos=(0, 0, 0.175),
             parent=self.target_info_panel
@@ -256,7 +256,7 @@ class EVEStyledHUD:
         
         # Border accent
         self.target_border = DirectFrame(
-            frameColor=EVEColorScheme.TARGET_HOSTILE,
+            frameColor=AstralisColorScheme.TARGET_HOSTILE,
             frameSize=(-0.3, 0.3, -0.002, 0.002),
             pos=(0, 0, 0.2),
             parent=self.target_info_panel
@@ -267,8 +267,8 @@ class EVEStyledHUD:
         self.target_title = OnscreenText(
             text="◢ TARGET",
             pos=(-0.28, 0.16),
-            scale=EVEPanelStyle.FONT_SIZE_NORMAL,
-            fg=EVEColorScheme.TARGET_HOSTILE,
+            scale=AstralisPanelStyle.FONT_SIZE_NORMAL,
+            fg=AstralisColorScheme.TARGET_HOSTILE,
             align=TextNode.ALeft,
             parent=self.target_info_panel
         )
@@ -277,8 +277,8 @@ class EVEStyledHUD:
         self.target_name_text = OnscreenText(
             text="No Target",
             pos=(-0.28, 0.10),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.TEXT_PRIMARY,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.TEXT_PRIMARY,
             align=TextNode.ALeft,
             parent=self.target_info_panel
         )
@@ -287,8 +287,8 @@ class EVEStyledHUD:
         self.target_distance_text = OnscreenText(
             text="Distance: --",
             pos=(-0.28, 0.04),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.TEXT_SECONDARY,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.TEXT_SECONDARY,
             align=TextNode.ALeft,
             parent=self.target_info_panel
         )
@@ -297,16 +297,16 @@ class EVEStyledHUD:
         self.target_shield_label = OnscreenText(
             text="SHIELD",
             pos=(-0.28, -0.02),
-            scale=EVEPanelStyle.FONT_SIZE_TINY,
-            fg=EVEColorScheme.SHIELD_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_TINY,
+            fg=AstralisColorScheme.SHIELD_COLOR,
             align=TextNode.ALeft,
             parent=self.target_info_panel
         )
         self.target_shield_text = OnscreenText(
             text="--",
             pos=(0.28, -0.02),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.SHIELD_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.SHIELD_COLOR,
             align=TextNode.ARight,
             parent=self.target_info_panel
         )
@@ -315,16 +315,16 @@ class EVEStyledHUD:
         self.target_armor_label = OnscreenText(
             text="ARMOR",
             pos=(-0.28, -0.08),
-            scale=EVEPanelStyle.FONT_SIZE_TINY,
-            fg=EVEColorScheme.ARMOR_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_TINY,
+            fg=AstralisColorScheme.ARMOR_COLOR,
             align=TextNode.ALeft,
             parent=self.target_info_panel
         )
         self.target_armor_text = OnscreenText(
             text="--",
             pos=(0.28, -0.08),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.ARMOR_COLOR,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.ARMOR_COLOR,
             align=TextNode.ARight,
             parent=self.target_info_panel
         )
@@ -337,7 +337,7 @@ class EVEStyledHUD:
         layout = EVELayoutPresets.SPEED_DISPLAY
         
         self.speed_panel = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PANEL,
+            frameColor=AstralisColorScheme.BACKGROUND_PANEL,
             frameSize=(-0.25, 0.25, -0.12, 0.12),
             pos=layout['pos'],
             parent=self.aspect2d
@@ -346,7 +346,7 @@ class EVEStyledHUD:
         
         # Header
         speed_header = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PRIMARY,
+            frameColor=AstralisColorScheme.BACKGROUND_PRIMARY,
             frameSize=(-0.25, 0.25, -0.02, 0.02),
             pos=(0, 0, 0.1),
             parent=self.speed_panel
@@ -355,7 +355,7 @@ class EVEStyledHUD:
         
         # Border
         speed_border = DirectFrame(
-            frameColor=EVEColorScheme.ACCENT_SECONDARY,
+            frameColor=AstralisColorScheme.ACCENT_SECONDARY,
             frameSize=(-0.25, 0.25, -0.002, 0.002),
             pos=(0, 0, 0.12),
             parent=self.speed_panel
@@ -366,8 +366,8 @@ class EVEStyledHUD:
         OnscreenText(
             text="◢ NAVIGATION",
             pos=(-0.23, 0.09),
-            scale=EVEPanelStyle.FONT_SIZE_NORMAL,
-            fg=EVEColorScheme.ACCENT_SECONDARY,
+            scale=AstralisPanelStyle.FONT_SIZE_NORMAL,
+            fg=AstralisColorScheme.ACCENT_SECONDARY,
             align=TextNode.ALeft,
             parent=self.speed_panel
         )
@@ -376,8 +376,8 @@ class EVEStyledHUD:
         self.speed_text = OnscreenText(
             text="Speed: 0.0 m/s",
             pos=(-0.23, 0.03),
-            scale=EVEPanelStyle.FONT_SIZE_NORMAL,
-            fg=EVEColorScheme.TEXT_PRIMARY,
+            scale=AstralisPanelStyle.FONT_SIZE_NORMAL,
+            fg=AstralisColorScheme.TEXT_PRIMARY,
             align=TextNode.ALeft,
             parent=self.speed_panel
         )
@@ -386,8 +386,8 @@ class EVEStyledHUD:
         self.position_text = OnscreenText(
             text="X: 0  Y: 0  Z: 0",
             pos=(-0.23, -0.04),
-            scale=EVEPanelStyle.FONT_SIZE_TINY,
-            fg=EVEColorScheme.TEXT_SECONDARY,
+            scale=AstralisPanelStyle.FONT_SIZE_TINY,
+            fg=AstralisColorScheme.TEXT_SECONDARY,
             align=TextNode.ALeft,
             parent=self.speed_panel
         )
@@ -395,7 +395,7 @@ class EVEStyledHUD:
     def _create_combat_log_panel(self):
         """Create combat log panel (bottom right)"""
         self.combat_log_panel = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PANEL,
+            frameColor=AstralisColorScheme.BACKGROUND_PANEL,
             frameSize=(-0.45, 0.45, -0.25, 0.05),
             pos=(0.45, 0, -0.75),
             parent=self.aspect2d
@@ -404,7 +404,7 @@ class EVEStyledHUD:
         
         # Header
         log_header = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PRIMARY,
+            frameColor=AstralisColorScheme.BACKGROUND_PRIMARY,
             frameSize=(-0.45, 0.45, -0.02, 0.02),
             pos=(0, 0, 0.03),
             parent=self.combat_log_panel
@@ -413,7 +413,7 @@ class EVEStyledHUD:
         
         # Border
         log_border = DirectFrame(
-            frameColor=EVEColorScheme.ACCENT_GLOW,
+            frameColor=AstralisColorScheme.ACCENT_GLOW,
             frameSize=(-0.45, 0.45, -0.002, 0.002),
             pos=(0, 0, 0.05),
             parent=self.combat_log_panel
@@ -424,8 +424,8 @@ class EVEStyledHUD:
         OnscreenText(
             text="◢ COMBAT LOG",
             pos=(-0.43, 0.02),
-            scale=EVEPanelStyle.FONT_SIZE_NORMAL,
-            fg=EVEColorScheme.ACCENT_GLOW,
+            scale=AstralisPanelStyle.FONT_SIZE_NORMAL,
+            fg=AstralisColorScheme.ACCENT_GLOW,
             align=TextNode.ALeft,
             parent=self.combat_log_panel
         )
@@ -434,10 +434,10 @@ class EVEStyledHUD:
         self.combat_message_texts = []
     
     def _create_overview_panel(self):
-        """Create EVE-style overview panel (right side)"""
+        """Create Astralis-style overview panel (right side)"""
         # Simplified overview for now - can be expanded
         self.overview_panel = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PANEL,
+            frameColor=AstralisColorScheme.BACKGROUND_PANEL,
             frameSize=(-0.35, 0.35, -0.5, 0.05),
             pos=(0.65, 0, 0.2),
             parent=self.aspect2d
@@ -446,7 +446,7 @@ class EVEStyledHUD:
         
         # Header
         overview_header = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PRIMARY,
+            frameColor=AstralisColorScheme.BACKGROUND_PRIMARY,
             frameSize=(-0.35, 0.35, -0.02, 0.02),
             pos=(0, 0, 0.03),
             parent=self.overview_panel
@@ -455,7 +455,7 @@ class EVEStyledHUD:
         
         # Border
         overview_border = DirectFrame(
-            frameColor=EVEColorScheme.ACCENT_PRIMARY,
+            frameColor=AstralisColorScheme.ACCENT_PRIMARY,
             frameSize=(-0.35, 0.35, -0.002, 0.002),
             pos=(0, 0, 0.05),
             parent=self.overview_panel
@@ -466,8 +466,8 @@ class EVEStyledHUD:
         OnscreenText(
             text="◢ OVERVIEW",
             pos=(-0.33, 0.02),
-            scale=EVEPanelStyle.FONT_SIZE_NORMAL,
-            fg=EVEColorScheme.ACCENT_PRIMARY,
+            scale=AstralisPanelStyle.FONT_SIZE_NORMAL,
+            fg=AstralisColorScheme.ACCENT_PRIMARY,
             align=TextNode.ALeft,
             parent=self.overview_panel
         )
@@ -476,8 +476,8 @@ class EVEStyledHUD:
         OnscreenText(
             text="[Nearby Objects]",
             pos=(0, -0.05),
-            scale=EVEPanelStyle.FONT_SIZE_SMALL,
-            fg=EVEColorScheme.TEXT_SECONDARY,
+            scale=AstralisPanelStyle.FONT_SIZE_SMALL,
+            fg=AstralisColorScheme.TEXT_SECONDARY,
             align=TextNode.ACenter,
             parent=self.overview_panel
         )
@@ -485,7 +485,7 @@ class EVEStyledHUD:
     def _create_nexcom_panel(self):
         """Create Nexcom-style left sidebar menu"""
         self.nexcom_panel = DirectFrame(
-            frameColor=EVEColorScheme.BACKGROUND_PRIMARY,
+            frameColor=AstralisColorScheme.BACKGROUND_PRIMARY,
             frameSize=(-0.06, 0.06, -0.9, 0.9),
             pos=(-0.94, 0, 0),
             parent=self.aspect2d
@@ -494,7 +494,7 @@ class EVEStyledHUD:
         
         # Border
         nexcom_border = DirectFrame(
-            frameColor=EVEColorScheme.BORDER_HIGHLIGHT,
+            frameColor=AstralisColorScheme.BORDER_HIGHLIGHT,
             frameSize=(-0.002, 0.002, -0.9, 0.9),
             pos=(0.06, 0, 0),
             parent=self.nexcom_panel
@@ -506,7 +506,7 @@ class EVEStyledHUD:
             text="≡",
             pos=(0, 0.85),
             scale=0.08,
-            fg=EVEColorScheme.ACCENT_PRIMARY,
+            fg=AstralisColorScheme.ACCENT_PRIMARY,
             align=TextNode.ACenter,
             parent=self.nexcom_panel
         )
@@ -522,7 +522,7 @@ class EVEStyledHUD:
         
         for icon, name, y_pos in menu_items:
             btn_frame = DirectFrame(
-                frameColor=EVEColorScheme.BUTTON_NORMAL,
+                frameColor=AstralisColorScheme.BUTTON_NORMAL,
                 frameSize=(-0.05, 0.05, -0.05, 0.05),
                 pos=(0, 0, y_pos),
                 parent=self.nexcom_panel
@@ -533,7 +533,7 @@ class EVEStyledHUD:
                 text=icon,
                 pos=(0, -0.015),
                 scale=0.06,
-                fg=EVEColorScheme.TEXT_PRIMARY,
+                fg=AstralisColorScheme.TEXT_PRIMARY,
                 align=TextNode.ACenter,
                 parent=btn_frame
             )
@@ -628,7 +628,7 @@ class EVEStyledHUD:
     def add_combat_message(self, message: str, color: Optional[Vec4] = None):
         """Add a message to the combat log"""
         if color is None:
-            color = EVEColorScheme.TEXT_PRIMARY
+            color = AstralisColorScheme.TEXT_PRIMARY
         
         self.combat_messages.append(message)
         if len(self.combat_messages) > self.max_combat_messages:
@@ -645,7 +645,7 @@ class EVEStyledHUD:
             text = OnscreenText(
                 text=msg,
                 pos=(-0.43, y_pos),
-                scale=EVEPanelStyle.FONT_SIZE_TINY,
+                scale=AstralisPanelStyle.FONT_SIZE_TINY,
                 fg=color,
                 align=TextNode.ALeft,
                 parent=self.combat_log_panel
@@ -699,4 +699,4 @@ class EVEStyledHUD:
         # DirectGui elements clean themselves up when parent is destroyed
 
 
-__all__ = ['EVEStyledHUD']
+__all__ = ['AstralisStyledHUD']

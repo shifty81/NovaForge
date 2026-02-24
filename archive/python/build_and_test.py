@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - Automated Build and Test Script
+Nova Forge - Automated Build and Test Script
 Run this after pulling from Git to verify everything works
 
 Usage:
@@ -481,7 +481,7 @@ class BuildSystem:
     
     def full_build(self, quick: bool = False):
         """Run full build and test"""
-        self.print_header("EVE OFFLINE - BUILD AND TEST")
+        self.print_header("Nova Forge - BUILD AND TEST")
         
         print(f"Platform: {self.os_name}")
         print(f"Python: {sys.version.split()[0]}")
@@ -525,7 +525,7 @@ class BuildSystem:
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="EVE OFFLINE - Automated Build and Test System",
+        description="Nova Forge - Automated Build and Test System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

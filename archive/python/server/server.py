@@ -33,7 +33,7 @@ class GameServer:
         
     async def initialize(self):
         """Initialize server"""
-        print(f"[Server] Initializing EVE OFFLINE Server")
+        print(f"[Server] Initializing Nova Forge Server")
         print(f"[Server] Host: {self.host}:{self.port}")
         
         # Load game data
@@ -81,7 +81,7 @@ class GameServer:
                     # Send acknowledgment
                     ack = create_message(MessageType.CONNECT_ACK, {
                         'success': True,
-                        'message': 'Welcome to EVE OFFLINE!'
+                        'message': 'Welcome to Nova Forge!'
                     })
                     writer.write(ack.to_json().encode())
                     await writer.drain()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - 3D Client Entry Point
+Nova Forge - 3D Client Entry Point
 Panda3D-based 3D graphical client
 
 Usage:
@@ -47,7 +47,7 @@ from client_3d.core.game_client import GameClient3D
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description='EVE OFFLINE 3D Client',
+        description='Nova Forge 3D Client',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -94,7 +94,7 @@ def main():
     )
     
     logger.info("="*60)
-    logger.info("EVE OFFLINE - 3D Client")
+    logger.info("Nova Forge - 3D Client")
     logger.info("="*60)
     logger.info("Version: 0.1.0 (Phase 5 Development)")
     logger.info("Engine: Panda3D")

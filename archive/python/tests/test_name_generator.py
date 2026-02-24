@@ -191,7 +191,7 @@ def print_examples():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("EVE OFFLINE Name Generator Test Suite")
+    print("Nova Forge Name Generator Test Suite")
     print("=" * 60)
     print()
     

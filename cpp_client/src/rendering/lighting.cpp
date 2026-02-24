@@ -206,7 +206,7 @@ void LightManager::calculateAttenuation(float range, float& linear, float& quadr
     quadratic = 75.0f / (range * range);
 }
 
-void LightManager::setupEVEStyleLighting() {
+void LightManager::setupAstralisStyleLighting() {
     std::cout << "[LightManager] Setting up Astralis-style lighting..." << std::endl;
     
     // Clear existing lights

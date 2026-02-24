@@ -2,7 +2,7 @@
 HUD (Heads-Up Display) for 3D Client
 Displays ship status, target info, navigation, and combat log
 
-This module provides both legacy and EVE-styled HUD options
+This module provides both legacy and Astralis-styled HUD options
 """
 
 from direct.gui.OnscreenText import OnscreenText
@@ -11,12 +11,12 @@ from direct.gui.DirectGui import DirectFrame
 from panda3d.core import TextNode, Vec3, Vec4, TransparencyAttrib
 from typing import Optional, Dict, Any
 
-# Import EVE-styled HUD
+# Import Astralis-styled HUD
 try:
-    from .novaforge_hud import EVEStyledHUD
+    from .novaforge_hud import AstralisStyledHUD
     EVE_HUD_AVAILABLE = True
 except ImportError as e:
-    print(f"[HUD] Warning: EVE-styled HUD not available: {e}")
+    print(f"[HUD] Warning: Astralis-styled HUD not available: {e}")
     EVE_HUD_AVAILABLE = False
 
 
@@ -408,18 +408,18 @@ def create_hud(aspect2d, render2d=None, style='eve'):
     
     Args:
         aspect2d: Panda3D aspect2d node
-        render2d: Panda3D render2d node (optional, for EVE style)
+        render2d: Panda3D render2d node (optional, for Astralis style)
         style: HUD style - 'eve' for Astralis style, 'legacy' for original
         
     Returns:
-        HUD instance (EVEStyledHUD or HUDSystem)
+        HUD instance (AstralisStyledHUD or HUDSystem)
     """
     if style == 'eve' and EVE_HUD_AVAILABLE:
-        print("[HUD] Creating EVE-styled HUD")
-        return EVEStyledHUD(aspect2d, render2d)
+        print("[HUD] Creating Astralis-styled HUD")
+        return AstralisStyledHUD(aspect2d, render2d)
     else:
         if style == 'eve' and not EVE_HUD_AVAILABLE:
-            print("[HUD] EVE-styled HUD not available, falling back to legacy")
+            print("[HUD] Astralis-styled HUD not available, falling back to legacy")
         print("[HUD] Creating legacy HUD")
         return HUDSystem(aspect2d)
 

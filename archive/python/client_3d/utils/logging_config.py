@@ -1,5 +1,5 @@
 """
-Logging configuration for EVE OFFLINE
+Logging configuration for Nova Forge
 Provides structured logging for debugging and error tracking
 """
 

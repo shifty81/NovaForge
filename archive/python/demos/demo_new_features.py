@@ -335,7 +335,7 @@ def demo_exploration():
 def main():
     """Run all demos"""
     print("\n" + "="*70)
-    print("  EVE OFFLINE - NEW FEATURES DEMONSTRATION")
+    print("  Nova Forge - NEW FEATURES DEMONSTRATION")
     print("  Manufacturing, Market, and Exploration Systems")
     print("="*70)
     

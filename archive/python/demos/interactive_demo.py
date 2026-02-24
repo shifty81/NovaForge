@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - Interactive Gameplay Demo
+Nova Forge - Interactive Gameplay Demo
 Shows all features in an interactive text-based interface
 """
 
@@ -151,7 +151,7 @@ class InteractiveDemo:
     def print_banner(self):
         """Print game banner"""
         print("\n" + "="*80)
-        print("  EVE OFFLINE - Interactive Gameplay Demo")
+        print("  Nova Forge - Interactive Gameplay Demo")
         print("  Your ship: Vexor (Gallente Cruiser)")
         print("="*80 + "\n")
     
@@ -424,13 +424,13 @@ class InteractiveDemo:
                 elif cmd == '9':
                     self.print_menu()
                 elif cmd == '0':
-                    print("\n👋 Thanks for playing EVE OFFLINE! Fly safe o7")
+                    print("\n👋 Thanks for playing Nova Forge! Fly safe o7")
                     break
                 else:
                     print("❌ Invalid command. Type 9 for help.")
                     
             except KeyboardInterrupt:
-                print("\n\n👋 Thanks for playing EVE OFFLINE! Fly safe o7")
+                print("\n\n👋 Thanks for playing Nova Forge! Fly safe o7")
                 break
             except Exception as e:
                 print(f"❌ Error: {e}")

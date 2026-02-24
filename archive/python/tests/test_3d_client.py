@@ -35,7 +35,7 @@ class TestClient3D(ShowBase):
     
     def __init__(self):
         # Configure Panda3D
-        loadPrcFileData("", "window-title EVE OFFLINE - 3D Test")
+        loadPrcFileData("", "window-title Nova Forge - 3D Test")
         loadPrcFileData("", "win-size 1280 720")
         loadPrcFileData("", "show-frame-rate-meter #t")
         
@@ -74,7 +74,7 @@ class TestClient3D(ShowBase):
         
         # Print instructions
         print("\n" + "="*60)
-        print("EVE OFFLINE - 3D Client Test")
+        print("Nova Forge - 3D Client Test")
         print("="*60)
         print("Controls:")
         print("  Left Mouse Drag  - Rotate camera")

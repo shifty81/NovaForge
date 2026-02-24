@@ -1,5 +1,5 @@
 """
-EVE OFFLINE - GUI Client with Pygame
+Nova Forge - GUI Client with Pygame
 Provides a graphical interface for the game
 """
 
@@ -104,7 +104,7 @@ class GUIClient:
             flags |= pygame.SCALED
         
         self.screen = pygame.display.set_mode((self.width, self.height), flags)
-        pygame.display.set_caption(f"EVE OFFLINE - {self.character_name}")
+        pygame.display.set_caption(f"Nova Forge - {self.character_name}")
         self.clock = pygame.time.Clock()
         
         # Load fonts
@@ -373,7 +373,7 @@ class GUIClient:
         
         # Title with connection status
         status_color = (0, 255, 0) if self.connection_status == "Connected" else (255, 100, 100)
-        text = self.font.render(f"EVE OFFLINE - {self.character_name}", True, self.COLOR_TEXT_BRIGHT)
+        text = self.font.render(f"Nova Forge - {self.character_name}", True, self.COLOR_TEXT_BRIGHT)
         self.screen.blit(text, (10, y))
         
         # Connection status indicator
@@ -424,7 +424,7 @@ class GUIClient:
                         (help_x, help_y, help_width, help_height), 2)
         
         # Title
-        text = self.font.render("EVE OFFLINE - Controls", True, self.COLOR_TEXT_BRIGHT)
+        text = self.font.render("Nova Forge - Controls", True, self.COLOR_TEXT_BRIGHT)
         self.screen.blit(text, (help_x + 20, help_y + 20))
         
         # Help text
@@ -574,7 +574,7 @@ if __name__ == "__main__":
     import argparse
     
     # Parse arguments
-    parser = argparse.ArgumentParser(description='EVE OFFLINE GUI Client')
+    parser = argparse.ArgumentParser(description='Nova Forge GUI Client')
     parser.add_argument('character_name', nargs='?', help='Character name')
     parser.add_argument('--host', help='Server host (overrides config)')
     parser.add_argument('--port', type=int, help='Server port (overrides config)')
@@ -607,7 +607,7 @@ if __name__ == "__main__":
     host = args.host or config.get_host()
     port = args.port or config.get_port()
     
-    print(f"[GUI Client] Starting EVE OFFLINE GUI Client")
+    print(f"[GUI Client] Starting Nova Forge GUI Client")
     print(f"[GUI Client] Character: {character_name}")
     print(f"[GUI Client] Player ID: {player_id}")
     print(f"[GUI Client] Server: {host}:{port}")

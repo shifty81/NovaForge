@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test Runner for EVEOFFLINE
+Test Runner for NovaForge
 Runs all test suites and provides summary
 """
 
@@ -54,7 +54,7 @@ def run_test(test_file, test_name):
 def main():
     """Run all tests"""
     print("\n" + "="*70)
-    print("EVEOFFLINE Test Suite Runner")
+    print("NovaForge Test Suite Runner")
     print("="*70)
     
     tests = [

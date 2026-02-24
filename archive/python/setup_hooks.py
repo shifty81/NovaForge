@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup Git hooks for EVE OFFLINE
+Setup Git hooks for Nova Forge
 Installs pre-commit and pre-push hooks for automated checks
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 HOOK_DIR = Path(".git/hooks")
 
 PRE_COMMIT_HOOK = """#!/usr/bin/env python3
-# EVE OFFLINE - Pre-commit hook
+# Nova Forge - Pre-commit hook
 # Runs quick checks before allowing commit
 
 import sys
@@ -32,7 +32,7 @@ sys.exit(0)
 """
 
 PRE_PUSH_HOOK = """#!/usr/bin/env python3
-# EVE OFFLINE - Pre-push hook
+# Nova Forge - Pre-push hook
 # Runs full tests before allowing push
 
 import sys
@@ -81,7 +81,7 @@ def install_hook(hook_name: str, hook_content: str) -> bool:
 def main():
     """Main entry point"""
     print("=" * 60)
-    print("EVE OFFLINE - Git Hook Setup")
+    print("Nova Forge - Git Hook Setup")
     print("=" * 60)
     print()
     

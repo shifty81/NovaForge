@@ -293,7 +293,7 @@ if __name__ == "__main__":
     import argparse
     
     # Parse arguments
-    parser = argparse.ArgumentParser(description='EVE OFFLINE Text Client')
+    parser = argparse.ArgumentParser(description='Nova Forge Text Client')
     parser.add_argument('character_name', nargs='?', help='Character name')
     parser.add_argument('--host', help='Server host (overrides config)')
     parser.add_argument('--port', type=int, help='Server port (overrides config)')
@@ -328,7 +328,7 @@ if __name__ == "__main__":
         host = args.host or config.get_host()
         port = args.port or config.get_port()
         
-        logger.info("Starting EVE OFFLINE Text Client")
+        logger.info("Starting Nova Forge Text Client")
         logger.info(f"Character: {character_name}")
         logger.info(f"Player ID: {player_id}")
         logger.info(f"Server: {host}:{port}")

@@ -42,7 +42,7 @@ class GameClient3D(ShowBase):
     
     def __init__(self, player_id: str, character_name: str, server_host: str = "localhost", server_port: int = 8765):
         # Configure Panda3D before initialization
-        loadPrcFileData("", "window-title EVE OFFLINE - " + character_name)
+        loadPrcFileData("", "window-title Nova Forge - " + character_name)
         loadPrcFileData("", "win-size 1280 720")
         loadPrcFileData("", "sync-video #t")  # V-sync on
         loadPrcFileData("", "show-frame-rate-meter #t")  # Show FPS
@@ -81,7 +81,7 @@ class GameClient3D(ShowBase):
         # Initialize camera
         self.camera_system = CameraSystem(self.camera, self.render)
         
-        # Initialize HUD (EVE-styled by default)
+        # Initialize HUD (Astralis-styled by default)
         self.hud = create_hud(self.aspect2d, self.render2d, style='eve')
         
         # Initialize selection system
@@ -114,7 +114,7 @@ class GameClient3D(ShowBase):
         self.accept("f", self.toggle_follow_camera)
         self.accept("r", self.camera_system.reset)
         
-        # Mouse controls for camera (EVE-style)
+        # Mouse controls for camera (Astralis-style)
         self.accept("mouse1", self.on_mouse_down, [0])  # Left click
         self.accept("mouse1-up", self.on_mouse_up, [0])
         self.accept("mouse2", self.on_mouse_down, [1])  # Right click (future: context menu)
@@ -135,9 +135,9 @@ class GameClient3D(ShowBase):
     def _print_controls(self):
         """Print control instructions"""
         print("\n" + "="*60)
-        print("EVE OFFLINE - 3D Client Controls (EVE-Style)")
+        print("Nova Forge - 3D Client Controls (Astralis-Style)")
         print("="*60)
-        print("Camera (EVE-Style):")
+        print("Camera (Astralis-Style):")
         print("  Left Mouse Drag  - Rotate camera around target")
         print("  Mouse Wheel      - Zoom in/out")
         print("  Middle Mouse     - Pan camera")
@@ -296,7 +296,7 @@ class GameClient3D(ShowBase):
         print(f"[Input] Key pressed: {key}")
         
         # Only handle test commands for now
-        # Real EVE-style commands will come from UI (right-click menus, buttons, etc.)
+        # Real Astralis-style commands will come from UI (right-click menus, buttons, etc.)
         if key == "fire":
             # Test weapon fire effect (not a real game command)
             self._create_test_weapon_effect()

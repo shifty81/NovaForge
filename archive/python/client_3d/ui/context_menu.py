@@ -14,7 +14,7 @@ class ContextMenu:
     Shows tactical options based on what was clicked
     """
     
-    # EVE-style color scheme
+    # Astralis-style color scheme
     MENU_BG_COLOR = Vec4(0.1, 0.1, 0.12, 0.95)  # Dark semi-transparent
     MENU_TEXT_COLOR = Vec4(0.9, 0.9, 0.9, 1.0)  # Light gray
     MENU_HIGHLIGHT_COLOR = Vec4(0.9, 0.8, 0.4, 1.0)  # Gold

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Standalone test for EVE-styled HUD
+Standalone test for Astralis-styled HUD
 Tests the new UI components without requiring a server connection
 """
 
@@ -19,18 +19,18 @@ except ImportError:
     print("Install with: pip install panda3d")
     sys.exit(1)
 
-from client_3d.ui.novaforge_hud import EVEStyledHUD
+from client_3d.ui.novaforge_hud import AstralisStyledHUD
 from client_3d.rendering.starfield import StarField
 
 
 class HUDDemo(ShowBase):
     """
-    Demo application to showcase the EVE-styled HUD
+    Demo application to showcase the Astralis-styled HUD
     """
     
     def __init__(self):
         # Configure Panda3D
-        loadPrcFileData("", "window-title EVE OFFLINE - UI Demo")
+        loadPrcFileData("", "window-title Nova Forge - UI Demo")
         loadPrcFileData("", "win-size 1280 720")
         loadPrcFileData("", "sync-video #t")
         
@@ -44,8 +44,8 @@ class HUDDemo(ShowBase):
         self.star_field = StarField(self.render, self.camera)
         self.star_field.create(num_stars=1500)
         
-        # Initialize EVE-styled HUD
-        self.hud = EVEStyledHUD(self.aspect2d, self.render2d)
+        # Initialize Astralis-styled HUD
+        self.hud = AstralisStyledHUD(self.aspect2d, self.render2d)
         
         # Demo state
         self.time = 0
@@ -63,7 +63,7 @@ class HUDDemo(ShowBase):
         self.accept('space', self.simulate_damage)
         
         print("=" * 60)
-        print("EVE OFFLINE - UI Demo")
+        print("Nova Forge - UI Demo")
         print("=" * 60)
         print("Controls:")
         print("  T      - Toggle target display")

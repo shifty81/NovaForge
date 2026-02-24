@@ -1,5 +1,5 @@
 """
-Research & Invention System for EVE OFFLINE
+Research & Invention System for Nova Forge
 
 Implements Tech II blueprint invention mechanics based on Astralis:
 - Invent T2 BPCs from T1 BPCs

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - Full Feature Demonstration
+Nova Forge - Full Feature Demonstration
 Showcases all newly implemented features
 """
 
@@ -395,7 +395,7 @@ def demo_full_combat_scenario():
 def main():
     """Run all demonstrations"""
     print("\n" + "="*60)
-    print("  EVE OFFLINE - Full Feature Demonstration")
+    print("  Nova Forge - Full Feature Demonstration")
     print("  Showcasing all newly implemented systems")
     print("="*60)
     
@@ -422,7 +422,7 @@ def main():
     print("   • See docs/features/NEW_FEATURES.md for complete feature documentation")
     print("   • Run tests/test_engine.py for core system tests")
     print("   • Run tests/test_advanced_systems.py for advanced tests")
-    print("\n🚀 EVE OFFLINE is ready for the full experience!")
+    print("\n🚀 Nova Forge is ready for the full experience!")
     print("="*60 + "\n")
 
 

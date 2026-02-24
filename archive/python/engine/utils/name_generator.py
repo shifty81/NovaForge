@@ -1,6 +1,6 @@
 """
 Random Name Generator
-Generates EVE-like names for various game elements
+Generates Astralis-like names for various game elements
 """
 
 import random
@@ -13,7 +13,7 @@ class NameGenerator:
     Similar to Astralis but with unique naming conventions
     """
     
-    # Character name components (EVE-style)
+    # Character name components (Astralis-style)
     FIRST_NAMES_MALE = [
         "Marcus", "Drake", "Orion", "Zephyr", "Atlas", "Phoenix", "Kaiden", "Ryker",
         "Sirius", "Talon", "Vex", "Nero", "Axel", "Cyrus", "Magnus", "Raven",
@@ -33,7 +33,7 @@ class NameGenerator:
         "Skyhammer", "Stormchaser", "Blacksun", "Silvermoon", "Redshard", "Blueflame"
     ]
     
-    # Ship name prefixes and suffixes (EVE-style)
+    # Ship name prefixes and suffixes (Astralis-style)
     SHIP_PREFIXES = [
         "INS", "USS", "RSS", "CSS", "GSS", "ASS", "HSS", "ESS"  # Imperial, United, Republic, etc.
     ]
@@ -332,7 +332,7 @@ def random_mission_name() -> str:
 
 if __name__ == "__main__":
     # Demo the name generator
-    print("EVE OFFLINE Name Generator Demo")
+    print("Nova Forge Name Generator Demo")
     print("=" * 50)
     print()
     

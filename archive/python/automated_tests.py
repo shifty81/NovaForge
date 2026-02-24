@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EVE OFFLINE - Automated Test Suite Runner
+Nova Forge - Automated Test Suite Runner
 Runs all tests and demos to verify the software is working correctly
 """
 
@@ -287,8 +287,8 @@ def generate_report(results: dict):
 
 def interactive_menu():
     """Show interactive menu for testing"""
-    print_header("EVE OFFLINE - Automated Test Runner")
-    print("This script will test all components of EVE OFFLINE")
+    print_header("Nova Forge - Automated Test Runner")
+    print("This script will test all components of Nova Forge")
     print()
     print("Options:")
     print("  1. Run all tests (recommended)")
@@ -308,7 +308,7 @@ def main():
     # Check if running interactively
     if len(sys.argv) > 1:
         if sys.argv[1] == "--quick":
-            print_header("EVE OFFLINE - Quick Test Mode")
+            print_header("Nova Forge - Quick Test Mode")
             results = {
                 "Dependencies": test_dependencies(),
                 "Unit Tests": test_unit_tests(),

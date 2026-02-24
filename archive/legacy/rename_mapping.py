@@ -75,7 +75,6 @@ PIRATE_FACTIONS = {
 # SECURITY / ORGANIZATIONS
 # ---------------------------------------------------------------------------
 ORGANIZATIONS = {
-    "AEGIS": "AEGIS",
     "New Eden": "Astralis",
     "EVE OFFLINE": "EVEOFFLINE",  # project name stays
 }

@@ -1,5 +1,5 @@
 """
-Base Panel System for EVE-styled UI Windows
+Base Panel System for Astralis-styled UI Windows
 Provides reusable window/panel infrastructure for the 3D client
 """
 
@@ -13,7 +13,7 @@ from typing import Optional, Callable, List, Tuple
 
 class EVEPanel:
     """
-    Base class for EVE-styled UI panels/windows
+    Base class for Astralis-styled UI panels/windows
     Provides common functionality like dragging, closing, resizing
     """
     
@@ -60,7 +60,7 @@ class EVEPanel:
         """Create the panel structure"""
         # Main frame (background)
         self.frame = DirectFrame(
-            frameColor=(0.05, 0.08, 0.12, 0.95),  # EVE dark blue-black
+            frameColor=(0.05, 0.08, 0.12, 0.95),  # Astralis dark blue-black
             frameSize=(0, self.size[0], -self.size[1], 0),
             pos=(self.pos[0], 0, self.pos[1]),
             parent=self.parent
@@ -83,7 +83,7 @@ class EVEPanel:
         """Create title bar with title text and close button"""
         # Title bar background
         title_bar = DirectFrame(
-            frameColor=(0.2, 0.6, 0.8, 0.3),  # EVE teal accent
+            frameColor=(0.2, 0.6, 0.8, 0.3),  # Astralis teal accent
             frameSize=(0, self.size[0], -0.08, 0),
             pos=(0, 0, 0),
             parent=self.frame
@@ -94,7 +94,7 @@ class EVEPanel:
         self.title_label = DirectLabel(
             text=self.title,
             text_scale=0.05,
-            text_fg=(0.9, 0.95, 1.0, 1.0),  # EVE white text
+            text_fg=(0.9, 0.95, 1.0, 1.0),  # Astralis white text
             text_align=TextNode.ALeft,
             frameColor=(0, 0, 0, 0),
             pos=(0.02, 0, -0.055),

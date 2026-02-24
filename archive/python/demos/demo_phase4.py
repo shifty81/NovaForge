@@ -196,11 +196,11 @@ def demo_contracts():
     # Create courier contract
     courier_seller = world.create_entity("courier_1")
     courier_seller.add_component(Player(character_name="Charlie Courier", credits=3000000.0))
-    courier_seller.add_component(Inventory(items={"item_ore_veldspar": 1000}, cargo_capacity=2000.0))
+    courier_seller.add_component(Inventory(items={"item_ore_ferrite": 1000}, cargo_capacity=2000.0))
     
     contract_id2 = contract_system.create_courier_contract(
         courier_seller,
-        items={"item_ore_veldspar": 500},
+        items={"item_ore_ferrite": 500},
         start_location="Jita",
         end_location="Amarr",
         reward=100000.0,
@@ -220,7 +220,7 @@ def demo_contracts():
 def main():
     """Run all demos"""
     print("\n" + "="*70)
-    print("EVE OFFLINE - PHASE 4 FEATURES DEMO")
+    print("Nova Forge - PHASE 4 FEATURES DEMO")
     print("Corporation, Social, and Contract Systems")
     print("="*70)
     

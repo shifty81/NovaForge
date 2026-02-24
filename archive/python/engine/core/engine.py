@@ -24,7 +24,7 @@ class Engine:
         
     def initialize(self):
         """Initialize the engine"""
-        print(f"[Engine] Initializing EVE OFFLINE Engine v0.1.0")
+        print(f"[Engine] Initializing Nova Forge Engine v0.1.0")
         print(f"[Engine] Target FPS: {self.target_fps}")
         
     def shutdown(self):

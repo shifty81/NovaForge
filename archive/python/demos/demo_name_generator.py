@@ -168,7 +168,7 @@ def main():
     """Run all demo scenarios"""
     print("\n")
     print("╔" + "═" * 68 + "╗")
-    print("║" + " " * 10 + "EVE OFFLINE - Name Generator Game Demo" + " " * 18 + "║")
+    print("║" + " " * 10 + "Nova Forge - Name Generator Game Demo" + " " * 18 + "║")
     print("╚" + "═" * 68 + "╝")
     print()
     
@@ -184,7 +184,7 @@ def main():
     print("=" * 70)
     print("Demo Complete!")
     print("=" * 70)
-    print("\nThe name generator creates unique, EVE-like names for all")
+    print("\nThe name generator creates unique, Astralis-like names for all")
     print("game elements, enhancing immersion and reducing repetitive content.")
     print()
 

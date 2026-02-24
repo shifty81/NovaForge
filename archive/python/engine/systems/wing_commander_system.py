@@ -1,6 +1,6 @@
 """
 Wing Commander System
-Core differentiating feature of EVE OFFLINE - players command their own wing
+Core differentiating feature of Nova Forge - players command their own wing
 of NPC pilots flying player-owned ships. NPCs can autonomously mine, haul,
 run trade routes, do combat, and more based on their skills and orders.
 

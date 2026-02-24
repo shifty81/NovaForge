@@ -173,7 +173,7 @@ def test_docking():
 def run_all_tests():
     """Run all advanced tests"""
     print("\n" + "="*50)
-    print("EVE OFFLINE - Advanced Systems Tests")
+    print("Nova Forge - Advanced Systems Tests")
     print("="*50)
     
     try:

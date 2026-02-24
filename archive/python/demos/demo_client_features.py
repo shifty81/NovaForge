@@ -180,7 +180,7 @@ def main():
     """Main demo function"""
     print()
     print("╔" + "═" * 68 + "╗")
-    print("║" + " " * 10 + "EVE OFFLINE - Client Features Demo" + " " * 23 + "║")
+    print("║" + " " * 10 + "Nova Forge - Client Features Demo" + " " * 23 + "║")
     print("╚" + "═" * 68 + "╝")
     print()
     

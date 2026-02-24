@@ -1,5 +1,5 @@
 """
-Tests for new EVE OFFLINE systems:
+Tests for new Nova Forge systems:
 - Insurance System
 - Bounty System
 - NPC Damage Reference
