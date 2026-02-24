@@ -83,7 +83,7 @@ WeaponLayout WeaponSocketUtil::generateLayout(const PCGContext& ctx,
             baseArc      = rng.rangeFloat(20.0f, 60.0f);
             baseTracking = rng.rangeFloat(0.005f, 0.02f);
             break;
-        default:
+        default: // Safety fallback for invalid enum values.
             baseArc      = rng.rangeFloat(60.0f, 120.0f);
             baseTracking = rng.rangeFloat(0.04f, 0.08f);
             break;

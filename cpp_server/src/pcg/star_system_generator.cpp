@@ -144,10 +144,10 @@ void StarSystemGenerator::generateOrbits(DeterministicRNG& rng,
     // First, decide which slot indices are belts.
     if (beltCount > totalSlots) beltCount = totalSlots;
     std::vector<bool> isBelt(static_cast<size_t>(totalSlots), false);
-    int beltPlaced   = 0;
-    int maxAttempts   = totalSlots * 4;  // prevent infinite loop on collisions
+    int beltPlaced    = 0;
+    int max_attempts  = totalSlots * 4;  // prevent infinite loop on collisions
     int attempts      = 0;
-    while (beltPlaced < beltCount && attempts < maxAttempts) {
+    while (beltPlaced < beltCount && attempts < max_attempts) {
         int idx = rng.range(0, totalSlots - 1);
         if (!isBelt[static_cast<size_t>(idx)]) {
             isBelt[static_cast<size_t>(idx)] = true;

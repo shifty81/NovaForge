@@ -44,7 +44,7 @@ TurretSize TurretPlacementSystem::sizeForHull(DeterministicRNG& rng,
             return rng.chance(0.6f) ? TurretSize::Large : TurretSize::Medium;
         case HullClass::Capital:
             return TurretSize::Capital;
-        default:
+        default: // Safety fallback for invalid enum values.
             return TurretSize::Small;
     }
 }
@@ -75,7 +75,7 @@ void TurretPlacementSystem::distributeMounts(DeterministicRNG& rng,
         case HullClass::Capital:
             baseArc = rng.rangeFloat(30.0f, 70.0f);
             break;
-        default:
+        default: // Safety fallback for invalid enum values.
             baseArc = rng.rangeFloat(60.0f, 110.0f);
             break;
     }

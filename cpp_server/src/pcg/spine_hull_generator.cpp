@@ -162,7 +162,8 @@ int SpineHullGenerator::generateEngineCluster(DeterministicRNG& rng,
         case HullClass::Battlecruiser: return rng.range(3, 5);
         case HullClass::Battleship:    return rng.range(4, 6);
         case HullClass::Capital:       return rng.range(6, 12);
-        default:                       return rng.range(2, 4);
+        default: // Safety fallback for invalid enum values.
+            return rng.range(2, 4);
     }
 }
 
