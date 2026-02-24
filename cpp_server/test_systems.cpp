@@ -97,6 +97,7 @@
 #include "systems/market_order_system.h"
 #include "systems/ai_economic_actor_system.h"
 #include "systems/turret_ai_system.h"
+#include "systems/titan_assembly_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -14021,6 +14022,249 @@ void testShipGeneratorHullOverride() {
     assertTrue(capital.engineCount >= 6, "Capital has ≥ 6 engines");
 }
 
+void testShipGeneratorExpandedFields() {
+    std::cout << "\n=== PCG: ShipGenerator expanded fields ===" << std::endl;
+    bool armorOk = true;
+    bool shieldOk = true;
+    bool sigOk = true;
+    bool targetOk = true;
+    bool nameOk = true;
+    bool droneOk = true;
+
+    for (uint64_t i = 1; i <= 100; ++i) {
+        atlas::pcg::PCGContext ctx{ i * 43, 1 };
+        auto ship = atlas::pcg::ShipGenerator::generate(ctx);
+        if (ship.armorHP <= 0.0f) armorOk = false;
+        if (ship.shieldHP <= 0.0f) shieldOk = false;
+        if (ship.signatureRadius <= 0.0f) sigOk = false;
+        if (ship.targetingSpeed <= 0.0f) targetOk = false;
+        if (ship.shipName.empty()) nameOk = false;
+        if (ship.droneBay < 0) droneOk = false;
+    }
+    assertTrue(armorOk, "All ships have positive armor");
+    assertTrue(shieldOk, "All ships have positive shields");
+    assertTrue(sigOk, "All ships have positive signature radius");
+    assertTrue(targetOk, "All ships have positive targeting speed");
+    assertTrue(nameOk, "All ships have non-empty names");
+    assertTrue(droneOk, "All ships have non-negative drone bay");
+}
+
+void testShipGeneratorExpandedDeterminism() {
+    std::cout << "\n=== PCG: ShipGenerator expanded determinism ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 777, 1 };
+    auto s1 = atlas::pcg::ShipGenerator::generate(ctx);
+    auto s2 = atlas::pcg::ShipGenerator::generate(ctx);
+
+    assertTrue(s1.armorHP == s2.armorHP, "Same armor HP");
+    assertTrue(s1.shieldHP == s2.shieldHP, "Same shield HP");
+    assertTrue(s1.signatureRadius == s2.signatureRadius, "Same signature radius");
+    assertTrue(s1.targetingSpeed == s2.targetingSpeed, "Same targeting speed");
+    assertTrue(s1.droneBay == s2.droneBay, "Same drone bay");
+    assertTrue(s1.shipName == s2.shipName, "Same ship name");
+}
+
+void testShipGeneratorHullRanges() {
+    std::cout << "\n=== PCG: ShipGenerator hull-specific ranges ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 999, 1 };
+
+    auto frigate = atlas::pcg::ShipGenerator::generate(ctx, atlas::pcg::HullClass::Frigate);
+    assertTrue(frigate.armorHP >= 300.0f && frigate.armorHP <= 600.0f, "Frigate armor in range");
+    assertTrue(frigate.shieldHP >= 250.0f && frigate.shieldHP <= 500.0f, "Frigate shield in range");
+    assertTrue(frigate.signatureRadius >= 30.0f && frigate.signatureRadius <= 45.0f, "Frigate sig in range");
+
+    auto bs = atlas::pcg::ShipGenerator::generate(ctx, atlas::pcg::HullClass::Battleship);
+    assertTrue(bs.armorHP >= 6000.0f && bs.armorHP <= 10000.0f, "Battleship armor in range");
+    assertTrue(bs.signatureRadius >= 300.0f && bs.signatureRadius <= 450.0f, "Battleship sig in range");
+
+    assertTrue(bs.armorHP > frigate.armorHP, "Battleship armor > Frigate armor");
+    assertTrue(bs.signatureRadius > frigate.signatureRadius, "Battleship sig > Frigate sig");
+}
+
+void testShipGeneratorShipName() {
+    std::cout << "\n=== PCG: ShipGenerator ship naming ===" << std::endl;
+    atlas::pcg::PCGContext ctx1{ 100, 1 };
+    atlas::pcg::PCGContext ctx2{ 200, 1 };
+
+    auto s1 = atlas::pcg::ShipGenerator::generate(ctx1);
+    auto s2 = atlas::pcg::ShipGenerator::generate(ctx2);
+
+    assertTrue(!s1.shipName.empty(), "Ship 1 has a name");
+    assertTrue(!s2.shipName.empty(), "Ship 2 has a name");
+    // Names from different seeds should usually differ.
+    assertTrue(s1.shipName != s2.shipName, "Different seeds produce different names");
+    // Name contains a hyphen (format: Prefix Suffix-Serial).
+    assertTrue(s1.shipName.find('-') != std::string::npos, "Ship name contains serial separator");
+}
+
+void testRoomGraphFunctionalTypes() {
+    std::cout << "\n=== PCG: RoomGraph functional type assignment ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 42, 1 };
+
+    // Deck 0: first room should be Cockpit.
+    auto deck0 = atlas::pcg::generateRoomsForDeck(0, ctx, 3);
+    assertTrue(deck0[0].type == atlas::pcg::RoomType::Cockpit,
+               "Deck 0 first room is Cockpit");
+
+    // Last room should be Engine.
+    assertTrue(deck0.back().type == atlas::pcg::RoomType::Engine,
+               "Last room on deck 0 is Engine");
+
+    // Deck 1+: first room should be Reactor.
+    auto deck1 = atlas::pcg::generateRoomsForDeck(1, ctx, 3);
+    assertTrue(deck1[0].type == atlas::pcg::RoomType::Reactor,
+               "Deck 1 first room is Reactor");
+    assertTrue(deck1.back().type == atlas::pcg::RoomType::Engine,
+               "Last room on deck 1 is Engine");
+}
+
+void testRoomGraphDimensionsByType() {
+    std::cout << "\n=== PCG: RoomGraph dimensions vary by type ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 50, 1 };
+
+    // Generate deck 0 with enough rooms to include varied types.
+    auto rooms = atlas::pcg::generateRoomsForDeck(0, ctx, 5);
+
+    for (const auto& r : rooms) {
+        switch (r.type) {
+            case atlas::pcg::RoomType::Engine:
+                assertTrue(r.dimZ >= 6.0f, "Engine room Z >= 6m");
+                break;
+            case atlas::pcg::RoomType::Corridor:
+                assertTrue(r.dimX <= 3.0f, "Corridor X <= 3m");
+                break;
+            case atlas::pcg::RoomType::Reactor:
+                assertTrue(r.dimX >= 5.0f, "Reactor X >= 5m");
+                break;
+            default:
+                assertTrue(r.dimX > 0.0f && r.dimY > 0.0f && r.dimZ > 0.0f,
+                           "Room has positive dimensions");
+                break;
+        }
+    }
+}
+
+void testDeckGraphHubAndSpoke() {
+    std::cout << "\n=== PCG: DeckGraph hub-and-spoke corridors ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 200, 1 };
+
+    // Use shipClass 4 to get enough rooms for hub-and-spoke to kick in.
+    auto decks = atlas::pcg::generateDeckStack(4, ctx);
+    bool hubFound = false;
+    for (const auto& deck : decks) {
+        if (deck.rooms.size() >= 4) {
+            // Should have linear (N-1) + hub ((N-2)) corridors.
+            size_t expected = (deck.rooms.size() - 1) + (deck.rooms.size() - 2);
+            assertTrue(deck.corridors.size() == expected,
+                       "Deck has linear + hub-and-spoke corridors");
+            hubFound = true;
+            break;
+        }
+    }
+    assertTrue(hubFound, "At least one deck has hub-and-spoke connections");
+}
+
+void testShipDesignerSaveRoundTrip() {
+    std::cout << "\n=== PCG: ShipDesigner save captures rooms ===" << std::endl;
+    atlas::pcg::PCGContext ctx{ 800, 1 };
+    auto decks = atlas::pcg::generateDeckStack(2, ctx);
+
+    // Count total rooms.
+    int totalRooms = 0;
+    for (const auto& d : decks) totalRooms += static_cast<int>(d.rooms.size());
+
+    auto save = atlas::pcg::saveShipLayout(decks, 2, 800);
+    assertTrue(save.pcgVersion == 1, "Save version set");
+    assertTrue(save.shipClass == 2, "Save class stored");
+    assertTrue(save.seed == 800, "Save seed stored");
+    assertTrue(static_cast<int>(save.roomOverrides.size()) == totalRooms,
+               "Save captures all rooms as overrides");
+}
+
+void testTitanAssemblyDefaults() {
+    std::cout << "\n=== Systems: TitanAssembly defaults ===" << std::endl;
+    atlas::systems::TitanAssemblyComponent comp;
+    assertTrue(comp.progress == 0.0f, "Initial progress is 0");
+    assertTrue(comp.phase == atlas::systems::TitanPhase::Rumor, "Initial phase is Rumor");
+    assertTrue(!comp.disrupted, "Not disrupted initially");
+    assertTrue(comp.disruptCount == 0, "No disruptions initially");
+}
+
+void testTitanAssemblyTick() {
+    std::cout << "\n=== Systems: TitanAssembly tick progression ===" << std::endl;
+    atlas::systems::TitanAssemblySystem sys;
+    atlas::systems::TitanAssemblyComponent comp;
+    comp.resourceRate = 0.05f;
+
+    // 4 ticks → progress = 0.20
+    for (int i = 0; i < 4; ++i) sys.tick(comp);
+    assertTrue(comp.progress >= 0.19f && comp.progress <= 0.21f, "4 ticks at 0.05 ≈ 0.20");
+    assertTrue(comp.phase == atlas::systems::TitanPhase::Unease, "Phase transitions to Unease at 20%");
+
+    // 6 more ticks → progress = 0.50
+    for (int i = 0; i < 6; ++i) sys.tick(comp);
+    assertTrue(comp.progress >= 0.49f && comp.progress <= 0.51f, "10 ticks at 0.05 ≈ 0.50");
+    assertTrue(comp.phase == atlas::systems::TitanPhase::Fear, "Phase transitions to Fear at 50%");
+}
+
+void testTitanAssemblyDisrupt() {
+    std::cout << "\n=== Systems: TitanAssembly disruption ===" << std::endl;
+    atlas::systems::TitanAssemblySystem sys;
+    atlas::systems::TitanAssemblyComponent comp;
+    comp.progress = 0.50f;
+    comp.phase = atlas::systems::TitanPhase::Fear;
+
+    sys.disrupt(comp, 0.35f);
+    assertTrue(comp.progress >= 0.14f && comp.progress <= 0.16f, "Progress reduced by disruption");
+    assertTrue(comp.phase == atlas::systems::TitanPhase::Rumor, "Phase regressed to Rumor");
+    assertTrue(comp.disruptCount == 1, "Disruption counted");
+    assertTrue(comp.disrupted, "Disrupted flag set");
+}
+
+void testTitanAssemblyDisruptedTick() {
+    std::cout << "\n=== Systems: TitanAssembly disrupted tick ===" << std::endl;
+    atlas::systems::TitanAssemblySystem sys;
+    atlas::systems::TitanAssemblyComponent comp;
+    comp.resourceRate = 0.10f;
+    comp.disrupted = true;
+
+    sys.tick(comp);
+    // Disrupted tick advances at 25% rate: 0.10 * 0.25 = 0.025
+    assertTrue(comp.progress >= 0.024f && comp.progress <= 0.026f, "Disrupted tick at 25% rate");
+    assertTrue(!comp.disrupted, "Disrupted flag cleared after tick");
+}
+
+void testTitanAssemblyClamped() {
+    std::cout << "\n=== Systems: TitanAssembly progress clamped ===" << std::endl;
+    atlas::systems::TitanAssemblySystem sys;
+    atlas::systems::TitanAssemblyComponent comp;
+    comp.progress = 0.99f;
+    comp.resourceRate = 0.10f;
+
+    sys.tick(comp);
+    assertTrue(comp.progress == 1.0f, "Progress clamped at 1.0");
+    assertTrue(comp.phase == atlas::systems::TitanPhase::Acceptance, "Acceptance phase at 100%");
+}
+
+void testTitanAssemblyDisruptFloor() {
+    std::cout << "\n=== Systems: TitanAssembly disrupt floor ===" << std::endl;
+    atlas::systems::TitanAssemblySystem sys;
+    atlas::systems::TitanAssemblyComponent comp;
+    comp.progress = 0.05f;
+
+    sys.disrupt(comp, 0.50f);
+    assertTrue(comp.progress == 0.0f, "Progress floored at 0.0");
+}
+
+void testTitanAssemblyPhaseName() {
+    std::cout << "\n=== Systems: TitanAssembly phase names ===" << std::endl;
+    using atlas::systems::TitanPhase;
+    using atlas::systems::TitanAssemblySystem;
+    assertTrue(TitanAssemblySystem::phaseName(TitanPhase::Rumor) == "Rumor", "Rumor name");
+    assertTrue(TitanAssemblySystem::phaseName(TitanPhase::Unease) == "Unease", "Unease name");
+    assertTrue(TitanAssemblySystem::phaseName(TitanPhase::Fear) == "Fear", "Fear name");
+    assertTrue(TitanAssemblySystem::phaseName(TitanPhase::Acceptance) == "Acceptance", "Acceptance name");
+}
+
 void testFleetDoctrineGeneration() {
     std::cout << "\n=== PCG: FleetDoctrine basic generation ===" << std::endl;
     atlas::pcg::PCGContext ctx{ 999, 1 };
@@ -14124,7 +14368,10 @@ void testDeckGraphCorridors() {
     atlas::pcg::PCGContext ctx{ 200, 1 };
     auto rooms = atlas::pcg::generateRoomsForDeck(0, ctx, 3);
     auto corridors = atlas::pcg::connectRooms(rooms);
-    assertTrue(corridors.size() == rooms.size() - 1, "N-1 corridors for N rooms");
+    // Linear corridors: N-1.  Hub-and-spoke adds N-2 more if N >= 4.
+    size_t expected = rooms.size() - 1;
+    if (rooms.size() >= 4) expected += rooms.size() - 2;
+    assertTrue(corridors.size() == expected, "Corridors match linear + hub-and-spoke count");
 }
 
 void testElevatorGeneration() {
@@ -18083,6 +18330,10 @@ int main() {
     testShipGeneratorDeterminism();
     testShipGeneratorConstraints();
     testShipGeneratorHullOverride();
+    testShipGeneratorExpandedFields();
+    testShipGeneratorExpandedDeterminism();
+    testShipGeneratorHullRanges();
+    testShipGeneratorShipName();
     testFleetDoctrineGeneration();
     testFleetDoctrineDeterminism();
     testFleetDoctrineRoles();
@@ -18091,8 +18342,11 @@ int main() {
     // Procedural Generation Systems tests
     testRoomGraphGeneration();
     testRoomGraphDeterminism();
+    testRoomGraphFunctionalTypes();
+    testRoomGraphDimensionsByType();
     testDeckGraphGeneration();
     testDeckGraphCorridors();
+    testDeckGraphHubAndSpoke();
     testElevatorGeneration();
     testHullMesherGeneration();
     testCapitalShipGeneratorDeterminism();
@@ -18100,6 +18354,7 @@ int main() {
     testCapitalShipGeneratorValidity();
     testShipDesignerOverride();
     testShipDesignerSaveLoad();
+    testShipDesignerSaveRoundTrip();
     testSnappableGridCreation();
     testSnappableGridPlacement();
     testSnappableGridSectorGeneration();
@@ -18408,6 +18663,15 @@ int main() {
     testTurretAITrackingReducesDamage();
     testTurretAINotEngaged();
     testTurretAIComponentDefaults();
+
+    // Titan Assembly System tests
+    testTitanAssemblyDefaults();
+    testTitanAssemblyTick();
+    testTitanAssemblyDisrupt();
+    testTitanAssemblyDisruptedTick();
+    testTitanAssemblyClamped();
+    testTitanAssemblyDisruptFloor();
+    testTitanAssemblyPhaseName();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
