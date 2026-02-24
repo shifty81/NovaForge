@@ -344,6 +344,24 @@ void test_viewport_load_spine_hull_with_turrets();
 void test_viewport_spine_hull_zone_names();
 void test_viewport_spine_hull_select_and_transform();
 
+// PCG Override Store tests
+void test_override_store_empty();
+void test_override_store_add_and_clear();
+void test_override_store_remove_by_object();
+void test_override_store_serialize_roundtrip();
+void test_override_store_file_roundtrip();
+void test_override_store_load_nonexistent();
+void test_override_store_import_from_viewport();
+
+// Live Scene Manager tests
+void test_live_scene_defaults();
+void test_live_scene_populate();
+void test_live_scene_capture_changes();
+void test_live_scene_save_and_load();
+void test_live_scene_regenerate();
+void test_live_scene_on_asset_reload_triggers_regen();
+void test_live_scene_seed_and_version();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -680,6 +698,26 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_viewport_load_spine_hull_with_turrets);
     RUN_TEST(test_viewport_spine_hull_zone_names);
     RUN_TEST(test_viewport_spine_hull_select_and_transform);
+
+    // PCG Override Store
+    log.BeginSection("PCG Override Store");
+    RUN_TEST(test_override_store_empty);
+    RUN_TEST(test_override_store_add_and_clear);
+    RUN_TEST(test_override_store_remove_by_object);
+    RUN_TEST(test_override_store_serialize_roundtrip);
+    RUN_TEST(test_override_store_file_roundtrip);
+    RUN_TEST(test_override_store_load_nonexistent);
+    RUN_TEST(test_override_store_import_from_viewport);
+
+    // Live Scene Manager
+    log.BeginSection("Live Scene Manager");
+    RUN_TEST(test_live_scene_defaults);
+    RUN_TEST(test_live_scene_populate);
+    RUN_TEST(test_live_scene_capture_changes);
+    RUN_TEST(test_live_scene_save_and_load);
+    RUN_TEST(test_live_scene_regenerate);
+    RUN_TEST(test_live_scene_on_asset_reload_triggers_regen);
+    RUN_TEST(test_live_scene_seed_and_version);
 
     // ECS Inspector
     log.BeginSection("ECS Inspector");

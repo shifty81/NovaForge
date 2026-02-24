@@ -9,6 +9,8 @@
 #include "tools/ShipArchetypePanel.h"
 #include "tools/GamePackagerPanel.h"
 #include "tools/ViewportPanel.h"
+#include "tools/LiveSceneManager.h"
+#include "assets/AssetRegistry.h"
 #include <iostream>
 #include <memory>
 
@@ -25,10 +27,6 @@ int main() {
     engine.InitEditor();
 
     // ── Create editor panels ──────────────────────────────────
-    // All panels live on the stack in main(); they remain valid for the
-    // entire editor session because engine.Run() blocks until shutdown.
-    // C++ guarantees reverse-order destruction, so EditorLayout (declared
-    // after the panels) is destroyed first — no dangling-pointer risk.
     atlas::editor::ViewportPanel viewport;
     atlas::editor::PCGPreviewPanel pcgPreview;
     atlas::editor::GenerationStylePanel genStyle;
@@ -40,17 +38,23 @@ int main() {
                                         engine.GetScheduler());
     atlas::editor::GamePackagerPanel packager;
 
+    // ── Live scene manager: connects viewport ↔ PCG ──────────
+    // This is the core of the in-engine content creation workflow.
+    // It populates the viewport with PCG content, captures viewport
+    // edits as overrides, and saves them to a file the client reads.
+    atlas::editor::LiveSceneManager liveScene(&viewport, &pcgPreview);
+
     // ── Build dock layout ─────────────────────────────────────
     //
     //  ┌─────────────────────────────┬──────────────┐
     //  │                             │  PCG Preview  │
     //  │         Viewport            ├──────────────┤
-    //  │                             │  Ship Arch.  │
-    //  │                             ├──────────────┤
+    //  │   (live game scene with     │  Ship Arch.  │
+    //  │    click-drag editing)      ├──────────────┤
     //  │                             │  Gen Style   │
     //  ├─────────────────────────────┼──────────────┤
-    //  │  Console / ECS / Net        │ Asset Style  │
-    //  │                             │ Packager     │
+    //  │  Console / ECS / Net /      │ Asset Style  │
+    //  │  Live Scene                 │ Packager     │
     //  └─────────────────────────────┴──────────────┘
     //
     atlas::editor::EditorLayout layout;
@@ -63,6 +67,7 @@ int main() {
     layout.RegisterPanel(&netInspector);
     layout.RegisterPanel(&console);
     layout.RegisterPanel(&packager);
+    layout.RegisterPanel(&liveScene);
 
     // Root: horizontal split — left (viewport area) | right (tool panels)
     auto& root = layout.Root();
@@ -113,7 +118,33 @@ int main() {
               << " panels" << std::endl;
     std::cout << "[Editor] Panels: Viewport, PCG Preview, Generation Style, "
               << "Asset Style, Ship Archetype, ECS Inspector, Net Inspector, "
-              << "Console, Game Packager" << std::endl;
+              << "Console, Game Packager, Live Scene Manager" << std::endl;
+
+    // ── Live-reload: watch asset files for changes ────────────
+    atlas::asset::AssetRegistry assetRegistry;
+    assetRegistry.Scan(engine.Config().assetRoot);
+    assetRegistry.Scan("data");
+    assetRegistry.SetReloadCallback(
+        [&layout](const atlas::asset::AssetEntry& entry) {
+            std::cout << "[HotReload] " << entry.id
+                      << " changed (v" << entry.version << ") — "
+                      << entry.path << std::endl;
+            layout.BroadcastAssetReload(entry.id, entry.path);
+        });
+
+    std::cout << "[Editor] Live-reload enabled — watching "
+              << assetRegistry.Count() << " assets" << std::endl;
+
+    // ── Auto-populate the viewport with a default game scene ──
+    // Load any previously saved overrides so the designer picks up
+    // where they left off.
+    liveScene.LoadOverrides("data/pcg_overrides.json");
+    liveScene.PopulateDefaultScene();
+
+    std::cout << "[Editor] Viewport populated with "
+              << viewport.ObjectCount() << " objects" << std::endl;
+    std::cout << "[Editor] Ready — drag objects in the viewport to edit, "
+              << "then save overrides for the client" << std::endl;
 
     // ── Run editor loop ───────────────────────────────────────
     engine.Run();

@@ -10,6 +10,8 @@ add_executable(AtlasEditor
     tools/AssetStylePanel.cpp
     tools/ShipArchetypePanel.cpp
     tools/ViewportPanel.cpp
+    tools/PCGOverrideStore.cpp
+    tools/LiveSceneManager.cpp
     ai/AIAggregator.cpp
     # PCG sources used by editor panels
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/pcg_manager.cpp
@@ -23,6 +25,9 @@ add_executable(AtlasEditor
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/generation_style.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/pcg_asset_style.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/ship_archetype.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/spine_hull_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_placement_system.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_generator.cpp
 )
 
 target_link_libraries(AtlasEditor AtlasEngine)

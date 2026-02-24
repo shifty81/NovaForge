@@ -168,6 +168,12 @@ public:
     /** Get the viewport log (for debug/status display). */
     const std::vector<std::string>& Log() const { return m_log; }
 
+    // ── Live Reload ───────────────────────────────────────────
+    /** Called when an asset changes on disk.  Logs the event so the
+     *  designer sees that the viewport is aware of file changes. */
+    void OnAssetReloaded(const std::string& assetId,
+                         const std::string& path) override;
+
 private:
     ViewportObject* findObject(uint32_t id);
     const ViewportObject* findObject(uint32_t id) const;

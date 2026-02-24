@@ -289,4 +289,11 @@ void ViewportPanel::recordChange(uint32_t id, const std::string& field,
     m_pendingChanges.push_back(change);
 }
 
+void ViewportPanel::OnAssetReloaded(const std::string& assetId,
+                                     const std::string& path) {
+    std::ostringstream oss;
+    oss << "[Viewport] Asset changed: " << assetId << " (" << path << ") — live reload";
+    m_log.push_back(oss.str());
+}
+
 } // namespace atlas::editor

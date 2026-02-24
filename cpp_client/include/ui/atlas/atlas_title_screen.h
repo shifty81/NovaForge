@@ -86,6 +86,14 @@ private:
     /** Determine starter ship class based on selected career. */
     void resolveStarterShip();
 
+    /** Regenerate the character preview model when race/career/gender changes. */
+    void regenerateCharacterPreview();
+
+    /** Render the 3rd-person character preview viewport within the
+     *  character-creation page.  Shows the generated FPS character model
+     *  from behind so the player can see what they look like. */
+    void renderCharacterPreviewViewport(AtlasContext& ctx, Rect area);
+
     bool m_active = true;
 
     enum class Page {
@@ -135,6 +143,30 @@ private:
     float m_masterVolume = 0.8f;
     float m_musicVolume = 0.5f;
     float m_sfxVolume = 0.7f;
+
+    // ── Character 3D preview state ─────────────────────────────────
+    /// True once a preview character model has been generated.
+    bool  m_previewGenerated = false;
+    /// True when the preview needs to be regenerated (race/career changed).
+    bool  m_previewDirty = true;
+    bool  m_previewIsFemale = false;
+
+    /// Orbit camera for the 3rd-person character preview.
+    float m_previewCamYaw   = 180.0f;   // start behind the character
+    float m_previewCamPitch = 10.0f;
+    float m_previewCamDist  = 3.0f;
+
+    /// Simplified mesh layout derived from the character generator.
+    struct PreviewBodyPart {
+        std::string name;
+        float offsetY;       // vertical offset (ground-up)
+        float scaleX, scaleY, scaleZ;
+        Color color;
+    };
+    std::vector<PreviewBodyPart> m_previewParts;
+
+    /// Preview palette (skin, hair, shirt, pants).
+    std::vector<Color> m_previewPalette;
 
     // ── Callbacks ───────────────────────────────────────────────────
     std::function<void()> m_playCb;

@@ -11,6 +11,13 @@ void EditorLayout::Draw() {
     DrawNode(m_root);
 }
 
+void EditorLayout::BroadcastAssetReload(const std::string& assetId,
+                                         const std::string& path) {
+    for (auto* panel : m_panels) {
+        if (panel) panel->OnAssetReloaded(assetId, path);
+    }
+}
+
 void EditorLayout::DrawNode(DockNode& node) {
     if (node.split == DockSplit::Tab) {
         if (!node.tabs.empty()) {

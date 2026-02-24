@@ -27,6 +27,7 @@ set(ATLAS_TEST_SOURCES
     test_generation_style.cpp
     test_viewport.cpp
     test_editor_panels.cpp
+    test_live_scene.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
@@ -34,6 +35,8 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/ShipArchetypePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GamePackagerPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/PCGOverrideStore.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/LiveSceneManager.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ECSInspectorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/NetInspectorPanel.cpp
