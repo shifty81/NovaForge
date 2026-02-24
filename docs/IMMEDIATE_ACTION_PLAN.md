@@ -1,4 +1,4 @@
-# EVE OFFLINE - Immediate Action Plan
+# Nova Forge - Immediate Action Plan
 
 **Date**: February 11, 2026  
 **Purpose**: Define concrete next steps following baseline system completion
@@ -326,7 +326,7 @@ The project is in excellent shape with all baseline systems complete. The next p
 
 **First Step**: Complete network interpolation (1-2 weeks)
 
-**Ultimate Goal**: Living, breathing EVE-style universe with player-driven economy
+**Ultimate Goal**: Living, breathing space simulation universe with player-driven economy
 
 ---
 

@@ -1,4 +1,4 @@
-# EVE OFFLINE - Project Status Summary (February 2026)
+# Nova Forge - Project Status Summary (February 2026)
 
 **Date**: February 11, 2026  
 **Status**: ✅ All Baseline Systems Complete - Ready for Advanced Features
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The EVE OFFLINE project has successfully completed all 27 baseline server systems with 100% test pass rate (832/832 assertions). The project features a comprehensive C++ ECS architecture with both dedicated server and OpenGL client, extensive game content (102 ships, 159+ modules, 137 skills), and robust CI/CD infrastructure.
+The Nova Forge project has successfully completed all 27 baseline server systems with 100% test pass rate (832/832 assertions). The project features a comprehensive C++ ECS architecture with both dedicated server and OpenGL client, extensive game content (102 ships, 159+ modules, 137 skills), and robust CI/CD infrastructure.
 
 **Key Achievement**: Zero security vulnerabilities, clean codebase, comprehensive documentation (161 markdown files).
 
@@ -322,7 +322,7 @@ Current missions are static, needs:
 
 ## Conclusion
 
-EVE OFFLINE has achieved a significant milestone with all baseline systems complete and tested. The project has a solid technical foundation with clean architecture, comprehensive content, and excellent documentation.
+Nova Forge has achieved a significant milestone with all baseline systems complete and tested. The project has a solid technical foundation with clean architecture, comprehensive content, and excellent documentation.
 
 The next phase focuses on **bringing the world to life** through:
 - AI economic actors creating a dynamic economy

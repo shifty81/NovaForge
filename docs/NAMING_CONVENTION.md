@@ -8,13 +8,13 @@
 ## Overview
 
 All UI framework classes, files, and identifiers have been renamed to use
-original names unique to the EVE OFFLINE project. Names that were
+original names unique to the Nova Forge project. Names that were
 previously pulled directly from EVE Online (Photon UI, Nexcom, etc.)
 have been replaced with project-specific alternatives.
 
 ## Naming Mapping
 
-| Old Name (EVE Online) | New Name (EVE OFFLINE) | Scope |
+| Old Name (EVE Online) | New Name (Nova Forge) | Scope |
 |----------------------|------------------------|-------|
 | `photon` namespace | `atlas` namespace | Namespace |
 | `PhotonContext` | `AtlasContext` | Class |
@@ -56,9 +56,9 @@ have been replaced with project-specific alternatives.
 4. **Color/theme structs**: Use generic terms (`SpaceColors`, `Theme`)
    rather than branded UI names.
 
-5. **The `eve` namespace** remains for the core game namespace, as the
-   project itself is titled "EVE OFFLINE".  Only UI component names
-   needed renaming.
+5. **Project namespace**: The core game uses the `eve` namespace for
+   historical/compatibility reasons, but new code should consider using
+   more generic namespaces where appropriate.
 
 ## Directory Structure (After Rename)
 

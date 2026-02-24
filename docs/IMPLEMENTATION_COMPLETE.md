@@ -512,4 +512,4 @@ EVE_MECHANICS.md
 
 ---
 
-*EVE OFFLINE - The EVE Online experience for small groups, now with complete gameplay loops!*
+*Nova Forge - The space simulation experience for small groups, now with complete gameplay loops!*

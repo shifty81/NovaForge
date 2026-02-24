@@ -1,7 +1,7 @@
 # Atlas Engine — Locked-In Development Roadmap
 
 > **Source of truth**: Derived from `features1.md` (canonical project bible).
-> This document defines the locked-in development path for EVE OFFLINE built on the Atlas Engine.
+> This document defines the locked-in development path for Nova Forge built on the Atlas Engine.
 > All new work must align with this roadmap. No feature ships unless it passes the design enforcement rules below.
 
 ---
