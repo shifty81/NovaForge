@@ -2830,6 +2830,54 @@ public:
     COMPONENT_TYPE(TurretAIState)
 };
 
+class Alliance : public ecs::Component {
+public:
+    std::string alliance_id;
+    std::string alliance_name;
+    std::string ticker;
+    std::string executor_corp_id;  // The corp that leads the alliance
+    std::vector<std::string> member_corp_ids;
+    double alliance_wallet = 0.0;
+    float tax_rate = 0.0f;
+    std::string founded_date;
+    bool is_open = false;  // Open for new applications
+    int max_corps = 100;
+    COMPONENT_TYPE(Alliance)
+};
+
+class Sovereignty : public ecs::Component {
+public:
+    std::string system_id;        // Star system this sovereignty covers
+    std::string owner_id;         // Alliance or corp entity that owns it
+    std::string system_name;
+    float control_level = 0.0f;   // 0.0 to 1.0 (contested to full control)
+    float vulnerability_timer = 0.0f; // hours until vulnerable
+    bool is_contested = false;
+    float strategic_index = 0.0f; // 0.0 to 5.0 based on activity
+    float military_index = 0.0f;  // 0.0 to 5.0 based on NPC kills
+    float industrial_index = 0.0f;// 0.0 to 5.0 based on mining/production
+    std::string infrastructure_hub_id;
+    int upgrade_level = 0;        // 0-5
+    COMPONENT_TYPE(Sovereignty)
+};
+
+class WarDeclaration : public ecs::Component {
+public:
+    std::string war_id;
+    std::string aggressor_id;     // Corp or alliance that declared war
+    std::string defender_id;      // Corp or alliance being attacked
+    std::string status = "pending"; // "pending", "active", "mutual", "surrendered", "retracted", "finished"
+    float duration_hours = 168.0f; // Default 1 week
+    float elapsed_hours = 0.0f;
+    double war_cost = 100000000.0; // ISK cost to declare war (100M)
+    int aggressor_kills = 0;
+    int defender_kills = 0;
+    double aggressor_isk_destroyed = 0.0;
+    double defender_isk_destroyed = 0.0;
+    bool is_mutual = false;
+    COMPONENT_TYPE(WarDeclaration)
+};
+
 } // namespace components
 } // namespace atlas
 

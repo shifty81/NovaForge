@@ -134,6 +134,9 @@
 #include "pcg/npc_encounter_generator.h"
 #include "pcg/star_system_generator.h"
 #include "pcg/galaxy_generator.h"
+#include "systems/alliance_system.h"
+#include "systems/sovereignty_system.h"
+#include "systems/war_declaration_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -17912,6 +17915,468 @@ void testTurretAIComponentDefaults() {
     assertTrue(turret.shots_fired == 0, "No shots by default");
 }
 
+// ========== Alliance System Tests ==========
+
+void testAllianceCreate() {
+    std::cout << "\n=== Alliance Create ===" << std::endl;
+    ecs::World world;
+    systems::AllianceSystem allianceSys(&world);
+
+    auto* corpEnt = world.createEntity("corp_alpha");
+    auto* corp = addComp<components::Corporation>(corpEnt);
+    corp->corp_id = "corp_alpha";
+    corp->corp_name = "Alpha Corp";
+
+    assertTrue(allianceSys.createAlliance("corp_alpha", "Test Alliance", "TSTA"),
+               "Alliance created");
+
+    auto* aEnt = world.getEntity("alliance_test_alliance");
+    assertTrue(aEnt != nullptr, "Alliance entity exists");
+
+    auto* a = aEnt->getComponent<components::Alliance>();
+    assertTrue(a != nullptr, "Alliance component exists");
+    assertTrue(a->executor_corp_id == "corp_alpha", "Executor is creator corp");
+    assertTrue(a->alliance_name == "Test Alliance", "Alliance name set");
+    assertTrue(a->ticker == "TSTA", "Ticker set");
+    assertTrue(a->member_corp_ids.size() == 1, "One member corp");
+}
+
+void testAllianceJoinCorp() {
+    std::cout << "\n=== Alliance Join Corp ===" << std::endl;
+    ecs::World world;
+    systems::AllianceSystem allianceSys(&world);
+
+    auto* c1 = world.createEntity("corp_a");
+    auto* corp1 = addComp<components::Corporation>(c1);
+    corp1->corp_id = "corp_a";
+
+    auto* c2 = world.createEntity("corp_b");
+    auto* corp2 = addComp<components::Corporation>(c2);
+    corp2->corp_id = "corp_b";
+
+    allianceSys.createAlliance("corp_a", "Join Alliance", "JNAL");
+
+    assertTrue(allianceSys.joinAlliance("corp_b", "alliance_join_alliance"),
+               "Corp B joins alliance");
+    assertTrue(allianceSys.getMemberCorpCount("alliance_join_alliance") == 2,
+               "Two member corps");
+    assertTrue(allianceSys.isCorpInAlliance("corp_b", "alliance_join_alliance"),
+               "Corp B is in alliance");
+    assertTrue(!allianceSys.joinAlliance("corp_b", "alliance_join_alliance"),
+               "Duplicate join rejected");
+}
+
+void testAllianceLeaveCorp() {
+    std::cout << "\n=== Alliance Leave Corp ===" << std::endl;
+    ecs::World world;
+    systems::AllianceSystem allianceSys(&world);
+
+    auto* c1 = world.createEntity("corp_a");
+    auto* corp1 = addComp<components::Corporation>(c1);
+    corp1->corp_id = "corp_a";
+
+    auto* c2 = world.createEntity("corp_b");
+    auto* corp2 = addComp<components::Corporation>(c2);
+    corp2->corp_id = "corp_b";
+
+    allianceSys.createAlliance("corp_a", "Leave Alliance", "LVAL");
+    allianceSys.joinAlliance("corp_b", "alliance_leave_alliance");
+
+    assertTrue(allianceSys.leaveAlliance("corp_b", "alliance_leave_alliance"),
+               "Corp B leaves alliance");
+    assertTrue(allianceSys.getMemberCorpCount("alliance_leave_alliance") == 1,
+               "One member corp after leave");
+    assertTrue(!allianceSys.isCorpInAlliance("corp_b", "alliance_leave_alliance"),
+               "Corp B no longer in alliance");
+}
+
+void testAllianceExecutorCannotLeave() {
+    std::cout << "\n=== Alliance Executor Cannot Leave ===" << std::endl;
+    ecs::World world;
+    systems::AllianceSystem allianceSys(&world);
+
+    auto* c1 = world.createEntity("corp_a");
+    auto* corp1 = addComp<components::Corporation>(c1);
+    corp1->corp_id = "corp_a";
+
+    allianceSys.createAlliance("corp_a", "Exec Alliance", "EXAL");
+
+    assertTrue(!allianceSys.leaveAlliance("corp_a", "alliance_exec_alliance"),
+               "Executor corp cannot leave");
+}
+
+void testAllianceSetExecutor() {
+    std::cout << "\n=== Alliance Set Executor ===" << std::endl;
+    ecs::World world;
+    systems::AllianceSystem allianceSys(&world);
+
+    auto* c1 = world.createEntity("corp_a");
+    auto* corp1 = addComp<components::Corporation>(c1);
+    corp1->corp_id = "corp_a";
+
+    auto* c2 = world.createEntity("corp_b");
+    auto* corp2 = addComp<components::Corporation>(c2);
+    corp2->corp_id = "corp_b";
+
+    allianceSys.createAlliance("corp_a", "Exec Change", "EXCH");
+    allianceSys.joinAlliance("corp_b", "alliance_exec_change");
+
+    // Non-executor cannot change executor
+    assertTrue(!allianceSys.setExecutor("alliance_exec_change", "corp_b", "corp_b"),
+               "Non-executor cannot change executor");
+
+    // Executor changes executor
+    assertTrue(allianceSys.setExecutor("alliance_exec_change", "corp_b", "corp_a"),
+               "Executor changed to corp_b");
+
+    auto* a = world.getEntity("alliance_exec_change")->getComponent<components::Alliance>();
+    assertTrue(a->executor_corp_id == "corp_b", "New executor is corp_b");
+}
+
+void testAllianceDisbandAlliance() {
+    std::cout << "\n=== Alliance Disband ===" << std::endl;
+    ecs::World world;
+    systems::AllianceSystem allianceSys(&world);
+
+    auto* c1 = world.createEntity("corp_a");
+    auto* corp1 = addComp<components::Corporation>(c1);
+    corp1->corp_id = "corp_a";
+
+    auto* c2 = world.createEntity("corp_b");
+    auto* corp2 = addComp<components::Corporation>(c2);
+    corp2->corp_id = "corp_b";
+
+    allianceSys.createAlliance("corp_a", "Disband Alliance", "DSBA");
+    allianceSys.joinAlliance("corp_b", "alliance_disband_alliance");
+
+    // Non-executor cannot disband
+    assertTrue(!allianceSys.disbandAlliance("alliance_disband_alliance", "corp_b"),
+               "Non-executor cannot disband");
+
+    assertTrue(allianceSys.disbandAlliance("alliance_disband_alliance", "corp_a"),
+               "Executor disbands alliance");
+    assertTrue(world.getEntity("alliance_disband_alliance") == nullptr,
+               "Alliance entity destroyed");
+}
+
+void testAllianceMaxCorps() {
+    std::cout << "\n=== Alliance Max Corps ===" << std::endl;
+    ecs::World world;
+    systems::AllianceSystem allianceSys(&world);
+
+    auto* c1 = world.createEntity("corp_founder");
+    auto* corp1 = addComp<components::Corporation>(c1);
+    corp1->corp_id = "corp_founder";
+
+    allianceSys.createAlliance("corp_founder", "Max Alliance", "MXAL");
+
+    // Set max_corps to 2 for testing
+    auto* a = world.getEntity("alliance_max_alliance")->getComponent<components::Alliance>();
+    a->max_corps = 2;
+
+    auto* c2 = world.createEntity("corp_two");
+    auto* corp2 = addComp<components::Corporation>(c2);
+    corp2->corp_id = "corp_two";
+
+    assertTrue(allianceSys.joinAlliance("corp_two", "alliance_max_alliance"),
+               "Second corp joins");
+
+    auto* c3 = world.createEntity("corp_three");
+    auto* corp3 = addComp<components::Corporation>(c3);
+    corp3->corp_id = "corp_three";
+
+    assertTrue(!allianceSys.joinAlliance("corp_three", "alliance_max_alliance"),
+               "Third corp rejected (max 2)");
+}
+
+// ========== Sovereignty System Tests ==========
+
+void testSovereigntyClaim() {
+    std::cout << "\n=== Sovereignty Claim ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    assertTrue(sovSys.claimSovereignty("system_alpha", "alliance_1", "Alpha System"),
+               "Sovereignty claimed");
+    assertTrue(sovSys.getOwner("system_alpha") == "alliance_1",
+               "Owner is alliance_1");
+    assertTrue(sovSys.getControlLevel("system_alpha") > 0.0f,
+               "Control level > 0");
+}
+
+void testSovereigntyRelinquish() {
+    std::cout << "\n=== Sovereignty Relinquish ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    sovSys.claimSovereignty("system_beta", "alliance_2", "Beta System");
+
+    assertTrue(!sovSys.relinquishSovereignty("system_beta", "wrong_owner"),
+               "Non-owner cannot relinquish");
+    assertTrue(sovSys.relinquishSovereignty("system_beta", "alliance_2"),
+               "Owner relinquishes");
+    assertTrue(sovSys.getOwner("system_beta").empty(),
+               "No owner after relinquish");
+}
+
+void testSovereigntyContest() {
+    std::cout << "\n=== Sovereignty Contest ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    sovSys.claimSovereignty("system_gamma", "alliance_3", "Gamma System");
+
+    assertTrue(sovSys.contestSovereignty("system_gamma"),
+               "System contested");
+
+    auto* sov = world.getEntity("system_gamma")->getComponent<components::Sovereignty>();
+    assertTrue(sov->is_contested, "System is contested");
+}
+
+void testSovereigntyUpdateIndices() {
+    std::cout << "\n=== Sovereignty Update Indices ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    sovSys.claimSovereignty("system_delta", "alliance_4", "Delta System");
+
+    assertTrue(sovSys.updateIndices("system_delta", 2.0f, 3.0f),
+               "Indices updated");
+
+    auto* sov = world.getEntity("system_delta")->getComponent<components::Sovereignty>();
+    assertTrue(approxEqual(sov->military_index, 2.0f), "Military index is 2.0");
+    assertTrue(approxEqual(sov->industrial_index, 3.0f), "Industrial index is 3.0");
+
+    // Clamp to max
+    sovSys.updateIndices("system_delta", 10.0f, 10.0f);
+    assertTrue(approxEqual(sov->military_index, 5.0f), "Military index clamped to 5.0");
+    assertTrue(approxEqual(sov->industrial_index, 5.0f), "Industrial index clamped to 5.0");
+}
+
+void testSovereigntyUpgrade() {
+    std::cout << "\n=== Sovereignty Upgrade ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    sovSys.claimSovereignty("system_eps", "alliance_5", "Epsilon System");
+
+    assertTrue(!sovSys.upgradeInfrastructure("system_eps", "wrong_owner"),
+               "Non-owner cannot upgrade");
+    assertTrue(sovSys.upgradeInfrastructure("system_eps", "alliance_5"),
+               "Owner upgrades infrastructure");
+
+    auto* sov = world.getEntity("system_eps")->getComponent<components::Sovereignty>();
+    assertTrue(sov->upgrade_level == 1, "Upgrade level is 1");
+}
+
+void testSovereigntyMaxUpgrade() {
+    std::cout << "\n=== Sovereignty Max Upgrade ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    sovSys.claimSovereignty("system_zeta", "alliance_6", "Zeta System");
+
+    for (int i = 0; i < 5; i++) {
+        assertTrue(sovSys.upgradeInfrastructure("system_zeta", "alliance_6"),
+                   "Upgrade succeeds");
+    }
+
+    assertTrue(!sovSys.upgradeInfrastructure("system_zeta", "alliance_6"),
+               "Cannot upgrade beyond 5");
+
+    auto* sov = world.getEntity("system_zeta")->getComponent<components::Sovereignty>();
+    assertTrue(sov->upgrade_level == 5, "Upgrade level capped at 5");
+}
+
+void testSovereigntyUpdateDecay() {
+    std::cout << "\n=== Sovereignty Update Decay ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    sovSys.claimSovereignty("system_eta", "alliance_7", "Eta System");
+
+    auto* sov = world.getEntity("system_eta")->getComponent<components::Sovereignty>();
+    sov->control_level = 0.5f;
+    sov->is_contested = true;
+    sov->military_index = 3.0f;
+    sov->industrial_index = 2.0f;
+
+    // Simulate 1 hour (3600 seconds)
+    sovSys.update(3600.0f);
+
+    assertTrue(sov->control_level < 0.5f, "Contested control level decayed");
+    assertTrue(sov->military_index < 3.0f, "Military index decayed");
+    assertTrue(sov->industrial_index < 2.0f, "Industrial index decayed");
+}
+
+void testSovereigntyCannotClaimOwned() {
+    std::cout << "\n=== Sovereignty Cannot Claim Owned ===" << std::endl;
+    ecs::World world;
+    systems::SovereigntySystem sovSys(&world);
+
+    sovSys.claimSovereignty("system_theta", "alliance_8", "Theta System");
+
+    assertTrue(!sovSys.claimSovereignty("system_theta", "alliance_9", "Theta System"),
+               "Cannot claim already-owned system");
+}
+
+// ========== War Declaration System Tests ==========
+
+void testWarDeclare() {
+    std::cout << "\n=== War Declare ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 500000000.0;
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+    assertTrue(!warId.empty(), "War declared successfully");
+    assertTrue(warSys.getWarStatus(warId) == "pending", "War status is pending");
+    assertTrue(approxEqual(aggPlayer->isk, 400000000.0), "ISK deducted");
+}
+
+void testWarActivate() {
+    std::cout << "\n=== War Activate ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 500000000.0;
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+    assertTrue(warSys.activateWar(warId), "War activated");
+    assertTrue(warSys.getWarStatus(warId) == "active", "War status is active");
+    assertTrue(!warSys.activateWar(warId), "Cannot activate already-active war");
+}
+
+void testWarMakeMutual() {
+    std::cout << "\n=== War Make Mutual ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 500000000.0;
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+    warSys.activateWar(warId);
+
+    assertTrue(!warSys.makeMutual(warId, "aggressor1"),
+               "Aggressor cannot make mutual");
+    assertTrue(warSys.makeMutual(warId, "defender1"),
+               "Defender makes war mutual");
+    assertTrue(warSys.getWarStatus(warId) == "mutual", "War status is mutual");
+}
+
+void testWarSurrender() {
+    std::cout << "\n=== War Surrender ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 500000000.0;
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+    warSys.activateWar(warId);
+
+    assertTrue(!warSys.surrender(warId, "aggressor1"),
+               "Aggressor cannot surrender");
+    assertTrue(warSys.surrender(warId, "defender1"),
+               "Defender surrenders");
+    assertTrue(warSys.getWarStatus(warId) == "surrendered", "War status is surrendered");
+}
+
+void testWarRetract() {
+    std::cout << "\n=== War Retract ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 500000000.0;
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+
+    assertTrue(!warSys.retractWar(warId, "defender1"),
+               "Defender cannot retract");
+    assertTrue(warSys.retractWar(warId, "aggressor1"),
+               "Aggressor retracts war");
+    assertTrue(warSys.getWarStatus(warId) == "retracted", "War status is retracted");
+}
+
+void testWarRecordKill() {
+    std::cout << "\n=== War Record Kill ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 500000000.0;
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+    warSys.activateWar(warId);
+
+    assertTrue(warSys.recordKill(warId, "aggressor", 50000000.0),
+               "Aggressor kill recorded");
+    assertTrue(warSys.recordKill(warId, "defender", 30000000.0),
+               "Defender kill recorded");
+
+    auto* war = world.getEntity(warId)->getComponent<components::WarDeclaration>();
+    assertTrue(war->aggressor_kills == 1, "Aggressor has 1 kill");
+    assertTrue(war->defender_kills == 1, "Defender has 1 kill");
+    assertTrue(approxEqual(war->aggressor_isk_destroyed, 50000000.0),
+               "Aggressor ISK destroyed correct");
+    assertTrue(approxEqual(war->defender_isk_destroyed, 30000000.0),
+               "Defender ISK destroyed correct");
+}
+
+void testWarAutoFinish() {
+    std::cout << "\n=== War Auto Finish ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 500000000.0;
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+    warSys.activateWar(warId);
+
+    auto* war = world.getEntity(warId)->getComponent<components::WarDeclaration>();
+    war->duration_hours = 1.0f; // 1 hour for testing
+
+    // Simulate 2 hours (7200 seconds)
+    warSys.update(7200.0f);
+
+    assertTrue(warSys.getWarStatus(warId) == "finished", "War auto-finished after duration");
+}
+
+void testWarInsufficientFunds() {
+    std::cout << "\n=== War Insufficient Funds ===" << std::endl;
+    ecs::World world;
+    systems::WarDeclarationSystem warSys(&world);
+
+    auto* aggEnt = world.createEntity("aggressor1");
+    auto* aggPlayer = addComp<components::Player>(aggEnt);
+    aggPlayer->player_id = "aggressor1";
+    aggPlayer->isk = 50000000.0; // Only 50M, need 100M
+
+    std::string warId = warSys.declareWar("aggressor1", "defender1", 100000000.0);
+    assertTrue(warId.empty(), "War declaration failed - insufficient funds");
+    assertTrue(approxEqual(aggPlayer->isk, 50000000.0), "ISK not deducted on failure");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -17951,7 +18416,8 @@ int main() {
     std::cout << "Menu, Crew, SalvageExploration, InteriorExterior, Race, Lore, MarketOrder," << std::endl;
     std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)," << std::endl;
     std::cout << "SpineHullGenerator, TerrainGenerator, TurretPlacementSystem," << std::endl;
-    std::cout << "AIEconomicActor, TurretAI" << std::endl;
+    std::cout << "AIEconomicActor, TurretAI," << std::endl;
+    std::cout << "Alliance, Sovereignty, WarDeclaration" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -19160,6 +19626,35 @@ int main() {
     testCharacterReferenceMeshArchive();
     testCharacterUniformScale();
     testCharacterMorphWeights();
+
+    // Alliance tests
+    testAllianceCreate();
+    testAllianceJoinCorp();
+    testAllianceLeaveCorp();
+    testAllianceExecutorCannotLeave();
+    testAllianceSetExecutor();
+    testAllianceDisbandAlliance();
+    testAllianceMaxCorps();
+
+    // Sovereignty tests
+    testSovereigntyClaim();
+    testSovereigntyRelinquish();
+    testSovereigntyContest();
+    testSovereigntyUpdateIndices();
+    testSovereigntyUpgrade();
+    testSovereigntyMaxUpgrade();
+    testSovereigntyUpdateDecay();
+    testSovereigntyCannotClaimOwned();
+
+    // War Declaration tests
+    testWarDeclare();
+    testWarActivate();
+    testWarMakeMutual();
+    testWarSurrender();
+    testWarRetract();
+    testWarRecordKill();
+    testWarAutoFinish();
+    testWarInsufficientFunds();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
