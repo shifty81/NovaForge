@@ -2,6 +2,7 @@
 #include "../ui/EditorPanel.h"
 #include "../../cpp_server/include/pcg/ship_archetype.h"
 #include "../../cpp_server/include/pcg/pcg_manager.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 #include <vector>
 
@@ -163,6 +164,10 @@ private:
     pcg::ArchetypeVariant   m_preview;
     bool                    m_hasPreview = false;
     std::vector<std::string> m_log;
+
+    atlas::PanelState m_panelState;
+    bool m_hullDropdownOpen = false;
+    float m_scrollOffset = 0.0f;
 
     void log(const std::string& msg);
 };

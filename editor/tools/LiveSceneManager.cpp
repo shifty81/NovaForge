@@ -13,9 +13,69 @@ LiveSceneManager::LiveSceneManager(ViewportPanel* viewport,
 // ── Draw (stub — real UI rendered via the editor dock layout) ────
 
 void LiveSceneManager::Draw() {
-    // The LiveSceneManager's Draw() is a no-op — it is a background
-    // coordinator.  Its state (unsaved changes, override count) can be
-    // queried by the Console panel or displayed in the status bar.
+    // The LiveSceneManager's Draw() is a no-op when headless.
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "Live Scene", m_panelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+
+    // Scene status
+    atlas::label(ctx, {b.x + pad, y},
+        m_populated ? "Scene: Populated" : "Scene: Not populated",
+        m_populated ? ctx.theme().success : ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Seed and version
+    atlas::label(ctx, {b.x + pad, y},
+        "Seed: " + std::to_string(m_seed) + "  Version: " + std::to_string(m_version),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Object count from viewport
+    size_t objCount = m_viewport ? m_viewport->ObjectCount() : 0;
+    atlas::label(ctx, {b.x + pad, y},
+        "Objects: " + std::to_string(objCount), ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Unsaved changes indicator
+    if (m_overrides.IsDirty()) {
+        atlas::label(ctx, {b.x + pad, y}, "* Unsaved changes", ctx.theme().warning);
+        y += rowH + pad;
+    }
+
+    // Save / Load Overrides buttons
+    const float btnW = 130.0f;
+    if (atlas::button(ctx, "Save Overrides", {b.x + pad, y, btnW, rowH + pad})) {
+        SaveOverrides();
+    }
+    if (atlas::button(ctx, "Load Overrides", {b.x + 2.0f * pad + btnW, y, btnW, rowH + pad})) {
+        LoadOverrides();
+    }
+    y += rowH + pad + pad;
+
+    // Regenerate button
+    if (atlas::button(ctx, "Regenerate", {b.x + pad, y, 100.0f, rowH + pad})) {
+        RegenerateScene();
+    }
+    y += rowH + pad + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Log area
+    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
+
+    atlas::panelEnd(ctx);
 }
 
 void LiveSceneManager::OnAssetReloaded(const std::string& assetId,

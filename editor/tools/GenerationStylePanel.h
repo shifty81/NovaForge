@@ -3,6 +3,7 @@
 #include "../../cpp_server/include/pcg/generation_style.h"
 #include "../../cpp_server/include/pcg/pcg_asset_style.h"
 #include "../../cpp_server/include/pcg/pcg_manager.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 #include <vector>
 
@@ -102,6 +103,9 @@ private:
     pcg::PCGManager              m_pcgManager;
     pcg::StyleGenerationResult   m_result;
     std::vector<std::string>     m_log;
+
+    atlas::PanelState m_panelState;
+    float m_scrollOffset = 0.0f;
 
     void log(const std::string& msg);
 };

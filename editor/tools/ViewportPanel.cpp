@@ -11,8 +11,76 @@ ViewportPanel::ViewportPanel() {
 }
 
 void ViewportPanel::Draw() {
-    // Stub: real rendering handled by the host windowing system (OpenGL/Vulkan).
     // In headless / test mode this is a no-op.
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "Viewport", m_viewportPanelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_viewportPanelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+
+    // Object count
+    atlas::label(ctx, {b.x + pad, y},
+        "Objects: " + std::to_string(m_objects.size()), ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Gizmo mode toolbar
+    const float btnW = 80.0f;
+    if (atlas::button(ctx, "Translate", {b.x + pad, y, btnW, rowH + pad})) {
+        m_gizmoMode = GizmoMode::Translate;
+    }
+    if (atlas::button(ctx, "Rotate", {b.x + pad + btnW + pad, y, btnW, rowH + pad})) {
+        m_gizmoMode = GizmoMode::Rotate;
+    }
+    if (atlas::button(ctx, "Scale", {b.x + pad + 2.0f * (btnW + pad), y, btnW, rowH + pad})) {
+        m_gizmoMode = GizmoMode::Scale;
+    }
+    y += rowH + pad + pad;
+
+    // Grid toggle
+    atlas::checkbox(ctx, "Show Grid", {b.x + pad, y, b.w - 2.0f * pad, rowH + pad}, &m_gridVisible);
+    y += rowH + pad + pad;
+
+    // Camera distance slider
+    atlas::slider(ctx, "Camera Dist", {b.x + pad, y, b.w - 2.0f * pad, rowH + pad},
+                  &m_cameraDistance, 10.0f, 5000.0f, "%.0f");
+    y += rowH + pad + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Object list
+    for (auto& obj : m_objects) {
+        if (y + rowH > b.y + b.h - 2.0f * (rowH + pad) - pad) break;
+        std::string objLabel = obj.name + " [" + obj.type + "]";
+        if (obj.selected) objLabel = "> " + objLabel;
+        atlas::Rect row{b.x + pad, y, b.w - 2.0f * pad, rowH};
+        if (atlas::button(ctx, objLabel.c_str(), row)) {
+            SelectObject(obj.id);
+        }
+        y += rowH + pad;
+    }
+
+    // Commit / Discard buttons (when pending changes)
+    if (!m_pendingChanges.empty()) {
+        float bottomY = b.y + b.h - rowH - 2.0f * pad;
+        float halfW = (b.w - 3.0f * pad) * 0.5f;
+        if (atlas::button(ctx, "Commit Changes", {b.x + pad, bottomY, halfW, rowH + pad})) {
+            CommitChanges();
+        }
+        if (atlas::button(ctx, "Discard Changes", {b.x + 2.0f * pad + halfW, bottomY, halfW, rowH + pad})) {
+            DiscardChanges();
+        }
+    }
+
+    atlas::panelEnd(ctx);
 }
 
 // ── Scene management ──────────────────────────────────────────────

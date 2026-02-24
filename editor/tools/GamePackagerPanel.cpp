@@ -4,6 +4,68 @@ namespace atlas::editor {
 
 void GamePackagerPanel::Draw() {
     // Headless: state tracking only
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "Game Packager", m_panelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+    float scrollOff = 0.0f;
+
+    // Build target / mode labels
+    atlas::label(ctx, {b.x + pad, y},
+        "Target: " + TargetToString(m_settings.target), ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    atlas::label(ctx, {b.x + pad, y},
+        "Mode: " + ModeToString(m_settings.mode), ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Output path
+    atlas::label(ctx, {b.x + pad, y},
+        "Output: " + m_settings.outputPath, ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Progress bar
+    atlas::Rect progRect{b.x + pad, y, b.w - 2.0f * pad, rowH + pad};
+    std::string progLabel = StepToString(m_status.currentStep)
+        + " " + std::to_string(static_cast<int>(m_status.progress * 100.0f)) + "%";
+    atlas::progressBar(ctx, progRect, m_status.progress,
+                       ctx.theme().accentPrimary, progLabel.c_str());
+    y += rowH + pad + pad;
+
+    // Start / Cancel buttons
+    const float btnW = 100.0f;
+    if (!IsPackaging()) {
+        if (atlas::button(ctx, "Start Package", {b.x + pad, y, btnW + 20.0f, rowH + pad})) {
+            StartPackage();
+        }
+    } else {
+        if (atlas::button(ctx, "Cancel", {b.x + pad, y, btnW, rowH + pad})) {
+            CancelPackage();
+        }
+    }
+    y += rowH + pad + pad;
+
+    // Status step label
+    atlas::label(ctx, {b.x + pad, y}, m_status.statusMessage, ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Log area
+    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::combatLogWidget(ctx, logRect, m_status.log, scrollOff);
+
+    atlas::panelEnd(ctx);
 }
 
 void GamePackagerPanel::SetSettings(const PackageSettings& s) {

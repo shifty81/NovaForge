@@ -3,6 +3,7 @@
 #include "ViewportPanel.h"
 #include "PCGPreviewPanel.h"
 #include "PCGOverrideStore.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 #include <vector>
 
@@ -99,6 +100,9 @@ private:
     uint32_t m_version   = 1;
 
     std::vector<std::string> m_log;
+
+    atlas::PanelState m_panelState;
+    float m_scrollOffset = 0.0f;
 
     /** Apply stored overrides to matching viewport objects. */
     void applyOverridesToViewport();

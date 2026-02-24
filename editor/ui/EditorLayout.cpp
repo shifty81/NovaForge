@@ -7,6 +7,12 @@ void EditorLayout::RegisterPanel(EditorPanel* panel) {
     m_panels.push_back(panel);
 }
 
+void EditorLayout::SetContext(atlas::AtlasContext* ctx) {
+    for (auto* panel : m_panels) {
+        if (panel) panel->SetContext(ctx);
+    }
+}
+
 void EditorLayout::Draw() {
     DrawNode(m_root);
 }

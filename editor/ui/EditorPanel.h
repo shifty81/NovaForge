@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 
+namespace atlas { class AtlasContext; }
+
 namespace atlas::editor {
 
 class EditorPanel {
@@ -10,6 +12,12 @@ public:
     virtual void Draw() = 0;
     virtual bool IsVisible() const { return m_visible; }
     virtual void SetVisible(bool visible) { m_visible = visible; }
+
+    /** Set the UI context used for rendering.  Null in headless/test mode. */
+    void SetContext(atlas::AtlasContext* ctx) { m_ctx = ctx; }
+
+    /** Get the UI context (may be null). */
+    atlas::AtlasContext* GetContext() const { return m_ctx; }
 
     /**
      * Called by the editor when a watched asset or data file changes on disk.
@@ -25,6 +33,7 @@ public:
 
 private:
     bool m_visible = true;
+    atlas::AtlasContext* m_ctx = nullptr;
 };
 
 }

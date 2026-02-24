@@ -16,6 +16,61 @@ void NetInspectorPanel::Draw() {
             m_selectedPeer = 0;
         }
     }
+
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "Network", m_panelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+
+    // Network mode
+    atlas::label(ctx, {b.x + pad, y}, "Mode: " + stats.modeString, ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Connected peers
+    atlas::label(ctx, {b.x + pad, y}, "Peers: " + std::to_string(stats.connectedPeerCount), ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // RTT stats
+    atlas::label(ctx, {b.x + pad, y},
+        "Avg RTT: " + std::to_string(static_cast<int>(stats.avgRTT)) + " ms"
+        + "  Max RTT: " + std::to_string(static_cast<int>(stats.maxRTT)) + " ms",
+        ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Peer list
+    auto& peers = m_net.Peers();
+    for (auto& p : peers) {
+        if (!p.connected) continue;
+        std::string peerLabel = "Peer " + std::to_string(p.id)
+            + " (RTT: " + std::to_string(static_cast<int>(p.rtt)) + " ms)";
+        atlas::Rect row{b.x + pad, y, b.w - 2.0f * pad, rowH};
+        if (atlas::button(ctx, peerLabel.c_str(), row)) {
+            m_selectedPeer = p.id;
+        }
+        y += rowH + pad;
+    }
+
+    // Clear selection button
+    if (m_selectedPeer != 0) {
+        atlas::Rect clearBtn{b.x + pad, y, 120.0f, rowH + pad};
+        if (atlas::button(ctx, "Clear Selection", clearBtn)) {
+            m_selectedPeer = 0;
+        }
+    }
+
+    atlas::panelEnd(ctx);
 }
 
 std::string NetInspectorPanel::ModeToString(net::NetMode mode) {

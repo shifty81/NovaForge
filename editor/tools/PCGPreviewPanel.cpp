@@ -39,13 +39,58 @@ PCGPreviewPanel::PCGPreviewPanel() {
 // ── Draw (stub – real UI rendered via Atlas UI in editor) ───────────
 
 void PCGPreviewPanel::Draw() {
-    // Stub: In a real implementation, this would render via Atlas UI:
-    //   • Mode selector (Ship / Station / Interior)
-    //   • Seed input field + Randomize button
-    //   • Domain-specific parameter widgets
-    //   • Generate button
-    //   • Preview area showing the generated result
-    //   • Log output
+    // In headless / test mode this is a no-op.
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "PCG Preview", m_panelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+
+    // Mode selector
+    static const std::vector<std::string> modeItems = {
+        "Ship", "Station", "Interior", "Character", "SpineHull", "TurretPlacement"
+    };
+    int modeIdx = static_cast<int>(m_settings.mode);
+    atlas::Rect comboRect{b.x + pad, y, b.w - 2.0f * pad, rowH + pad};
+    if (atlas::comboBox(ctx, "Mode", comboRect, modeItems, &modeIdx, &m_modeDropdownOpen)) {
+        m_settings.mode = static_cast<PCGPreviewMode>(modeIdx);
+    }
+    y += rowH + pad + pad;
+
+    // Seed label
+    atlas::label(ctx, {b.x + pad, y},
+        "Seed: " + std::to_string(m_settings.seed), ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Randomize button
+    const float btnW = 100.0f;
+    if (atlas::button(ctx, "Randomize", {b.x + pad, y, btnW, rowH + pad})) {
+        Randomize();
+    }
+    y += rowH + pad + pad;
+
+    // Generate button
+    if (atlas::button(ctx, "Generate", {b.x + pad, y, btnW, rowH + pad})) {
+        Generate();
+    }
+    y += rowH + pad + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Log area
+    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
+
+    atlas::panelEnd(ctx);
 }
 
 // ── Generation ──────────────────────────────────────────────────────

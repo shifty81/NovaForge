@@ -1,6 +1,7 @@
 #pragma once
 #include "../ui/EditorPanel.h"
 #include "../../engine/net/NetContext.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 
 namespace atlas::editor {
@@ -29,6 +30,7 @@ public:
 private:
     net::NetContext& m_net;
     uint32_t m_selectedPeer = 0;
+    atlas::PanelState m_panelState;
 };
 
 }

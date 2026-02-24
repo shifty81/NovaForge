@@ -17,15 +17,63 @@ AssetStylePanel::AssetStylePanel() {
 // ── Draw (stub) ────────────────────────────────────────────────────
 
 void AssetStylePanel::Draw() {
-    // Stub: In a real implementation, this would render via Atlas UI:
-    //   • Style name + target type selector
-    //   • Shape profile editor (3D control point gizmos)
-    //   • Palette editor (color pickers, material sliders)
-    //   • Surface treatment dropdown
-    //   • Detail level slider
-    //   • Preview viewport showing the modified asset
-    //   • Save to Library / Load from Library buttons
-    //   • Log output
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "Asset Style", m_panelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+
+    // Style name
+    atlas::label(ctx, {b.x + pad, y}, "Style: " + m_currentStyle.name, ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Control point count
+    atlas::label(ctx, {b.x + pad, y},
+        "Control Points: " + std::to_string(m_currentStyle.shape.controlPoints.size()),
+        ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Color count
+    atlas::label(ctx, {b.x + pad, y},
+        "Colors: " + std::to_string(m_currentStyle.palette.colors.size()),
+        ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Material count
+    atlas::label(ctx, {b.x + pad, y},
+        "Materials: " + std::to_string(m_currentStyle.palette.materials.size()),
+        ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Apply & Preview button
+    const float btnW = 130.0f;
+    if (atlas::button(ctx, "Apply & Preview", {b.x + pad, y, btnW, rowH + pad})) {
+        ApplyAndPreview();
+    }
+    y += rowH + pad + pad;
+
+    // Save to Library button
+    if (atlas::button(ctx, "Save to Library", {b.x + pad, y, btnW, rowH + pad})) {
+        SaveToLibrary();
+    }
+    y += rowH + pad + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Log area
+    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
+
+    atlas::panelEnd(ctx);
 }
 
 // ── Style management ───────────────────────────────────────────────

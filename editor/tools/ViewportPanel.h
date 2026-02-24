@@ -4,6 +4,7 @@
 #include "../../cpp_server/include/pcg/pcg_manager.h"
 #include "../../cpp_server/include/pcg/ship_generator.h"
 #include "../../cpp_server/include/pcg/station_generator.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <vector>
 #include <string>
 #include <cmath>
@@ -201,6 +202,8 @@ private:
     std::vector<std::pair<uint32_t, ViewportTransform>> m_originalTransforms;
 
     static const ViewportTransform s_defaultTransform;
+
+    atlas::PanelState m_viewportPanelState;
 };
 
 } // namespace atlas::editor

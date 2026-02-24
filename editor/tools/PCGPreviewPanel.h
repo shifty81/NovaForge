@@ -8,6 +8,7 @@
 #include "../../cpp_server/include/pcg/lowpoly_character_generator.h"
 #include "../../cpp_server/include/pcg/spine_hull_generator.h"
 #include "../../cpp_server/include/pcg/turret_placement_system.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -146,6 +147,10 @@ private:
     TurretPlacementPreview  m_turretPlacementPreview;
 
     std::vector<std::string> m_log;
+
+    atlas::PanelState m_panelState;
+    bool m_modeDropdownOpen = false;
+    float m_scrollOffset = 0.0f;
 
     void generateShip();
     void generateStation();

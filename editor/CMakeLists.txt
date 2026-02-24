@@ -28,9 +28,14 @@ add_executable(AtlasEditor
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/spine_hull_generator.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_placement_system.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_generator.cpp
+    # Atlas UI sources used by editor panels
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
 )
 
 target_link_libraries(AtlasEditor AtlasEngine)
 target_include_directories(AtlasEditor PRIVATE
     ${CMAKE_SOURCE_DIR}/cpp_server/include
+    ${CMAKE_SOURCE_DIR}/cpp_client/include
 )

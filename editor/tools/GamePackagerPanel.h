@@ -1,5 +1,6 @@
 #pragma once
 #include "../ui/EditorPanel.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 #include <vector>
 
@@ -63,6 +64,7 @@ public:
 private:
     PackageSettings m_settings;
     PackageStatus m_status;
+    atlas::PanelState m_panelState;
 };
 
 }

@@ -3,6 +3,7 @@
 #include "../../engine/ecs/ECS.h"
 #include "../../engine/net/NetContext.h"
 #include "../../engine/sim/TickScheduler.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -28,6 +29,10 @@ private:
     ecs::World& m_world;
     net::NetContext& m_net;
     sim::TickScheduler& m_scheduler;
+
+    atlas::PanelState     m_panelState;
+    atlas::TextInputState m_inputState;
+    float                 m_scrollOffset = 0.0f;
 };
 
 }

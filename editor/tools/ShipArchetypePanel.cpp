@@ -15,18 +15,71 @@ ShipArchetypePanel::ShipArchetypePanel() {
 // ── Draw (stub) ────────────────────────────────────────────────────
 
 void ShipArchetypePanel::Draw() {
-    // Stub: In a real implementation this renders via Atlas UI:
-    //   • Hull class selector dropdown
-    //   • 3D viewport with hull shape control point gizmos
-    //   • Interior room editor (drag rooms into position)
-    //   • Door placement tool (click between rooms)
-    //   • Hardpoint editor (place turret/launcher mounts)
-    //   • Subsystem slot editor with variant configuration
-    //   • Module visual rule editor
-    //   • PCG variation sliders
-    //   • Generate Preview button
-    //   • Save / Load buttons
-    //   • Log output
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "Ship Archetype", m_panelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+
+    // Hull class label
+    atlas::label(ctx, {b.x + pad, y},
+        "Hull: " + pcg::ShipGenerator::hullClassName(m_archetype.hullClass),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Room count
+    atlas::label(ctx, {b.x + pad, y},
+        "Rooms: " + std::to_string(m_archetype.rooms.size()), ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Door count
+    atlas::label(ctx, {b.x + pad, y},
+        "Doors: " + std::to_string(m_archetype.doors.size()), ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Hardpoint count
+    atlas::label(ctx, {b.x + pad, y},
+        "Hardpoints: " + std::to_string(m_archetype.hardpoints.size()), ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Subsystem count
+    atlas::label(ctx, {b.x + pad, y},
+        "Subsystems: " + std::to_string(m_archetype.subsystems.size()), ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Generate Preview button
+    const float btnW = 130.0f;
+    if (atlas::button(ctx, "Generate Preview", {b.x + pad, y, btnW, rowH + pad})) {
+        GeneratePreview();
+    }
+    y += rowH + pad + pad;
+
+    // Save / Load buttons
+    float halfW = (b.w - 3.0f * pad) * 0.5f;
+    if (atlas::button(ctx, "Save", {b.x + pad, y, halfW, rowH + pad})) {
+        SaveToString();
+    }
+    if (atlas::button(ctx, "Load", {b.x + 2.0f * pad + halfW, y, halfW, rowH + pad})) {
+        // Load would require external data; placeholder
+    }
+    y += rowH + pad + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Log area
+    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
+
+    atlas::panelEnd(ctx);
 }
 
 // ── Hull class selection ───────────────────────────────────────────

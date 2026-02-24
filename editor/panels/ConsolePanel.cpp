@@ -4,8 +4,49 @@
 namespace atlas::editor {
 
 void ConsolePanel::Draw() {
-    // Stub: In a real implementation, this would render via Atlas UI
-    // Display history, input field, execute button
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!panelBeginStateful(ctx, "Console", m_panelState))
+    {
+        panelEnd(ctx);
+        return;
+    }
+
+    const float pad    = ctx.theme().padding;
+    const float rowH   = ctx.theme().rowHeight;
+    const Rect& b      = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+
+    // Layout constants
+    const float inputH   = rowH + pad;
+    const float buttonW  = 60.0f;
+    const float bottomY  = b.y + b.h - pad - inputH;
+
+    // History area (below header, above input row)
+    Rect logRect{b.x + pad, b.y + headerH + pad,
+                 b.w - 2.0f * pad,
+                 bottomY - (b.y + headerH + pad) - pad};
+    combatLogWidget(ctx, logRect, m_history, m_scrollOffset);
+
+    // Text input field (bottom-left, leaving room for button)
+    Rect inputRect{b.x + pad, bottomY,
+                   b.w - 3.0f * pad - buttonW, inputH};
+    bool submitted = textInput(ctx, "##console_input", inputRect,
+                               m_inputState, "Enter command...");
+
+    // Execute button (bottom-right)
+    Rect btnRect{inputRect.x + inputRect.w + pad, bottomY,
+                 buttonW, inputH};
+    bool clicked = button(ctx, "Execute", btnRect);
+
+    if ((submitted || clicked) && !m_inputState.text.empty()) {
+        Execute(m_inputState.text);
+        m_inputState.text.clear();
+        m_inputState.cursorPos = 0;
+    }
+
+    panelEnd(ctx);
 }
 
 void ConsolePanel::AddLine(const std::string& line) {

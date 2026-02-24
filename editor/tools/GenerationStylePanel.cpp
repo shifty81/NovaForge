@@ -15,14 +15,59 @@ GenerationStylePanel::GenerationStylePanel() {
 // ── Draw (stub — real UI via Atlas UI) ─────────────────────────────
 
 void GenerationStylePanel::Draw() {
-    // Stub: In a real implementation, this would render via Atlas UI:
-    //   • Style type selector
-    //   • Placement list with add/remove controls
-    //   • Parameter sliders with enable/disable toggles
-    //   • Asset style attachment button
-    //   • Generate button + preview area
-    //   • Save / Load buttons
-    //   • Log output
+    if (!GetContext()) return;
+
+    auto& ctx = *GetContext();
+    if (!atlas::panelBeginStateful(ctx, "Generation Style", m_panelState)) {
+        atlas::panelEnd(ctx);
+        return;
+    }
+
+    const float pad     = ctx.theme().padding;
+    const float rowH    = ctx.theme().rowHeight;
+    const atlas::Rect& b = m_panelState.bounds;
+    const float headerH = ctx.theme().headerHeight;
+    float y = b.y + headerH + pad;
+
+    // Style name
+    atlas::label(ctx, {b.x + pad, y}, "Style: " + m_style.name, ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    // Placement count
+    atlas::label(ctx, {b.x + pad, y},
+        "Placements: " + std::to_string(m_style.placements.size()), ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Parameter count
+    atlas::label(ctx, {b.x + pad, y},
+        "Parameters: " + std::to_string(m_style.parameters.size()), ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Generate button
+    const float btnW = 100.0f;
+    if (atlas::button(ctx, "Generate", {b.x + pad, y, btnW, rowH + pad})) {
+        Generate();
+    }
+    y += rowH + pad + pad;
+
+    // Save / Load buttons
+    float halfW = (b.w - 3.0f * pad) * 0.5f;
+    if (atlas::button(ctx, "Save", {b.x + pad, y, halfW, rowH + pad})) {
+        SaveStyleToString();
+    }
+    if (atlas::button(ctx, "Load", {b.x + 2.0f * pad + halfW, y, halfW, rowH + pad})) {
+        // Load would require external data; log placeholder action
+    }
+    y += rowH + pad + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    y += pad;
+
+    // Log area
+    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
+
+    atlas::panelEnd(ctx);
 }
 
 // ── Style management ───────────────────────────────────────────────
