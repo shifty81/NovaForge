@@ -2773,6 +2773,63 @@ public:
     COMPONENT_TYPE(AIFleetDispatch)
 };
 
+// ==================== Living Universe: AI Economic Actors ====================
+
+/**
+ * @brief Makes NPCs real economic participants with wallets, ship ownership,
+ *        and permanent death.
+ *
+ * NPCs are no longer disposable spawns — they own ships, earn and spend ISK,
+ * and permanently die if they cannot afford a replacement hull.
+ */
+class AIEconomicActor : public ecs::Component {
+public:
+    std::string owned_ship_type;        // e.g. "Rifter", "Caracal"
+    double ship_value = 0.0;            // estimated hull ISK value
+    double repair_cost_ratio = 0.15;    // fraction of ship_value for repairs
+    bool is_destroyed = false;          // ship currently destroyed
+    bool permanently_dead = false;      // cannot afford replacement — removed from sim
+    int destruction_count = 0;          // total times destroyed
+    int replacement_count = 0;          // total times replaced ship
+    float time_alive = 0.0f;           // seconds since last respawn / spawn
+
+    bool canAffordReplacement(double wallet) const {
+        return wallet >= ship_value;
+    }
+
+    COMPONENT_TYPE(AIEconomicActor)
+};
+
+// ==================== Phase 15: Turret AI + Firing Arcs ====================
+
+/**
+ * @brief Per-turret state for automated targeting within arc constraints.
+ *
+ * Attached to ship/station entities with turrets. Each TurretAIState
+ * represents one turret's targeting and firing state.
+ */
+class TurretAIState : public ecs::Component {
+public:
+    // Turret configuration (from TurretPlacement/TurretGenerator)
+    uint32_t turret_index = 0;
+    float arc_degrees = 90.0f;         // total firing arc width
+    float direction_deg = 0.0f;        // turret facing direction (ship-relative)
+    float tracking_speed = 1.0f;       // rad/s — how fast turret can track
+    float base_damage = 10.0f;
+    float rate_of_fire = 1.0f;         // shots per second
+    float optimal_range = 100.0f;      // for future range-based damage falloff
+
+    // Runtime state
+    std::string target_entity_id;       // currently targeted entity
+    float cooldown_remaining = 0.0f;   // seconds until next shot
+    float angular_velocity = 0.0f;     // target's angular velocity (rad/s)
+    bool engaged = false;               // currently firing
+    int shots_fired = 0;
+    float total_damage_dealt = 0.0f;
+
+    COMPONENT_TYPE(TurretAIState)
+};
+
 } // namespace components
 } // namespace atlas
 

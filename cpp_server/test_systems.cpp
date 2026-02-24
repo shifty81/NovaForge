@@ -95,6 +95,8 @@
 #include "systems/crew_system.h"
 #include "systems/salvage_exploration_system.h"
 #include "systems/market_order_system.h"
+#include "systems/ai_economic_actor_system.h"
+#include "systems/turret_ai_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -16917,6 +16919,302 @@ void testEconomyStateNames() {
     assertTrue(pcg::EconomyDrivenGenerator::shipRoleName(pcg::EconomyShipRole::Pirate) == "Pirate", "Pirate role name");
 }
 
+// ==================== AI Economic Actor System tests ====================
+
+void testAIEconomicActorDefaults() {
+    std::cout << "\n=== AI Economic Actor Defaults ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    auto* entity = world.createEntity("npc_trader_1");
+    auto* actor = addComp<components::AIEconomicActor>(entity);
+    auto* intent = addComp<components::SimNPCIntent>(entity);
+
+    assertTrue(actor->owned_ship_type.empty(), "Ship type empty by default");
+    assertTrue(actor->ship_value == 0.0, "Ship value starts at 0");
+    assertTrue(!actor->is_destroyed, "Not destroyed by default");
+    assertTrue(!actor->permanently_dead, "Not permanently dead by default");
+    assertTrue(actor->destruction_count == 0, "No destructions");
+    assertTrue(actor->replacement_count == 0, "No replacements");
+    assertTrue(approxEqual(actor->time_alive, 0.0f), "Time alive starts at 0");
+    assertTrue(intent->wallet == 10000.0, "Wallet default ISK");
+}
+
+void testAIEconomicActorEarnSpend() {
+    std::cout << "\n=== AI Economic Actor Earn/Spend ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::AIEconomicActorSystem sys(&world);
+
+    auto* entity = world.createEntity("npc_miner_1");
+    addComp<components::AIEconomicActor>(entity);
+    auto* intent = addComp<components::SimNPCIntent>(entity);
+    intent->wallet = 5000.0;
+
+    sys.earnISK("npc_miner_1", 3000.0);
+    assertTrue(intent->wallet == 8000.0, "Earned 3000 ISK");
+
+    bool spent = sys.spendISK("npc_miner_1", 2000.0);
+    assertTrue(spent, "Spend succeeds with sufficient funds");
+    assertTrue(intent->wallet == 6000.0, "Wallet after spend");
+
+    bool fail = sys.spendISK("npc_miner_1", 99999.0);
+    assertTrue(!fail, "Spend fails with insufficient funds");
+    assertTrue(intent->wallet == 6000.0, "Wallet unchanged after failed spend");
+}
+
+void testAIEconomicActorShipDestruction() {
+    std::cout << "\n=== AI Economic Actor Ship Destruction ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::AIEconomicActorSystem sys(&world);
+
+    auto* entity = world.createEntity("npc_hauler_1");
+    auto* actor = addComp<components::AIEconomicActor>(entity);
+    auto* intent = addComp<components::SimNPCIntent>(entity);
+    actor->owned_ship_type = "Badger";
+    actor->ship_value = 5000.0;
+    intent->wallet = 12000.0;
+
+    // Destroy the ship
+    bool destroyed = sys.handleShipDestruction("npc_hauler_1");
+    assertTrue(destroyed, "Destruction handled");
+    assertTrue(actor->is_destroyed, "Ship marked destroyed");
+    assertTrue(actor->destruction_count == 1, "Destruction count incremented");
+
+    // Update should trigger replacement since wallet (12000) >= ship_value (5000)
+    sys.update(1.0f);
+    assertTrue(!actor->is_destroyed, "Ship replaced after update");
+    assertTrue(actor->replacement_count == 1, "Replacement count incremented");
+    assertTrue(intent->wallet == 7000.0, "Wallet reduced by ship value");
+}
+
+void testAIEconomicActorPermanentDeath() {
+    std::cout << "\n=== AI Economic Actor Permanent Death ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::AIEconomicActorSystem sys(&world);
+
+    auto* entity = world.createEntity("npc_pirate_1");
+    auto* actor = addComp<components::AIEconomicActor>(entity);
+    auto* intent = addComp<components::SimNPCIntent>(entity);
+    actor->owned_ship_type = "Rifter";
+    actor->ship_value = 10000.0;
+    intent->wallet = 3000.0;  // Cannot afford replacement
+
+    sys.handleShipDestruction("npc_pirate_1");
+    sys.update(1.0f);
+
+    assertTrue(actor->permanently_dead, "NPC permanently dead when broke");
+    assertTrue(actor->is_destroyed, "Ship still destroyed");
+
+    auto dead = sys.getDeadActors();
+    assertTrue(dead.size() == 1, "One dead actor");
+    assertTrue(dead[0] == "npc_pirate_1", "Dead actor is pirate");
+}
+
+void testAIEconomicActorTimeTracking() {
+    std::cout << "\n=== AI Economic Actor Time Tracking ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::AIEconomicActorSystem sys(&world);
+
+    auto* entity = world.createEntity("npc_patrol_1");
+    auto* actor = addComp<components::AIEconomicActor>(entity);
+    addComp<components::SimNPCIntent>(entity);
+
+    sys.update(5.0f);
+    assertTrue(approxEqual(actor->time_alive, 5.0f), "Time alive updated");
+
+    sys.update(3.0f);
+    assertTrue(approxEqual(actor->time_alive, 8.0f), "Time alive accumulated");
+}
+
+void testAIEconomicActorTotalEconomy() {
+    std::cout << "\n=== AI Economic Actor Total Economy ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::AIEconomicActorSystem sys(&world);
+
+    auto* e1 = world.createEntity("trader_1");
+    addComp<components::AIEconomicActor>(e1);
+    auto* i1 = addComp<components::SimNPCIntent>(e1);
+    i1->wallet = 50000.0;
+
+    auto* e2 = world.createEntity("trader_2");
+    addComp<components::AIEconomicActor>(e2);
+    auto* i2 = addComp<components::SimNPCIntent>(e2);
+    i2->wallet = 30000.0;
+
+    double total = sys.getTotalEconomyISK();
+    assertTrue(total == 80000.0, "Total economy ISK correct");
+
+    auto low = sys.getLowFundsActors(40000.0);
+    assertTrue(low.size() == 1, "One low-funds actor");
+}
+
+void testAIEconomicActorCanAffordReplacement() {
+    std::cout << "\n=== AI Economic Actor Can Afford Replacement ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::AIEconomicActorSystem sys(&world);
+
+    auto* entity = world.createEntity("npc_1");
+    auto* actor = addComp<components::AIEconomicActor>(entity);
+    auto* intent = addComp<components::SimNPCIntent>(entity);
+    actor->ship_value = 5000.0;
+    intent->wallet = 10000.0;
+
+    assertTrue(sys.canAffordReplacement("npc_1"), "Can afford with 10k wallet and 5k ship");
+
+    intent->wallet = 3000.0;
+    assertTrue(!sys.canAffordReplacement("npc_1"), "Cannot afford with 3k wallet and 5k ship");
+}
+
+// ==================== Turret AI System tests ====================
+
+void testTurretAIWithinArc() {
+    std::cout << "\n=== Turret AI Within Arc ===" << std::endl;
+    using namespace atlas;
+
+    // Turret facing forward (0 deg) with 90 deg arc
+    assertTrue(systems::TurretAISystem::isWithinArc(0.0f, 0.0f, 90.0f),
+               "Dead center is within arc");
+    assertTrue(systems::TurretAISystem::isWithinArc(44.0f, 0.0f, 90.0f),
+               "44 deg is within 90 deg arc");
+    assertTrue(!systems::TurretAISystem::isWithinArc(46.0f, 0.0f, 90.0f),
+               "46 deg is outside 90 deg arc");
+    assertTrue(systems::TurretAISystem::isWithinArc(-44.0f, 0.0f, 90.0f),
+               "-44 deg is within 90 deg arc");
+    assertTrue(!systems::TurretAISystem::isWithinArc(-46.0f, 0.0f, 90.0f),
+               "-46 deg is outside 90 deg arc");
+}
+
+void testTurretAITrackingPenalty() {
+    std::cout << "\n=== Turret AI Tracking Penalty ===" << std::endl;
+    using namespace atlas;
+
+    // Perfect tracking (stationary target)
+    float p1 = systems::TurretAISystem::computeTrackingPenalty(0.0f, 1.0f);
+    assertTrue(approxEqual(p1, 1.0f), "Stationary target = full damage");
+
+    // Angular velocity equals tracking speed
+    float p2 = systems::TurretAISystem::computeTrackingPenalty(1.0f, 1.0f);
+    assertTrue(approxEqual(p2, 0.5f), "Equal angular/tracking = 50% damage");
+
+    // Very fast target
+    float p3 = systems::TurretAISystem::computeTrackingPenalty(10.0f, 1.0f);
+    assertTrue(p3 < 0.02f, "Very fast target = near-zero damage");
+
+    // Zero tracking speed
+    float p4 = systems::TurretAISystem::computeTrackingPenalty(1.0f, 0.0f);
+    assertTrue(approxEqual(p4, 0.0f), "Zero tracking speed = no hit");
+}
+
+void testTurretAICooldown() {
+    std::cout << "\n=== Turret AI Cooldown ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::TurretAISystem sys(&world);
+
+    auto* entity = world.createEntity("ship_turret_0");
+    auto* turret = addComp<components::TurretAIState>(entity);
+    turret->engaged = true;
+    turret->target_entity_id = "enemy_1";
+    turret->rate_of_fire = 2.0f;  // 2 shots/sec
+    turret->base_damage = 50.0f;
+    turret->tracking_speed = 5.0f;
+    turret->angular_velocity = 0.0f;  // stationary target
+
+    // First update: should fire (cooldown starts at 0)
+    sys.update(0.1f);
+    assertTrue(turret->shots_fired == 1, "First shot fired");
+    assertTrue(turret->cooldown_remaining > 0.0f, "Cooldown set after shot");
+
+    // Cooldown should be 0.5 seconds (1/2 rate_of_fire)
+    assertTrue(approxEqual(turret->cooldown_remaining, 0.5f),
+               "Cooldown = 1/rate_of_fire");
+}
+
+void testTurretAIDamageAccumulation() {
+    std::cout << "\n=== Turret AI Damage Accumulation ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::TurretAISystem sys(&world);
+
+    auto* entity = world.createEntity("ship_turret_0");
+    auto* turret = addComp<components::TurretAIState>(entity);
+    turret->engaged = true;
+    turret->target_entity_id = "enemy_1";
+    turret->rate_of_fire = 1.0f;   // 1 shot/sec
+    turret->base_damage = 100.0f;
+    turret->tracking_speed = 10.0f;
+    turret->angular_velocity = 0.0f;  // stationary = full damage
+
+    sys.update(0.1f);  // fires, sets 1s cooldown
+    assertTrue(approxEqual(turret->total_damage_dealt, 100.0f),
+               "Full damage on stationary target");
+
+    // Wait for cooldown to expire
+    sys.update(1.0f);  // cooldown drops to 0, fires again
+    assertTrue(turret->shots_fired == 2, "Second shot after cooldown");
+    assertTrue(approxEqual(turret->total_damage_dealt, 200.0f),
+               "Accumulated damage after 2 shots");
+}
+
+void testTurretAITrackingReducesDamage() {
+    std::cout << "\n=== Turret AI Tracking Reduces Damage ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::TurretAISystem sys(&world);
+
+    auto* entity = world.createEntity("ship_turret_0");
+    auto* turret = addComp<components::TurretAIState>(entity);
+    turret->engaged = true;
+    turret->target_entity_id = "enemy_1";
+    turret->rate_of_fire = 1.0f;
+    turret->base_damage = 100.0f;
+    turret->tracking_speed = 1.0f;
+    turret->angular_velocity = 1.0f;  // matches tracking = 50% damage
+
+    sys.update(0.1f);
+    assertTrue(approxEqual(turret->total_damage_dealt, 50.0f),
+               "50% damage when angular vel = tracking speed");
+}
+
+void testTurretAINotEngaged() {
+    std::cout << "\n=== Turret AI Not Engaged ===" << std::endl;
+    using namespace atlas;
+    ecs::World world;
+    systems::TurretAISystem sys(&world);
+
+    auto* entity = world.createEntity("ship_turret_0");
+    auto* turret = addComp<components::TurretAIState>(entity);
+    turret->engaged = false;  // not firing
+    turret->target_entity_id = "enemy_1";
+    turret->rate_of_fire = 1.0f;
+    turret->base_damage = 100.0f;
+
+    sys.update(1.0f);
+    assertTrue(turret->shots_fired == 0, "No shots when not engaged");
+    assertTrue(approxEqual(turret->total_damage_dealt, 0.0f),
+               "No damage when not engaged");
+}
+
+void testTurretAIComponentDefaults() {
+    std::cout << "\n=== Turret AI Component Defaults ===" << std::endl;
+    using namespace atlas;
+
+    components::TurretAIState turret;
+    assertTrue(turret.turret_index == 0, "Turret index default 0");
+    assertTrue(approxEqual(turret.arc_degrees, 90.0f), "Arc default 90 deg");
+    assertTrue(approxEqual(turret.direction_deg, 0.0f), "Direction default 0");
+    assertTrue(approxEqual(turret.tracking_speed, 1.0f), "Tracking default 1.0");
+    assertTrue(approxEqual(turret.base_damage, 10.0f), "Base damage default 10");
+    assertTrue(turret.target_entity_id.empty(), "No target by default");
+    assertTrue(!turret.engaged, "Not engaged by default");
+    assertTrue(turret.shots_fired == 0, "No shots by default");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -16955,7 +17253,8 @@ int main() {
     std::cout << "Legend, AncientTech, Docking, Survival," << std::endl;
     std::cout << "Menu, Crew, SalvageExploration, InteriorExterior, Race, Lore, MarketOrder," << std::endl;
     std::cout << "PCG Framework (DeterministicRNG, Hash, PCGManager, ShipGenerator, FleetDoctrine)," << std::endl;
-    std::cout << "SpineHullGenerator, TerrainGenerator, TurretPlacementSystem" << std::endl;
+    std::cout << "SpineHullGenerator, TerrainGenerator, TurretPlacementSystem," << std::endl;
+    std::cout << "AIEconomicActor, TurretAI" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -18091,6 +18390,24 @@ int main() {
     testEconomyProsperousHighQuality();
     testEconomyLawlessHasPirates();
     testEconomyStateNames();
+
+    // AI Economic Actor System tests
+    testAIEconomicActorDefaults();
+    testAIEconomicActorEarnSpend();
+    testAIEconomicActorShipDestruction();
+    testAIEconomicActorPermanentDeath();
+    testAIEconomicActorTimeTracking();
+    testAIEconomicActorTotalEconomy();
+    testAIEconomicActorCanAffordReplacement();
+
+    // Turret AI System tests
+    testTurretAIWithinArc();
+    testTurretAITrackingPenalty();
+    testTurretAICooldown();
+    testTurretAIDamageAccumulation();
+    testTurretAITrackingReducesDamage();
+    testTurretAINotEngaged();
+    testTurretAIComponentDefaults();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
