@@ -8,7 +8,7 @@
 static int passed = 0;
 
 static void ok(const char* name) {
-    std::cout << "  PASS: " << name << std::endl;
+    // Output handled by RUN_TEST in main.cpp
     ++passed;
 }
 

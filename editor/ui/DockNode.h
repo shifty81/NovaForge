@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include "EditorPanel.h"
 
 namespace atlas::editor {
@@ -7,7 +8,8 @@ namespace atlas::editor {
 enum class DockSplit {
     None,
     Horizontal,
-    Vertical
+    Vertical,
+    Tab
 };
 
 struct DockNode {
@@ -18,6 +20,9 @@ struct DockNode {
     std::unique_ptr<DockNode> b;
 
     EditorPanel* panel = nullptr;
+
+    std::vector<EditorPanel*> tabs;
+    int activeTab = 0;
 };
 
 }

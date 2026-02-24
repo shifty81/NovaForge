@@ -26,12 +26,18 @@ set(ATLAS_TEST_SOURCES
     test_lowpoly_character.cpp
     test_generation_style.cpp
     test_viewport.cpp
+    test_editor_panels.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/AssetStylePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ShipArchetypePanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/GamePackagerPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
+    ${CMAKE_SOURCE_DIR}/editor/panels/ECSInspectorPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/panels/NetInspectorPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/ui/EditorLayout.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
@@ -69,6 +75,7 @@ endif()
 
 target_link_libraries(AtlasTests AtlasEngine)
 target_include_directories(AtlasTests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/editor
     ${CMAKE_SOURCE_DIR}/cpp_client/include
     ${CMAKE_SOURCE_DIR}/cpp_server/include

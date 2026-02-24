@@ -1,4 +1,7 @@
 #include <iostream>
+#include <string>
+#include <cstring>
+#include "test_log.h"
 
 // GraphVM tests
 void test_basic_arithmetic();
@@ -237,6 +240,52 @@ void test_archp_generate_preview_with_modules();
 void test_archp_save_load_string();
 void test_archp_draw_does_not_crash();
 
+// Editor Panel tests — ECS Inspector
+void test_ecsi_defaults();
+void test_ecsi_select_entity();
+void test_ecsi_select_dead_entity_ignored();
+void test_ecsi_destroy_selected();
+void test_ecsi_clear_selection();
+void test_ecsi_search_filter_by_id();
+void test_ecsi_search_filter_empty_shows_all();
+void test_ecsi_draw_clears_dead_selection();
+void test_ecsi_name();
+void test_ecsi_visibility();
+
+// Editor Panel tests — Network Inspector
+void test_neti_defaults();
+void test_neti_mode_to_string();
+void test_neti_select_peer();
+void test_neti_select_nonexistent_peer_ignored();
+void test_neti_clear_peer_selection();
+void test_neti_stats_with_peers();
+void test_neti_draw_clears_disconnected_peer();
+void test_neti_name();
+
+// Editor Panel tests — Game Packager
+void test_pkg_defaults();
+void test_pkg_set_settings();
+void test_pkg_start_package();
+void test_pkg_advance_full_pipeline();
+void test_pkg_cancel_package();
+void test_pkg_empty_output_path_fails();
+void test_pkg_is_packaging();
+void test_pkg_step_to_string();
+void test_pkg_target_to_string();
+void test_pkg_mode_to_string();
+void test_pkg_log_messages();
+
+// Editor Panel tests — AI Aggregator
+void test_ai_no_backends();
+void test_ai_register_null_ignored();
+void test_ai_single_backend();
+void test_ai_best_confidence_wins();
+
+// Editor Panel tests — Dock Layout
+void test_dock_tab_draw();
+void test_dock_tab_switch();
+void test_dock_register_panels();
+
 // Viewport Panel tests
 void test_viewport_defaults();
 void test_viewport_load_ship();
@@ -259,292 +308,357 @@ void test_viewport_draw_does_not_crash();
 void test_viewport_log_entries();
 void test_viewport_no_op_without_selection();
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::string logPath;
+    for (int i = 1; i < argc; ++i) {
+        if ((std::strcmp(argv[i], "--log") == 0) && i + 1 < argc) {
+            logPath = argv[++i];
+        }
+    }
+
+    auto& log = atlas::test::TestLog::Instance();
+
     std::cout << "=== Atlas Engine Tests ===" << std::endl;
 
     // GraphVM
-    std::cout << "\n--- Graph VM ---" << std::endl;
-    test_basic_arithmetic();
-    test_subtraction();
-    test_multiplication();
-    test_division();
-    test_division_by_zero();
-    test_comparison();
-    test_conditional_jump();
-    test_variables();
+    log.BeginSection("Graph VM");
+    RUN_TEST(test_basic_arithmetic);
+    RUN_TEST(test_subtraction);
+    RUN_TEST(test_multiplication);
+    RUN_TEST(test_division);
+    RUN_TEST(test_division_by_zero);
+    RUN_TEST(test_comparison);
+    RUN_TEST(test_conditional_jump);
+    RUN_TEST(test_variables);
 
     // ECS
-    std::cout << "\n--- ECS ---" << std::endl;
-    test_create_entity();
-    test_destroy_entity();
-    test_tick_callback();
+    log.BeginSection("ECS");
+    RUN_TEST(test_create_entity);
+    RUN_TEST(test_destroy_entity);
+    RUN_TEST(test_tick_callback);
 
     // ECS Components
-    std::cout << "\n--- ECS Components ---" << std::endl;
-    test_add_and_get_component();
-    test_has_component();
-    test_remove_component();
-    test_multiple_components();
-    test_destroy_entity_removes_components();
-    test_component_update();
+    log.BeginSection("ECS Components");
+    RUN_TEST(test_add_and_get_component);
+    RUN_TEST(test_has_component);
+    RUN_TEST(test_remove_component);
+    RUN_TEST(test_multiple_components);
+    RUN_TEST(test_destroy_entity_removes_components);
+    RUN_TEST(test_component_update);
 
     // Assets
-    std::cout << "\n--- Asset System ---" << std::endl;
-    test_asset_binary_roundtrip();
-    test_asset_registry_scan();
+    log.BeginSection("Asset System");
+    RUN_TEST(test_asset_binary_roundtrip);
+    RUN_TEST(test_asset_registry_scan);
 
     // Networking
-    std::cout << "\n--- Networking ---" << std::endl;
-    test_net_init();
-    test_net_authority();
-    test_net_shutdown();
+    log.BeginSection("Networking");
+    RUN_TEST(test_net_init);
+    RUN_TEST(test_net_authority);
+    RUN_TEST(test_net_shutdown);
 
     // Network Queue
-    std::cout << "\n--- Network Queue ---" << std::endl;
-    test_net_add_peer();
-    test_net_remove_peer();
-    test_net_send_receive();
-    test_net_broadcast_receive();
-    test_net_shutdown_clears_queues();
+    log.BeginSection("Network Queue");
+    RUN_TEST(test_net_add_peer);
+    RUN_TEST(test_net_remove_peer);
+    RUN_TEST(test_net_send_receive);
+    RUN_TEST(test_net_broadcast_receive);
+    RUN_TEST(test_net_shutdown_clears_queues);
 
     // Network Quality Monitor
-    std::cout << "\n--- Network Quality Monitor ---" << std::endl;
-    test_nqm_initial_rtt();
-    test_nqm_rtt_ewma();
-    test_nqm_stable_rtt_low_jitter();
-    test_nqm_negative_rtt_ignored();
-    test_nqm_no_loss();
-    test_nqm_50_percent_loss();
-    test_nqm_window_trims();
-    test_nqm_empty_loss_rate();
-    test_nqm_interp_floor();
-    test_nqm_interp_ceiling();
-    test_nqm_interp_increases_with_jitter();
-    test_nqm_interp_increases_with_loss();
-    test_nqm_reset();
-    test_net_send_assigns_sequence();
-    test_net_broadcast_assigns_sequence();
-    test_net_sequence_resets_on_init();
+    log.BeginSection("Network Quality Monitor");
+    RUN_TEST(test_nqm_initial_rtt);
+    RUN_TEST(test_nqm_rtt_ewma);
+    RUN_TEST(test_nqm_stable_rtt_low_jitter);
+    RUN_TEST(test_nqm_negative_rtt_ignored);
+    RUN_TEST(test_nqm_no_loss);
+    RUN_TEST(test_nqm_50_percent_loss);
+    RUN_TEST(test_nqm_window_trims);
+    RUN_TEST(test_nqm_empty_loss_rate);
+    RUN_TEST(test_nqm_interp_floor);
+    RUN_TEST(test_nqm_interp_ceiling);
+    RUN_TEST(test_nqm_interp_increases_with_jitter);
+    RUN_TEST(test_nqm_interp_increases_with_loss);
+    RUN_TEST(test_nqm_reset);
+    RUN_TEST(test_net_send_assigns_sequence);
+    RUN_TEST(test_net_broadcast_assigns_sequence);
+    RUN_TEST(test_net_sequence_resets_on_init);
 
     // World
-    std::cout << "\n--- World Layout ---" << std::endl;
-    test_cube_sphere_projection();
-    test_cube_sphere_chunk_roundtrip();
-    test_cube_sphere_neighbors();
-    test_cube_sphere_lod();
-    test_voxel_chunk_roundtrip();
-    test_voxel_neighbors();
+    log.BeginSection("World Layout");
+    RUN_TEST(test_cube_sphere_projection);
+    RUN_TEST(test_cube_sphere_chunk_roundtrip);
+    RUN_TEST(test_cube_sphere_neighbors);
+    RUN_TEST(test_cube_sphere_lod);
+    RUN_TEST(test_voxel_chunk_roundtrip);
+    RUN_TEST(test_voxel_neighbors);
 
     // Compiler
-    std::cout << "\n--- Graph Compiler ---" << std::endl;
-    test_compile_constants_and_add();
-    test_compile_and_execute_full();
-    test_compile_multiply();
+    log.BeginSection("Graph Compiler");
+    RUN_TEST(test_compile_constants_and_add);
+    RUN_TEST(test_compile_and_execute_full);
+    RUN_TEST(test_compile_multiply);
 
     // Engine
-    std::cout << "\n--- Engine ---" << std::endl;
-    test_engine_init_and_shutdown();
-    test_engine_run_loop_ticks();
-    test_engine_capabilities();
-    test_engine_net_mode_from_config();
+    log.BeginSection("Engine");
+    RUN_TEST(test_engine_init_and_shutdown);
+    RUN_TEST(test_engine_run_loop_ticks);
+    RUN_TEST(test_engine_capabilities);
+    RUN_TEST(test_engine_net_mode_from_config);
 
     // Console
-    std::cout << "\n--- Console ---" << std::endl;
-    test_console_spawn_entity();
-    test_console_ecs_dump();
-    test_console_set_tickrate();
-    test_console_net_mode();
-    test_console_help();
-    test_console_unknown_command();
+    log.BeginSection("Console");
+    RUN_TEST(test_console_spawn_entity);
+    RUN_TEST(test_console_ecs_dump);
+    RUN_TEST(test_console_set_tickrate);
+    RUN_TEST(test_console_net_mode);
+    RUN_TEST(test_console_help);
+    RUN_TEST(test_console_unknown_command);
 
     // HUD Panels
-    std::cout << "\n--- HUD Panels ---" << std::endl;
-    test_station_panel_defaults();
-    test_station_panel_toggle();
-    test_station_panel_set_data();
-    test_station_panel_callbacks();
-    test_inventory_panel_defaults();
-    test_inventory_panel_set_data();
-    test_fitting_panel_defaults();
-    test_fitting_panel_set_data();
-    test_market_panel_defaults();
-    test_market_panel_set_data();
-    test_fleet_panel_defaults();
-    test_fleet_panel_toggle();
-    test_fleet_panel_set_data();
-    test_existing_panel_toggles();
-    test_overview_tab_filter();
+    log.BeginSection("HUD Panels");
+    RUN_TEST(test_station_panel_defaults);
+    RUN_TEST(test_station_panel_toggle);
+    RUN_TEST(test_station_panel_set_data);
+    RUN_TEST(test_station_panel_callbacks);
+    RUN_TEST(test_inventory_panel_defaults);
+    RUN_TEST(test_inventory_panel_set_data);
+    RUN_TEST(test_fitting_panel_defaults);
+    RUN_TEST(test_fitting_panel_set_data);
+    RUN_TEST(test_market_panel_defaults);
+    RUN_TEST(test_market_panel_set_data);
+    RUN_TEST(test_fleet_panel_defaults);
+    RUN_TEST(test_fleet_panel_toggle);
+    RUN_TEST(test_fleet_panel_set_data);
+    RUN_TEST(test_existing_panel_toggles);
+    RUN_TEST(test_overview_tab_filter);
 
     // Game State & ViewMode
 #ifndef ATLAS_NO_GLM
-    std::cout << "\n--- Game State & ViewMode ---" << std::endl;
-    test_camera_default_view_mode();
-    test_camera_set_view_mode_orbit();
-    test_camera_set_view_mode_fps();
-    test_camera_set_view_mode_cockpit();
-    test_camera_fps_position_and_forward();
-    test_camera_fps_rotate();
-    test_camera_orbit_position_unchanged_in_fps();
-    test_camera_view_mode_kills_inertia();
-    test_camera_view_matrix_differs_by_mode();
+    log.BeginSection("Game State & ViewMode");
+    RUN_TEST(test_camera_default_view_mode);
+    RUN_TEST(test_camera_set_view_mode_orbit);
+    RUN_TEST(test_camera_set_view_mode_fps);
+    RUN_TEST(test_camera_set_view_mode_cockpit);
+    RUN_TEST(test_camera_fps_position_and_forward);
+    RUN_TEST(test_camera_fps_rotate);
+    RUN_TEST(test_camera_orbit_position_unchanged_in_fps);
+    RUN_TEST(test_camera_view_mode_kills_inertia);
+    RUN_TEST(test_camera_view_matrix_differs_by_mode);
 #else
-    std::cout << "\n--- Game State & ViewMode (SKIPPED — GLM not available) ---" << std::endl;
+    log.BeginSection("Game State & ViewMode (SKIPPED — GLM not available)");
 #endif
 
     // PCG Preview Panel
-    std::cout << "\n--- PCG Preview Panel ---" << std::endl;
-    test_pcg_preview_defaults();
-    test_pcg_preview_generate_ship();
-    test_pcg_preview_generate_ship_override_hull();
-    test_pcg_preview_generate_station();
-    test_pcg_preview_generate_station_override_count();
-    test_pcg_preview_generate_interior();
-    test_pcg_preview_determinism();
-    test_pcg_preview_randomize_changes_seed();
-    test_pcg_preview_clear();
-    test_pcg_preview_set_settings();
-    test_pcg_preview_different_seeds_differ();
-    test_pcg_preview_draw_does_not_crash();
+    log.BeginSection("PCG Preview Panel");
+    RUN_TEST(test_pcg_preview_defaults);
+    RUN_TEST(test_pcg_preview_generate_ship);
+    RUN_TEST(test_pcg_preview_generate_ship_override_hull);
+    RUN_TEST(test_pcg_preview_generate_station);
+    RUN_TEST(test_pcg_preview_generate_station_override_count);
+    RUN_TEST(test_pcg_preview_generate_interior);
+    RUN_TEST(test_pcg_preview_determinism);
+    RUN_TEST(test_pcg_preview_randomize_changes_seed);
+    RUN_TEST(test_pcg_preview_clear);
+    RUN_TEST(test_pcg_preview_set_settings);
+    RUN_TEST(test_pcg_preview_different_seeds_differ);
+    RUN_TEST(test_pcg_preview_draw_does_not_crash);
 
     // Low-Poly Character Generator
-    std::cout << "\n--- Low-Poly Character Generator ---" << std::endl;
-    test_lowpoly_char_generate_default();
-    test_lowpoly_char_body_slot_count();
-    test_lowpoly_char_override_archetype();
-    test_lowpoly_char_override_gender();
-    test_lowpoly_char_palette_regions();
-    test_lowpoly_char_flat_shading();
-    test_lowpoly_char_fps_arms();
-    test_lowpoly_char_determinism();
-    test_lowpoly_char_different_seeds_differ();
-    test_lowpoly_char_clothing_always_has_basics();
-    test_lowpoly_char_archetype_names();
-    test_lowpoly_char_body_slot_names();
-    test_lowpoly_char_clothing_slot_names();
-    test_pcg_preview_generate_character();
-    test_pcg_preview_character_override_archetype();
-    test_pcg_preview_character_override_gender();
-    test_pcg_preview_character_clear();
+    log.BeginSection("Low-Poly Character Generator");
+    RUN_TEST(test_lowpoly_char_generate_default);
+    RUN_TEST(test_lowpoly_char_body_slot_count);
+    RUN_TEST(test_lowpoly_char_override_archetype);
+    RUN_TEST(test_lowpoly_char_override_gender);
+    RUN_TEST(test_lowpoly_char_palette_regions);
+    RUN_TEST(test_lowpoly_char_flat_shading);
+    RUN_TEST(test_lowpoly_char_fps_arms);
+    RUN_TEST(test_lowpoly_char_determinism);
+    RUN_TEST(test_lowpoly_char_different_seeds_differ);
+    RUN_TEST(test_lowpoly_char_clothing_always_has_basics);
+    RUN_TEST(test_lowpoly_char_archetype_names);
+    RUN_TEST(test_lowpoly_char_body_slot_names);
+    RUN_TEST(test_lowpoly_char_clothing_slot_names);
+    RUN_TEST(test_pcg_preview_generate_character);
+    RUN_TEST(test_pcg_preview_character_override_archetype);
+    RUN_TEST(test_pcg_preview_character_override_gender);
+    RUN_TEST(test_pcg_preview_character_clear);
 
     // Generation Style Engine
-    std::cout << "\n--- Generation Style Engine ---" << std::endl;
-    test_gs_create_default_ship_style();
-    test_gs_create_default_station_style();
-    test_gs_create_all_default_styles();
-    test_gs_validate_valid_style();
-    test_gs_validate_empty_name_fails();
-    test_gs_validate_out_of_range_param_fails();
-    test_gs_validate_duplicate_slots_fails();
-    test_gs_available_parameters();
-    test_gs_find_parameter();
-    test_gs_style_type_names();
-    test_gs_generate_ship_style();
-    test_gs_generate_station_style();
-    test_gs_generate_station_with_placements();
-    test_gs_generate_interior_style();
-    test_gs_generate_determinism();
-    test_gs_serialize_roundtrip();
-    test_gs_ship_parameter_overrides();
+    log.BeginSection("Generation Style Engine");
+    RUN_TEST(test_gs_create_default_ship_style);
+    RUN_TEST(test_gs_create_default_station_style);
+    RUN_TEST(test_gs_create_all_default_styles);
+    RUN_TEST(test_gs_validate_valid_style);
+    RUN_TEST(test_gs_validate_empty_name_fails);
+    RUN_TEST(test_gs_validate_out_of_range_param_fails);
+    RUN_TEST(test_gs_validate_duplicate_slots_fails);
+    RUN_TEST(test_gs_available_parameters);
+    RUN_TEST(test_gs_find_parameter);
+    RUN_TEST(test_gs_style_type_names);
+    RUN_TEST(test_gs_generate_ship_style);
+    RUN_TEST(test_gs_generate_station_style);
+    RUN_TEST(test_gs_generate_station_with_placements);
+    RUN_TEST(test_gs_generate_interior_style);
+    RUN_TEST(test_gs_generate_determinism);
+    RUN_TEST(test_gs_serialize_roundtrip);
+    RUN_TEST(test_gs_ship_parameter_overrides);
 
     // Generation Style Panel
-    std::cout << "\n--- Generation Style Panel ---" << std::endl;
-    test_gsp_defaults();
-    test_gsp_new_style();
-    test_gsp_add_remove_placement();
-    test_gsp_set_parameter();
-    test_gsp_enable_disable_parameter();
-    test_gsp_generate();
-    test_gsp_generate_with_asset_style();
-    test_gsp_save_load_string();
-    test_gsp_draw_does_not_crash();
+    log.BeginSection("Generation Style Panel");
+    RUN_TEST(test_gsp_defaults);
+    RUN_TEST(test_gsp_new_style);
+    RUN_TEST(test_gsp_add_remove_placement);
+    RUN_TEST(test_gsp_set_parameter);
+    RUN_TEST(test_gsp_enable_disable_parameter);
+    RUN_TEST(test_gsp_generate);
+    RUN_TEST(test_gsp_generate_with_asset_style);
+    RUN_TEST(test_gsp_save_load_string);
+    RUN_TEST(test_gsp_draw_does_not_crash);
 
     // Asset Style Library
-    std::cout << "\n--- Asset Style Library ---" << std::endl;
-    test_as_library_add_find();
-    test_as_library_replace();
-    test_as_library_remove();
-    test_as_library_list_by_type();
-    test_as_library_clear();
-    test_as_shape_apply_to_ship();
-    test_as_shape_apply_to_station();
-    test_as_surface_treatment_names();
-    test_as_serialize_roundtrip();
+    log.BeginSection("Asset Style Library");
+    RUN_TEST(test_as_library_add_find);
+    RUN_TEST(test_as_library_replace);
+    RUN_TEST(test_as_library_remove);
+    RUN_TEST(test_as_library_list_by_type);
+    RUN_TEST(test_as_library_clear);
+    RUN_TEST(test_as_shape_apply_to_ship);
+    RUN_TEST(test_as_shape_apply_to_station);
+    RUN_TEST(test_as_surface_treatment_names);
+    RUN_TEST(test_as_serialize_roundtrip);
 
     // Asset Style Panel
-    std::cout << "\n--- Asset Style Panel ---" << std::endl;
-    test_asp_defaults();
-    test_asp_new_style();
-    test_asp_shape_control_points();
-    test_asp_mirror_and_smoothing();
-    test_asp_palette_colors();
-    test_asp_palette_materials();
-    test_asp_surface_treatment();
-    test_asp_detail_level();
-    test_asp_apply_and_preview_ship();
-    test_asp_apply_and_preview_station();
-    test_asp_library_save_load();
-    test_asp_serialize_roundtrip();
-    test_asp_draw_does_not_crash();
+    log.BeginSection("Asset Style Panel");
+    RUN_TEST(test_asp_defaults);
+    RUN_TEST(test_asp_new_style);
+    RUN_TEST(test_asp_shape_control_points);
+    RUN_TEST(test_asp_mirror_and_smoothing);
+    RUN_TEST(test_asp_palette_colors);
+    RUN_TEST(test_asp_palette_materials);
+    RUN_TEST(test_asp_surface_treatment);
+    RUN_TEST(test_asp_detail_level);
+    RUN_TEST(test_asp_apply_and_preview_ship);
+    RUN_TEST(test_asp_apply_and_preview_station);
+    RUN_TEST(test_asp_library_save_load);
+    RUN_TEST(test_asp_serialize_roundtrip);
+    RUN_TEST(test_asp_draw_does_not_crash);
 
     // Ship Archetype Engine
-    std::cout << "\n--- Ship Archetype Engine ---" << std::endl;
-    test_arch_create_default_frigate();
-    test_arch_create_all_hull_classes();
-    test_arch_capital_bigger_than_frigate();
-    test_arch_validate_valid();
-    test_arch_validate_empty_name_fails();
-    test_arch_validate_no_rooms_fails();
-    test_arch_validate_no_hardpoints_fails();
-    test_arch_validate_duplicate_hardpoint_ids_fails();
-    test_arch_validate_door_bad_room_ref_fails();
-    test_arch_generate_from_archetype();
-    test_arch_generate_determinism();
-    test_arch_apply_subsystems();
-    test_arch_apply_module_visuals();
-    test_arch_subsystem_type_names();
-    test_arch_serialize_roundtrip();
-    test_arch_different_seeds_differ();
+    log.BeginSection("Ship Archetype Engine");
+    RUN_TEST(test_arch_create_default_frigate);
+    RUN_TEST(test_arch_create_all_hull_classes);
+    RUN_TEST(test_arch_capital_bigger_than_frigate);
+    RUN_TEST(test_arch_validate_valid);
+    RUN_TEST(test_arch_validate_empty_name_fails);
+    RUN_TEST(test_arch_validate_no_rooms_fails);
+    RUN_TEST(test_arch_validate_no_hardpoints_fails);
+    RUN_TEST(test_arch_validate_duplicate_hardpoint_ids_fails);
+    RUN_TEST(test_arch_validate_door_bad_room_ref_fails);
+    RUN_TEST(test_arch_generate_from_archetype);
+    RUN_TEST(test_arch_generate_determinism);
+    RUN_TEST(test_arch_apply_subsystems);
+    RUN_TEST(test_arch_apply_module_visuals);
+    RUN_TEST(test_arch_subsystem_type_names);
+    RUN_TEST(test_arch_serialize_roundtrip);
+    RUN_TEST(test_arch_different_seeds_differ);
 
     // Ship Archetype Panel
-    std::cout << "\n--- Ship Archetype Panel ---" << std::endl;
-    test_archp_defaults();
-    test_archp_select_hull_class();
-    test_archp_add_remove_hull_control_point();
-    test_archp_add_remove_room();
-    test_archp_add_remove_door();
-    test_archp_add_remove_hardpoint();
-    test_archp_subsystem_editing();
-    test_archp_module_visual_rules();
-    test_archp_variation_bounds();
-    test_archp_generate_preview();
-    test_archp_generate_preview_with_subsystems();
-    test_archp_generate_preview_with_modules();
-    test_archp_save_load_string();
-    test_archp_draw_does_not_crash();
+    log.BeginSection("Ship Archetype Panel");
+    RUN_TEST(test_archp_defaults);
+    RUN_TEST(test_archp_select_hull_class);
+    RUN_TEST(test_archp_add_remove_hull_control_point);
+    RUN_TEST(test_archp_add_remove_room);
+    RUN_TEST(test_archp_add_remove_door);
+    RUN_TEST(test_archp_add_remove_hardpoint);
+    RUN_TEST(test_archp_subsystem_editing);
+    RUN_TEST(test_archp_module_visual_rules);
+    RUN_TEST(test_archp_variation_bounds);
+    RUN_TEST(test_archp_generate_preview);
+    RUN_TEST(test_archp_generate_preview_with_subsystems);
+    RUN_TEST(test_archp_generate_preview_with_modules);
+    RUN_TEST(test_archp_save_load_string);
+    RUN_TEST(test_archp_draw_does_not_crash);
 
     // Viewport Panel
-    std::cout << "\n--- Viewport Panel ---" << std::endl;
-    test_viewport_defaults();
-    test_viewport_load_ship();
-    test_viewport_load_station();
-    test_viewport_clear_scene();
-    test_viewport_select_object();
-    test_viewport_deselect_all();
-    test_viewport_translate_selected();
-    test_viewport_rotate_selected();
-    test_viewport_scale_selected();
-    test_viewport_scale_clamps_positive();
-    test_viewport_gizmo_mode();
-    test_viewport_camera_orbit();
-    test_viewport_camera_pitch_clamp();
-    test_viewport_camera_distance();
-    test_viewport_commit_changes();
-    test_viewport_discard_changes();
-    test_viewport_grid_toggle();
-    test_viewport_draw_does_not_crash();
-    test_viewport_log_entries();
-    test_viewport_no_op_without_selection();
+    log.BeginSection("Viewport Panel");
+    RUN_TEST(test_viewport_defaults);
+    RUN_TEST(test_viewport_load_ship);
+    RUN_TEST(test_viewport_load_station);
+    RUN_TEST(test_viewport_clear_scene);
+    RUN_TEST(test_viewport_select_object);
+    RUN_TEST(test_viewport_deselect_all);
+    RUN_TEST(test_viewport_translate_selected);
+    RUN_TEST(test_viewport_rotate_selected);
+    RUN_TEST(test_viewport_scale_selected);
+    RUN_TEST(test_viewport_scale_clamps_positive);
+    RUN_TEST(test_viewport_gizmo_mode);
+    RUN_TEST(test_viewport_camera_orbit);
+    RUN_TEST(test_viewport_camera_pitch_clamp);
+    RUN_TEST(test_viewport_camera_distance);
+    RUN_TEST(test_viewport_commit_changes);
+    RUN_TEST(test_viewport_discard_changes);
+    RUN_TEST(test_viewport_grid_toggle);
+    RUN_TEST(test_viewport_draw_does_not_crash);
+    RUN_TEST(test_viewport_log_entries);
+    RUN_TEST(test_viewport_no_op_without_selection);
 
-    std::cout << "\n=== All tests passed! ===" << std::endl;
-    return 0;
+    // ECS Inspector
+    log.BeginSection("ECS Inspector");
+    RUN_TEST(test_ecsi_defaults);
+    RUN_TEST(test_ecsi_select_entity);
+    RUN_TEST(test_ecsi_select_dead_entity_ignored);
+    RUN_TEST(test_ecsi_destroy_selected);
+    RUN_TEST(test_ecsi_clear_selection);
+    RUN_TEST(test_ecsi_search_filter_by_id);
+    RUN_TEST(test_ecsi_search_filter_empty_shows_all);
+    RUN_TEST(test_ecsi_draw_clears_dead_selection);
+    RUN_TEST(test_ecsi_name);
+    RUN_TEST(test_ecsi_visibility);
+
+    // Network Inspector
+    log.BeginSection("Network Inspector");
+    RUN_TEST(test_neti_defaults);
+    RUN_TEST(test_neti_mode_to_string);
+    RUN_TEST(test_neti_select_peer);
+    RUN_TEST(test_neti_select_nonexistent_peer_ignored);
+    RUN_TEST(test_neti_clear_peer_selection);
+    RUN_TEST(test_neti_stats_with_peers);
+    RUN_TEST(test_neti_draw_clears_disconnected_peer);
+    RUN_TEST(test_neti_name);
+
+    // Game Packager
+    log.BeginSection("Game Packager");
+    RUN_TEST(test_pkg_defaults);
+    RUN_TEST(test_pkg_set_settings);
+    RUN_TEST(test_pkg_start_package);
+    RUN_TEST(test_pkg_advance_full_pipeline);
+    RUN_TEST(test_pkg_cancel_package);
+    RUN_TEST(test_pkg_empty_output_path_fails);
+    RUN_TEST(test_pkg_is_packaging);
+    RUN_TEST(test_pkg_step_to_string);
+    RUN_TEST(test_pkg_target_to_string);
+    RUN_TEST(test_pkg_mode_to_string);
+    RUN_TEST(test_pkg_log_messages);
+
+    // AI Aggregator
+    log.BeginSection("AI Aggregator");
+    RUN_TEST(test_ai_no_backends);
+    RUN_TEST(test_ai_register_null_ignored);
+    RUN_TEST(test_ai_single_backend);
+    RUN_TEST(test_ai_best_confidence_wins);
+
+    // Dock Layout
+    log.BeginSection("Dock Layout");
+    RUN_TEST(test_dock_tab_draw);
+    RUN_TEST(test_dock_tab_switch);
+    RUN_TEST(test_dock_register_panels);
+
+    if (!logPath.empty()) {
+        log.WriteLogFile(logPath);
+    }
+
+    int exitCode = log.PrintSummary();
+    atlas::test::TestLog::WaitOnWindows();
+    return exitCode;
 }

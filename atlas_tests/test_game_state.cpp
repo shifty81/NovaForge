@@ -25,7 +25,6 @@ void test_camera_default_view_mode() {
     Camera cam;
     assert(cam.getViewMode() == ViewMode::ORBIT);
 
-    std::cout << "[PASS] test_camera_default_view_mode" << std::endl;
 }
 
 void test_camera_set_view_mode_orbit() {
@@ -33,7 +32,6 @@ void test_camera_set_view_mode_orbit() {
     cam.setViewMode(ViewMode::ORBIT);
     assert(cam.getViewMode() == ViewMode::ORBIT);
 
-    std::cout << "[PASS] test_camera_set_view_mode_orbit" << std::endl;
 }
 
 void test_camera_set_view_mode_fps() {
@@ -41,7 +39,6 @@ void test_camera_set_view_mode_fps() {
     cam.setViewMode(ViewMode::FPS);
     assert(cam.getViewMode() == ViewMode::FPS);
 
-    std::cout << "[PASS] test_camera_set_view_mode_fps" << std::endl;
 }
 
 void test_camera_set_view_mode_cockpit() {
@@ -49,7 +46,6 @@ void test_camera_set_view_mode_cockpit() {
     cam.setViewMode(ViewMode::COCKPIT);
     assert(cam.getViewMode() == ViewMode::COCKPIT);
 
-    std::cout << "[PASS] test_camera_set_view_mode_cockpit" << std::endl;
 }
 
 void test_camera_fps_position_and_forward() {
@@ -68,7 +64,6 @@ void test_camera_fps_position_and_forward() {
     glm::vec3 fwd = cam.getFPSForward();
     assert(std::abs(fwd.z - (-1.0f)) < 0.1f);
 
-    std::cout << "[PASS] test_camera_fps_position_and_forward" << std::endl;
 }
 
 void test_camera_fps_rotate() {
@@ -84,7 +79,6 @@ void test_camera_fps_rotate() {
     assert(std::abs(fwd.x - 1.0f) < 0.1f);
     assert(std::abs(fwd.z) < 0.1f);
 
-    std::cout << "[PASS] test_camera_fps_rotate" << std::endl;
 }
 
 void test_camera_orbit_position_unchanged_in_fps() {
@@ -105,7 +99,6 @@ void test_camera_orbit_position_unchanged_in_fps() {
     // Switch back to orbit — orbit target should be unchanged
     cam.setViewMode(ViewMode::ORBIT);
 
-    std::cout << "[PASS] test_camera_orbit_position_unchanged_in_fps" << std::endl;
 }
 
 void test_camera_view_mode_kills_inertia() {
@@ -124,7 +117,6 @@ void test_camera_view_mode_kills_inertia() {
     // If inertia was killed, verify no crash and mode is correct
     assert(cam.getViewMode() == ViewMode::ORBIT);
 
-    std::cout << "[PASS] test_camera_view_mode_kills_inertia" << std::endl;
 }
 
 void test_camera_view_matrix_differs_by_mode() {
@@ -148,5 +140,4 @@ void test_camera_view_matrix_differs_by_mode() {
                 different = true;
     assert(different);
 
-    std::cout << "[PASS] test_camera_view_matrix_differs_by_mode" << std::endl;
 }

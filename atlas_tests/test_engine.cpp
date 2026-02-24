@@ -18,7 +18,6 @@ void test_engine_init_and_shutdown() {
     engine.Shutdown();
     assert(!engine.Running());
 
-    std::cout << "[PASS] test_engine_init_and_shutdown" << std::endl;
 }
 
 void test_engine_run_loop_ticks() {
@@ -44,7 +43,6 @@ void test_engine_run_loop_ticks() {
     assert(tickCount == 5);
     assert(!engine.Running());
 
-    std::cout << "[PASS] test_engine_run_loop_ticks" << std::endl;
 }
 
 void test_engine_capabilities() {
@@ -82,7 +80,6 @@ void test_engine_capabilities() {
         assert(!engine.Can(Capability::NetAuthority));
     }
 
-    std::cout << "[PASS] test_engine_capabilities" << std::endl;
 }
 
 void test_engine_net_mode_from_config() {
@@ -109,5 +106,4 @@ void test_engine_net_mode_from_config() {
         assert(!engine.GetNet().IsAuthority());
     }
 
-    std::cout << "[PASS] test_engine_net_mode_from_config" << std::endl;
 }

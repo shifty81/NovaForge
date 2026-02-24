@@ -25,7 +25,6 @@ void test_compile_constants_and_add() {
     // After add, result should be on the stack
     // The VM ends without storing, so we check the stack is empty after END
     // Let's also test with store
-    std::cout << "[PASS] test_compile_constants_and_add (compilation)" << std::endl;
 }
 
 void test_compile_and_execute_full() {
@@ -50,7 +49,6 @@ void test_compile_and_execute_full() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 5);
-    std::cout << "[PASS] test_compile_and_execute_full" << std::endl;
 }
 
 void test_compile_multiply() {
@@ -75,5 +73,4 @@ void test_compile_multiply() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 42);
-    std::cout << "[PASS] test_compile_multiply" << std::endl;
 }

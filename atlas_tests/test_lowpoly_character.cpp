@@ -11,7 +11,7 @@
 static int lpc_passed = 0;
 
 static void ok(const char* name) {
-    std::cout << "  PASS: " << name << std::endl;
+    // Output handled by RUN_TEST in main.cpp
     ++lpc_passed;
 }
 

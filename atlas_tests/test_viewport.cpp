@@ -32,7 +32,6 @@ void test_viewport_defaults() {
     assert(!vp.HasPendingChanges());
     assert(vp.GetCameraDistance() == 500.0f);
 
-    std::cout << "  PASS: test_viewport_defaults" << std::endl;
 }
 
 void test_viewport_load_ship() {
@@ -50,7 +49,6 @@ void test_viewport_load_ship() {
     assert(vp.GetObject(0).type == "Ship");
     assert(!vp.GetObject(0).name.empty());
 
-    std::cout << "  PASS: test_viewport_load_ship" << std::endl;
 }
 
 void test_viewport_load_station() {
@@ -68,7 +66,6 @@ void test_viewport_load_station() {
         assert(vp.GetObject(0).type == "Module");
     }
 
-    std::cout << "  PASS: test_viewport_load_station" << std::endl;
 }
 
 void test_viewport_clear_scene() {
@@ -86,7 +83,6 @@ void test_viewport_clear_scene() {
     assert(vp.SelectedObjectId() == 0);
     assert(!vp.HasPendingChanges());
 
-    std::cout << "  PASS: test_viewport_clear_scene" << std::endl;
 }
 
 // ── Selection tests ───────────────────────────────────────────────
@@ -104,7 +100,6 @@ void test_viewport_select_object() {
     assert(vp.SelectedObjectId() == firstId);
     assert(vp.GetObject(0).selected);
 
-    std::cout << "  PASS: test_viewport_select_object" << std::endl;
 }
 
 void test_viewport_deselect_all() {
@@ -123,7 +118,6 @@ void test_viewport_deselect_all() {
     assert(vp.SelectedObjectId() == 0);
     assert(!vp.GetObject(0).selected);
 
-    std::cout << "  PASS: test_viewport_deselect_all" << std::endl;
 }
 
 // ── Transform gizmo tests ────────────────────────────────────────
@@ -150,7 +144,6 @@ void test_viewport_translate_selected() {
     assert(std::abs(vp.GetTransform(id).posZ - (origZ + 30.0f)) < 0.01f);
     assert(vp.HasPendingChanges());
 
-    std::cout << "  PASS: test_viewport_translate_selected" << std::endl;
 }
 
 void test_viewport_rotate_selected() {
@@ -170,7 +163,6 @@ void test_viewport_rotate_selected() {
     assert(std::abs(vp.GetTransform(id).rotZ - 90.0f) < 0.01f);
     assert(vp.HasPendingChanges());
 
-    std::cout << "  PASS: test_viewport_rotate_selected" << std::endl;
 }
 
 void test_viewport_scale_selected() {
@@ -190,7 +182,6 @@ void test_viewport_scale_selected() {
     assert(vp.GetTransform(id).scaleX > origSX);
     assert(vp.HasPendingChanges());
 
-    std::cout << "  PASS: test_viewport_scale_selected" << std::endl;
 }
 
 void test_viewport_scale_clamps_positive() {
@@ -210,7 +201,6 @@ void test_viewport_scale_clamps_positive() {
     assert(vp.GetTransform(id).scaleY >= 0.01f);
     assert(vp.GetTransform(id).scaleZ >= 0.01f);
 
-    std::cout << "  PASS: test_viewport_scale_clamps_positive" << std::endl;
 }
 
 void test_viewport_gizmo_mode() {
@@ -226,7 +216,6 @@ void test_viewport_gizmo_mode() {
     vp.SetGizmoMode(GizmoMode::None);
     assert(vp.GetGizmoMode() == GizmoMode::None);
 
-    std::cout << "  PASS: test_viewport_gizmo_mode" << std::endl;
 }
 
 // ── Camera tests ──────────────────────────────────────────────────
@@ -241,7 +230,6 @@ void test_viewport_camera_orbit() {
     assert(std::abs(vp.GetCameraYaw() - (origYaw + 45.0f)) < 0.01f);
     assert(std::abs(vp.GetCameraPitch() - (origPitch - 10.0f)) < 0.01f);
 
-    std::cout << "  PASS: test_viewport_camera_orbit" << std::endl;
 }
 
 void test_viewport_camera_pitch_clamp() {
@@ -253,7 +241,6 @@ void test_viewport_camera_pitch_clamp() {
     vp.OrbitCamera(0.0f, -2000.0f);
     assert(vp.GetCameraPitch() >= -89.0f);
 
-    std::cout << "  PASS: test_viewport_camera_pitch_clamp" << std::endl;
 }
 
 void test_viewport_camera_distance() {
@@ -261,7 +248,6 @@ void test_viewport_camera_distance() {
     vp.SetCameraDistance(200.0f);
     assert(std::abs(vp.GetCameraDistance() - 200.0f) < 0.01f);
 
-    std::cout << "  PASS: test_viewport_camera_distance" << std::endl;
 }
 
 // ── Change tracking tests ─────────────────────────────────────────
@@ -284,7 +270,6 @@ void test_viewport_commit_changes() {
     assert(changes[0].field == "position");
     assert(!vp.HasPendingChanges());
 
-    std::cout << "  PASS: test_viewport_commit_changes" << std::endl;
 }
 
 void test_viewport_discard_changes() {
@@ -307,7 +292,6 @@ void test_viewport_discard_changes() {
     // Transform should revert to original
     assert(std::abs(vp.GetTransform(id).posX - origX) < 0.01f);
 
-    std::cout << "  PASS: test_viewport_discard_changes" << std::endl;
 }
 
 // ── Misc tests ────────────────────────────────────────────────────
@@ -322,7 +306,6 @@ void test_viewport_grid_toggle() {
     vp.SetGridVisible(true);
     assert(vp.IsGridVisible());
 
-    std::cout << "  PASS: test_viewport_grid_toggle" << std::endl;
 }
 
 void test_viewport_draw_does_not_crash() {
@@ -336,7 +319,6 @@ void test_viewport_draw_does_not_crash() {
     vp.LoadShip(ship, 12345);
     vp.Draw(); // should not crash with loaded scene
 
-    std::cout << "  PASS: test_viewport_draw_does_not_crash" << std::endl;
 }
 
 void test_viewport_log_entries() {
@@ -355,7 +337,6 @@ void test_viewport_log_entries() {
     vp.ClearScene();
     assert(vp.Log().size() > logSize); // clear also logs
 
-    std::cout << "  PASS: test_viewport_log_entries" << std::endl;
 }
 
 void test_viewport_no_op_without_selection() {
@@ -372,5 +353,4 @@ void test_viewport_no_op_without_selection() {
     vp.ScaleSelected(5.0f, 5.0f, 5.0f);
     assert(!vp.HasPendingChanges());
 
-    std::cout << "  PASS: test_viewport_no_op_without_selection" << std::endl;
 }

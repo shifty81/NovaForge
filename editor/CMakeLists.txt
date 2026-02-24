@@ -10,6 +10,7 @@ add_executable(AtlasEditor
     tools/AssetStylePanel.cpp
     tools/ShipArchetypePanel.cpp
     tools/ViewportPanel.cpp
+    ai/AIAggregator.cpp
     # PCG sources used by editor panels
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/pcg_manager.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/ship_generator.cpp

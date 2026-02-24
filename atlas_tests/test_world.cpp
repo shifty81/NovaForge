@@ -12,7 +12,6 @@ void test_cube_sphere_projection() {
     double len = std::sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
     assert(std::abs(len - 100.0) < 0.01);
 
-    std::cout << "[PASS] test_cube_sphere_projection" << std::endl;
 }
 
 void test_cube_sphere_chunk_roundtrip() {
@@ -26,7 +25,6 @@ void test_cube_sphere_chunk_roundtrip() {
     // Should be roughly on the same face
     assert(back.z > 0);
 
-    std::cout << "[PASS] test_cube_sphere_chunk_roundtrip" << std::endl;
 }
 
 void test_cube_sphere_neighbors() {
@@ -37,7 +35,6 @@ void test_cube_sphere_neighbors() {
     layout.GetNeighbors(chunk, neighbors);
 
     assert(neighbors.size() == 4);
-    std::cout << "[PASS] test_cube_sphere_neighbors" << std::endl;
 }
 
 void test_cube_sphere_lod() {
@@ -48,7 +45,6 @@ void test_cube_sphere_lod() {
     assert(!layout.IsValidLOD(11));
     assert(!layout.IsValidLOD(-1));
 
-    std::cout << "[PASS] test_cube_sphere_lod" << std::endl;
 }
 
 void test_voxel_chunk_roundtrip() {
@@ -63,7 +59,6 @@ void test_voxel_chunk_roundtrip() {
     assert(std::abs(back.y - (chunk.y * 16 + 8)) < 0.01);
     assert(std::abs(back.z - (chunk.z * 16 + 8)) < 0.01);
 
-    std::cout << "[PASS] test_voxel_chunk_roundtrip" << std::endl;
 }
 
 void test_voxel_neighbors() {
@@ -74,5 +69,4 @@ void test_voxel_neighbors() {
     layout.GetNeighbors(chunk, neighbors);
 
     assert(neighbors.size() == 6);
-    std::cout << "[PASS] test_voxel_neighbors" << std::endl;
 }

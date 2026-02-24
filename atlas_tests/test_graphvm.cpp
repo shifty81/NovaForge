@@ -22,7 +22,6 @@ void test_basic_arithmetic() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 30);
-    std::cout << "[PASS] test_basic_arithmetic" << std::endl;
 }
 
 void test_subtraction() {
@@ -42,7 +41,6 @@ void test_subtraction() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 70);
-    std::cout << "[PASS] test_subtraction" << std::endl;
 }
 
 void test_multiplication() {
@@ -62,7 +60,6 @@ void test_multiplication() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 42);
-    std::cout << "[PASS] test_multiplication" << std::endl;
 }
 
 void test_division() {
@@ -82,7 +79,6 @@ void test_division() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 20);
-    std::cout << "[PASS] test_division" << std::endl;
 }
 
 void test_division_by_zero() {
@@ -102,7 +98,6 @@ void test_division_by_zero() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 0);
-    std::cout << "[PASS] test_division_by_zero" << std::endl;
 }
 
 void test_comparison() {
@@ -122,7 +117,6 @@ void test_comparison() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 1);
-    std::cout << "[PASS] test_comparison" << std::endl;
 }
 
 void test_conditional_jump() {
@@ -145,7 +139,6 @@ void test_conditional_jump() {
     vm.Execute(bc, ctx);
 
     assert(vm.GetLocal(0) == 42);
-    std::cout << "[PASS] test_conditional_jump" << std::endl;
 }
 
 void test_variables() {
@@ -169,5 +162,4 @@ void test_variables() {
 
     assert(vm.GetLocal(0) == 100);
     assert(vm.GetLocal(1) == 150);
-    std::cout << "[PASS] test_variables" << std::endl;
 }

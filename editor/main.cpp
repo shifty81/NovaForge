@@ -78,7 +78,9 @@ int main() {
     root.a->a = std::make_unique<atlas::editor::DockNode>();
     root.a->b = std::make_unique<atlas::editor::DockNode>();
     root.a->a->panel = &viewport;
-    root.a->b->panel = &console;
+    root.a->b->split = atlas::editor::DockSplit::Tab;
+    root.a->b->tabs = {&console, &ecsInspector, &netInspector};
+    root.a->b->activeTab = 0;
 
     // Right side: vertical split — top (PCG preview + tools) | bottom (asset/packager)
     root.b->split = atlas::editor::DockSplit::Vertical;

@@ -14,7 +14,6 @@ void test_create_entity() {
     assert(world.IsAlive(e2));
     assert(world.EntityCount() == 2);
 
-    std::cout << "[PASS] test_create_entity" << std::endl;
 }
 
 void test_destroy_entity() {
@@ -27,7 +26,6 @@ void test_destroy_entity() {
     assert(!world.IsAlive(e1));
     assert(world.EntityCount() == 1);
 
-    std::cout << "[PASS] test_destroy_entity" << std::endl;
 }
 
 void test_tick_callback() {
@@ -41,5 +39,4 @@ void test_tick_callback() {
     world.Update(0.033f);
 
     assert(receivedDt > 0.03f && receivedDt < 0.04f);
-    std::cout << "[PASS] test_tick_callback" << std::endl;
 }
