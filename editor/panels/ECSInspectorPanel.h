@@ -1,6 +1,7 @@
 #pragma once
 #include "../ui/EditorPanel.h"
 #include "../../engine/ecs/ECS.h"
+#include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <string>
 
 namespace atlas::editor {
@@ -25,6 +26,9 @@ private:
     ecs::World& m_world;
     ecs::EntityID m_selectedEntity = 0;
     std::string m_searchFilter;
+    atlas::PanelState     m_panelState;
+    atlas::TextInputState m_searchInput;
+    float                 m_scrollOffset = 0.0f;
 };
 
 }
