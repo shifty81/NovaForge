@@ -115,3 +115,7 @@ test-server: ## Build and run C++ server tests
 
 .PHONY: all
 all: clean build ## Clean and build everything
+
+.PHONY: build-all
+build-all: ## Build engine, editor, client, server into build/bin/ (unified, shareable)
+	./build_all.sh Release
