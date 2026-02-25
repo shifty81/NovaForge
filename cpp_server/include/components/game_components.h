@@ -3126,6 +3126,60 @@ public:
     COMPONENT_TYPE(VisualCue)
 };
 
+// ==================== Living Universe: Supply/Demand Economy ====================
+
+class SupplyDemand : public ecs::Component {
+public:
+    struct CommodityState {
+        std::string commodity_id;
+        float supply = 100.0f;        // current supply units
+        float demand = 100.0f;        // current demand units
+        float base_price = 100.0f;    // base price per unit
+        float current_price = 100.0f; // computed price
+        float supply_rate = 1.0f;     // units produced per tick by NPCs
+        float demand_rate = 1.0f;     // units consumed per tick by NPCs
+    };
+
+    std::vector<CommodityState> commodities;
+    float price_elasticity = 0.5f;          // how sensitive prices are to supply/demand ratio
+    float npc_activity_modifier = 1.0f;     // scales NPC production/consumption rates
+    float price_floor_multiplier = 0.2f;    // minimum price = base_price * floor
+    float price_ceiling_multiplier = 5.0f;  // maximum price = base_price * ceiling
+    float supply_decay_rate = 0.01f;        // natural supply reduction per tick (consumption)
+    float demand_drift_rate = 0.005f;       // demand drifts toward baseline per tick
+
+    void addCommodity(const std::string& id, float base_price, float initial_supply, float initial_demand) {
+        for (auto& c : commodities) {
+            if (c.commodity_id == id) return; // already exists
+        }
+        CommodityState cs;
+        cs.commodity_id = id;
+        cs.base_price = base_price;
+        cs.current_price = base_price;
+        cs.supply = initial_supply;
+        cs.demand = initial_demand;
+        commodities.push_back(cs);
+    }
+
+    CommodityState* getCommodity(const std::string& id) {
+        for (auto& c : commodities) {
+            if (c.commodity_id == id) return &c;
+        }
+        return nullptr;
+    }
+
+    const CommodityState* getCommodity(const std::string& id) const {
+        for (const auto& c : commodities) {
+            if (c.commodity_id == id) return &c;
+        }
+        return nullptr;
+    }
+
+    int getCommodityCount() const { return static_cast<int>(commodities.size()); }
+
+    COMPONENT_TYPE(SupplyDemand)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -143,6 +143,7 @@
 #include "systems/information_propagation_system.h"
 #include "systems/crew_activity_system.h"
 #include "systems/visual_cue_system.h"
+#include "systems/supply_demand_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -19026,6 +19027,120 @@ void testVisualCuePirateWarning() {
     assertTrue(pw > 0.69f && pw < 0.71f, "Pirate warning maps from pirate_activity");
 }
 
+void testSupplyDemandDefaults() {
+    std::cout << "\n=== Supply/Demand Defaults ===" << std::endl;
+    components::SupplyDemand sd;
+    assertTrue(sd.commodities.empty(), "Default commodities is empty");
+    assertTrue(approxEqual(sd.price_elasticity, 0.5f), "Default price_elasticity is 0.5");
+    assertTrue(approxEqual(sd.npc_activity_modifier, 1.0f), "Default npc_activity_modifier is 1.0");
+    assertTrue(approxEqual(sd.price_floor_multiplier, 0.2f), "Default price_floor_multiplier is 0.2");
+    assertTrue(approxEqual(sd.price_ceiling_multiplier, 5.0f), "Default price_ceiling_multiplier is 5.0");
+    assertTrue(approxEqual(sd.supply_decay_rate, 0.01f), "Default supply_decay_rate is 0.01");
+    assertTrue(approxEqual(sd.demand_drift_rate, 0.005f), "Default demand_drift_rate is 0.005");
+}
+
+void testSupplyDemandAddCommodity() {
+    std::cout << "\n=== Supply/Demand Add Commodity ===" << std::endl;
+    components::SupplyDemand sd;
+    sd.addCommodity("ore", 50.0f, 200.0f, 150.0f);
+    assertTrue(sd.getCommodityCount() == 1, "One commodity added");
+    auto* c = sd.getCommodity("ore");
+    assertTrue(c != nullptr, "Commodity found by id");
+    assertTrue(approxEqual(c->base_price, 50.0f), "Base price is 50");
+    assertTrue(approxEqual(c->supply, 200.0f), "Initial supply is 200");
+    assertTrue(approxEqual(c->demand, 150.0f), "Initial demand is 150");
+    sd.addCommodity("ore", 999.0f, 999.0f, 999.0f);
+    assertTrue(sd.getCommodityCount() == 1, "Duplicate commodity not added");
+    assertTrue(sd.getCommodity("nonexistent") == nullptr, "Unknown commodity returns null");
+}
+
+void testSupplyDemandPriceCalculation() {
+    std::cout << "\n=== Supply/Demand Price Calculation ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_alpha");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 50.0f, 150.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 0.0f;
+
+    sdSys.update(1.0f);
+    auto* c = sd->getCommodity("ore");
+    assertTrue(c->current_price > 100.0f, "Price increases when demand > supply");
+
+    // Reset: supply > demand
+    c->supply = 200.0f;
+    c->demand = 50.0f;
+    sdSys.update(1.0f);
+    assertTrue(c->current_price < 100.0f, "Price decreases when supply > demand");
+}
+
+void testSupplyDemandPriceFloor() {
+    std::cout << "\n=== Supply/Demand Price Floor ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_floor");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 10000.0f, 1.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 0.0f;
+    sd->price_elasticity = 10.0f;
+
+    sdSys.update(1.0f);
+    auto* c = sd->getCommodity("ore");
+    float floor = 100.0f * sd->price_floor_multiplier;
+    assertTrue(c->current_price >= floor, "Price does not go below floor");
+    assertTrue(approxEqual(c->current_price, floor, 0.01f), "Price clamped to floor");
+}
+
+void testSupplyDemandPriceCeiling() {
+    std::cout << "\n=== Supply/Demand Price Ceiling ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_ceiling");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 0.1f, 10000.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 0.0f;
+    sd->price_elasticity = 10.0f;
+
+    sdSys.update(1.0f);
+    auto* c = sd->getCommodity("ore");
+    float ceiling = 100.0f * sd->price_ceiling_multiplier;
+    assertTrue(c->current_price <= ceiling, "Price does not exceed ceiling");
+    assertTrue(approxEqual(c->current_price, ceiling, 0.01f), "Price clamped to ceiling");
+}
+
+void testSupplyDemandNPCModifier() {
+    std::cout << "\n=== Supply/Demand NPC Modifier ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_npc");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 100.0f, 100.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 10.0f;
+
+    float supply_before = sd->commodities[0].supply;
+    sd->npc_activity_modifier = 2.0f;
+    sdSys.update(1.0f);
+    float supply_after_2x = sd->commodities[0].supply;
+    float gained_2x = supply_after_2x - supply_before;
+
+    // Reset
+    sd->commodities[0].supply = 100.0f;
+    sd->npc_activity_modifier = 1.0f;
+    sdSys.update(1.0f);
+    float supply_after_1x = sd->commodities[0].supply;
+    float gained_1x = supply_after_1x - 100.0f;
+
+    assertTrue(approxEqual(gained_2x, gained_1x * 2.0f, 0.01f), "2x NPC modifier doubles supply gain");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -20356,6 +20471,14 @@ int main() {
     testVisualCueThreatGlow();
     testVisualCueProsperity();
     testVisualCuePirateWarning();
+
+    // Supply/Demand System tests
+    testSupplyDemandDefaults();
+    testSupplyDemandAddCommodity();
+    testSupplyDemandPriceCalculation();
+    testSupplyDemandPriceFloor();
+    testSupplyDemandPriceCeiling();
+    testSupplyDemandNPCModifier();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
