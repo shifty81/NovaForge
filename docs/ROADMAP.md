@@ -1183,7 +1183,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Survival needs** — Oxygen drain, hunger, fatigue with configurable rates — SurvivalNeeds component + SurvivalSystem (4 tests)
 - [x] **Fabricator** — Crafting station with recipe tracking and craft speed — Fabricator component
 - [ ] **Lavatory interaction** — FPS → 3rd person door transition with audio
-- [ ] **Bed & rest** — Fatigue recovery mechanic
+- [x] **Bed & rest** — Fatigue recovery mechanic — RestStation + RestingState components, RestStationSystem with quality-based recovery, auto-stop when rested (8 tests)
 - [ ] **Food processor** — Wall-mounted Subnautica-style module
 
 #### Docking & Airlock System
@@ -1262,7 +1262,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Enhanced Market
 - [x] **Buy/sell orders** — Regional market with per-item orders and expiry — MarketOrder component + MarketOrderSystem (5 tests)
 - [x] **AI fleet dispatch** — NPC mining/hauling/production fleets fulfilling orders — AIFleetDispatch component with completion tracking
-- [ ] **Dynamic price graphs** — Visual price history per region
+- [x] **Dynamic price graphs** — Visual price history per region — PriceHistory component + PriceHistorySystem with recording, averaging, trend analysis, volume tracking (6 tests)
 - [x] **Black market & smuggling** — BlackMarketSystem with hidden listings, contraband tracking, detection chance scaled by security, price markup, expiry, purchase API (7 tests)
 - [x] **Convoy ambush AI** — Pirates target trade routes — ConvoyAmbushSystem with ConvoyRoute + ConvoyAmbush components, security-level-gated success, loot capture, disperse on security response (7 tests)
 
@@ -1270,7 +1270,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Player legend tracking** — Events with magnitude scoring and earned titles — PlayerLegend component + LegendSystem with title computation (3 tests)
 - [x] **NPC dialogue references** — NPCs talk about player legends — NPCDialogueSystem with NPCDialogue component, title-aware generated lines, observe-legend event recording (6 tests)
 - [x] **Player statues & monuments** — Generated in stations based on legend score — StationMonumentSystem with StationMonument component, 5 monument tiers (Plaque→MythicShrine), upgrade logic (6 tests)
-- [ ] **False myths & propaganda** — NPC-generated misinformation
+- [x] **False myths & propaganda** — NPC-generated misinformation — PropagandaNetwork component + PropagandaSystem with myth generation, spreading, debunking, credibility decay, NPC belief thresholds (7 tests)
 - [ ] **Myth-based boss encounters** — Ancient sites generated from myth content
 
 #### Menu & Game Flow

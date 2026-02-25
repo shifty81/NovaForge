@@ -145,6 +145,9 @@
 #include "systems/visual_cue_system.h"
 #include "systems/supply_demand_system.h"
 #include "systems/black_market_system.h"
+#include "systems/price_history_system.h"
+#include "systems/propaganda_system.h"
+#include "systems/rest_station_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -19244,6 +19247,332 @@ void testBlackMarketDetectionChance() {
     assertTrue(approxEqual(chance, 0.2f), "Detection chance scales with security level");
 }
 
+// ==================== Price History System Tests ====================
+
+void testPriceHistoryDefaults() {
+    std::cout << "\n=== Price History Defaults ===" << std::endl;
+    ecs::World world;
+    systems::PriceHistorySystem priceHistSys(&world);
+    
+    // No history recorded yet
+    auto history = priceHistSys.getHistory("region1", "tritanium");
+    assertTrue(history.empty(), "No history for untracked item");
+    
+    double avg = priceHistSys.getAveragePrice("region1", "tritanium", 3600.0f, 0.0f);
+    assertTrue(avg < 0.0, "Average returns -1 when no data");
+}
+
+void testPriceHistoryRecording() {
+    std::cout << "\n=== Price History Recording ===" << std::endl;
+    ecs::World world;
+    systems::PriceHistorySystem priceHistSys(&world);
+    
+    priceHistSys.recordPrice("jita", "tritanium", 6.0, 5.5, 1000, 0.0f);
+    priceHistSys.recordPrice("jita", "tritanium", 6.2, 5.6, 800, 3600.0f);
+    priceHistSys.recordPrice("jita", "tritanium", 6.5, 5.8, 1200, 7200.0f);
+    
+    auto history = priceHistSys.getHistory("jita", "tritanium");
+    assertTrue(history.size() == 3, "3 price entries recorded");
+    assertTrue(approxEqual(static_cast<float>(history[0].sell_price), 6.0f), "First entry sell price correct");
+    assertTrue(approxEqual(static_cast<float>(history[2].sell_price), 6.5f), "Last entry sell price correct");
+}
+
+void testPriceHistoryAverage() {
+    std::cout << "\n=== Price History Average ===" << std::endl;
+    ecs::World world;
+    systems::PriceHistorySystem priceHistSys(&world);
+    
+    priceHistSys.recordPrice("amarr", "mexallon", 40.0, 38.0, 500, 0.0f);
+    priceHistSys.recordPrice("amarr", "mexallon", 44.0, 42.0, 600, 1800.0f);
+    priceHistSys.recordPrice("amarr", "mexallon", 46.0, 44.0, 400, 3600.0f);
+    
+    double avg = priceHistSys.getAveragePrice("amarr", "mexallon", 4000.0f, 3600.0f);
+    // Average of 40, 44, 46 = 43.33
+    assertTrue(approxEqual(static_cast<float>(avg), 43.33f, 0.1f), "Average price calculated correctly");
+}
+
+void testPriceHistoryTrend() {
+    std::cout << "\n=== Price History Trend ===" << std::endl;
+    ecs::World world;
+    systems::PriceHistorySystem priceHistSys(&world);
+    
+    // Rising prices
+    priceHistSys.recordPrice("dodixie", "pyerite", 10.0, 9.0, 100, 0.0f);
+    priceHistSys.recordPrice("dodixie", "pyerite", 12.0, 11.0, 100, 3600.0f);
+    priceHistSys.recordPrice("dodixie", "pyerite", 14.0, 13.0, 100, 7200.0f);
+    priceHistSys.recordPrice("dodixie", "pyerite", 16.0, 15.0, 100, 10800.0f);
+    
+    float trend = priceHistSys.getPriceTrend("dodixie", "pyerite", 4);
+    assertTrue(trend > 0.0f, "Rising prices show positive trend");
+}
+
+void testPriceHistoryVolume() {
+    std::cout << "\n=== Price History Volume ===" << std::endl;
+    ecs::World world;
+    systems::PriceHistorySystem priceHistSys(&world);
+    
+    priceHistSys.recordPrice("rens", "isogen", 50.0, 48.0, 1000, 0.0f);
+    priceHistSys.recordPrice("rens", "isogen", 52.0, 50.0, 2000, 1800.0f);
+    priceHistSys.recordPrice("rens", "isogen", 51.0, 49.0, 1500, 3600.0f);
+    
+    int vol = priceHistSys.getTotalVolume("rens", "isogen", 4000.0f, 3600.0f);
+    assertTrue(vol == 4500, "Total volume is sum of all entries (1000+2000+1500=4500)");
+}
+
+void testPriceHistoryIntervalConfig() {
+    std::cout << "\n=== Price History Interval Config ===" << std::endl;
+    ecs::World world;
+    systems::PriceHistorySystem priceHistSys(&world);
+    
+    assertTrue(approxEqual(priceHistSys.getSnapshotInterval(), 3600.0f), "Default interval is 1 hour");
+    priceHistSys.setSnapshotInterval(1800.0f);
+    assertTrue(approxEqual(priceHistSys.getSnapshotInterval(), 1800.0f), "Interval updated to 30 minutes");
+    
+    assertTrue(priceHistSys.getMaxHistoryEntries() == 720, "Default max entries is 720");
+    priceHistSys.setMaxHistoryEntries(168);
+    assertTrue(priceHistSys.getMaxHistoryEntries() == 168, "Max entries updated to 168");
+}
+
+// ==================== Propaganda System Tests ====================
+
+void testPropagandaDefaults() {
+    std::cout << "\n=== Propaganda Defaults ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    
+    auto myths = propSys.getMythsAbout("player1");
+    assertTrue(myths.empty(), "No myths about unknown entity");
+    
+    int count = propSys.getActiveMythCount("player1");
+    assertTrue(count == 0, "Active myth count is 0");
+}
+
+void testPropagandaGenerateMyth() {
+    std::cout << "\n=== Propaganda Generate Myth ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    
+    std::string mythId = propSys.generateMyth("hero_pilot", "Solari", "heroic", "Battle of Jita");
+    assertTrue(!mythId.empty(), "Myth ID returned");
+    
+    float cred = propSys.getMythCredibility(mythId);
+    assertTrue(approxEqual(cred, 1.0f), "New myth has full credibility");
+    
+    auto myths = propSys.getMythsAbout("hero_pilot");
+    assertTrue(myths.size() == 1, "One myth about hero_pilot");
+    assertTrue(myths[0].type == components::PropagandaNetwork::MythType::Heroic, "Myth type is heroic");
+}
+
+void testPropagandaDebunk() {
+    std::cout << "\n=== Propaganda Debunk ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    
+    std::string mythId = propSys.generateMyth("villain_npc", "Veyren", "villainous");
+    float cred = propSys.debunkMyth(mythId, 0.7f);
+    assertTrue(approxEqual(cred, 0.3f), "Credibility reduced by evidence strength");
+    
+    cred = propSys.debunkMyth(mythId, 0.5f);
+    assertTrue(approxEqual(cred, 0.0f), "Credibility cannot go below 0");
+    
+    auto myths = propSys.getMythsAbout("villain_npc", true);
+    assertTrue(myths[0].debunked, "Myth marked as debunked");
+}
+
+void testPropagandaSpread() {
+    std::cout << "\n=== Propaganda Spread ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    
+    std::string mythId = propSys.generateMyth("mystery_trader", "Keldari", "mysterious");
+    
+    auto myths = propSys.getMythsAbout("mystery_trader");
+    int initialSpread = myths[0].spread_count;
+    
+    propSys.spreadMyth(mythId, "system_alpha", 0.1f);
+    
+    myths = propSys.getMythsAbout("mystery_trader");
+    assertTrue(myths[0].spread_count == initialSpread + 1, "Spread count increased");
+}
+
+void testPropagandaNPCBelief() {
+    std::cout << "\n=== Propaganda NPC Belief ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    
+    std::string mythId = propSys.generateMyth("legend_pilot", "Aurelian", "exaggerated");
+    assertTrue(propSys.npcBelievesMyth("npc_1", mythId), "NPCs believe high credibility myths");
+    
+    propSys.debunkMyth(mythId, 0.8f);
+    assertTrue(!propSys.npcBelievesMyth("npc_1", mythId), "NPCs don't believe low credibility myths");
+}
+
+void testPropagandaMythTypeName() {
+    std::cout << "\n=== Propaganda Myth Type Name ===" << std::endl;
+    assertTrue(systems::PropagandaSystem::getMythTypeName(0) == "Heroic", "Type 0 is Heroic");
+    assertTrue(systems::PropagandaSystem::getMythTypeName(1) == "Villainous", "Type 1 is Villainous");
+    assertTrue(systems::PropagandaSystem::getMythTypeName(2) == "Mysterious", "Type 2 is Mysterious");
+    assertTrue(systems::PropagandaSystem::getMythTypeName(3) == "Exaggerated", "Type 3 is Exaggerated");
+    assertTrue(systems::PropagandaSystem::getMythTypeName(4) == "Fabricated", "Type 4 is Fabricated");
+}
+
+void testPropagandaDecay() {
+    std::cout << "\n=== Propaganda Decay ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    
+    std::string mythId = propSys.generateMyth("fading_legend", "Solari", "heroic");
+    float initialCred = propSys.getMythCredibility(mythId);
+    
+    // Update should decay credibility slightly
+    propSys.update(100.0f);
+    float newCred = propSys.getMythCredibility(mythId);
+    assertTrue(newCred < initialCred, "Credibility decays over time");
+}
+
+// ==================== Rest Station System Tests ====================
+
+void testRestStationDefaults() {
+    std::cout << "\n=== Rest Station Defaults ===" << std::endl;
+    ecs::World world;
+    auto* station = world.createEntity("bed1");
+    auto* rs = addComp<components::RestStation>(station);
+    
+    assertTrue(rs->isAvailable(), "New station is available");
+    assertTrue(approxEqual(rs->quality, 1.0f), "Default quality is 1.0");
+    assertTrue(rs->type == components::RestStation::StationType::Bed, "Default type is Bed");
+}
+
+void testRestStationStartRest() {
+    std::cout << "\n=== Rest Station Start Rest ===" << std::endl;
+    ecs::World world;
+    systems::RestStationSystem restSys(&world);
+    
+    auto* character = world.createEntity("char1");
+    auto* needs = addComp<components::SurvivalNeeds>(character);
+    needs->fatigue = 80.0f;
+    
+    auto* station = world.createEntity("bed2");
+    addComp<components::RestStation>(station);
+    
+    bool started = restSys.startResting("char1", "bed2");
+    assertTrue(started, "Rest started successfully");
+    assertTrue(restSys.isResting("char1"), "Character is resting");
+    assertTrue(!restSys.isStationAvailable("bed2"), "Station is now occupied");
+}
+
+void testRestStationRecovery() {
+    std::cout << "\n=== Rest Station Recovery ===" << std::endl;
+    ecs::World world;
+    systems::RestStationSystem restSys(&world);
+    
+    auto* character = world.createEntity("char2");
+    auto* needs = addComp<components::SurvivalNeeds>(character);
+    needs->fatigue = 50.0f;
+    
+    auto* station = world.createEntity("bed3");
+    auto* rs = addComp<components::RestStation>(station);
+    rs->quality = 2.0f;  // Luxury
+    
+    restSys.startResting("char2", "bed3");
+    restSys.update(10.0f);  // 10 seconds of rest
+    
+    // Recovery = base_rate * quality * time = 1.0 * 2.0 * 10 = 20
+    assertTrue(approxEqual(needs->fatigue, 30.0f), "Fatigue reduced by 20 (50 - 20 = 30)");
+}
+
+void testRestStationStopRest() {
+    std::cout << "\n=== Rest Station Stop Rest ===" << std::endl;
+    ecs::World world;
+    systems::RestStationSystem restSys(&world);
+    
+    auto* character = world.createEntity("char3");
+    auto* needs = addComp<components::SurvivalNeeds>(character);
+    needs->fatigue = 40.0f;
+    
+    auto* station = world.createEntity("bed4");
+    addComp<components::RestStation>(station);
+    
+    restSys.startResting("char3", "bed4");
+    restSys.update(5.0f);
+    
+    float finalFatigue = restSys.stopResting("char3");
+    assertTrue(finalFatigue < 40.0f, "Fatigue reduced after rest");
+    assertTrue(!restSys.isResting("char3"), "Character no longer resting");
+    assertTrue(restSys.isStationAvailable("bed4"), "Station available again");
+}
+
+void testRestStationProgress() {
+    std::cout << "\n=== Rest Station Progress ===" << std::endl;
+    ecs::World world;
+    systems::RestStationSystem restSys(&world);
+    
+    auto* character = world.createEntity("char4");
+    auto* needs = addComp<components::SurvivalNeeds>(character);
+    needs->fatigue = 100.0f;
+    
+    auto* station = world.createEntity("bed5");
+    addComp<components::RestStation>(station);
+    
+    restSys.startResting("char4", "bed5");
+    restSys.update(50.0f);  // Should recover 50 fatigue points
+    
+    float progress = restSys.getRestProgress("char4");
+    assertTrue(approxEqual(progress, 0.5f), "50% rest progress (50/100)");
+}
+
+void testRestStationQualityName() {
+    std::cout << "\n=== Rest Station Quality Name ===" << std::endl;
+    assertTrue(systems::RestStationSystem::getQualityName(2.0f) == "Luxury", "Quality 2.0 is Luxury");
+    assertTrue(systems::RestStationSystem::getQualityName(1.5f) == "Premium", "Quality 1.5 is Premium");
+    assertTrue(systems::RestStationSystem::getQualityName(1.0f) == "Standard", "Quality 1.0 is Standard");
+    assertTrue(systems::RestStationSystem::getQualityName(0.5f) == "Basic", "Quality 0.5 is Basic");
+    assertTrue(systems::RestStationSystem::getQualityName(0.3f) == "Poor", "Quality 0.3 is Poor");
+}
+
+void testRestStationAutoStop() {
+    std::cout << "\n=== Rest Station Auto Stop ===" << std::endl;
+    ecs::World world;
+    systems::RestStationSystem restSys(&world);
+    
+    auto* character = world.createEntity("char5");
+    auto* needs = addComp<components::SurvivalNeeds>(character);
+    needs->fatigue = 10.0f;
+    
+    auto* station = world.createEntity("bed6");
+    addComp<components::RestStation>(station);
+    
+    restSys.startResting("char5", "bed6");
+    restSys.update(15.0f);  // Should fully recover and auto-stop
+    
+    assertTrue(!restSys.isResting("char5"), "Character auto-stopped resting when fully rested");
+    assertTrue(needs->fatigue <= 0.0f, "Fatigue at 0 when fully rested");
+}
+
+void testRestStationCount() {
+    std::cout << "\n=== Rest Station Count ===" << std::endl;
+    ecs::World world;
+    systems::RestStationSystem restSys(&world);
+    
+    auto* char1 = world.createEntity("c1");
+    addComp<components::SurvivalNeeds>(char1)->fatigue = 50.0f;
+    auto* char2 = world.createEntity("c2");
+    addComp<components::SurvivalNeeds>(char2)->fatigue = 50.0f;
+    
+    auto* bed1 = world.createEntity("b1");
+    addComp<components::RestStation>(bed1);
+    auto* bed2 = world.createEntity("b2");
+    addComp<components::RestStation>(bed2);
+    
+    assertTrue(restSys.getRestingCount() == 0, "No one resting initially");
+    
+    restSys.startResting("c1", "b1");
+    assertTrue(restSys.getRestingCount() == 1, "1 person resting");
+    
+    restSys.startResting("c2", "b2");
+    assertTrue(restSys.getRestingCount() == 2, "2 people resting");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -20591,6 +20920,33 @@ int main() {
     testBlackMarketExpiry();
     testBlackMarketMaxListings();
     testBlackMarketDetectionChance();
+
+    // Price History System tests
+    testPriceHistoryDefaults();
+    testPriceHistoryRecording();
+    testPriceHistoryAverage();
+    testPriceHistoryTrend();
+    testPriceHistoryVolume();
+    testPriceHistoryIntervalConfig();
+
+    // Propaganda System tests
+    testPropagandaDefaults();
+    testPropagandaGenerateMyth();
+    testPropagandaDebunk();
+    testPropagandaSpread();
+    testPropagandaNPCBelief();
+    testPropagandaMythTypeName();
+    testPropagandaDecay();
+
+    // Rest Station System tests
+    testRestStationDefaults();
+    testRestStationStartRest();
+    testRestStationRecovery();
+    testRestStationStopRest();
+    testRestStationProgress();
+    testRestStationQualityName();
+    testRestStationAutoStop();
+    testRestStationCount();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

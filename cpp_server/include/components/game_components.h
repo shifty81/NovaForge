@@ -3238,6 +3238,215 @@ public:
     COMPONENT_TYPE(BlackMarket)
 };
 
+// ==================== Price History for Dynamic Price Graphs ====================
+
+/**
+ * @brief Tracks historical price data for market items to enable price graph visualization
+ * 
+ * Stores timestamped price snapshots with sell price, buy price, and volume.
+ * Used by PriceHistorySystem to provide trend analysis and historical data.
+ */
+class PriceHistory : public ecs::Component {
+public:
+    struct PriceEntry {
+        std::string item_id;
+        float timestamp = 0.0f;        // game time when recorded
+        double sell_price = 0.0;       // lowest sell price at snapshot time
+        double buy_price = 0.0;        // highest buy price at snapshot time
+        int volume = 0;                // trade volume in this period
+        
+        PriceEntry() = default;
+        PriceEntry(const std::string& id, float ts, double sell, double buy, int vol)
+            : item_id(id), timestamp(ts), sell_price(sell), buy_price(buy), volume(vol) {}
+    };
+
+    std::string region_id;
+    std::map<std::string, std::vector<PriceEntry>> item_history;  // item_id -> history
+    int max_entries_per_item = 720;  // 30 days of hourly data
+
+    void addEntry(const std::string& item_id, float timestamp, 
+                  double sell_price, double buy_price, int volume) {
+        auto& history = item_history[item_id];
+        history.push_back(PriceEntry(item_id, timestamp, sell_price, buy_price, volume));
+        
+        // Trim to max entries
+        while (static_cast<int>(history.size()) > max_entries_per_item) {
+            history.erase(history.begin());
+        }
+    }
+
+    std::vector<PriceEntry> getHistory(const std::string& item_id, int max_count = 0) const {
+        auto it = item_history.find(item_id);
+        if (it == item_history.end()) return {};
+        
+        const auto& history = it->second;
+        if (max_count <= 0 || max_count >= static_cast<int>(history.size())) {
+            return history;
+        }
+        
+        // Return last max_count entries
+        return std::vector<PriceEntry>(history.end() - max_count, history.end());
+    }
+
+    int getEntryCount(const std::string& item_id) const {
+        auto it = item_history.find(item_id);
+        return (it != item_history.end()) ? static_cast<int>(it->second.size()) : 0;
+    }
+
+    COMPONENT_TYPE(PriceHistory)
+};
+
+// ==================== Propaganda & False Myths System ====================
+
+/**
+ * @brief Network of NPC-propagated myths, rumors, and misinformation
+ * 
+ * Tracks fabricated stories about players and factions that NPCs spread
+ * through dialogue. Myths have credibility scores that decay over time
+ * and can be debunked by players.
+ */
+class PropagandaNetwork : public ecs::Component {
+public:
+    enum class MythType {
+        Heroic,      // Inflated positive reputation
+        Villainous,  // False accusations of wrongdoing
+        Mysterious,  // Cryptic rumors about hidden activities
+        Exaggerated, // Real events blown out of proportion
+        Fabricated   // Completely made up stories
+    };
+
+    struct MythEntry {
+        std::string myth_id;
+        std::string subject_id;        // Who/what the myth is about
+        std::string source_faction;    // Faction that originated the myth
+        MythType type = MythType::Fabricated;
+        std::string content;           // The actual myth text
+        std::string base_event;        // Real event being distorted (if any)
+        float credibility = 1.0f;      // 0 = debunked, 1 = fully believed
+        float timestamp = 0.0f;        // When created
+        int spread_count = 1;          // How many NPCs have heard it
+        bool debunked = false;
+        
+        MythEntry() = default;
+    };
+
+    std::vector<MythEntry> myths;
+    float credibility_decay_rate = 0.001f;  // Credibility lost per update
+    int max_myths = 100;
+
+    MythEntry* findMyth(const std::string& myth_id) {
+        for (auto& m : myths) {
+            if (m.myth_id == myth_id) return &m;
+        }
+        return nullptr;
+    }
+
+    const MythEntry* findMyth(const std::string& myth_id) const {
+        for (const auto& m : myths) {
+            if (m.myth_id == myth_id) return &m;
+        }
+        return nullptr;
+    }
+
+    std::vector<MythEntry> getMythsAbout(const std::string& subject_id, bool include_debunked = false) const {
+        std::vector<MythEntry> result;
+        for (const auto& m : myths) {
+            if (m.subject_id == subject_id && (include_debunked || !m.debunked)) {
+                result.push_back(m);
+            }
+        }
+        return result;
+    }
+
+    int getActiveMythCount() const {
+        int count = 0;
+        for (const auto& m : myths) {
+            if (!m.debunked && m.credibility > 0.0f) count++;
+        }
+        return count;
+    }
+
+    COMPONENT_TYPE(PropagandaNetwork)
+};
+
+// ==================== Rest Station (Bed & Quarters) ====================
+
+/**
+ * @brief A rest facility (bed, quarters, etc.) for fatigue recovery
+ * 
+ * Provides mechanics for characters to rest and recover fatigue.
+ * Quality level affects recovery rate.
+ */
+class RestStation : public ecs::Component {
+public:
+    enum class StationType {
+        Bunk,       // Basic bunk bed (quality 0.5)
+        Bed,        // Standard bed (quality 1.0)
+        Quarters,   // Private quarters (quality 1.5)
+        Luxury      // Luxury cabin (quality 2.0)
+    };
+
+    StationType type = StationType::Bed;
+    float quality = 1.0f;              // Recovery rate multiplier (0.5 - 2.0)
+    std::string occupant_id;           // Entity currently using this station
+    bool is_occupied = false;
+    float rest_start_time = 0.0f;      // When current rest session started
+    float total_rest_time = 0.0f;      // Accumulated rest time this session
+
+    bool isAvailable() const { return !is_occupied; }
+
+    void startRest(const std::string& entity_id, float current_time) {
+        occupant_id = entity_id;
+        is_occupied = true;
+        rest_start_time = current_time;
+        total_rest_time = 0.0f;
+    }
+
+    void endRest() {
+        occupant_id.clear();
+        is_occupied = false;
+        rest_start_time = 0.0f;
+        total_rest_time = 0.0f;
+    }
+
+    static float getQualityForType(StationType t) {
+        switch (t) {
+            case StationType::Bunk: return 0.5f;
+            case StationType::Bed: return 1.0f;
+            case StationType::Quarters: return 1.5f;
+            case StationType::Luxury: return 2.0f;
+            default: return 1.0f;
+        }
+    }
+
+    static std::string getTypeName(StationType t) {
+        switch (t) {
+            case StationType::Bunk: return "Bunk";
+            case StationType::Bed: return "Bed";
+            case StationType::Quarters: return "Quarters";
+            case StationType::Luxury: return "Luxury Cabin";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(RestStation)
+};
+
+/**
+ * @brief Tracks an entity's current resting state
+ * 
+ * Added to entities that are currently resting at a RestStation.
+ */
+class RestingState : public ecs::Component {
+public:
+    std::string rest_station_id;   // RestStation entity being used
+    float rest_start_time = 0.0f;  // When rest started
+    float fatigue_at_start = 0.0f; // Fatigue level when rest began
+    bool is_resting = false;
+
+    COMPONENT_TYPE(RestingState)
+};
+
 } // namespace components
 } // namespace atlas
 
