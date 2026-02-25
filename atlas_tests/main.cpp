@@ -362,6 +362,13 @@ void test_viewport_load_spine_hull();
 void test_viewport_load_spine_hull_with_turrets();
 void test_viewport_spine_hull_zone_names();
 void test_viewport_spine_hull_select_and_transform();
+void test_viewport_load_character();
+void test_viewport_load_character_body_part_type();
+void test_viewport_load_character_clothing_type();
+void test_viewport_load_character_select_and_transform();
+void test_viewport_load_character_log_entry();
+void test_viewport_load_character_female();
+void test_viewport_load_character_clear_scene();
 
 // PCG Override Store tests
 void test_override_store_empty();
@@ -739,6 +746,13 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_viewport_load_spine_hull_with_turrets);
     RUN_TEST(test_viewport_spine_hull_zone_names);
     RUN_TEST(test_viewport_spine_hull_select_and_transform);
+    RUN_TEST(test_viewport_load_character);
+    RUN_TEST(test_viewport_load_character_body_part_type);
+    RUN_TEST(test_viewport_load_character_clothing_type);
+    RUN_TEST(test_viewport_load_character_select_and_transform);
+    RUN_TEST(test_viewport_load_character_log_entry);
+    RUN_TEST(test_viewport_load_character_female);
+    RUN_TEST(test_viewport_load_character_clear_scene);
 
     // PCG Override Store
     log.BeginSection("PCG Override Store");

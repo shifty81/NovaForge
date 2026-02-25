@@ -208,6 +208,54 @@ void ViewportPanel::LoadSpineHull(const pcg::GeneratedSpineHull& hull,
     m_log.push_back(oss.str());
 }
 
+void ViewportPanel::LoadCharacter(const pcg::GeneratedLowPolyCharacter& character,
+                                   uint64_t seed) {
+    const char* archetypeName = pcg::archetypeName(character.archetype);
+    std::string charName = std::string(archetypeName)
+                         + (character.isMale ? "_M_" : "_F_")
+                         + std::to_string(character.characterId);
+
+    // Create one object per body part so each piece is individually selectable.
+    for (size_t i = 0; i < character.bodyParts.size(); ++i) {
+        const auto& part = character.bodyParts[i];
+        ViewportObject obj;
+        obj.id   = m_nextId++;
+        obj.name = charName + " " + part.variant;
+        obj.type = "BodyPart";
+        obj.transform.scaleX = part.scaleX;
+        obj.transform.scaleY = part.scaleY;
+        obj.transform.scaleZ = part.scaleZ;
+        obj.transform.posX   = part.offsetX;
+        obj.transform.posY   = part.offsetY;
+        obj.transform.posZ   = part.offsetZ;
+        m_objects.push_back(obj);
+        m_originalTransforms.push_back({obj.id, obj.transform});
+    }
+
+    // Create one object per clothing / accessory item.
+    for (size_t i = 0; i < character.clothing.size(); ++i) {
+        const auto& item = character.clothing[i];
+        ViewportObject obj;
+        obj.id   = m_nextId++;
+        obj.name = charName + " " + item.variant;
+        obj.type = "Clothing";
+        obj.transform.scaleX = item.scaleX;
+        obj.transform.scaleY = item.scaleY;
+        obj.transform.scaleZ = item.scaleZ;
+        obj.transform.posX   = item.offsetX;
+        obj.transform.posY   = item.offsetY;
+        obj.transform.posZ   = item.offsetZ;
+        m_objects.push_back(obj);
+        m_originalTransforms.push_back({obj.id, obj.transform});
+    }
+
+    std::ostringstream oss;
+    oss << "[Viewport] Loaded character '" << charName << "' (seed=" << seed
+        << ") — " << character.bodyParts.size() << " body parts, "
+        << character.clothing.size() << " clothing items";
+    m_log.push_back(oss.str());
+}
+
 void ViewportPanel::ClearScene() {
     m_objects.clear();
     m_originalTransforms.clear();

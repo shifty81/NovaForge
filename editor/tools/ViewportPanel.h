@@ -4,6 +4,7 @@
 #include "../../cpp_server/include/pcg/pcg_manager.h"
 #include "../../cpp_server/include/pcg/ship_generator.h"
 #include "../../cpp_server/include/pcg/station_generator.h"
+#include "../../cpp_server/include/pcg/lowpoly_character_generator.h"
 #include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <vector>
 #include <string>
@@ -87,6 +88,12 @@ public:
     /** Load a spine hull with optional turret placement into the viewport. */
     void LoadSpineHull(const pcg::GeneratedSpineHull& hull,
                        const pcg::TurretPlacement* placement,
+                       uint64_t seed);
+
+    /** Load a generated low-poly character into the viewport for inspection
+     *  and placement.  Creates one object per body part and one per clothing
+     *  item so each piece can be individually selected and transformed. */
+    void LoadCharacter(const pcg::GeneratedLowPolyCharacter& character,
                        uint64_t seed);
 
     /** Clear all objects from the viewport. */

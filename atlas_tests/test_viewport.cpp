@@ -16,6 +16,7 @@
 #include "../cpp_server/include/pcg/station_generator.h"
 #include "../cpp_server/include/pcg/spine_hull_generator.h"
 #include "../cpp_server/include/pcg/turret_placement_system.h"
+#include "../cpp_server/include/pcg/lowpoly_character_generator.h"
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -439,5 +440,126 @@ void test_viewport_spine_hull_select_and_transform() {
     vp.TranslateSelected(10.0f, 0.0f, 0.0f);
     assert(std::abs(vp.GetTransform(zoneId).posX - (origX + 10.0f)) < 0.01f);
     assert(vp.HasPendingChanges());
+
+}
+
+// ── Character viewport tests ──────────────────────────────────────
+
+void test_viewport_load_character() {
+    ViewportPanel vp;
+    PCGManager mgr;
+    mgr.initialize(11111);
+    PCGContext ctx = mgr.makeRootContext(PCGDomain::Character, 1, 1);
+    GeneratedLowPolyCharacter ch = LowPolyCharacterGenerator::generate(ctx);
+
+    vp.LoadCharacter(ch, 11111);
+
+    // Should have body parts + clothing as separate objects.
+    size_t expected = ch.bodyParts.size() + ch.clothing.size();
+    assert(vp.ObjectCount() == expected);
+
+}
+
+void test_viewport_load_character_body_part_type() {
+    ViewportPanel vp;
+    PCGManager mgr;
+    mgr.initialize(22222);
+    PCGContext ctx = mgr.makeRootContext(PCGDomain::Character, 1, 1);
+    GeneratedLowPolyCharacter ch = LowPolyCharacterGenerator::generate(ctx);
+
+    vp.LoadCharacter(ch, 22222);
+
+    // First objects (body parts) must have type "BodyPart".
+    for (size_t i = 0; i < ch.bodyParts.size(); ++i) {
+        assert(vp.GetObject(i).type == "BodyPart");
+    }
+
+}
+
+void test_viewport_load_character_clothing_type() {
+    ViewportPanel vp;
+    PCGManager mgr;
+    mgr.initialize(33333);
+    PCGContext ctx = mgr.makeRootContext(PCGDomain::Character, 1, 1);
+    GeneratedLowPolyCharacter ch = LowPolyCharacterGenerator::generate(ctx);
+
+    vp.LoadCharacter(ch, 33333);
+
+    // Objects after body parts must have type "Clothing".
+    size_t bodyCount = ch.bodyParts.size();
+    for (size_t i = bodyCount; i < vp.ObjectCount(); ++i) {
+        assert(vp.GetObject(i).type == "Clothing");
+    }
+
+}
+
+void test_viewport_load_character_select_and_transform() {
+    ViewportPanel vp;
+    PCGManager mgr;
+    mgr.initialize(44444);
+    PCGContext ctx = mgr.makeRootContext(PCGDomain::Character, 1, 1);
+    GeneratedLowPolyCharacter ch = LowPolyCharacterGenerator::generate(ctx);
+
+    vp.LoadCharacter(ch, 44444);
+    assert(vp.ObjectCount() > 0);
+
+    uint32_t partId = vp.GetObject(0).id;
+    vp.SelectObject(partId);
+    assert(vp.SelectedObjectId() == partId);
+
+    float origX = vp.GetTransform(partId).posX;
+    vp.TranslateSelected(5.0f, 0.0f, 0.0f);
+    assert(std::abs(vp.GetTransform(partId).posX - (origX + 5.0f)) < 0.01f);
+    assert(vp.HasPendingChanges());
+
+}
+
+void test_viewport_load_character_log_entry() {
+    ViewportPanel vp;
+    PCGManager mgr;
+    mgr.initialize(55555);
+    PCGContext ctx = mgr.makeRootContext(PCGDomain::Character, 1, 1);
+    GeneratedLowPolyCharacter ch = LowPolyCharacterGenerator::generate(ctx);
+
+    size_t logBefore = vp.Log().size();
+    vp.LoadCharacter(ch, 55555);
+
+    assert(vp.Log().size() > logBefore);
+
+}
+
+void test_viewport_load_character_female() {
+    ViewportPanel vp;
+    PCGManager mgr;
+    mgr.initialize(66666);
+    PCGContext ctx = mgr.makeRootContext(PCGDomain::Character, 1, 1);
+    GeneratedLowPolyCharacter ch = LowPolyCharacterGenerator::generate(
+        ctx, CharacterArchetype::Medic, /*isMale=*/false);
+
+    vp.LoadCharacter(ch, 66666);
+
+    size_t expected = ch.bodyParts.size() + ch.clothing.size();
+    assert(vp.ObjectCount() == expected);
+    // All body-part objects present.
+    for (size_t i = 0; i < ch.bodyParts.size(); ++i) {
+        assert(vp.GetObject(i).type == "BodyPart");
+    }
+
+}
+
+void test_viewport_load_character_clear_scene() {
+    ViewportPanel vp;
+    PCGManager mgr;
+    mgr.initialize(77777);
+    PCGContext ctx = mgr.makeRootContext(PCGDomain::Character, 1, 1);
+    GeneratedLowPolyCharacter ch = LowPolyCharacterGenerator::generate(ctx);
+
+    vp.LoadCharacter(ch, 77777);
+    assert(vp.ObjectCount() > 0);
+
+    vp.ClearScene();
+    assert(vp.ObjectCount() == 0);
+    assert(vp.SelectedObjectId() == 0);
+    assert(!vp.HasPendingChanges());
 
 }
