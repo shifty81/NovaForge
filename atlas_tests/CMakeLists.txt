@@ -33,6 +33,7 @@ set(ATLAS_TEST_SOURCES
     test_galaxy_map.cpp
     test_eventbus.cpp
     test_fleet_formation.cpp
+    test_mission_editor.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
@@ -44,7 +45,10 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/LiveSceneManager.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GalaxyMapPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/FleetFormationPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/MissionEditorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
+    ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
+    ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ECSInspectorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/NetInspectorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/ui/EditorLayout.cpp

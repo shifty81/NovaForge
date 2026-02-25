@@ -491,6 +491,58 @@ void test_fmtn_spacing_affects_offsets();
 void test_fmtn_draw_does_not_crash();
 void test_fmtn_log_after_actions();
 
+// Mission Editor Panel tests
+void test_mission_editor_defaults();
+void test_mission_editor_add_template();
+void test_mission_editor_add_multiple();
+void test_mission_editor_remove_template();
+void test_mission_editor_remove_out_of_range();
+void test_mission_editor_update_template();
+void test_mission_editor_update_out_of_range();
+void test_mission_editor_select_template();
+void test_mission_editor_select_invalid_ignored();
+void test_mission_editor_clear_selection();
+void test_mission_editor_remove_fixes_selection();
+void test_mission_editor_type_filter();
+void test_mission_editor_level_filter();
+void test_mission_editor_combined_filter();
+void test_mission_editor_validate_valid();
+void test_mission_editor_validate_empty_id();
+void test_mission_editor_validate_empty_type();
+void test_mission_editor_validate_bad_level();
+void test_mission_editor_validate_no_objectives();
+void test_mission_editor_validate_bad_objective();
+void test_mission_editor_validate_negative_isk();
+void test_mission_editor_validate_all();
+void test_mission_editor_export_json();
+void test_mission_editor_import_json();
+void test_mission_editor_draw_does_not_crash();
+void test_mission_editor_log_after_actions();
+
+// Undo Stack tests
+void test_undo_stack_defaults();
+void test_undo_stack_push_and_undo();
+void test_undo_stack_redo();
+void test_undo_stack_multiple_actions();
+void test_undo_stack_push_clears_redo();
+void test_undo_stack_clear();
+void test_undo_stack_max_depth();
+void test_undo_stack_empty_undo_returns_false();
+void test_undo_stack_empty_redo_returns_false();
+
+// Template AI Backend tests
+void test_template_ai_defaults_installed();
+void test_template_ai_query_match();
+void test_template_ai_query_no_match();
+void test_template_ai_case_insensitive();
+void test_template_ai_best_match_wins();
+void test_template_ai_multiple_matches_boost();
+void test_template_ai_add_and_remove();
+void test_template_ai_remove_nonexistent();
+void test_template_ai_add_empty_keyword_ignored();
+void test_template_ai_clear_templates();
+void test_template_ai_with_aggregator();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1037,6 +1089,61 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_dock_tab_draw);
     RUN_TEST(test_dock_tab_switch);
     RUN_TEST(test_dock_register_panels);
+
+    // Mission Editor Panel
+    log.BeginSection("Mission Editor Panel");
+    RUN_TEST(test_mission_editor_defaults);
+    RUN_TEST(test_mission_editor_add_template);
+    RUN_TEST(test_mission_editor_add_multiple);
+    RUN_TEST(test_mission_editor_remove_template);
+    RUN_TEST(test_mission_editor_remove_out_of_range);
+    RUN_TEST(test_mission_editor_update_template);
+    RUN_TEST(test_mission_editor_update_out_of_range);
+    RUN_TEST(test_mission_editor_select_template);
+    RUN_TEST(test_mission_editor_select_invalid_ignored);
+    RUN_TEST(test_mission_editor_clear_selection);
+    RUN_TEST(test_mission_editor_remove_fixes_selection);
+    RUN_TEST(test_mission_editor_type_filter);
+    RUN_TEST(test_mission_editor_level_filter);
+    RUN_TEST(test_mission_editor_combined_filter);
+    RUN_TEST(test_mission_editor_validate_valid);
+    RUN_TEST(test_mission_editor_validate_empty_id);
+    RUN_TEST(test_mission_editor_validate_empty_type);
+    RUN_TEST(test_mission_editor_validate_bad_level);
+    RUN_TEST(test_mission_editor_validate_no_objectives);
+    RUN_TEST(test_mission_editor_validate_bad_objective);
+    RUN_TEST(test_mission_editor_validate_negative_isk);
+    RUN_TEST(test_mission_editor_validate_all);
+    RUN_TEST(test_mission_editor_export_json);
+    RUN_TEST(test_mission_editor_import_json);
+    RUN_TEST(test_mission_editor_draw_does_not_crash);
+    RUN_TEST(test_mission_editor_log_after_actions);
+
+    // Undo Stack
+    log.BeginSection("Undo Stack");
+    RUN_TEST(test_undo_stack_defaults);
+    RUN_TEST(test_undo_stack_push_and_undo);
+    RUN_TEST(test_undo_stack_redo);
+    RUN_TEST(test_undo_stack_multiple_actions);
+    RUN_TEST(test_undo_stack_push_clears_redo);
+    RUN_TEST(test_undo_stack_clear);
+    RUN_TEST(test_undo_stack_max_depth);
+    RUN_TEST(test_undo_stack_empty_undo_returns_false);
+    RUN_TEST(test_undo_stack_empty_redo_returns_false);
+
+    // Template AI Backend
+    log.BeginSection("Template AI Backend");
+    RUN_TEST(test_template_ai_defaults_installed);
+    RUN_TEST(test_template_ai_query_match);
+    RUN_TEST(test_template_ai_query_no_match);
+    RUN_TEST(test_template_ai_case_insensitive);
+    RUN_TEST(test_template_ai_best_match_wins);
+    RUN_TEST(test_template_ai_multiple_matches_boost);
+    RUN_TEST(test_template_ai_add_and_remove);
+    RUN_TEST(test_template_ai_remove_nonexistent);
+    RUN_TEST(test_template_ai_add_empty_keyword_ignored);
+    RUN_TEST(test_template_ai_clear_templates);
+    RUN_TEST(test_template_ai_with_aggregator);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
