@@ -91,8 +91,10 @@ void LiveSceneManager::PopulateDefaultScene() {
 
     m_viewport->ClearScene();
 
-    // Configure PCG settings for the scene seed
-    PCGPreviewSettings settings = m_pcgPreview->Settings();
+    // Start from clean default settings so that previous overrides
+    // (e.g. overrideHull from a prior SpineHull step) do not leak into
+    // subsequent calls and produce a different object count.
+    PCGPreviewSettings settings{};
     settings.seed    = m_seed;
     settings.version = m_version;
 
