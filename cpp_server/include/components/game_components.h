@@ -3003,6 +3003,98 @@ public:
     COMPONENT_TYPE(StationMonument)
 };
 
+// ==================== Living Universe: Information Propagation ====================
+
+/**
+ * @brief Tracks rumors about player actions in a star system.
+ * Rumors propagate to neighboring systems over time and decay if unconfirmed.
+ */
+class InformationPropagation : public ecs::Component {
+public:
+    struct Rumor {
+        std::string rumor_id;
+        std::string player_id;
+        std::string action_type;  // "combat", "mining", "trade", "exploration", "piracy"
+        std::string origin_system;
+        float belief_strength = 1.0f;  // 0.0 to 1.0
+        float age = 0.0f;              // seconds since creation
+        int hops = 0;                  // how many systems this has propagated through
+        bool personally_witnessed = false;
+    };
+
+    std::vector<Rumor> rumors;
+    std::vector<std::string> neighbor_system_ids;  // systems this can propagate to
+    float propagation_interval = 30.0f;     // seconds between propagation attempts
+    float propagation_timer = 0.0f;
+    float decay_rate = 0.01f;               // belief decay per second
+    float max_rumor_age = 300.0f;           // rumors older than this are removed
+    int max_rumors = 50;
+    int max_hops = 5;                       // max propagation distance
+
+    void addRumor(const std::string& rumor_id, const std::string& player_id,
+                  const std::string& action_type, const std::string& origin_system,
+                  bool witnessed = true) {
+        // Don't add duplicate rumors
+        for (auto& r : rumors) {
+            if (r.rumor_id == rumor_id) {
+                if (witnessed) r.belief_strength = std::min(r.belief_strength + 0.3f, 1.0f);
+                return;
+            }
+        }
+        Rumor rumor;
+        rumor.rumor_id = rumor_id;
+        rumor.player_id = player_id;
+        rumor.action_type = action_type;
+        rumor.origin_system = origin_system;
+        rumor.belief_strength = witnessed ? 1.0f : 0.5f;
+        rumor.personally_witnessed = witnessed;
+        rumors.push_back(rumor);
+        if (static_cast<int>(rumors.size()) > max_rumors) {
+            rumors.erase(rumors.begin());
+        }
+    }
+
+    int getRumorCount() const { return static_cast<int>(rumors.size()); }
+
+    COMPONENT_TYPE(InformationPropagation)
+};
+
+// ==================== Phase 13: Crew Activity AI ====================
+
+/**
+ * @brief Tracks crew member activity state and room assignment.
+ * Crew AI transitions between activities based on ship state and needs.
+ */
+class CrewActivity : public ecs::Component {
+public:
+    enum class Activity { Idle, Working, Walking, Resting, Eating, Repairing, Manning };
+
+    std::string crew_member_id;
+    std::string assigned_room_id;
+    Activity current_activity = Activity::Idle;
+    float activity_timer = 0.0f;        // time in current activity
+    float activity_duration = 60.0f;    // how long to stay in activity
+    float fatigue = 0.0f;               // 0.0 to 1.0
+    float hunger = 0.0f;                // 0.0 to 1.0
+    bool ship_damaged = false;          // triggers repair activity
+    bool station_manned = false;        // at workstation
+
+    static std::string activityToString(Activity a) {
+        switch (a) {
+            case Activity::Idle:      return "Idle";
+            case Activity::Working:   return "Working";
+            case Activity::Walking:   return "Walking";
+            case Activity::Resting:   return "Resting";
+            case Activity::Eating:    return "Eating";
+            case Activity::Repairing: return "Repairing";
+            case Activity::Manning:   return "Manning";
+            default:                  return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(CrewActivity)
+};
+
 } // namespace components
 } // namespace atlas
 

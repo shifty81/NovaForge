@@ -140,6 +140,8 @@
 #include "systems/convoy_ambush_system.h"
 #include "systems/npc_dialogue_system.h"
 #include "systems/station_monument_system.h"
+#include "systems/information_propagation_system.h"
+#include "systems/crew_activity_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -18684,6 +18686,241 @@ void testMonumentMultiplePlayers() {
     assertTrue(monumentSys.getMonuments("station1").size() == 3, "getMonuments returns 3");
 }
 
+// ==================== Information Propagation System tests ====================
+
+void testInfoPropReportAction() {
+    std::cout << "\n=== Info Prop Report Action ===" << std::endl;
+    ecs::World world;
+    systems::InformationPropagationSystem infoSys(&world);
+
+    auto* sys1 = world.createEntity("system1");
+    sys1->addComponent(std::make_unique<components::InformationPropagation>());
+
+    infoSys.reportPlayerAction("system1", "player1", "combat");
+    assertTrue(infoSys.getRumorCount("system1") == 1, "One rumor reported");
+    auto rumors = infoSys.getRumors("system1");
+    assertTrue(rumors[0].player_id == "player1", "Rumor tracks correct player");
+    assertTrue(rumors[0].action_type == "combat", "Rumor tracks correct action");
+    assertTrue(rumors[0].personally_witnessed == true, "Rumor is witnessed");
+}
+
+void testInfoPropDecay() {
+    std::cout << "\n=== Info Prop Decay ===" << std::endl;
+    ecs::World world;
+    systems::InformationPropagationSystem infoSys(&world);
+
+    auto* sys1 = world.createEntity("system1");
+    auto infoProp = std::make_unique<components::InformationPropagation>();
+    infoProp->decay_rate = 0.1f;
+    infoProp->max_rumor_age = 300.0f;
+    sys1->addComponent(std::move(infoProp));
+
+    // Add a non-witnessed rumor
+    auto* info = sys1->getComponent<components::InformationPropagation>();
+    info->addRumor("rumor1", "player1", "piracy", "system1", false);
+    float initial = info->rumors[0].belief_strength;
+
+    infoSys.update(1.0f);  // 1 second
+    assertTrue(info->rumors[0].belief_strength < initial, "Belief decayed for non-witnessed");
+}
+
+void testInfoPropPropagation() {
+    std::cout << "\n=== Info Prop Propagation ===" << std::endl;
+    ecs::World world;
+    systems::InformationPropagationSystem infoSys(&world);
+
+    auto* sys1 = world.createEntity("system1");
+    auto info1 = std::make_unique<components::InformationPropagation>();
+    info1->neighbor_system_ids.push_back("system2");
+    info1->propagation_interval = 1.0f;  // propagate every 1s for testing
+    sys1->addComponent(std::move(info1));
+
+    auto* sys2 = world.createEntity("system2");
+    sys2->addComponent(std::make_unique<components::InformationPropagation>());
+
+    infoSys.reportPlayerAction("system1", "player1", "combat");
+    assertTrue(infoSys.getRumorCount("system1") == 1, "System1 has rumor");
+    assertTrue(infoSys.getRumorCount("system2") == 0, "System2 has no rumor yet");
+
+    infoSys.update(1.0f);  // trigger propagation
+    assertTrue(infoSys.getRumorCount("system2") == 1, "Rumor propagated to system2");
+
+    auto rumors2 = infoSys.getRumors("system2");
+    assertTrue(rumors2[0].hops == 1, "Propagated rumor has hop count 1");
+    assertTrue(rumors2[0].belief_strength < 1.0f, "Propagated rumor has reduced belief");
+    assertTrue(rumors2[0].personally_witnessed == false, "Propagated rumor not witnessed");
+}
+
+void testInfoPropPlayerNotoriety() {
+    std::cout << "\n=== Info Prop Player Notoriety ===" << std::endl;
+    ecs::World world;
+    systems::InformationPropagationSystem infoSys(&world);
+
+    auto* sys1 = world.createEntity("system1");
+    sys1->addComponent(std::make_unique<components::InformationPropagation>());
+
+    infoSys.reportPlayerAction("system1", "player1", "combat");
+    infoSys.reportPlayerAction("system1", "player1", "piracy");
+    float notoriety = infoSys.getPlayerNotoriety("system1", "player1");
+    assertTrue(notoriety > 0.0f, "Player has notoriety");
+    assertTrue(infoSys.getRumorCount("system1") == 2, "Two rumors about player");
+}
+
+void testInfoPropMaxHops() {
+    std::cout << "\n=== Info Prop Max Hops ===" << std::endl;
+    ecs::World world;
+    systems::InformationPropagationSystem infoSys(&world);
+
+    auto* sys1 = world.createEntity("system1");
+    auto info1 = std::make_unique<components::InformationPropagation>();
+    info1->neighbor_system_ids.push_back("system2");
+    info1->propagation_interval = 1.0f;
+    info1->max_hops = 1;
+    sys1->addComponent(std::move(info1));
+
+    auto* sys2 = world.createEntity("system2");
+    auto info2 = std::make_unique<components::InformationPropagation>();
+    info2->neighbor_system_ids.push_back("system3");
+    info2->propagation_interval = 1.0f;
+    info2->max_hops = 1;
+    sys2->addComponent(std::move(info2));
+
+    auto* sys3 = world.createEntity("system3");
+    sys3->addComponent(std::make_unique<components::InformationPropagation>());
+
+    infoSys.reportPlayerAction("system1", "player1", "combat");
+    infoSys.update(1.0f);  // propagate to system2
+    assertTrue(infoSys.getRumorCount("system2") == 1, "Propagated to system2");
+
+    infoSys.update(1.0f);  // try to propagate from system2 to system3
+    assertTrue(infoSys.getRumorCount("system3") == 0, "Stopped at max hops");
+}
+
+void testInfoPropExpiry() {
+    std::cout << "\n=== Info Prop Expiry ===" << std::endl;
+    ecs::World world;
+    systems::InformationPropagationSystem infoSys(&world);
+
+    auto* sys1 = world.createEntity("system1");
+    auto infoProp = std::make_unique<components::InformationPropagation>();
+    infoProp->max_rumor_age = 5.0f;
+    sys1->addComponent(std::move(infoProp));
+
+    auto* info = sys1->getComponent<components::InformationPropagation>();
+    info->addRumor("rumor1", "player1", "combat", "system1", true);
+    assertTrue(info->getRumorCount() == 1, "Rumor exists");
+
+    infoSys.update(6.0f);  // age past expiry
+    assertTrue(info->getRumorCount() == 0, "Rumor expired and removed");
+}
+
+// ==================== Crew Activity System tests ====================
+
+void testCrewActivityAssignRoom() {
+    std::cout << "\n=== Crew Activity Assign Room ===" << std::endl;
+    ecs::World world;
+    systems::CrewActivitySystem crewActSys(&world);
+
+    auto* crew1 = world.createEntity("crew1");
+    crew1->addComponent(std::make_unique<components::CrewActivity>());
+
+    crewActSys.assignRoom("crew1", "engine_room");
+    assertTrue(crewActSys.getAssignedRoom("crew1") == "engine_room", "Room assigned");
+    assertTrue(crewActSys.getActivity("crew1") == "Idle", "Initially idle");
+}
+
+void testCrewActivityDamageRepair() {
+    std::cout << "\n=== Crew Activity Damage Repair ===" << std::endl;
+    ecs::World world;
+    systems::CrewActivitySystem crewActSys(&world);
+
+    auto* crew1 = world.createEntity("crew1");
+    crew1->addComponent(std::make_unique<components::CrewActivity>());
+
+    crewActSys.setShipDamaged("crew1", true);
+    crewActSys.update(0.1f);
+    assertTrue(crewActSys.getActivity("crew1") == "Repairing", "Crew repairs when ship damaged");
+}
+
+void testCrewActivityHunger() {
+    std::cout << "\n=== Crew Activity Hunger ===" << std::endl;
+    ecs::World world;
+    systems::CrewActivitySystem crewActSys(&world);
+
+    auto* crew1 = world.createEntity("crew1");
+    auto ca = std::make_unique<components::CrewActivity>();
+    ca->hunger = 0.79f;
+    ca->current_activity = components::CrewActivity::Activity::Working;
+    crew1->addComponent(std::move(ca));
+
+    // hunger at 0.79, accumulation of 0.003 * delta pushes over 0.8
+    crewActSys.update(10.0f);  // hunger += 0.003 * 10 = 0.03 → 0.82
+    assertTrue(crewActSys.getActivity("crew1") == "Eating", "Crew eats when hungry");
+}
+
+void testCrewActivityFatigue() {
+    std::cout << "\n=== Crew Activity Fatigue ===" << std::endl;
+    ecs::World world;
+    systems::CrewActivitySystem crewActSys(&world);
+
+    auto* crew1 = world.createEntity("crew1");
+    auto ca = std::make_unique<components::CrewActivity>();
+    ca->fatigue = 0.79f;
+    ca->current_activity = components::CrewActivity::Activity::Working;
+    crew1->addComponent(std::move(ca));
+
+    // fatigue at 0.79, accumulation of 0.002 * delta pushes over 0.8
+    crewActSys.update(10.0f);  // fatigue += 0.002 * 10 = 0.02 → 0.81
+    assertTrue(crewActSys.getActivity("crew1") == "Resting", "Crew rests when fatigued");
+}
+
+void testCrewActivityGetCrewInActivity() {
+    std::cout << "\n=== Crew Activity Get Crew In Activity ===" << std::endl;
+    ecs::World world;
+    systems::CrewActivitySystem crewActSys(&world);
+
+    auto* crew1 = world.createEntity("crew1");
+    auto ca1 = std::make_unique<components::CrewActivity>();
+    ca1->current_activity = components::CrewActivity::Activity::Working;
+    crew1->addComponent(std::move(ca1));
+
+    auto* crew2 = world.createEntity("crew2");
+    auto ca2 = std::make_unique<components::CrewActivity>();
+    ca2->current_activity = components::CrewActivity::Activity::Working;
+    crew2->addComponent(std::move(ca2));
+
+    auto* crew3 = world.createEntity("crew3");
+    auto ca3 = std::make_unique<components::CrewActivity>();
+    ca3->current_activity = components::CrewActivity::Activity::Resting;
+    crew3->addComponent(std::move(ca3));
+
+    auto working = crewActSys.getCrewInActivity(components::CrewActivity::Activity::Working);
+    assertTrue(working.size() == 2, "Two crew working");
+    auto resting = crewActSys.getCrewInActivity(components::CrewActivity::Activity::Resting);
+    assertTrue(resting.size() == 1, "One crew resting");
+}
+
+void testCrewActivityTransition() {
+    std::cout << "\n=== Crew Activity Transition ===" << std::endl;
+    ecs::World world;
+    systems::CrewActivitySystem crewActSys(&world);
+
+    auto* crew1 = world.createEntity("crew1");
+    auto ca = std::make_unique<components::CrewActivity>();
+    ca->current_activity = components::CrewActivity::Activity::Idle;
+    ca->assigned_room_id = "bridge";
+    ca->activity_duration = 5.0f;
+    crew1->addComponent(std::move(ca));
+
+    // Idle → Walking after activity_duration
+    crewActSys.update(6.0f);
+    assertTrue(crewActSys.getActivity("crew1") == "Walking", "Crew walks to room after idle");
+
+    // Walking → Manning after another activity_duration
+    crewActSys.update(6.0f);
+    assertTrue(crewActSys.getActivity("crew1") == "Manning", "Crew mans station after walking");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -18726,6 +18963,7 @@ int main() {
     std::cout << "AIEconomicActor, TurretAI," << std::endl;
     std::cout << "Alliance, Sovereignty, WarDeclaration," << std::endl;
     std::cout << "ConvoyAmbush, NPCDialogue, StationMonument" << std::endl;
+    std::cout << "CrewActivity" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -19988,6 +20226,22 @@ int main() {
     testMonumentUpgrade();
     testMonumentNoUpgradeIfSameType();
     testMonumentMultiplePlayers();
+
+    // Information Propagation System tests
+    testInfoPropReportAction();
+    testInfoPropDecay();
+    testInfoPropPropagation();
+    testInfoPropPlayerNotoriety();
+    testInfoPropMaxHops();
+    testInfoPropExpiry();
+
+    // Crew Activity System tests
+    testCrewActivityAssignRoom();
+    testCrewActivityDamageRepair();
+    testCrewActivityHunger();
+    testCrewActivityFatigue();
+    testCrewActivityGetCrewInActivity();
+    testCrewActivityTransition();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

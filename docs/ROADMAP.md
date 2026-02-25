@@ -1057,7 +1057,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] Security response delay — SecurityResponseSystem with AEGIS-style delayed response (7 tests)
 - [x] System threat adjustment from combat — CombatThreatSystem with damage/destruction tracking (5 tests)
 - [x] Station news feed — StationNewsFeed component + StationNewsSystem with combat/economy/exploration event reporting (3 tests)
-- [ ] Rumors about player actions (`AtlasInformationPropagationSystem`)
+- [x] Rumors about player actions (`AtlasInformationPropagationSystem`)
 - [ ] Visual cues (lockdowns, traffic density)
 - [ ] Economy engine: supply/demand curves driven by NPC activity
 
@@ -1195,8 +1195,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### NPC Crew Simulation
 - [x] **Crew members** — 8 roles (Engineer, Pilot, Gunner, Medic, Scientist, Miner, Cook, Security) — CrewMember component with skill, morale, activity tracking (4 tests)
 - [x] **Ship crew management** — Assign/remove crew, efficiency calculation — ShipCrew component + CrewSystem
-- [ ] **Crew room assignment** — NPCs spawn at workbenches, walk corridors, use elevators
-- [ ] **Crew activity AI** — Working, walking, resting, eating, repairing, manning based on ship state
+- [x] **Crew room assignment** — NPCs spawn at workbenches, walk corridors, use elevators — CrewActivity component with assigned_room_id + CrewActivitySystem room assignment (6 tests)
+- [x] **Crew activity AI** — Working, walking, resting, eating, repairing, manning based on ship state — CrewActivitySystem with priority-based transitions, fatigue/hunger tracking (6 tests)
 
 #### Salvage & Exploration
 - [x] **Salvage sites** — ShipWreck, DerelictStation, Ruins, DebrisField, AncientSite types — SalvageSite component with loot node discovery/looting (5 tests)

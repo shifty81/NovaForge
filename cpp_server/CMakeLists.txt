@@ -136,6 +136,8 @@ set(SERVER_SOURCES
     src/systems/alliance_system.cpp
     src/systems/sovereignty_system.cpp
     src/systems/war_declaration_system.cpp
+    src/systems/information_propagation_system.cpp
+    src/systems/crew_activity_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -286,6 +288,8 @@ set(SERVER_HEADERS
     include/systems/alliance_system.h
     include/systems/sovereignty_system.h
     include/systems/war_declaration_system.h
+    include/systems/information_propagation_system.h
+    include/systems/crew_activity_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -505,6 +509,8 @@ if(BUILD_TESTS)
         src/systems/convoy_ambush_system.cpp
         src/systems/npc_dialogue_system.cpp
         src/systems/station_monument_system.cpp
+        src/systems/information_propagation_system.cpp
+        src/systems/crew_activity_system.cpp
         src/data/world_persistence.cpp
         src/utils/logger.cpp
         src/utils/server_metrics.cpp
