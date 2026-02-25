@@ -1058,8 +1058,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] System threat adjustment from combat — CombatThreatSystem with damage/destruction tracking (5 tests)
 - [x] Station news feed — StationNewsFeed component + StationNewsSystem with combat/economy/exploration event reporting (3 tests)
 - [x] Rumors about player actions (`AtlasInformationPropagationSystem`)
-- [ ] Visual cues (lockdowns, traffic density)
-- [ ] Economy engine: supply/demand curves driven by NPC activity
+- [x] Visual cues (lockdowns, traffic density) — VisualCueSystem with lockdown detection, traffic density, threat glow, prosperity, pirate warning, resource highlight, faction influence (6 tests)
+- [x] Economy engine: supply/demand curves driven by NPC activity — SupplyDemandSystem with per-commodity tracking, price elasticity, NPC activity modifiers, floor/ceiling clamping (6 tests)
 
 ---
 
@@ -1263,7 +1263,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Buy/sell orders** — Regional market with per-item orders and expiry — MarketOrder component + MarketOrderSystem (5 tests)
 - [x] **AI fleet dispatch** — NPC mining/hauling/production fleets fulfilling orders — AIFleetDispatch component with completion tracking
 - [ ] **Dynamic price graphs** — Visual price history per region
-- [ ] **Black market & smuggling** — Hidden trade network
+- [x] **Black market & smuggling** — BlackMarketSystem with hidden listings, contraband tracking, detection chance scaled by security, price markup, expiry, purchase API (7 tests)
 - [x] **Convoy ambush AI** — Pirates target trade routes — ConvoyAmbushSystem with ConvoyRoute + ConvoyAmbush components, security-level-gated success, loot capture, disperse on security response (7 tests)
 
 #### Legend & Myth System
