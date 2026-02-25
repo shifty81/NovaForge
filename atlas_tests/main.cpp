@@ -388,6 +388,67 @@ void test_live_scene_regenerate();
 void test_live_scene_on_asset_reload_triggers_regen();
 void test_live_scene_seed_and_version();
 
+// Galaxy Generator tests
+void test_galaxy_generate_default();
+void test_galaxy_system_count_clamped();
+void test_galaxy_security_zone_counts();
+void test_galaxy_all_nodes_connected();
+void test_galaxy_chokepoints_exist();
+void test_galaxy_determinism();
+void test_galaxy_different_seeds_differ();
+void test_galaxy_security_level_range();
+void test_galaxy_security_zone_name();
+void test_galaxy_route_distances_positive();
+
+// Economy-Driven Generator tests
+void test_economy_generate_default();
+void test_economy_resource_rich_has_miners();
+void test_economy_lawless_has_pirates();
+void test_economy_quality_range();
+void test_economy_determinism();
+void test_economy_state_names();
+void test_economy_role_names();
+void test_economy_war_torn_has_armed_ships();
+
+// NPC Encounter Generator tests
+void test_encounter_generate_default();
+void test_encounter_wave_count_explicit();
+void test_encounter_high_sec_easier();
+void test_encounter_null_sec_higher_bounty();
+void test_encounter_determinism();
+void test_encounter_calculate_bounty();
+void test_encounter_wave_trigger_delays();
+
+// Damage State Generator tests
+void test_damage_generate_pristine();
+void test_damage_generate_critical();
+void test_damage_level_progression();
+void test_damage_decals_increase_with_severity();
+void test_damage_determinism();
+void test_damage_structural_integrity_range();
+void test_damage_level_names();
+void test_damage_decal_type_names();
+
+// Galaxy Map Panel tests
+void test_galaxy_panel_defaults();
+void test_galaxy_panel_generate();
+void test_galaxy_panel_chokepoints();
+void test_galaxy_panel_system_count_clamped_low();
+void test_galaxy_panel_system_count_clamped_high();
+void test_galaxy_panel_log_after_generate();
+void test_galaxy_panel_filter_all();
+void test_galaxy_panel_filter_highsec();
+void test_galaxy_panel_filter_lowsec();
+void test_galaxy_panel_filter_nullsec();
+void test_galaxy_panel_filter_sum_equals_total();
+void test_galaxy_panel_select_system();
+void test_galaxy_panel_select_nonexistent_ignored();
+void test_galaxy_panel_clear_selection();
+void test_galaxy_panel_generate_clears_selection();
+void test_galaxy_panel_determinism();
+void test_galaxy_panel_different_seeds_differ();
+void test_galaxy_panel_draw_does_not_crash();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -763,6 +824,72 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_override_store_file_roundtrip);
     RUN_TEST(test_override_store_load_nonexistent);
     RUN_TEST(test_override_store_import_from_viewport);
+
+    // Galaxy Generator
+    log.BeginSection("Galaxy Generator");
+    RUN_TEST(test_galaxy_generate_default);
+    RUN_TEST(test_galaxy_system_count_clamped);
+    RUN_TEST(test_galaxy_security_zone_counts);
+    RUN_TEST(test_galaxy_all_nodes_connected);
+    RUN_TEST(test_galaxy_chokepoints_exist);
+    RUN_TEST(test_galaxy_determinism);
+    RUN_TEST(test_galaxy_different_seeds_differ);
+    RUN_TEST(test_galaxy_security_level_range);
+    RUN_TEST(test_galaxy_security_zone_name);
+    RUN_TEST(test_galaxy_route_distances_positive);
+
+    // Economy-Driven Generator
+    log.BeginSection("Economy-Driven Generator");
+    RUN_TEST(test_economy_generate_default);
+    RUN_TEST(test_economy_resource_rich_has_miners);
+    RUN_TEST(test_economy_lawless_has_pirates);
+    RUN_TEST(test_economy_quality_range);
+    RUN_TEST(test_economy_determinism);
+    RUN_TEST(test_economy_state_names);
+    RUN_TEST(test_economy_role_names);
+    RUN_TEST(test_economy_war_torn_has_armed_ships);
+
+    // NPC Encounter Generator
+    log.BeginSection("NPC Encounter Generator");
+    RUN_TEST(test_encounter_generate_default);
+    RUN_TEST(test_encounter_wave_count_explicit);
+    RUN_TEST(test_encounter_high_sec_easier);
+    RUN_TEST(test_encounter_null_sec_higher_bounty);
+    RUN_TEST(test_encounter_determinism);
+    RUN_TEST(test_encounter_calculate_bounty);
+    RUN_TEST(test_encounter_wave_trigger_delays);
+
+    // Damage State Generator
+    log.BeginSection("Damage State Generator");
+    RUN_TEST(test_damage_generate_pristine);
+    RUN_TEST(test_damage_generate_critical);
+    RUN_TEST(test_damage_level_progression);
+    RUN_TEST(test_damage_decals_increase_with_severity);
+    RUN_TEST(test_damage_determinism);
+    RUN_TEST(test_damage_structural_integrity_range);
+    RUN_TEST(test_damage_level_names);
+    RUN_TEST(test_damage_decal_type_names);
+
+    // Galaxy Map Panel
+    log.BeginSection("Galaxy Map Panel");
+    RUN_TEST(test_galaxy_panel_defaults);
+    RUN_TEST(test_galaxy_panel_generate);
+    RUN_TEST(test_galaxy_panel_chokepoints);
+    RUN_TEST(test_galaxy_panel_system_count_clamped_low);
+    RUN_TEST(test_galaxy_panel_system_count_clamped_high);
+    RUN_TEST(test_galaxy_panel_log_after_generate);
+    RUN_TEST(test_galaxy_panel_filter_all);
+    RUN_TEST(test_galaxy_panel_filter_highsec);
+    RUN_TEST(test_galaxy_panel_filter_lowsec);
+    RUN_TEST(test_galaxy_panel_filter_nullsec);
+    RUN_TEST(test_galaxy_panel_filter_sum_equals_total);
+    RUN_TEST(test_galaxy_panel_select_system);
+    RUN_TEST(test_galaxy_panel_select_nonexistent_ignored);
+    RUN_TEST(test_galaxy_panel_clear_selection);
+    RUN_TEST(test_galaxy_panel_generate_clears_selection);
+    RUN_TEST(test_galaxy_panel_determinism);
+    RUN_TEST(test_galaxy_panel_different_seeds_differ);
+    RUN_TEST(test_galaxy_panel_draw_does_not_crash);
 
     // Live Scene Manager
     log.BeginSection("Live Scene Manager");

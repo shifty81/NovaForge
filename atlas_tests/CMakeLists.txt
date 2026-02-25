@@ -29,6 +29,8 @@ set(ATLAS_TEST_SOURCES
     test_viewport.cpp
     test_editor_panels.cpp
     test_live_scene.cpp
+    test_sim_systems.cpp
+    test_galaxy_map.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
@@ -38,6 +40,7 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGOverrideStore.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/LiveSceneManager.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/GalaxyMapPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ECSInspectorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/NetInspectorPanel.cpp
@@ -60,6 +63,10 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/spine_hull_generator.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_placement_system.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/galaxy_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/economy_driven_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/npc_encounter_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/damage_state_generator.cpp
 )
 
 # Camera tests require GLM; include conditionally
