@@ -142,6 +142,9 @@
 #include "systems/station_monument_system.h"
 #include "systems/information_propagation_system.h"
 #include "systems/crew_activity_system.h"
+#include "systems/visual_cue_system.h"
+#include "systems/supply_demand_system.h"
+#include "systems/black_market_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -18921,6 +18924,326 @@ void testCrewActivityTransition() {
     assertTrue(crewActSys.getActivity("crew1") == "Manning", "Crew mans station after walking");
 }
 
+// ==================== Visual Cue System Tests ====================
+
+void testVisualCueDefaults() {
+    std::cout << "\n=== Visual Cue Defaults ===" << std::endl;
+    components::VisualCue cue;
+    assertTrue(cue.lockdown_active == false, "Default lockdown_active is false");
+    assertTrue(cue.lockdown_intensity == 0.0f, "Default lockdown_intensity is 0");
+    assertTrue(cue.traffic_density == 0.0f, "Default traffic_density is 0");
+    assertTrue(cue.traffic_ship_count == 0, "Default traffic_ship_count is 0");
+    assertTrue(cue.threat_glow == 0.0f, "Default threat_glow is 0");
+    assertTrue(cue.prosperity_indicator == 0.5f, "Default prosperity_indicator is 0.5");
+    assertTrue(cue.pirate_warning == 0.0f, "Default pirate_warning is 0");
+    assertTrue(cue.resource_highlight == 0.5f, "Default resource_highlight is 0.5");
+    assertTrue(cue.dominant_faction.empty(), "Default dominant_faction is empty");
+    assertTrue(cue.faction_influence_strength == 0.0f, "Default faction_influence_strength is 0");
+}
+
+void testVisualCueLockdown() {
+    std::cout << "\n=== Visual Cue Lockdown ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_alpha");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->threat_level = 0.9f;
+    state->security_level = 0.5f;
+
+    vcSys.update(1.0f);
+    assertTrue(vcSys.isLockdownActive("system_alpha") == true, "High threat triggers lockdown");
+
+    state->threat_level = 0.1f;
+    state->security_level = 0.1f;
+    vcSys.update(1.0f);
+    assertTrue(vcSys.isLockdownActive("system_alpha") == true, "Low security triggers lockdown");
+
+    state->threat_level = 0.3f;
+    state->security_level = 0.5f;
+    vcSys.update(1.0f);
+    assertTrue(vcSys.isLockdownActive("system_alpha") == false, "Moderate values no lockdown");
+}
+
+void testVisualCueTrafficDensity() {
+    std::cout << "\n=== Visual Cue Traffic Density ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_beta");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->traffic_level = 0.75f;
+
+    vcSys.update(1.0f);
+    float td = vcSys.getTrafficDensity("system_beta");
+    assertTrue(td > 0.74f && td < 0.76f, "Traffic density mapped from sim state");
+    auto* cue = sys->getComponent<components::VisualCue>();
+    assertTrue(cue->traffic_ship_count == 75, "Traffic ship count is traffic * 100");
+}
+
+void testVisualCueThreatGlow() {
+    std::cout << "\n=== Visual Cue Threat Glow ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_gamma");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->threat_level = 0.6f;
+
+    vcSys.update(1.0f);
+    float glow = vcSys.getThreatGlow("system_gamma");
+    assertTrue(glow > 0.59f && glow < 0.61f, "Threat glow maps from threat_level");
+}
+
+void testVisualCueProsperity() {
+    std::cout << "\n=== Visual Cue Prosperity ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_delta");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->economic_index = 0.85f;
+
+    vcSys.update(1.0f);
+    float p = vcSys.getProsperityIndicator("system_delta");
+    assertTrue(p > 0.84f && p < 0.86f, "Prosperity maps from economic_index");
+}
+
+void testVisualCuePirateWarning() {
+    std::cout << "\n=== Visual Cue Pirate Warning ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_epsilon");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->pirate_activity = 0.7f;
+
+    vcSys.update(1.0f);
+    float pw = vcSys.getPirateWarning("system_epsilon");
+    assertTrue(pw > 0.69f && pw < 0.71f, "Pirate warning maps from pirate_activity");
+}
+
+void testSupplyDemandDefaults() {
+    std::cout << "\n=== Supply/Demand Defaults ===" << std::endl;
+    components::SupplyDemand sd;
+    assertTrue(sd.commodities.empty(), "Default commodities is empty");
+    assertTrue(approxEqual(sd.price_elasticity, 0.5f), "Default price_elasticity is 0.5");
+    assertTrue(approxEqual(sd.npc_activity_modifier, 1.0f), "Default npc_activity_modifier is 1.0");
+    assertTrue(approxEqual(sd.price_floor_multiplier, 0.2f), "Default price_floor_multiplier is 0.2");
+    assertTrue(approxEqual(sd.price_ceiling_multiplier, 5.0f), "Default price_ceiling_multiplier is 5.0");
+    assertTrue(approxEqual(sd.supply_decay_rate, 0.01f), "Default supply_decay_rate is 0.01");
+    assertTrue(approxEqual(sd.demand_drift_rate, 0.005f), "Default demand_drift_rate is 0.005");
+}
+
+void testSupplyDemandAddCommodity() {
+    std::cout << "\n=== Supply/Demand Add Commodity ===" << std::endl;
+    components::SupplyDemand sd;
+    sd.addCommodity("ore", 50.0f, 200.0f, 150.0f);
+    assertTrue(sd.getCommodityCount() == 1, "One commodity added");
+    auto* c = sd.getCommodity("ore");
+    assertTrue(c != nullptr, "Commodity found by id");
+    assertTrue(approxEqual(c->base_price, 50.0f), "Base price is 50");
+    assertTrue(approxEqual(c->supply, 200.0f), "Initial supply is 200");
+    assertTrue(approxEqual(c->demand, 150.0f), "Initial demand is 150");
+    sd.addCommodity("ore", 999.0f, 999.0f, 999.0f);
+    assertTrue(sd.getCommodityCount() == 1, "Duplicate commodity not added");
+    assertTrue(sd.getCommodity("nonexistent") == nullptr, "Unknown commodity returns null");
+}
+
+void testSupplyDemandPriceCalculation() {
+    std::cout << "\n=== Supply/Demand Price Calculation ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_alpha");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 50.0f, 150.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 0.0f;
+
+    sdSys.update(1.0f);
+    auto* c = sd->getCommodity("ore");
+    assertTrue(c->current_price > 100.0f, "Price increases when demand > supply");
+
+    // Reset: supply > demand
+    c->supply = 200.0f;
+    c->demand = 50.0f;
+    sdSys.update(1.0f);
+    assertTrue(c->current_price < 100.0f, "Price decreases when supply > demand");
+}
+
+void testSupplyDemandPriceFloor() {
+    std::cout << "\n=== Supply/Demand Price Floor ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_floor");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 10000.0f, 1.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 0.0f;
+    sd->price_elasticity = 10.0f;
+
+    sdSys.update(1.0f);
+    auto* c = sd->getCommodity("ore");
+    float floor = 100.0f * sd->price_floor_multiplier;
+    assertTrue(c->current_price >= floor, "Price does not go below floor");
+    assertTrue(approxEqual(c->current_price, floor, 0.01f), "Price clamped to floor");
+}
+
+void testSupplyDemandPriceCeiling() {
+    std::cout << "\n=== Supply/Demand Price Ceiling ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_ceiling");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 0.1f, 10000.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 0.0f;
+    sd->price_elasticity = 10.0f;
+
+    sdSys.update(1.0f);
+    auto* c = sd->getCommodity("ore");
+    float ceiling = 100.0f * sd->price_ceiling_multiplier;
+    assertTrue(c->current_price <= ceiling, "Price does not exceed ceiling");
+    assertTrue(approxEqual(c->current_price, ceiling, 0.01f), "Price clamped to ceiling");
+}
+
+void testSupplyDemandNPCModifier() {
+    std::cout << "\n=== Supply/Demand NPC Modifier ===" << std::endl;
+    ecs::World world;
+    systems::SupplyDemandSystem sdSys(&world);
+    auto* entity = world.createEntity("system_npc");
+    auto* sd = addComp<components::SupplyDemand>(entity);
+    sd->addCommodity("ore", 100.0f, 100.0f, 100.0f);
+    sd->supply_decay_rate = 0.0f;
+    sd->demand_drift_rate = 0.0f;
+    sd->commodities[0].supply_rate = 10.0f;
+
+    float supply_before = sd->commodities[0].supply;
+    sd->npc_activity_modifier = 2.0f;
+    sdSys.update(1.0f);
+    float supply_after_2x = sd->commodities[0].supply;
+    float gained_2x = supply_after_2x - supply_before;
+
+    // Reset
+    sd->commodities[0].supply = 100.0f;
+    sd->npc_activity_modifier = 1.0f;
+    sdSys.update(1.0f);
+    float supply_after_1x = sd->commodities[0].supply;
+    float gained_1x = supply_after_1x - 100.0f;
+
+    assertTrue(approxEqual(gained_2x, gained_1x * 2.0f, 0.01f), "2x NPC modifier doubles supply gain");
+}
+
+// ==================== Black Market System Tests ====================
+
+void testBlackMarketDefaults() {
+    std::cout << "\n=== Black Market Defaults ===" << std::endl;
+    components::BlackMarket bm;
+    assertTrue(bm.listings.empty(), "Default listings is empty");
+    assertTrue(approxEqual(bm.security_level, 0.5f), "Default security_level is 0.5");
+    assertTrue(approxEqual(bm.detection_chance_base, 0.1f), "Default detection_chance_base is 0.1");
+    assertTrue(approxEqual(bm.price_markup, 1.5f), "Default price_markup is 1.5");
+    assertTrue(bm.max_listings == 20, "Default max_listings is 20");
+    assertTrue(approxEqual(bm.listing_refresh_interval, 120.0f), "Default listing_refresh_interval is 120");
+}
+
+void testBlackMarketAddListing() {
+    std::cout << "\n=== Black Market Add Listing ===" << std::endl;
+    ecs::World world;
+    systems::BlackMarketSystem bmSys(&world);
+    auto* entity = world.createEntity("market_1");
+    addComp<components::BlackMarket>(entity);
+
+    bmSys.addListing("market_1", "stolen_ore", "seller_a", 100.0f, 5, true, 0.3f);
+    assertTrue(bmSys.getListingCount("market_1") == 1, "One listing added");
+
+    auto items = bmSys.getAvailableItems("market_1");
+    assertTrue(items.size() == 1 && items[0] == "stolen_ore", "Available items contains stolen_ore");
+}
+
+void testBlackMarketPurchase() {
+    std::cout << "\n=== Black Market Purchase ===" << std::endl;
+    ecs::World world;
+    systems::BlackMarketSystem bmSys(&world);
+    auto* entity = world.createEntity("market_2");
+    auto* bm = addComp<components::BlackMarket>(entity);
+    bm->addListing("rare_gem", "seller_b", 200.0f, 3, false, 0.1f);
+
+    bool ok = bmSys.purchaseItem("market_2", "rare_gem", "buyer_x");
+    assertTrue(ok, "Purchase succeeds");
+    auto* listing = bm->findListing("rare_gem");
+    assertTrue(listing != nullptr && listing->quantity == 2, "Quantity decreased to 2");
+}
+
+void testBlackMarketPurchaseRemovesEmpty() {
+    std::cout << "\n=== Black Market Purchase Removes Empty ===" << std::endl;
+    ecs::World world;
+    systems::BlackMarketSystem bmSys(&world);
+    auto* entity = world.createEntity("market_3");
+    auto* bm = addComp<components::BlackMarket>(entity);
+    bm->addListing("last_item", "seller_c", 50.0f, 1, true, 0.5f);
+
+    bool ok = bmSys.purchaseItem("market_3", "last_item", "buyer_y");
+    assertTrue(ok, "Purchase of last item succeeds");
+    assertTrue(bm->getListingCount() == 0, "Listing removed when quantity reaches 0");
+}
+
+void testBlackMarketExpiry() {
+    std::cout << "\n=== Black Market Expiry ===" << std::endl;
+    ecs::World world;
+    systems::BlackMarketSystem bmSys(&world);
+    auto* entity = world.createEntity("market_4");
+    auto* bm = addComp<components::BlackMarket>(entity);
+    bm->addListing("temp_goods", "seller_d", 80.0f, 2, false, 0.2f);
+    bm->listings[0].max_expiry = 10.0f;
+
+    bmSys.update(5.0f);
+    assertTrue(bm->getListingCount() == 1, "Listing still present before expiry");
+
+    bmSys.update(6.0f);
+    assertTrue(bm->getListingCount() == 0, "Listing removed after expiry");
+}
+
+void testBlackMarketMaxListings() {
+    std::cout << "\n=== Black Market Max Listings ===" << std::endl;
+    components::BlackMarket bm;
+    bm.max_listings = 3;
+    bm.addListing("item_a", "s1", 10.0f, 1, false, 0.1f);
+    bm.addListing("item_b", "s2", 20.0f, 1, false, 0.1f);
+    bm.addListing("item_c", "s3", 30.0f, 1, false, 0.1f);
+    assertTrue(bm.getListingCount() == 3, "3 listings at max");
+
+    bm.addListing("item_d", "s4", 40.0f, 1, false, 0.1f);
+    assertTrue(bm.getListingCount() == 3, "Still at max after adding 4th");
+    assertTrue(bm.findListing("item_a") == nullptr, "Oldest listing (item_a) removed");
+    assertTrue(bm.findListing("item_d") != nullptr, "Newest listing (item_d) present");
+}
+
+void testBlackMarketDetectionChance() {
+    std::cout << "\n=== Black Market Detection Chance ===" << std::endl;
+    ecs::World world;
+    systems::BlackMarketSystem bmSys(&world);
+    auto* entity = world.createEntity("market_5");
+    auto* bm = addComp<components::BlackMarket>(entity);
+    bm->detection_chance_base = 0.2f;
+    bm->security_level = 0.5f;
+
+    float chance = bmSys.getDetectionChance("market_5");
+    assertTrue(approxEqual(chance, 0.1f), "Detection chance = base * security (0.2 * 0.5 = 0.1)");
+
+    bmSys.setSecurityLevel("market_5", 1.0f);
+    chance = bmSys.getDetectionChance("market_5");
+    assertTrue(approxEqual(chance, 0.2f), "Detection chance scales with security level");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -18963,7 +19286,8 @@ int main() {
     std::cout << "AIEconomicActor, TurretAI," << std::endl;
     std::cout << "Alliance, Sovereignty, WarDeclaration," << std::endl;
     std::cout << "ConvoyAmbush, NPCDialogue, StationMonument" << std::endl;
-    std::cout << "CrewActivity" << std::endl;
+    std::cout << "CrewActivity," << std::endl;
+    std::cout << "VisualCue" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -20242,6 +20566,31 @@ int main() {
     testCrewActivityFatigue();
     testCrewActivityGetCrewInActivity();
     testCrewActivityTransition();
+
+    // Visual Cue System tests
+    testVisualCueDefaults();
+    testVisualCueLockdown();
+    testVisualCueTrafficDensity();
+    testVisualCueThreatGlow();
+    testVisualCueProsperity();
+    testVisualCuePirateWarning();
+
+    // Supply/Demand System tests
+    testSupplyDemandDefaults();
+    testSupplyDemandAddCommodity();
+    testSupplyDemandPriceCalculation();
+    testSupplyDemandPriceFloor();
+    testSupplyDemandPriceCeiling();
+    testSupplyDemandNPCModifier();
+
+    // Black Market System tests
+    testBlackMarketDefaults();
+    testBlackMarketAddListing();
+    testBlackMarketPurchase();
+    testBlackMarketPurchaseRemovesEmpty();
+    testBlackMarketExpiry();
+    testBlackMarketMaxListings();
+    testBlackMarketDetectionChance();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

@@ -3095,6 +3095,149 @@ public:
     COMPONENT_TYPE(CrewActivity)
 };
 
+// ==================== Living Universe: Visual Cues ====================
+
+class VisualCue : public ecs::Component {
+public:
+    // Lockdown visual state
+    bool lockdown_active = false;
+    float lockdown_intensity = 0.0f;       // 0.0 to 1.0
+
+    // Traffic density visualization
+    float traffic_density = 0.0f;          // 0.0 (empty) to 1.0 (congested)
+    int traffic_ship_count = 0;
+
+    // Threat visualization
+    float threat_glow = 0.0f;              // red glow intensity for dangerous systems
+
+    // Economic state visualization
+    float prosperity_indicator = 0.5f;     // 0.0 (depressed) to 1.0 (booming)
+
+    // Pirate presence
+    float pirate_warning = 0.0f;           // 0.0 (safe) to 1.0 (infested)
+
+    // Resource availability visualization
+    float resource_highlight = 0.5f;       // 0.0 (depleted) to 1.0 (rich)
+
+    // Faction influence coloring
+    std::string dominant_faction;
+    float faction_influence_strength = 0.0f;
+
+    COMPONENT_TYPE(VisualCue)
+};
+
+// ==================== Living Universe: Supply/Demand Economy ====================
+
+class SupplyDemand : public ecs::Component {
+public:
+    struct CommodityState {
+        std::string commodity_id;
+        float supply = 100.0f;        // current supply units
+        float demand = 100.0f;        // current demand units
+        float base_price = 100.0f;    // base price per unit
+        float current_price = 100.0f; // computed price
+        float supply_rate = 1.0f;     // units produced per tick by NPCs
+        float demand_rate = 1.0f;     // units consumed per tick by NPCs
+    };
+
+    std::vector<CommodityState> commodities;
+    float price_elasticity = 0.5f;          // how sensitive prices are to supply/demand ratio
+    float npc_activity_modifier = 1.0f;     // scales NPC production/consumption rates
+    float price_floor_multiplier = 0.2f;    // minimum price = base_price * floor
+    float price_ceiling_multiplier = 5.0f;  // maximum price = base_price * ceiling
+    float supply_decay_rate = 0.01f;        // natural supply reduction per tick (consumption)
+    float demand_drift_rate = 0.005f;       // demand drifts toward baseline per tick
+
+    void addCommodity(const std::string& id, float base_price, float initial_supply, float initial_demand) {
+        for (auto& c : commodities) {
+            if (c.commodity_id == id) return; // already exists
+        }
+        CommodityState cs;
+        cs.commodity_id = id;
+        cs.base_price = base_price;
+        cs.current_price = base_price;
+        cs.supply = initial_supply;
+        cs.demand = initial_demand;
+        commodities.push_back(cs);
+    }
+
+    CommodityState* getCommodity(const std::string& id) {
+        for (auto& c : commodities) {
+            if (c.commodity_id == id) return &c;
+        }
+        return nullptr;
+    }
+
+    const CommodityState* getCommodity(const std::string& id) const {
+        for (const auto& c : commodities) {
+            if (c.commodity_id == id) return &c;
+        }
+        return nullptr;
+    }
+
+    int getCommodityCount() const { return static_cast<int>(commodities.size()); }
+
+    COMPONENT_TYPE(SupplyDemand)
+};
+
+// ==================== Phase 15: Black Market & Smuggling ====================
+
+class BlackMarket : public ecs::Component {
+public:
+    struct Listing {
+        std::string item_id;
+        std::string seller_id;
+        float price = 0.0f;
+        int quantity = 0;
+        float risk_level = 0.0f;    // 0.0 (safe) to 1.0 (dangerous)
+        bool contraband = false;
+        float expiry_timer = 0.0f;
+        float max_expiry = 600.0f;  // 10 minutes default
+    };
+
+    std::vector<Listing> listings;
+    float security_level = 0.5f;            // system security (higher = more risky to trade)
+    float detection_chance_base = 0.1f;     // base chance of being detected per transaction
+    float price_markup = 1.5f;              // black market items cost more
+    int max_listings = 20;
+    float listing_refresh_timer = 0.0f;
+    float listing_refresh_interval = 120.0f;  // new listings every 2 minutes
+
+    void addListing(const std::string& item_id, const std::string& seller_id,
+                    float price, int quantity, bool contraband_item, float risk) {
+        if (static_cast<int>(listings.size()) >= max_listings) {
+            listings.erase(listings.begin());  // remove oldest
+        }
+        Listing l;
+        l.item_id = item_id;
+        l.seller_id = seller_id;
+        l.price = price * price_markup;
+        l.quantity = quantity;
+        l.contraband = contraband_item;
+        l.risk_level = risk;
+        l.max_expiry = 600.0f;
+        listings.push_back(l);
+    }
+
+    int getListingCount() const { return static_cast<int>(listings.size()); }
+
+    Listing* findListing(const std::string& item_id) {
+        for (auto& l : listings) {
+            if (l.item_id == item_id) return &l;
+        }
+        return nullptr;
+    }
+
+    const Listing* findListing(const std::string& item_id) const {
+        for (const auto& l : listings) {
+            if (l.item_id == item_id) return &l;
+        }
+        return nullptr;
+    }
+
+    COMPONENT_TYPE(BlackMarket)
+};
+
 } // namespace components
 } // namespace atlas
 
