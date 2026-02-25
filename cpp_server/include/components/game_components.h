@@ -3095,6 +3095,37 @@ public:
     COMPONENT_TYPE(CrewActivity)
 };
 
+// ==================== Living Universe: Visual Cues ====================
+
+class VisualCue : public ecs::Component {
+public:
+    // Lockdown visual state
+    bool lockdown_active = false;
+    float lockdown_intensity = 0.0f;       // 0.0 to 1.0
+
+    // Traffic density visualization
+    float traffic_density = 0.0f;          // 0.0 (empty) to 1.0 (congested)
+    int traffic_ship_count = 0;
+
+    // Threat visualization
+    float threat_glow = 0.0f;              // red glow intensity for dangerous systems
+
+    // Economic state visualization
+    float prosperity_indicator = 0.5f;     // 0.0 (depressed) to 1.0 (booming)
+
+    // Pirate presence
+    float pirate_warning = 0.0f;           // 0.0 (safe) to 1.0 (infested)
+
+    // Resource availability visualization
+    float resource_highlight = 0.5f;       // 0.0 (depleted) to 1.0 (rich)
+
+    // Faction influence coloring
+    std::string dominant_faction;
+    float faction_influence_strength = 0.0f;
+
+    COMPONENT_TYPE(VisualCue)
+};
+
 } // namespace components
 } // namespace atlas
 

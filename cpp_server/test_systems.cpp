@@ -142,6 +142,7 @@
 #include "systems/station_monument_system.h"
 #include "systems/information_propagation_system.h"
 #include "systems/crew_activity_system.h"
+#include "systems/visual_cue_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -18921,6 +18922,110 @@ void testCrewActivityTransition() {
     assertTrue(crewActSys.getActivity("crew1") == "Manning", "Crew mans station after walking");
 }
 
+// ==================== Visual Cue System Tests ====================
+
+void testVisualCueDefaults() {
+    std::cout << "\n=== Visual Cue Defaults ===" << std::endl;
+    components::VisualCue cue;
+    assertTrue(cue.lockdown_active == false, "Default lockdown_active is false");
+    assertTrue(cue.lockdown_intensity == 0.0f, "Default lockdown_intensity is 0");
+    assertTrue(cue.traffic_density == 0.0f, "Default traffic_density is 0");
+    assertTrue(cue.traffic_ship_count == 0, "Default traffic_ship_count is 0");
+    assertTrue(cue.threat_glow == 0.0f, "Default threat_glow is 0");
+    assertTrue(cue.prosperity_indicator == 0.5f, "Default prosperity_indicator is 0.5");
+    assertTrue(cue.pirate_warning == 0.0f, "Default pirate_warning is 0");
+    assertTrue(cue.resource_highlight == 0.5f, "Default resource_highlight is 0.5");
+    assertTrue(cue.dominant_faction.empty(), "Default dominant_faction is empty");
+    assertTrue(cue.faction_influence_strength == 0.0f, "Default faction_influence_strength is 0");
+}
+
+void testVisualCueLockdown() {
+    std::cout << "\n=== Visual Cue Lockdown ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_alpha");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->threat_level = 0.9f;
+    state->security_level = 0.5f;
+
+    vcSys.update(1.0f);
+    assertTrue(vcSys.isLockdownActive("system_alpha") == true, "High threat triggers lockdown");
+
+    state->threat_level = 0.1f;
+    state->security_level = 0.1f;
+    vcSys.update(1.0f);
+    assertTrue(vcSys.isLockdownActive("system_alpha") == true, "Low security triggers lockdown");
+
+    state->threat_level = 0.3f;
+    state->security_level = 0.5f;
+    vcSys.update(1.0f);
+    assertTrue(vcSys.isLockdownActive("system_alpha") == false, "Moderate values no lockdown");
+}
+
+void testVisualCueTrafficDensity() {
+    std::cout << "\n=== Visual Cue Traffic Density ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_beta");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->traffic_level = 0.75f;
+
+    vcSys.update(1.0f);
+    float td = vcSys.getTrafficDensity("system_beta");
+    assertTrue(td > 0.74f && td < 0.76f, "Traffic density mapped from sim state");
+    auto* cue = sys->getComponent<components::VisualCue>();
+    assertTrue(cue->traffic_ship_count == 75, "Traffic ship count is traffic * 100");
+}
+
+void testVisualCueThreatGlow() {
+    std::cout << "\n=== Visual Cue Threat Glow ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_gamma");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->threat_level = 0.6f;
+
+    vcSys.update(1.0f);
+    float glow = vcSys.getThreatGlow("system_gamma");
+    assertTrue(glow > 0.59f && glow < 0.61f, "Threat glow maps from threat_level");
+}
+
+void testVisualCueProsperity() {
+    std::cout << "\n=== Visual Cue Prosperity ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_delta");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->economic_index = 0.85f;
+
+    vcSys.update(1.0f);
+    float p = vcSys.getProsperityIndicator("system_delta");
+    assertTrue(p > 0.84f && p < 0.86f, "Prosperity maps from economic_index");
+}
+
+void testVisualCuePirateWarning() {
+    std::cout << "\n=== Visual Cue Pirate Warning ===" << std::endl;
+    ecs::World world;
+    systems::VisualCueSystem vcSys(&world);
+
+    auto* sys = world.createEntity("system_epsilon");
+    auto* state = addComp<components::SimStarSystemState>(sys);
+    sys->addComponent(std::make_unique<components::VisualCue>());
+    state->pirate_activity = 0.7f;
+
+    vcSys.update(1.0f);
+    float pw = vcSys.getPirateWarning("system_epsilon");
+    assertTrue(pw > 0.69f && pw < 0.71f, "Pirate warning maps from pirate_activity");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -18963,7 +19068,8 @@ int main() {
     std::cout << "AIEconomicActor, TurretAI," << std::endl;
     std::cout << "Alliance, Sovereignty, WarDeclaration," << std::endl;
     std::cout << "ConvoyAmbush, NPCDialogue, StationMonument" << std::endl;
-    std::cout << "CrewActivity" << std::endl;
+    std::cout << "CrewActivity," << std::endl;
+    std::cout << "VisualCue" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -20242,6 +20348,14 @@ int main() {
     testCrewActivityFatigue();
     testCrewActivityGetCrewInActivity();
     testCrewActivityTransition();
+
+    // Visual Cue System tests
+    testVisualCueDefaults();
+    testVisualCueLockdown();
+    testVisualCueTrafficDensity();
+    testVisualCueThreatGlow();
+    testVisualCueProsperity();
+    testVisualCuePirateWarning();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
