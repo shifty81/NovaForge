@@ -3447,6 +3447,131 @@ public:
     COMPONENT_TYPE(RestingState)
 };
 
+// ==================== Myth Boss Encounters ====================
+
+/**
+ * @brief A boss encounter generated from myth/propaganda content
+ * 
+ * When myths about events, players, or factions reach critical mass,
+ * ancient sites manifest as boss encounters reflecting the myth.
+ */
+class MythBossEncounter : public ecs::Component {
+public:
+    enum class BossType {
+        Guardian,   // From heroic myths - protective ancient entity
+        Destroyer,  // From villainous myths - aggressive ancient weapon
+        Phantom,    // From mysterious myths - elusive anomaly entity
+        Colossus,   // From exaggerated myths - massive ancient construct
+        Mirage      // From fabricated myths - illusion-based encounter
+    };
+
+    struct LootEntry {
+        std::string item_id;
+        float drop_chance = 0.5f;
+        int quantity = 1;
+    };
+
+    std::string encounter_id;
+    std::string myth_id;          // Source myth that generated this encounter
+    std::string system_id;        // Star system where encounter spawns
+    BossType boss_type = BossType::Guardian;
+    float difficulty = 1.0f;      // 1.0 = normal, 5.0 = extreme
+    float active_time = 0.0f;     // Time since encounter started
+    float max_duration = 3600.0f; // Max time before encounter despawns (1 hour)
+    bool active = true;
+    bool completion_success = false;
+    float shield_hp = 1000.0f;
+    float armor_hp = 500.0f;
+    float hull_hp = 2000.0f;
+    std::vector<LootEntry> loot_table;
+    int recommended_fleet_size = 3;
+
+    bool isActive() const { return active && active_time < max_duration; }
+    bool isExpired() const { return active_time >= max_duration; }
+
+    static std::string getBossTypeName(BossType t) {
+        switch (t) {
+            case BossType::Guardian: return "Guardian";
+            case BossType::Destroyer: return "Destroyer";
+            case BossType::Phantom: return "Phantom";
+            case BossType::Colossus: return "Colossus";
+            case BossType::Mirage: return "Mirage";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(MythBossEncounter)
+};
+
+// ==================== Ancient Tech Upgrade State ====================
+
+/**
+ * @brief Tracks the upgrade process for ancient tech modules
+ * 
+ * Paired with AncientTechModule to track the upgrade from Repaired → Upgraded state,
+ * where modules gain rule-breaking stat bonuses exceeding modern limits.
+ */
+class AncientTechUpgradeState : public ecs::Component {
+public:
+    bool upgrading = false;
+    float upgrade_progress = 0.0f;
+    float upgrade_cost = 200.0f;    // Time units to complete upgrade
+    std::string bonus_type;          // e.g. "shield", "weapon", "engine"
+    float bonus_magnitude = 0.0f;    // Actual bonus value (computed on upgrade complete)
+
+    COMPONENT_TYPE(AncientTechUpgradeState)
+};
+
+// ==================== Mod Registry ====================
+
+/**
+ * @brief Registry of installed mod manifests
+ * 
+ * Stores all registered mod manifests with their metadata, dependencies,
+ * and enabled/disabled state. Used by ModManifestSystem for validation
+ * and load ordering.
+ */
+class ModRegistry : public ecs::Component {
+public:
+    struct ModInfo {
+        std::string mod_id;
+        std::string name;
+        std::string version;
+        std::string author;
+        std::vector<std::string> dependencies;
+        bool enabled = true;
+    };
+
+    std::vector<ModInfo> mods;
+    int max_mods = 50;
+
+    ModInfo* findMod(const std::string& mod_id) {
+        for (auto& m : mods) {
+            if (m.mod_id == mod_id) return &m;
+        }
+        return nullptr;
+    }
+
+    const ModInfo* findMod(const std::string& mod_id) const {
+        for (const auto& m : mods) {
+            if (m.mod_id == mod_id) return &m;
+        }
+        return nullptr;
+    }
+
+    bool removeMod(const std::string& mod_id) {
+        for (auto it = mods.begin(); it != mods.end(); ++it) {
+            if (it->mod_id == mod_id) {
+                mods.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    COMPONENT_TYPE(ModRegistry)
+};
+
 } // namespace components
 } // namespace atlas
 

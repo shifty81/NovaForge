@@ -148,6 +148,9 @@
 #include "systems/price_history_system.h"
 #include "systems/propaganda_system.h"
 #include "systems/rest_station_system.h"
+#include "systems/myth_boss_system.h"
+#include "systems/ancient_tech_upgrade_system.h"
+#include "systems/mod_manifest_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -19573,6 +19576,302 @@ void testRestStationCount() {
     assertTrue(restSys.getRestingCount() == 2, "2 people resting");
 }
 
+// ==================== Myth Boss System Tests ====================
+
+void testMythBossDefaults() {
+    std::cout << "\n=== Myth Boss Defaults ===" << std::endl;
+    ecs::World world;
+    systems::MythBossSystem bossSys(&world);
+    assertTrue(bossSys.getActiveBossCount() == 0, "No active bosses initially");
+}
+
+void testMythBossGenerateEncounter() {
+    std::cout << "\n=== Myth Boss Generate Encounter ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    systems::MythBossSystem bossSys(&world);
+
+    std::string mythId = propSys.generateMyth("ancient_pilot", "Solari", "heroic", "Battle of the Ancients");
+    std::string encId = bossSys.generateEncounter(mythId, "system_alpha");
+    assertTrue(!encId.empty(), "Encounter ID returned");
+    assertTrue(bossSys.isEncounterActive(encId), "Encounter is active");
+    assertTrue(bossSys.getActiveBossCount() == 1, "One active boss");
+}
+
+void testMythBossDifficulty() {
+    std::cout << "\n=== Myth Boss Difficulty ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    systems::MythBossSystem bossSys(&world);
+
+    std::string mythId = propSys.generateMyth("legend", "Veyren", "villainous");
+    // Spread the myth to increase difficulty
+    propSys.spreadMyth(mythId, "sys1");
+    propSys.spreadMyth(mythId, "sys2");
+    propSys.spreadMyth(mythId, "sys3");
+    std::string encId = bossSys.generateEncounter(mythId, "system_beta");
+    float diff = bossSys.getBossDifficulty(encId);
+    assertTrue(diff > 1.0f, "Difficulty scales with myth spread");
+}
+
+void testMythBossComplete() {
+    std::cout << "\n=== Myth Boss Complete ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    systems::MythBossSystem bossSys(&world);
+
+    std::string mythId = propSys.generateMyth("hero", "Aurelian", "mysterious");
+    std::string encId = bossSys.generateEncounter(mythId, "system_gamma");
+    assertTrue(bossSys.completeEncounter(encId, true), "Complete succeeds");
+    assertTrue(!bossSys.isEncounterActive(encId), "No longer active after completion");
+    assertTrue(bossSys.getActiveBossCount() == 0, "Zero active bosses after completion");
+}
+
+void testMythBossExpiry() {
+    std::cout << "\n=== Myth Boss Expiry ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    systems::MythBossSystem bossSys(&world);
+
+    std::string mythId = propSys.generateMyth("fading_one", "Keldari", "exaggerated");
+    std::string encId = bossSys.generateEncounter(mythId, "system_delta");
+    assertTrue(bossSys.isEncounterActive(encId), "Active before expiry");
+
+    // Simulate time past max duration
+    bossSys.update(3601.0f);
+    assertTrue(!bossSys.isEncounterActive(encId), "Expired after max duration");
+}
+
+void testMythBossTypeName() {
+    std::cout << "\n=== Myth Boss Type Name ===" << std::endl;
+    assertTrue(systems::MythBossSystem::getBossTypeName(0) == "Guardian", "Type 0 is Guardian");
+    assertTrue(systems::MythBossSystem::getBossTypeName(1) == "Destroyer", "Type 1 is Destroyer");
+    assertTrue(systems::MythBossSystem::getBossTypeName(2) == "Phantom", "Type 2 is Phantom");
+    assertTrue(systems::MythBossSystem::getBossTypeName(3) == "Colossus", "Type 3 is Colossus");
+    assertTrue(systems::MythBossSystem::getBossTypeName(4) == "Mirage", "Type 4 is Mirage");
+    assertTrue(systems::MythBossSystem::getBossTypeName(99) == "Unknown", "Unknown type returns Unknown");
+}
+
+void testMythBossSourceMyth() {
+    std::cout << "\n=== Myth Boss Source Myth ===" << std::endl;
+    ecs::World world;
+    systems::PropagandaSystem propSys(&world);
+    systems::MythBossSystem bossSys(&world);
+
+    std::string mythId = propSys.generateMyth("tracker", "Solari", "fabricated");
+    std::string encId = bossSys.generateEncounter(mythId, "system_epsilon");
+    assertTrue(bossSys.getEncounterMythId(encId) == mythId, "Source myth ID matches");
+}
+
+// ==================== Ancient Tech Upgrade System Tests ====================
+
+void testAncientTechUpgradeDefaults() {
+    std::cout << "\n=== Ancient Tech Upgrade Defaults ===" << std::endl;
+    ecs::World world;
+    systems::AncientTechUpgradeSystem upgSys(&world);
+    assertTrue(upgSys.getUpgradingCount() == 0, "No modules upgrading initially");
+    assertTrue(upgSys.getUpgradedCount() == 0, "No modules upgraded initially");
+}
+
+void testAncientTechUpgradeStart() {
+    std::cout << "\n=== Ancient Tech Upgrade Start ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ancient1");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->state = components::AncientTechModule::TechState::Repaired;
+    tech->tech_type = "shield";
+    tech->power_multiplier = 1.8f;
+
+    systems::AncientTechUpgradeSystem upgSys(&world);
+    assertTrue(upgSys.startUpgrade("ancient1"), "Start upgrade succeeds on Repaired module");
+    assertTrue(upgSys.getUpgradingCount() == 1, "One module upgrading");
+    assertTrue(!upgSys.hasRuleBreakingBonuses("ancient1"), "Not yet upgraded");
+}
+
+void testAncientTechUpgradeNotRepaired() {
+    std::cout << "\n=== Ancient Tech Upgrade Not Repaired ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ancient2");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->state = components::AncientTechModule::TechState::Broken;
+
+    systems::AncientTechUpgradeSystem upgSys(&world);
+    assertTrue(!upgSys.startUpgrade("ancient2"), "Cannot upgrade Broken module");
+}
+
+void testAncientTechUpgradeComplete() {
+    std::cout << "\n=== Ancient Tech Upgrade Complete ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ancient3");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->state = components::AncientTechModule::TechState::Repaired;
+    tech->tech_type = "weapon";
+    tech->power_multiplier = 1.5f;
+    auto* upg = addComp<components::AncientTechUpgradeState>(e);
+    upg->upgrade_cost = 10.0f;
+
+    systems::AncientTechUpgradeSystem upgSys(&world);
+    assertTrue(upgSys.startUpgrade("ancient3"), "Start upgrade");
+
+    upgSys.update(11.0f); // More than upgrade_cost
+    assertTrue(tech->state == components::AncientTechModule::TechState::Upgraded, "Module is now Upgraded");
+    assertTrue(upgSys.hasRuleBreakingBonuses("ancient3"), "Has rule-breaking bonuses");
+    assertTrue(upgSys.getUpgradedCount() == 1, "One upgraded module");
+    assertTrue(approxEqual(upgSys.getStatMultiplier("ancient3"), 1.5f), "Stat multiplier matches power_multiplier");
+}
+
+void testAncientTechUpgradeCancel() {
+    std::cout << "\n=== Ancient Tech Upgrade Cancel ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ancient4");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->state = components::AncientTechModule::TechState::Repaired;
+
+    systems::AncientTechUpgradeSystem upgSys(&world);
+    upgSys.startUpgrade("ancient4");
+    assertTrue(upgSys.cancelUpgrade("ancient4"), "Cancel succeeds");
+    assertTrue(upgSys.getUpgradingCount() == 0, "No modules upgrading after cancel");
+    assertTrue(tech->state == components::AncientTechModule::TechState::Repaired, "State back to Repaired");
+}
+
+void testAncientTechUpgradeProgress() {
+    std::cout << "\n=== Ancient Tech Upgrade Progress ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ancient5");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->state = components::AncientTechModule::TechState::Repaired;
+    auto* upg = addComp<components::AncientTechUpgradeState>(e);
+    upg->upgrade_cost = 100.0f;
+
+    systems::AncientTechUpgradeSystem upgSys(&world);
+    upgSys.startUpgrade("ancient5");
+    upgSys.update(50.0f);
+    assertTrue(approxEqual(upgSys.getUpgradeProgress("ancient5"), 0.5f), "50% progress after half time");
+}
+
+void testAncientTechUpgradeBonusDescription() {
+    std::cout << "\n=== Ancient Tech Upgrade Bonus Description ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ancient6");
+    auto* tech = addComp<components::AncientTechModule>(e);
+    tech->state = components::AncientTechModule::TechState::Upgraded;
+    tech->tech_type = "shield";
+    tech->power_multiplier = 1.8f;
+
+    systems::AncientTechUpgradeSystem upgSys(&world);
+    std::string desc = upgSys.getBonusDescription("ancient6");
+    assertTrue(!desc.empty(), "Bonus description not empty for upgraded module");
+    assertTrue(desc.find("1.8") != std::string::npos, "Description contains multiplier value");
+}
+
+// ==================== Mod Manifest System Tests ====================
+
+void testModManifestDefaults() {
+    std::cout << "\n=== Mod Manifest Defaults ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+    assertTrue(modSys.getModCount() == 0, "No mods registered initially");
+    assertTrue(modSys.getEnabledModCount() == 0, "No mods enabled initially");
+    assertTrue(modSys.validateAll(), "Empty registry is valid");
+}
+
+void testModManifestRegister() {
+    std::cout << "\n=== Mod Manifest Register ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+
+    assertTrue(modSys.registerMod("core_expansion", "Core Expansion", "1.0.0", "NovaForge Team"), "Register succeeds");
+    assertTrue(modSys.isModRegistered("core_expansion"), "Mod is registered");
+    assertTrue(modSys.getModCount() == 1, "One mod registered");
+    assertTrue(modSys.isModEnabled("core_expansion"), "Mod enabled by default");
+    assertTrue(modSys.getModVersion("core_expansion") == "1.0.0", "Version matches");
+}
+
+void testModManifestDuplicate() {
+    std::cout << "\n=== Mod Manifest Duplicate ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+
+    modSys.registerMod("mod_a", "Mod A", "1.0.0", "Author A");
+    assertTrue(!modSys.registerMod("mod_a", "Mod A Dupe", "2.0.0", "Author B"), "Duplicate mod ID rejected");
+    assertTrue(modSys.getModCount() == 1, "Still one mod");
+}
+
+void testModManifestUnregister() {
+    std::cout << "\n=== Mod Manifest Unregister ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+
+    modSys.registerMod("temp_mod", "Temp Mod", "0.1.0", "Tester");
+    assertTrue(modSys.unregisterMod("temp_mod"), "Unregister succeeds");
+    assertTrue(!modSys.isModRegistered("temp_mod"), "Mod no longer registered");
+    assertTrue(modSys.getModCount() == 0, "Zero mods after unregister");
+}
+
+void testModManifestDependencies() {
+    std::cout << "\n=== Mod Manifest Dependencies ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+
+    modSys.registerMod("base_lib", "Base Library", "1.0.0", "Core Team");
+    modSys.registerMod("addon_pack", "Addon Pack", "1.0.0", "Addon Team", {"base_lib"});
+
+    assertTrue(modSys.areDependenciesMet("addon_pack"), "Dependencies met when base_lib present");
+    assertTrue(modSys.validateAll(), "All valid with dependencies satisfied");
+
+    // Register mod with unmet dependency
+    modSys.registerMod("broken_mod", "Broken Mod", "1.0.0", "Nobody", {"missing_lib"});
+    assertTrue(!modSys.areDependenciesMet("broken_mod"), "Unmet dependency detected");
+    assertTrue(!modSys.validateAll(), "Validation fails with unmet dependency");
+}
+
+void testModManifestLoadOrder() {
+    std::cout << "\n=== Mod Manifest Load Order ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+
+    modSys.registerMod("foundation", "Foundation", "1.0.0", "Core");
+    modSys.registerMod("graphics", "Graphics Pack", "1.0.0", "Art", {"foundation"});
+    modSys.registerMod("gameplay", "Gameplay Mod", "1.0.0", "Design", {"foundation"});
+
+    auto order = modSys.getLoadOrder();
+    assertTrue(order.size() == 3, "All 3 mods in load order");
+    // foundation must come before graphics and gameplay
+    int foundIdx = -1, gfxIdx = -1, gameIdx = -1;
+    for (size_t i = 0; i < order.size(); i++) {
+        if (order[i] == "foundation") foundIdx = static_cast<int>(i);
+        if (order[i] == "graphics") gfxIdx = static_cast<int>(i);
+        if (order[i] == "gameplay") gameIdx = static_cast<int>(i);
+    }
+    assertTrue(foundIdx < gfxIdx, "Foundation loads before Graphics");
+    assertTrue(foundIdx < gameIdx, "Foundation loads before Gameplay");
+}
+
+void testModManifestEnableDisable() {
+    std::cout << "\n=== Mod Manifest Enable/Disable ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+
+    modSys.registerMod("toggle_mod", "Toggle Mod", "1.0.0", "Dev");
+    assertTrue(modSys.isModEnabled("toggle_mod"), "Enabled by default");
+
+    assertTrue(modSys.setModEnabled("toggle_mod", false), "Disable succeeds");
+    assertTrue(!modSys.isModEnabled("toggle_mod"), "Mod is disabled");
+    assertTrue(modSys.getEnabledModCount() == 0, "Zero enabled mods");
+
+    assertTrue(modSys.setModEnabled("toggle_mod", true), "Re-enable succeeds");
+    assertTrue(modSys.isModEnabled("toggle_mod"), "Mod is enabled again");
+}
+
+void testModManifestEmptyId() {
+    std::cout << "\n=== Mod Manifest Empty ID ===" << std::endl;
+    ecs::World world;
+    systems::ModManifestSystem modSys(&world);
+
+    assertTrue(!modSys.registerMod("", "No ID", "1.0.0", "Nobody"), "Empty mod ID rejected");
+    assertTrue(modSys.getModCount() == 0, "No mods registered with empty ID");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -19616,7 +19915,8 @@ int main() {
     std::cout << "Alliance, Sovereignty, WarDeclaration," << std::endl;
     std::cout << "ConvoyAmbush, NPCDialogue, StationMonument" << std::endl;
     std::cout << "CrewActivity," << std::endl;
-    std::cout << "VisualCue" << std::endl;
+    std::cout << "VisualCue," << std::endl;
+    std::cout << "ModManifest" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -20947,6 +21247,34 @@ int main() {
     testRestStationQualityName();
     testRestStationAutoStop();
     testRestStationCount();
+
+    // Myth Boss System tests
+    testMythBossDefaults();
+    testMythBossGenerateEncounter();
+    testMythBossDifficulty();
+    testMythBossComplete();
+    testMythBossExpiry();
+    testMythBossTypeName();
+    testMythBossSourceMyth();
+
+    // Ancient Tech Upgrade System tests
+    testAncientTechUpgradeDefaults();
+    testAncientTechUpgradeStart();
+    testAncientTechUpgradeNotRepaired();
+    testAncientTechUpgradeComplete();
+    testAncientTechUpgradeCancel();
+    testAncientTechUpgradeProgress();
+    testAncientTechUpgradeBonusDescription();
+
+    // Mod Manifest System tests
+    testModManifestDefaults();
+    testModManifestRegister();
+    testModManifestDuplicate();
+    testModManifestUnregister();
+    testModManifestDependencies();
+    testModManifestLoadOrder();
+    testModManifestEnableDisable();
+    testModManifestEmptyId();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

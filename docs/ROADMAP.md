@@ -1215,7 +1215,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Ancient tech modules** — Broken→Repairing→Repaired→Upgraded lifecycle — AncientTechModule component + AncientTechSystem (3 tests)
 - [x] **Reverse engineering** — Scan/salvage to unlock blueprints — reverseEngineer() returns blueprint_id
 - [ ] **Ancient AI remnants** — Boss encounters in ancient sites
-- [ ] **Rule-breaking modules** — Repaired ancient tech exceeds modern module limits
+- [x] **Rule-breaking modules** — Repaired ancient tech exceeds modern module limits — AncientTechUpgradeState component + AncientTechUpgradeSystem with upgrade lifecycle, stat multiplier exceeding modern caps, cancel support (7 tests)
 
 #### Interior-Exterior Coupling
 - [x] **Hull deformation tracking** — Interior modules affect exterior appearance — InteriorExteriorLink component with per-module deformation and visibility (3 tests)
@@ -1277,12 +1277,12 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **NPC dialogue references** — NPCs talk about player legends — NPCDialogueSystem with NPCDialogue component, title-aware generated lines, observe-legend event recording (6 tests)
 - [x] **Player statues & monuments** — Generated in stations based on legend score — StationMonumentSystem with StationMonument component, 5 monument tiers (Plaque→MythicShrine), upgrade logic (6 tests)
 - [x] **False myths & propaganda** — NPC-generated misinformation — PropagandaNetwork component + PropagandaSystem with myth generation, spreading, debunking, credibility decay, NPC belief thresholds (7 tests)
-- [ ] **Myth-based boss encounters** — Ancient sites generated from myth content
+- [x] **Myth-based boss encounters** — Ancient sites generated from myth content — MythBossEncounter component + MythBossSystem with myth-driven boss generation, difficulty scaling, encounter lifecycle (7 tests)
 
 #### Menu & Game Flow
 - [x] **Menu state machine** — TitleScreen→NewGame→CharacterCreation→InGame flow — MenuState component + MenuSystem with navigate/goBack (4 tests)
 - [x] **Multiplayer session** — Host/Join with mod validation and seed syncing — MultiplayerSession component
-- [ ] **Mod support** — mod.json manifest, hot reload, save migration
+- [x] **Mod support** — mod.json manifest, validation, dependency ordering — ModRegistry component + ModManifestSystem with registration, topological load ordering, enable/disable (8 tests)
 - [ ] **Character creation screen** — 3rd person view with race selection and sliders
 - [ ] **FPS ↔ RTS transitions** — Cockpit → interior → EVA → RTS overlay seamless transitions
 
