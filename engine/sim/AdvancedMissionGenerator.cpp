@@ -242,7 +242,7 @@ GeneratedMission AdvancedMissionGenerator::buildMission(
     }
 
     // Branching choices for templates that support them
-    if (tpl.hasBranching) {
+    if (tpl.hasBranching && !m_templates.empty()) {
         BranchChoice a;
         a.label          = "Pursue the aggressors";
         a.standingChange = 0.02f;
