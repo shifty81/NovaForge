@@ -47,7 +47,7 @@ The easiest way to build is using the provided batch script:
 
 ```cmd
 # From repository root
-build_vs.bat
+scripts\build_vs.bat
 ```
 
 This will:
@@ -58,19 +58,19 @@ This will:
 ### Build Script Options
 
 ```cmd
-build_vs.bat --clean      # Clean rebuild (deletes build directory)
-build_vs.bat --debug      # Build Debug configuration instead of Release
-build_vs.bat --open       # Open Visual Studio after generating solution
+scripts\build_vs.bat --clean      # Clean rebuild (deletes build directory)
+scripts\build_vs.bat --debug      # Build Debug configuration instead of Release
+scripts\build_vs.bat --open       # Open Visual Studio after generating solution
 ```
 
 ### Example Usage
 
 ```cmd
 # Clean Debug build and open in Visual Studio
-build_vs.bat --clean --debug --open
+scripts\build_vs.bat --clean --debug --open
 
 # Quick Release build
-build_vs.bat --release
+scripts\build_vs.bat --release
 ```
 
 ## Manual Visual Studio Setup

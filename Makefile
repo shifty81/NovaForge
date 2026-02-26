@@ -27,11 +27,11 @@ help: ## Show this help message
 
 .PHONY: build
 build: ## Build client, server, engine, and editor (Release)
-	./build.sh Release
+	./scripts/build.sh Release
 
 .PHONY: build-debug
 build-debug: ## Build client, server, engine, and editor (Debug)
-	./build.sh Debug
+	./scripts/build.sh Debug
 
 .PHONY: build-client
 build-client: ## Build C++ client only
@@ -118,4 +118,4 @@ all: clean build ## Clean and build everything
 
 .PHONY: build-all
 build-all: ## Build engine, editor, client, server into build/bin/ (unified, shareable)
-	./build_all.sh Release
+	./scripts/build_all.sh Release

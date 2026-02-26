@@ -18,11 +18,17 @@ REM   build_all.bat --clean --debug --test   Combine flags
 
 setlocal
 
-REM --- Logging Setup ---
+REM --- Resolve project root (parent of scripts/) ---
 set "SCRIPT_DIR=%~dp0"
-if not exist "%SCRIPT_DIR%logs" mkdir "%SCRIPT_DIR%logs"
+set "PROJECT_ROOT=%SCRIPT_DIR%.."
+pushd "%PROJECT_ROOT%"
+set "PROJECT_ROOT=%CD%"
+popd
+
+REM --- Logging Setup ---
+if not exist "%PROJECT_ROOT%\logs" mkdir "%PROJECT_ROOT%\logs"
 for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "datetime=%%I"
-set "LOG_FILE=%SCRIPT_DIR%logs\build_all_%datetime:~0,8%_%datetime:~8,6%.log"
+set "LOG_FILE=%PROJECT_ROOT%\logs\build_all_%datetime:~0,8%_%datetime:~8,6%.log"
 echo Build log will be saved to: %LOG_FILE%
 call :main %* 2>&1 | powershell -Command "$input | Tee-Object -FilePath '%LOG_FILE%'"
 set "EXIT_CODE=%ERRORLEVEL%"
@@ -152,6 +158,7 @@ if "%CLEAN_BUILD%"=="1" (
 )
 
 REM --- Configure ---
+cd /d "%PROJECT_ROOT%"
 if not exist build mkdir build
 cd build
 
@@ -167,8 +174,8 @@ echo Configuration:
 echo   Generator:    %VS_GENERATOR%
 echo   Architecture: x64
 echo   Build Type:   %BUILD_TYPE%
-echo   Build Dir:    %SCRIPT_DIR%build
-echo   Output Dir:   %SCRIPT_DIR%build\bin
+echo   Build Dir:    %PROJECT_ROOT%\build
+echo   Output Dir:   %PROJECT_ROOT%\build\bin
 echo   Run Tests:    %RUN_TESTS%
 echo.
 
@@ -239,9 +246,9 @@ set "BIN_DIR=bin\%BUILD_TYPE%"
 if not exist "%BIN_DIR%" set "BIN_DIR=bin"
 
 if not exist "%BIN_DIR%\data" (
-    if exist "%SCRIPT_DIR%data" (
+    if exist "%PROJECT_ROOT%\data" (
         echo Copying game data into output directory...
-        xcopy /E /I /Q "%SCRIPT_DIR%data" "%BIN_DIR%\data" >nul
+        xcopy /E /I /Q "%PROJECT_ROOT%\data" "%BIN_DIR%\data" >nul
         echo   data\ copied
     )
 )

@@ -22,13 +22,13 @@ python build_and_test.py --install
 
 **Windows:**
 ```cmd
-build.bat
+scripts\build.bat
 ```
 
 **Linux/macOS:**
 ```bash
-chmod +x build.sh
-./build.sh
+chmod +x scripts/build.sh
+./scripts/build.sh
 ```
 
 ### Option 3: Make Commands
@@ -422,7 +422,7 @@ pip install -r requirements.txt
 **Solution**: Make scripts executable
 
 ```bash
-chmod +x build.sh
+chmod +x scripts/build.sh
 chmod +x setup_hooks.py
 ```
 

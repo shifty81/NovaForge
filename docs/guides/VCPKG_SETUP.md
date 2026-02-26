@@ -60,7 +60,7 @@ openal-soft:x64-windows
 ### 4. Build the Project
 ```cmd
 cd C:\path\to\NovaForge
-.\build_vs.bat
+.\scripts\build_vs.bat
 ```
 
 The build script will automatically detect vcpkg at `C:\vcpkg` and use it.
@@ -115,7 +115,7 @@ vcpkg install glew:x64-windows
 ### CMake can't find packages even though vcpkg installed them
 **Cause**: CMake isn't using the vcpkg toolchain file.
 
-**Solution**: The `build_vs.bat` script automatically detects vcpkg at `C:\vcpkg`. If you installed vcpkg elsewhere, set the environment variable:
+**Solution**: The `scripts\build_vs.bat` script automatically detects vcpkg at `C:\vcpkg`. If you installed vcpkg elsewhere, set the environment variable:
 ```cmd
 set CMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake
 ```

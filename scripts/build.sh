@@ -3,10 +3,11 @@
 # Builds the C++ client and server using CMake
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
 # --- Logging Setup ---
-LOG_DIR="$SCRIPT_DIR/logs"
+LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/build_$(date '+%Y%m%d_%H%M%S').log"
 exec > >(tee -a "$LOG_FILE") 2>&1

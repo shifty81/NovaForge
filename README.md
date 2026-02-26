@@ -83,7 +83,7 @@ sudo apt-get install build-essential cmake \
 brew install cmake glfw glm glew nlohmann-json openal-soft freetype
 
 # Build & run
-./build.sh
+./scripts/build.sh
 cd build/bin && ./nova_forge "YourName"
 ```
 
@@ -95,7 +95,7 @@ vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows ^
               nlohmann-json:x64-windows freetype:x64-windows
 
 :: Generate & open solution
-build_vs.bat --open
+scripts\build_vs.bat --open
 ```
 
 ### CMake (any platform)
@@ -141,17 +141,26 @@ NovaForge/
 │   ├── missions/          #   Mission templates (5 levels, 7 types)
 │   ├── universe/          #   Solar systems, stargates, stations
 │   └── ...                #   Skills, NPCs, market, industry, etc.
+├── scripts/               # Build & packaging scripts
+│   ├── build.sh / .bat    #   Quick build (Release or Debug)
+│   ├── build_all.sh / .bat#   Full build (engine+editor+client+server+tests)
+│   ├── build_vs.bat       #   Visual Studio client build
+│   └── generate_solution.bat # Generate VS solution
+├── assets/                # Raw reference models & archives (.blend, .zip)
 ├── docs/                  # Documentation
+│   ├── ATLAS_INTEGRATION.md # ★ Atlas Engine integration guide
 │   ├── atlas-ui/          #   ★ Atlas UI framework docs
 │   ├── guides/            #   Build & setup guides
+│   ├── images/            #   Concept art & project images
+│   ├── screenshots/       #   Development screenshots
+│   ├── notes/             #   Design notes & chat logs
 │   └── ...                #   Design, features, development notes
 ├── tools/                 # Utilities (ship creator, JSON validator, Blender addon)
 │   └── BlenderSpaceshipGenerator/  # Blender addon for procedural ship/station generation
 ├── archive/               # Legacy code & deprecated files
-├── ATLAS_INTEGRATION.md   # ★ Atlas Engine integration guide
 ├── CMakeLists.txt         # Root build configuration
-├── build.sh / build.bat   # Build scripts
-└── Makefile               # Development task shortcuts
+├── Makefile               # Development task shortcuts
+└── Dockerfile             # Server container build
 ```
 
 ---
@@ -203,7 +212,7 @@ ctx.endFrame();
 
 This project includes the **Atlas Engine** — a modular, data-driven game engine core that powers both the client and server. **Nova Forge is the game built on top of Atlas**; stable, game-agnostic pieces are developed in the engine for reuse.
 
-**→ [Atlas Integration Guide](ATLAS_INTEGRATION.md)**
+**→ [Atlas Integration Guide](docs/ATLAS_INTEGRATION.md)**
 
 ### Engine Components
 
@@ -358,7 +367,7 @@ See the [Modding Guide](docs/MODDING_GUIDE.md) for details.
 | Category | Links |
 |----------|-------|
 | **Get Started** | [Tutorial](docs/TUTORIAL.md) · [Build Guides](docs/guides/) |
-| **Atlas Engine** | [Integration Guide](ATLAS_INTEGRATION.md) · [Atlas Repo](https://github.com/shifty81/Atlas) |
+| **Atlas Engine** | [Integration Guide](docs/ATLAS_INTEGRATION.md) · [Atlas Repo](https://github.com/shifty81/Atlas) |
 | **Atlas UI** | [Atlas UI Docs](docs/atlas-ui/README.md) · [Widget Reference](docs/atlas-ui/WIDGETS.md) |
 | **Development** | [Roadmap](docs/ROADMAP.md) · [Contributing](docs/CONTRIBUTING.md) |
 | **Design** | [Game Design](docs/design/DESIGN.md) · [Ship Modeling](docs/SHIP_MODELING.md) |

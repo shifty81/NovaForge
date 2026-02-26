@@ -16,10 +16,11 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
 # --- Logging Setup ---
-LOG_DIR="$SCRIPT_DIR/logs"
+LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/build_all_$(date '+%Y%m%d_%H%M%S').log"
 exec > >(tee -a "$LOG_FILE") 2>&1
@@ -177,8 +178,8 @@ fi
 
 echo "Configuration:"
 echo "  Build Type:   $BUILD_TYPE"
-echo "  Build Dir:    $SCRIPT_DIR/$BUILD_DIR"
-echo "  Output Dir:   $SCRIPT_DIR/$BUILD_DIR/bin"
+echo "  Build Dir:    $PROJECT_ROOT/$BUILD_DIR"
+echo "  Output Dir:   $PROJECT_ROOT/$BUILD_DIR/bin"
 echo "  Run Tests:    $RUN_TESTS"
 if [ "$IS_WINDOWS" = true ]; then
     echo "  Generator:    $VS_GENERATOR"
@@ -269,9 +270,9 @@ else
     DATA_DEST="bin/data"
 fi
 
-if [ ! -d "$DATA_DEST" ] && [ -d "$SCRIPT_DIR/data" ]; then
+if [ ! -d "$DATA_DEST" ] && [ -d "$PROJECT_ROOT/data" ]; then
     echo "Copying game data into output directory..."
-    cp -r "$SCRIPT_DIR/data" "$DATA_DEST"
+    cp -r "$PROJECT_ROOT/data" "$DATA_DEST"
     echo "  data/ copied"
     echo ""
 fi

@@ -44,10 +44,10 @@ REM Install dependencies with vcpkg first:
 REM vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows nlohmann-json:x64-windows openal-soft:x64-windows
 
 REM Generate Visual Studio solution and build
-build_vs.bat
+scripts\build_vs.bat
 
 REM Or open in Visual Studio
-build_vs.bat --open
+scripts\build_vs.bat --open
 ```
 
 #### Option 2: Python Script
@@ -270,7 +270,7 @@ cd cpp_client/build/bin
 ./eve_client "YourName"
 
 # Visual Studio (Windows)
-build_vs.bat --open
+scripts\build_vs.bat --open
 ```
 
 **That's it!** The automated build script handles everything else.
