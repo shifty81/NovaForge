@@ -620,6 +620,57 @@ void test_kb_describe_binding();
 void test_kb_describe_action();
 void test_kb_default_bindings();
 
+// Alert Stack tests
+void test_alert_defaults();
+void test_alert_custom_max();
+void test_alert_push();
+void test_alert_push_multiple();
+void test_alert_active_sorted_by_priority();
+void test_alert_category_filter();
+void test_alert_tick_expiry();
+void test_alert_tick_ages_alerts();
+void test_alert_dismiss();
+void test_alert_dismiss_nonexistent();
+void test_alert_dismiss_category();
+void test_alert_eviction();
+void test_alert_clear();
+void test_alert_ids_monotonic();
+void test_alert_same_priority_ordered_by_age();
+
+// AI Miner State Machine tests
+void test_miner_defaults();
+void test_miner_add();
+void test_miner_add_duplicate_rejected();
+void test_miner_remove();
+void test_miner_remove_nonexistent();
+void test_miner_idle_without_deposits();
+void test_miner_full_cycle();
+void test_miner_travel_progress();
+void test_miner_cargo_accumulation();
+void test_miner_kill();
+void test_miner_kill_nonexistent();
+void test_miner_respawn();
+void test_miner_count_in_state();
+void test_miner_field_distance();
+void test_miner_multiple_miners();
+
+// AI Hauler State Machine tests
+void test_hauler_defaults();
+void test_hauler_add();
+void test_hauler_add_duplicate_rejected();
+void test_hauler_remove();
+void test_hauler_remove_nonexistent();
+void test_hauler_idle_without_cargo();
+void test_hauler_full_cycle();
+void test_hauler_travel_progress();
+void test_hauler_picks_best_cargo();
+void test_hauler_kill();
+void test_hauler_kill_nonexistent();
+void test_hauler_respawn();
+void test_hauler_count_in_state();
+void test_hauler_station_distance();
+void test_hauler_multiple_haulers();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1301,6 +1352,60 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_kb_describe_binding);
     RUN_TEST(test_kb_describe_action);
     RUN_TEST(test_kb_default_bindings);
+
+    // Alert Stack
+    log.BeginSection("Alert Stack");
+    RUN_TEST(test_alert_defaults);
+    RUN_TEST(test_alert_custom_max);
+    RUN_TEST(test_alert_push);
+    RUN_TEST(test_alert_push_multiple);
+    RUN_TEST(test_alert_active_sorted_by_priority);
+    RUN_TEST(test_alert_category_filter);
+    RUN_TEST(test_alert_tick_expiry);
+    RUN_TEST(test_alert_tick_ages_alerts);
+    RUN_TEST(test_alert_dismiss);
+    RUN_TEST(test_alert_dismiss_nonexistent);
+    RUN_TEST(test_alert_dismiss_category);
+    RUN_TEST(test_alert_eviction);
+    RUN_TEST(test_alert_clear);
+    RUN_TEST(test_alert_ids_monotonic);
+    RUN_TEST(test_alert_same_priority_ordered_by_age);
+
+    // AI Miner State Machine
+    log.BeginSection("AI Miner State Machine");
+    RUN_TEST(test_miner_defaults);
+    RUN_TEST(test_miner_add);
+    RUN_TEST(test_miner_add_duplicate_rejected);
+    RUN_TEST(test_miner_remove);
+    RUN_TEST(test_miner_remove_nonexistent);
+    RUN_TEST(test_miner_idle_without_deposits);
+    RUN_TEST(test_miner_full_cycle);
+    RUN_TEST(test_miner_travel_progress);
+    RUN_TEST(test_miner_cargo_accumulation);
+    RUN_TEST(test_miner_kill);
+    RUN_TEST(test_miner_kill_nonexistent);
+    RUN_TEST(test_miner_respawn);
+    RUN_TEST(test_miner_count_in_state);
+    RUN_TEST(test_miner_field_distance);
+    RUN_TEST(test_miner_multiple_miners);
+
+    // AI Hauler State Machine
+    log.BeginSection("AI Hauler State Machine");
+    RUN_TEST(test_hauler_defaults);
+    RUN_TEST(test_hauler_add);
+    RUN_TEST(test_hauler_add_duplicate_rejected);
+    RUN_TEST(test_hauler_remove);
+    RUN_TEST(test_hauler_remove_nonexistent);
+    RUN_TEST(test_hauler_idle_without_cargo);
+    RUN_TEST(test_hauler_full_cycle);
+    RUN_TEST(test_hauler_travel_progress);
+    RUN_TEST(test_hauler_picks_best_cargo);
+    RUN_TEST(test_hauler_kill);
+    RUN_TEST(test_hauler_kill_nonexistent);
+    RUN_TEST(test_hauler_respawn);
+    RUN_TEST(test_hauler_count_in_state);
+    RUN_TEST(test_hauler_station_distance);
+    RUN_TEST(test_hauler_multiple_haulers);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);

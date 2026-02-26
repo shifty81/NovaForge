@@ -11,6 +11,9 @@ add_library(AtlasEngine STATIC
     net/NetworkQualityMonitor.cpp
     net/NetworkInterpolationBuffer.cpp
     sim/TickScheduler.cpp
+    sim/AlertStack.cpp
+    sim/AIMinerStateMachine.cpp
+    sim/AIHaulerStateMachine.cpp
     world/CubeSphereLayout.cpp
     world/VoxelGridLayout.cpp
 )

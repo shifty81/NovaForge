@@ -37,6 +37,9 @@ set(ATLAS_TEST_SOURCES
     test_net_interpolation.cpp
     test_scene_graph.cpp
     test_keybind_manager.cpp
+    test_alert_stack.cpp
+    test_ai_miner.cpp
+    test_ai_hauler.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
