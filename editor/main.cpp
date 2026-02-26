@@ -203,6 +203,15 @@ int main() {
     std::cout << "[Editor] Ready — drag objects in the viewport to edit, "
               << "then save overrides for the client" << std::endl;
 
+    // ── Load saved dock layout (if any) ──────────────────────────
+    layout.LoadFromFile("data/editor_layout.json");
+
+    // ── Per-frame callback: UI drawing, hot-reload, keybinds ────
+    engine.SetFrameCallback([&](float /*dt*/) {
+        assetRegistry.PollHotReload();
+        layout.Draw();
+    });
+
     // ── Run editor loop ───────────────────────────────────────
     engine.Run();
 

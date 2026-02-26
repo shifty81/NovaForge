@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <cstdint>
+#include <functional>
 #include "../ecs/ECS.h"
 #include "../net/NetContext.h"
 #include "../sim/TickScheduler.h"
@@ -38,6 +39,8 @@ struct EngineConfig {
 
 class Engine {
 public:
+    using FrameCallback = std::function<void(float dt)>;
+
     explicit Engine(const EngineConfig& cfg);
     ~Engine();
 
@@ -58,6 +61,13 @@ public:
 
     bool Can(Capability cap) const;
 
+    /** Register a per-frame callback invoked once per tick.
+     *  Useful for editor UI drawing, asset hot-reload polling, etc. */
+    void SetFrameCallback(FrameCallback cb) { m_frameCallback = std::move(cb); }
+
+    /** Number of ticks executed so far. */
+    uint64_t TickCount() const { return m_tickCount; }
+
     const EngineConfig& Config() const { return m_config; }
 
     ecs::World& GetWorld() { return m_world; }
@@ -67,9 +77,11 @@ public:
 private:
     EngineConfig m_config;
     bool m_running = false;
+    uint64_t m_tickCount = 0;
     ecs::World m_world;
     net::NetContext m_net;
     sim::TickScheduler m_scheduler;
+    FrameCallback m_frameCallback;
 };
 
 }

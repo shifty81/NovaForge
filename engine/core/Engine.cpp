@@ -66,15 +66,15 @@ void Engine::Run() {
 
 void Engine::RunEditor() {
     Logger::Info("Running Atlas Editor");
-    uint64_t tickCount = 0;
     while (m_running) {
         m_net.Poll();
-        m_scheduler.Tick([this](float dt) {
-            m_world.Update(dt);
+        float dt = 1.0f / static_cast<float>(m_config.tickRate);
+        m_scheduler.Tick([this](float d) {
+            m_world.Update(d);
         });
-        // UI update and render would happen here
-        tickCount++;
-        if (m_config.maxTicks > 0 && tickCount >= m_config.maxTicks) {
+        if (m_frameCallback) m_frameCallback(dt);
+        m_tickCount++;
+        if (m_config.maxTicks > 0 && m_tickCount >= m_config.maxTicks) {
             m_running = false;
         }
     }
@@ -82,15 +82,15 @@ void Engine::RunEditor() {
 
 void Engine::RunClient() {
     Logger::Info("Running Atlas Client");
-    uint64_t tickCount = 0;
     while (m_running) {
         m_net.Poll();
-        m_scheduler.Tick([this](float dt) {
-            m_world.Update(dt);
+        float dt = 1.0f / static_cast<float>(m_config.tickRate);
+        m_scheduler.Tick([this](float d) {
+            m_world.Update(d);
         });
-        // Render would happen here
-        tickCount++;
-        if (m_config.maxTicks > 0 && tickCount >= m_config.maxTicks) {
+        if (m_frameCallback) m_frameCallback(dt);
+        m_tickCount++;
+        if (m_config.maxTicks > 0 && m_tickCount >= m_config.maxTicks) {
             m_running = false;
         }
     }
@@ -98,15 +98,16 @@ void Engine::RunClient() {
 
 void Engine::RunServer() {
     Logger::Info("Running Atlas Server");
-    uint64_t tickCount = 0;
     while (m_running) {
         m_net.Poll();
-        m_scheduler.Tick([this](float dt) {
-            m_world.Update(dt);
+        float dt = 1.0f / static_cast<float>(m_config.tickRate);
+        m_scheduler.Tick([this](float d) {
+            m_world.Update(d);
         });
+        if (m_frameCallback) m_frameCallback(dt);
         m_net.Flush();
-        tickCount++;
-        if (m_config.maxTicks > 0 && tickCount >= m_config.maxTicks) {
+        m_tickCount++;
+        if (m_config.maxTicks > 0 && m_tickCount >= m_config.maxTicks) {
             m_running = false;
         }
     }

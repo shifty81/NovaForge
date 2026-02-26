@@ -864,6 +864,28 @@ void test_economy_rules_load_multiple();
 void test_economy_rules_load_overwrites_defaults();
 void test_economy_rules_all_bands();
 
+// Engine frame callback tests
+void test_engine_frame_callback_invoked();
+void test_engine_frame_callback_receives_dt();
+void test_engine_frame_callback_server_mode();
+void test_engine_no_callback_safe();
+void test_engine_tick_count();
+void test_engine_callback_replace();
+
+// EditorLayout serialisation tests
+void test_layout_serialize_empty();
+void test_layout_serialize_single_panel();
+void test_layout_serialize_split();
+void test_layout_serialize_tabs();
+void test_layout_roundtrip_single_panel();
+void test_layout_roundtrip_horizontal_split();
+void test_layout_roundtrip_tabs();
+void test_layout_deserialize_invalid();
+void test_layout_deserialize_empty_string();
+void test_layout_file_roundtrip();
+void test_layout_load_nonexistent_file();
+void test_layout_roundtrip_nested();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1799,6 +1821,30 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_economy_rules_load_multiple);
     RUN_TEST(test_economy_rules_load_overwrites_defaults);
     RUN_TEST(test_economy_rules_all_bands);
+
+    // Engine Frame Callback
+    log.BeginSection("Engine Frame Callback");
+    RUN_TEST(test_engine_frame_callback_invoked);
+    RUN_TEST(test_engine_frame_callback_receives_dt);
+    RUN_TEST(test_engine_frame_callback_server_mode);
+    RUN_TEST(test_engine_no_callback_safe);
+    RUN_TEST(test_engine_tick_count);
+    RUN_TEST(test_engine_callback_replace);
+
+    // EditorLayout Serialisation
+    log.BeginSection("EditorLayout Serialisation");
+    RUN_TEST(test_layout_serialize_empty);
+    RUN_TEST(test_layout_serialize_single_panel);
+    RUN_TEST(test_layout_serialize_split);
+    RUN_TEST(test_layout_serialize_tabs);
+    RUN_TEST(test_layout_roundtrip_single_panel);
+    RUN_TEST(test_layout_roundtrip_horizontal_split);
+    RUN_TEST(test_layout_roundtrip_tabs);
+    RUN_TEST(test_layout_deserialize_invalid);
+    RUN_TEST(test_layout_deserialize_empty_string);
+    RUN_TEST(test_layout_file_roundtrip);
+    RUN_TEST(test_layout_load_nonexistent_file);
+    RUN_TEST(test_layout_roundtrip_nested);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
