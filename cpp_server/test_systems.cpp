@@ -151,6 +151,9 @@
 #include "systems/myth_boss_system.h"
 #include "systems/ancient_tech_upgrade_system.h"
 #include "systems/mod_manifest_system.h"
+#include "systems/ancient_ai_remnant_system.h"
+#include "systems/character_creation_screen_system.h"
+#include "systems/view_mode_transition_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -19872,6 +19875,264 @@ void testModManifestEmptyId() {
     assertTrue(modSys.getModCount() == 0, "No mods registered with empty ID");
 }
 
+// ==================== Ancient AI Remnant System Tests ====================
+
+void testAncientAIRemnantDefaults() {
+    std::cout << "\n=== Ancient AI Remnant Defaults ===" << std::endl;
+    components::AncientAIRemnant remnant;
+    assertTrue(remnant.active == true, "Default active");
+    assertTrue(remnant.defeated == false, "Default not defeated");
+    assertTrue(remnant.tier == 1, "Default tier 1");
+    assertTrue(remnant.remnant_type == components::AncientAIRemnant::RemnantType::Sentinel, "Default Sentinel type");
+    assertTrue(remnant.isActive(), "Active by default");
+}
+
+void testAncientAIRemnantSpawn() {
+    std::cout << "\n=== Ancient AI Remnant Spawn ===" << std::endl;
+    ecs::World world;
+    systems::AncientAIRemnantSystem sys(&world);
+
+    std::string id = sys.spawnRemnant("ancient_site_1", 3);
+    assertTrue(!id.empty(), "Remnant ID generated");
+    assertTrue(sys.isRemnantActive(id), "Remnant is active after spawn");
+    assertTrue(sys.getActiveRemnantCount() == 1, "One active remnant");
+}
+
+void testAncientAIRemnantTierScaling() {
+    std::cout << "\n=== Ancient AI Remnant Tier Scaling ===" << std::endl;
+    ecs::World world;
+    systems::AncientAIRemnantSystem sys(&world);
+
+    std::string id1 = sys.spawnRemnant("site_1", 1);
+    std::string id5 = sys.spawnRemnant("site_5", 5);
+
+    float diff1 = sys.getRemnantDifficulty(id1);
+    float diff5 = sys.getRemnantDifficulty(id5);
+    assertTrue(diff5 > diff1, "Higher tier = higher difficulty");
+    assertTrue(approxEqual(diff1, 1.0f), "Tier 1 difficulty is 1.0");
+    assertTrue(approxEqual(diff5, 5.0f), "Tier 5 difficulty is 5.0");
+}
+
+void testAncientAIRemnantDefeat() {
+    std::cout << "\n=== Ancient AI Remnant Defeat ===" << std::endl;
+    ecs::World world;
+    systems::AncientAIRemnantSystem sys(&world);
+
+    std::string id = sys.spawnRemnant("ancient_site_1", 2);
+    assertTrue(sys.isRemnantActive(id), "Active before defeat");
+    assertTrue(sys.defeatRemnant(id), "Defeat succeeds");
+    assertTrue(!sys.isRemnantActive(id), "Inactive after defeat");
+    assertTrue(sys.getActiveRemnantCount() == 0, "Zero active after defeat");
+}
+
+void testAncientAIRemnantExpiry() {
+    std::cout << "\n=== Ancient AI Remnant Expiry ===" << std::endl;
+    ecs::World world;
+    systems::AncientAIRemnantSystem sys(&world);
+
+    std::string id = sys.spawnRemnant("ancient_site_1", 1);
+    // Default max_duration is 7200s. Advance time past that.
+    sys.update(7201.0f);
+    assertTrue(!sys.isRemnantActive(id), "Inactive after expiry");
+}
+
+void testAncientAIRemnantSiteId() {
+    std::cout << "\n=== Ancient AI Remnant Site ID ===" << std::endl;
+    ecs::World world;
+    systems::AncientAIRemnantSystem sys(&world);
+
+    std::string id = sys.spawnRemnant("ancient_ruins_alpha", 4);
+    assertTrue(sys.getRemnantSiteId(id) == "ancient_ruins_alpha", "Site ID matches");
+}
+
+void testAncientAIRemnantTypeName() {
+    std::cout << "\n=== Ancient AI Remnant Type Name ===" << std::endl;
+    assertTrue(systems::AncientAIRemnantSystem::getRemnantTypeName(0) == "Sentinel", "Type 0 is Sentinel");
+    assertTrue(systems::AncientAIRemnantSystem::getRemnantTypeName(1) == "Swarm", "Type 1 is Swarm");
+    assertTrue(systems::AncientAIRemnantSystem::getRemnantTypeName(2) == "Construct", "Type 2 is Construct");
+    assertTrue(systems::AncientAIRemnantSystem::getRemnantTypeName(3) == "Warden", "Type 3 is Warden");
+    assertTrue(systems::AncientAIRemnantSystem::getRemnantTypeName(4) == "Leviathan", "Type 4 is Leviathan");
+    assertTrue(systems::AncientAIRemnantSystem::getRemnantTypeName(99) == "Unknown", "Invalid type is Unknown");
+}
+
+// ==================== Character Creation Screen System Tests ====================
+
+void testCharCreationScreenDefaults() {
+    std::cout << "\n=== Char Creation Screen Defaults ===" << std::endl;
+    components::CharacterCreationScreen screen;
+    assertTrue(!screen.is_open, "Default not open");
+    assertTrue(!screen.finalized, "Default not finalized");
+    assertTrue(screen.selected_race.empty(), "No race selected");
+    assertTrue(screen.selected_faction.empty(), "No faction selected");
+}
+
+void testCharCreationScreenOpen() {
+    std::cout << "\n=== Char Creation Screen Open ===" << std::endl;
+    ecs::World world;
+    systems::CharacterCreationScreenSystem sys(&world);
+
+    assertTrue(sys.openScreen("player1"), "Open screen succeeds");
+    assertTrue(sys.isScreenOpen("player1"), "Screen is open");
+    assertTrue(!sys.openScreen("player1"), "Cannot open twice");
+}
+
+void testCharCreationScreenRaceSelect() {
+    std::cout << "\n=== Char Creation Screen Race Select ===" << std::endl;
+    ecs::World world;
+    systems::CharacterCreationScreenSystem sys(&world);
+    sys.openScreen("player1");
+
+    assertTrue(sys.selectRace("player1", "Synth-Born"), "Valid race accepted");
+    assertTrue(sys.getSelectedRace("player1") == "Synth-Born", "Race saved correctly");
+    assertTrue(!sys.selectRace("player1", "InvalidRace"), "Invalid race rejected");
+}
+
+void testCharCreationScreenFactionSelect() {
+    std::cout << "\n=== Char Creation Screen Faction Select ===" << std::endl;
+    ecs::World world;
+    systems::CharacterCreationScreenSystem sys(&world);
+    sys.openScreen("player1");
+
+    assertTrue(sys.selectFaction("player1", "Solari"), "Valid faction accepted");
+    assertTrue(sys.getSelectedFaction("player1") == "Solari", "Faction saved correctly");
+    assertTrue(!sys.selectFaction("player1", "InvalidFaction"), "Invalid faction rejected");
+}
+
+void testCharCreationScreenSliders() {
+    std::cout << "\n=== Char Creation Screen Sliders ===" << std::endl;
+    ecs::World world;
+    systems::CharacterCreationScreenSystem sys(&world);
+    sys.openScreen("player1");
+
+    assertTrue(sys.setAttributeSlider("player1", "strength", 0.8f), "Set strength slider");
+    assertTrue(approxEqual(sys.getAttributeSlider("player1", "strength"), 0.8f), "Strength value correct");
+    assertTrue(sys.setAttributeSlider("player1", "agility", 1.5f), "Set agility clamped");
+    assertTrue(approxEqual(sys.getAttributeSlider("player1", "agility"), 1.0f), "Agility clamped to 1.0");
+    assertTrue(!sys.setAttributeSlider("player1", "invalid_attr", 0.5f), "Invalid attribute rejected");
+}
+
+void testCharCreationScreenValidation() {
+    std::cout << "\n=== Char Creation Screen Validation ===" << std::endl;
+    ecs::World world;
+    systems::CharacterCreationScreenSystem sys(&world);
+    sys.openScreen("player1");
+
+    assertTrue(!sys.validateSelections("player1"), "Invalid without race/faction");
+    sys.selectRace("player1", "Terran Descendant");
+    assertTrue(!sys.validateSelections("player1"), "Invalid without faction");
+    sys.selectFaction("player1", "Veyren");
+    assertTrue(sys.validateSelections("player1"), "Valid with race and faction");
+}
+
+void testCharCreationScreenFinalize() {
+    std::cout << "\n=== Char Creation Screen Finalize ===" << std::endl;
+    ecs::World world;
+    systems::CharacterCreationScreenSystem sys(&world);
+    sys.openScreen("player1");
+
+    assertTrue(!sys.finalizeCharacter("player1", "TestChar"), "Cannot finalize without selections");
+    sys.selectRace("player1", "Pure Alien");
+    sys.selectFaction("player1", "Aurelian");
+    assertTrue(!sys.finalizeCharacter("player1", ""), "Cannot finalize with empty name");
+    assertTrue(sys.finalizeCharacter("player1", "TestChar"), "Finalize succeeds");
+    assertTrue(!sys.isScreenOpen("player1"), "Screen closed after finalize");
+}
+
+void testCharCreationScreenAppearance() {
+    std::cout << "\n=== Char Creation Screen Appearance ===" << std::endl;
+    ecs::World world;
+    systems::CharacterCreationScreenSystem sys(&world);
+    sys.openScreen("player1");
+
+    assertTrue(sys.setAppearanceSlider("player1", "height", 0.7f), "Set height slider");
+    assertTrue(sys.setAppearanceSlider("player1", "build", 0.3f), "Set build slider");
+    assertTrue(!sys.setAppearanceSlider("player_none", "height", 0.5f), "Fails for non-existent player");
+}
+
+// ==================== View Mode Transition System Tests ====================
+
+void testViewModeDefaults() {
+    std::cout << "\n=== View Mode Defaults ===" << std::endl;
+    components::ViewModeState state;
+    assertTrue(state.current_mode == 0, "Default mode is Cockpit (0)");
+    assertTrue(!state.transitioning, "Default not transitioning");
+    assertTrue(approxEqual(state.transition_progress, 0.0f), "Default zero progress");
+}
+
+void testViewModeInitialize() {
+    std::cout << "\n=== View Mode Initialize ===" << std::endl;
+    ecs::World world;
+    systems::ViewModeTransitionSystem sys(&world);
+
+    assertTrue(sys.initializePlayer("player1"), "Initialize succeeds");
+    assertTrue(sys.getCurrentMode("player1") == 0, "Default Cockpit mode");
+    assertTrue(!sys.isTransitioning("player1"), "Not transitioning initially");
+}
+
+void testViewModeTransition() {
+    std::cout << "\n=== View Mode Transition ===" << std::endl;
+    ecs::World world;
+    systems::ViewModeTransitionSystem sys(&world);
+    sys.initializePlayer("player1");
+
+    int interior = static_cast<int>(components::ViewModeState::Mode::Interior);
+    assertTrue(sys.requestTransition("player1", interior), "Cockpit to Interior valid");
+    assertTrue(sys.isTransitioning("player1"), "Transitioning after request");
+
+    // Complete transition
+    sys.update(2.0f);
+    assertTrue(!sys.isTransitioning("player1"), "Not transitioning after completion");
+    assertTrue(sys.getCurrentMode("player1") == interior, "Now in Interior mode");
+}
+
+void testViewModeInvalidTransition() {
+    std::cout << "\n=== View Mode Invalid Transition ===" << std::endl;
+    ecs::World world;
+    systems::ViewModeTransitionSystem sys(&world);
+    sys.initializePlayer("player1");
+
+    int eva = static_cast<int>(components::ViewModeState::Mode::EVA);
+    // Cockpit -> EVA is not a valid direct transition
+    assertTrue(!sys.requestTransition("player1", eva), "Cockpit to EVA invalid (not adjacent)");
+}
+
+void testViewModeCancel() {
+    std::cout << "\n=== View Mode Cancel ===" << std::endl;
+    ecs::World world;
+    systems::ViewModeTransitionSystem sys(&world);
+    sys.initializePlayer("player1");
+
+    int interior = static_cast<int>(components::ViewModeState::Mode::Interior);
+    sys.requestTransition("player1", interior);
+    assertTrue(sys.isTransitioning("player1"), "Transitioning");
+    assertTrue(sys.cancelTransition("player1"), "Cancel succeeds");
+    assertTrue(!sys.isTransitioning("player1"), "No longer transitioning");
+    assertTrue(sys.getCurrentMode("player1") == 0, "Still in Cockpit after cancel");
+}
+
+void testViewModeProgress() {
+    std::cout << "\n=== View Mode Progress ===" << std::endl;
+    ecs::World world;
+    systems::ViewModeTransitionSystem sys(&world);
+    sys.initializePlayer("player1");
+
+    int interior = static_cast<int>(components::ViewModeState::Mode::Interior);
+    sys.requestTransition("player1", interior);
+    sys.update(0.75f); // Half of 1.5s default duration
+    float progress = sys.getTransitionProgress("player1");
+    assertTrue(progress > 0.0f && progress < 1.0f, "Progress is mid-transition");
+    assertTrue(sys.isTransitioning("player1"), "Still transitioning");
+}
+
+void testViewModeNames() {
+    std::cout << "\n=== View Mode Names ===" << std::endl;
+    assertTrue(systems::ViewModeTransitionSystem::getModeName(0) == "Cockpit", "Mode 0 is Cockpit");
+    assertTrue(systems::ViewModeTransitionSystem::getModeName(1) == "Interior", "Mode 1 is Interior");
+    assertTrue(systems::ViewModeTransitionSystem::getModeName(2) == "EVA", "Mode 2 is EVA");
+    assertTrue(systems::ViewModeTransitionSystem::getModeName(3) == "RTS Overlay", "Mode 3 is RTS Overlay");
+    assertTrue(systems::ViewModeTransitionSystem::getModeName(99) == "Unknown", "Invalid mode is Unknown");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -19916,7 +20177,8 @@ int main() {
     std::cout << "ConvoyAmbush, NPCDialogue, StationMonument" << std::endl;
     std::cout << "CrewActivity," << std::endl;
     std::cout << "VisualCue," << std::endl;
-    std::cout << "ModManifest" << std::endl;
+    std::cout << "ModManifest," << std::endl;
+    std::cout << "AncientAIRemnant, CharCreationScreen, ViewModeTransition" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -21275,6 +21537,34 @@ int main() {
     testModManifestLoadOrder();
     testModManifestEnableDisable();
     testModManifestEmptyId();
+
+    // Ancient AI Remnant System tests
+    testAncientAIRemnantDefaults();
+    testAncientAIRemnantSpawn();
+    testAncientAIRemnantTierScaling();
+    testAncientAIRemnantDefeat();
+    testAncientAIRemnantExpiry();
+    testAncientAIRemnantSiteId();
+    testAncientAIRemnantTypeName();
+
+    // Character Creation Screen System tests
+    testCharCreationScreenDefaults();
+    testCharCreationScreenOpen();
+    testCharCreationScreenRaceSelect();
+    testCharCreationScreenFactionSelect();
+    testCharCreationScreenSliders();
+    testCharCreationScreenValidation();
+    testCharCreationScreenFinalize();
+    testCharCreationScreenAppearance();
+
+    // View Mode Transition System tests
+    testViewModeDefaults();
+    testViewModeInitialize();
+    testViewModeTransition();
+    testViewModeInvalidTransition();
+    testViewModeCancel();
+    testViewModeProgress();
+    testViewModeNames();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

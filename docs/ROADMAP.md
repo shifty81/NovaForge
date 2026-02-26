@@ -1214,7 +1214,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Ancient Tech System
 - [x] **Ancient tech modules** — Broken→Repairing→Repaired→Upgraded lifecycle — AncientTechModule component + AncientTechSystem (3 tests)
 - [x] **Reverse engineering** — Scan/salvage to unlock blueprints — reverseEngineer() returns blueprint_id
-- [ ] **Ancient AI remnants** — Boss encounters in ancient sites
+- [x] **Ancient AI remnants** — Boss encounters in ancient sites — AncientAIRemnant component + AncientAIRemnantSystem with tier-based spawning, defeat/expiry lifecycle, reward generation (7 tests)
 - [x] **Rule-breaking modules** — Repaired ancient tech exceeds modern module limits — AncientTechUpgradeState component + AncientTechUpgradeSystem with upgrade lifecycle, stat multiplier exceeding modern caps, cancel support (7 tests)
 
 #### Interior-Exterior Coupling
@@ -1283,8 +1283,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Menu state machine** — TitleScreen→NewGame→CharacterCreation→InGame flow — MenuState component + MenuSystem with navigate/goBack (4 tests)
 - [x] **Multiplayer session** — Host/Join with mod validation and seed syncing — MultiplayerSession component
 - [x] **Mod support** — mod.json manifest, validation, dependency ordering — ModRegistry component + ModManifestSystem with registration, topological load ordering, enable/disable (8 tests)
-- [ ] **Character creation screen** — 3rd person view with race selection and sliders
-- [ ] **FPS ↔ RTS transitions** — Cockpit → interior → EVA → RTS overlay seamless transitions
+- [x] **Character creation screen** — 3rd person view with race selection and sliders — CharacterCreationScreen component + CharacterCreationScreenSystem with race/faction selection, attribute/appearance sliders, validation, finalization (8 tests)
+- [x] **FPS ↔ RTS transitions** — Cockpit → interior → EVA → RTS overlay seamless transitions — ViewModeState component + ViewModeTransitionSystem with mode adjacency validation, transition progress, cancel support (7 tests)
 
 ---
 
