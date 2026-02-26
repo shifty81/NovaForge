@@ -86,6 +86,14 @@ void test_console_set_tickrate();
 void test_console_net_mode();
 void test_console_help();
 void test_console_unknown_command();
+void test_console_ecs_count();
+void test_console_ecs_destroy();
+void test_console_ecs_destroy_invalid();
+void test_console_net_stats();
+void test_console_net_peers();
+void test_console_clear();
+void test_console_ai_query();
+void test_console_ai_query_empty();
 
 // HUD Panel tests
 void test_station_panel_defaults();
@@ -619,6 +627,10 @@ void test_kb_callback_replacement();
 void test_kb_describe_binding();
 void test_kb_describe_action();
 void test_kb_default_bindings();
+void test_kb_serialize_roundtrip();
+void test_kb_deserialize_empty_returns_false();
+void test_kb_file_roundtrip();
+void test_kb_load_nonexistent_returns_false();
 
 // Alert Stack tests
 void test_alert_defaults();
@@ -958,6 +970,14 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_console_net_mode);
     RUN_TEST(test_console_help);
     RUN_TEST(test_console_unknown_command);
+    RUN_TEST(test_console_ecs_count);
+    RUN_TEST(test_console_ecs_destroy);
+    RUN_TEST(test_console_ecs_destroy_invalid);
+    RUN_TEST(test_console_net_stats);
+    RUN_TEST(test_console_net_peers);
+    RUN_TEST(test_console_clear);
+    RUN_TEST(test_console_ai_query);
+    RUN_TEST(test_console_ai_query_empty);
 
     // HUD Panels
     log.BeginSection("HUD Panels");
@@ -1533,6 +1553,10 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_kb_describe_binding);
     RUN_TEST(test_kb_describe_action);
     RUN_TEST(test_kb_default_bindings);
+    RUN_TEST(test_kb_serialize_roundtrip);
+    RUN_TEST(test_kb_deserialize_empty_returns_false);
+    RUN_TEST(test_kb_file_roundtrip);
+    RUN_TEST(test_kb_load_nonexistent_returns_false);
 
     // Alert Stack
     log.BeginSection("Alert Stack");

@@ -1,5 +1,8 @@
 #include "KeybindManager.h"
 #include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <filesystem>
 
 namespace atlas::editor {
 
@@ -177,6 +180,120 @@ Keybind* KeybindManager::findMutable(const std::string& action) {
         if (kb.action == action) return &kb;
     }
     return nullptr;
+}
+
+// ── Serialisation ──────────────────────────────────────────────────
+
+std::string KeybindManager::SerializeToJSON() const {
+    std::ostringstream os;
+    os << "{\n  \"keybinds\": [\n";
+    for (size_t i = 0; i < m_bindings.size(); ++i) {
+        const auto& kb = m_bindings[i];
+        os << "    {\n"
+           << "      \"action\": \""   << kb.action   << "\",\n"
+           << "      \"category\": \"" << kb.category  << "\",\n"
+           << "      \"key\": "        << kb.key       << ",\n"
+           << "      \"mods\": "       << static_cast<int>(kb.mods) << ",\n"
+           << "      \"enabled\": "    << (kb.enabled ? "true" : "false") << "\n"
+           << "    }";
+        if (i + 1 < m_bindings.size()) os << ",";
+        os << "\n";
+    }
+    os << "  ]\n}\n";
+    return os.str();
+}
+
+bool KeybindManager::DeserializeFromJSON(const std::string& json) {
+    std::vector<Keybind> loaded;
+
+    size_t pos = 0;
+    while ((pos = json.find("\"action\"", pos)) != std::string::npos) {
+        Keybind kb;
+
+        // action
+        size_t q1 = json.find('\"', json.find(':', pos) + 1);
+        size_t q2 = json.find('\"', q1 + 1);
+        if (q1 == std::string::npos || q2 == std::string::npos) break;
+        kb.action = json.substr(q1 + 1, q2 - q1 - 1);
+
+        // category
+        size_t catKey = json.find("\"category\"", pos);
+        if (catKey != std::string::npos) {
+            size_t cq1 = json.find('\"', json.find(':', catKey) + 1);
+            size_t cq2 = json.find('\"', cq1 + 1);
+            if (cq1 != std::string::npos && cq2 != std::string::npos)
+                kb.category = json.substr(cq1 + 1, cq2 - cq1 - 1);
+        }
+
+        // key
+        size_t keyKey = json.find("\"key\"", pos);
+        if (keyKey != std::string::npos) {
+            size_t kc = json.find(':', keyKey);
+            if (kc != std::string::npos)
+                kb.key = std::stoi(json.substr(kc + 1));
+        }
+
+        // mods
+        size_t modKey = json.find("\"mods\"", pos);
+        if (modKey != std::string::npos) {
+            size_t mc = json.find(':', modKey);
+            if (mc != std::string::npos)
+                kb.mods = static_cast<KeyMod>(std::stoi(json.substr(mc + 1)));
+        }
+
+        // enabled
+        size_t enKey = json.find("\"enabled\"", pos);
+        if (enKey != std::string::npos) {
+            size_t ec = json.find(':', enKey);
+            if (ec != std::string::npos) {
+                size_t vs = json.find_first_not_of(" \t\n\r", ec + 1);
+                kb.enabled = (json.substr(vs, 4) == "true");
+            }
+        }
+
+        if (!kb.action.empty()) {
+            loaded.push_back(kb);
+        }
+
+        // Move past this block
+        pos = json.find('}', pos);
+        if (pos == std::string::npos) break;
+        ++pos;
+    }
+
+    if (loaded.empty()) return false;
+
+    m_bindings = std::move(loaded);
+    return true;
+}
+
+// ── File I/O ───────────────────────────────────────────────────────
+
+bool KeybindManager::SaveToFile(const std::string& path) const {
+    std::filesystem::path fspath(path);
+    if (fspath.has_parent_path()) {
+        std::filesystem::create_directories(fspath.parent_path());
+    }
+
+    std::ofstream out(path);
+    if (!out.is_open()) return false;
+
+    out << SerializeToJSON();
+    out.close();
+    return true;
+}
+
+bool KeybindManager::LoadFromFile(const std::string& path) {
+    if (!std::filesystem::exists(path)) return false;
+
+    std::ifstream in(path);
+    if (!in.is_open()) return false;
+
+    std::string json((std::istreambuf_iterator<char>(in)),
+                      std::istreambuf_iterator<char>());
+    in.close();
+
+    return DeserializeFromJSON(json);
 }
 
 } // namespace atlas::editor

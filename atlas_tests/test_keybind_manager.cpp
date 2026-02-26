@@ -242,3 +242,70 @@ void test_kb_default_bindings() {
     assert(!viewport.empty());
     assert(!panels.empty());
 }
+
+// ══════════════════════════════════════════════════════════════════
+// Persistence (serialize / deserialize / file I/O)
+// ══════════════════════════════════════════════════════════════════
+
+void test_kb_serialize_roundtrip() {
+    KeybindManager mgr;
+    mgr.Clear();
+    mgr.AddBinding({"TestSave", "Cat", 'S', KeyMod::Ctrl, true});
+    mgr.AddBinding({"TestDel",  "Cat", 127,  KeyMod::None, false});
+
+    std::string json = mgr.SerializeToJSON();
+    assert(!json.empty());
+    assert(json.find("TestSave") != std::string::npos);
+    assert(json.find("TestDel") != std::string::npos);
+
+    KeybindManager mgr2;
+    mgr2.Clear();
+    bool ok = mgr2.DeserializeFromJSON(json);
+    assert(ok);
+    assert(mgr2.BindingCount() == 2);
+
+    const Keybind* s = mgr2.FindBinding("TestSave");
+    assert(s != nullptr);
+    assert(s->key == 'S');
+    assert(s->mods == KeyMod::Ctrl);
+    assert(s->enabled == true);
+
+    const Keybind* d = mgr2.FindBinding("TestDel");
+    assert(d != nullptr);
+    assert(d->key == 127);
+    assert(d->enabled == false);
+}
+
+void test_kb_deserialize_empty_returns_false() {
+    KeybindManager mgr;
+    assert(!mgr.DeserializeFromJSON(""));
+    assert(!mgr.DeserializeFromJSON("{}"));
+}
+
+void test_kb_file_roundtrip() {
+    std::string path = "/tmp/atlas_test_keybinds.json";
+
+    KeybindManager mgr;
+    mgr.Clear();
+    mgr.AddBinding({"FileSave", "General", 'F', KeyMod::Ctrl | KeyMod::Shift});
+
+    bool saved = mgr.SaveToFile(path);
+    assert(saved);
+
+    KeybindManager mgr2;
+    mgr2.Clear();
+    bool loaded = mgr2.LoadFromFile(path);
+    assert(loaded);
+    assert(mgr2.BindingCount() == 1);
+    const Keybind* kb = mgr2.FindBinding("FileSave");
+    assert(kb != nullptr);
+    assert(kb->key == 'F');
+    assert(kb->mods == (KeyMod::Ctrl | KeyMod::Shift));
+
+    std::remove(path.c_str());
+}
+
+void test_kb_load_nonexistent_returns_false() {
+    KeybindManager mgr;
+    assert(!mgr.LoadFromFile("/tmp/nonexistent_keybinds_test.json"));
+}
