@@ -671,6 +671,65 @@ void test_hauler_count_in_state();
 void test_hauler_station_distance();
 void test_hauler_multiple_haulers();
 
+// AI Pirate State Machine tests
+void test_pirate_defaults();
+void test_pirate_add();
+void test_pirate_add_duplicate_rejected();
+void test_pirate_remove();
+void test_pirate_remove_nonexistent();
+void test_pirate_patrol_without_targets();
+void test_pirate_full_attack_cycle();
+void test_pirate_travel_progress();
+void test_pirate_damage();
+void test_pirate_damage_kills();
+void test_pirate_damage_nonexistent();
+void test_pirate_kill();
+void test_pirate_kill_nonexistent();
+void test_pirate_respawn();
+void test_pirate_count_in_state();
+void test_pirate_patrol_distance();
+void test_pirate_multiple_pirates();
+
+// AI Security State Machine tests
+void test_security_defaults();
+void test_security_add();
+void test_security_add_duplicate_rejected();
+void test_security_remove();
+void test_security_remove_nonexistent();
+void test_security_standby_without_threats();
+void test_security_full_engagement_cycle();
+void test_security_warp_progress();
+void test_security_damage();
+void test_security_damage_kills();
+void test_security_damage_nonexistent();
+void test_security_kill();
+void test_security_kill_nonexistent();
+void test_security_respawn();
+void test_security_count_in_state();
+void test_security_post_distance();
+void test_security_multiple_guards();
+
+// AI Wallet System tests
+void test_wallet_defaults();
+void test_wallet_create();
+void test_wallet_create_duplicate_rejected();
+void test_wallet_create_negative_balance_rejected();
+void test_wallet_remove();
+void test_wallet_remove_nonexistent();
+void test_wallet_deposit();
+void test_wallet_deposit_nonexistent();
+void test_wallet_deposit_zero_rejected();
+void test_wallet_withdraw();
+void test_wallet_withdraw_insufficient();
+void test_wallet_withdraw_zero_rejected();
+void test_wallet_transfer();
+void test_wallet_transfer_insufficient();
+void test_wallet_transfer_self_rejected();
+void test_wallet_total_circulation();
+void test_wallet_wealthiest_entity();
+void test_wallet_clear();
+void test_wallet_get_balance_nonexistent();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1406,6 +1465,68 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_hauler_count_in_state);
     RUN_TEST(test_hauler_station_distance);
     RUN_TEST(test_hauler_multiple_haulers);
+
+    // AI Pirate State Machine
+    log.BeginSection("AI Pirate State Machine");
+    RUN_TEST(test_pirate_defaults);
+    RUN_TEST(test_pirate_add);
+    RUN_TEST(test_pirate_add_duplicate_rejected);
+    RUN_TEST(test_pirate_remove);
+    RUN_TEST(test_pirate_remove_nonexistent);
+    RUN_TEST(test_pirate_patrol_without_targets);
+    RUN_TEST(test_pirate_full_attack_cycle);
+    RUN_TEST(test_pirate_travel_progress);
+    RUN_TEST(test_pirate_damage);
+    RUN_TEST(test_pirate_damage_kills);
+    RUN_TEST(test_pirate_damage_nonexistent);
+    RUN_TEST(test_pirate_kill);
+    RUN_TEST(test_pirate_kill_nonexistent);
+    RUN_TEST(test_pirate_respawn);
+    RUN_TEST(test_pirate_count_in_state);
+    RUN_TEST(test_pirate_patrol_distance);
+    RUN_TEST(test_pirate_multiple_pirates);
+
+    // AI Security State Machine
+    log.BeginSection("AI Security State Machine");
+    RUN_TEST(test_security_defaults);
+    RUN_TEST(test_security_add);
+    RUN_TEST(test_security_add_duplicate_rejected);
+    RUN_TEST(test_security_remove);
+    RUN_TEST(test_security_remove_nonexistent);
+    RUN_TEST(test_security_standby_without_threats);
+    RUN_TEST(test_security_full_engagement_cycle);
+    RUN_TEST(test_security_warp_progress);
+    RUN_TEST(test_security_damage);
+    RUN_TEST(test_security_damage_kills);
+    RUN_TEST(test_security_damage_nonexistent);
+    RUN_TEST(test_security_kill);
+    RUN_TEST(test_security_kill_nonexistent);
+    RUN_TEST(test_security_respawn);
+    RUN_TEST(test_security_count_in_state);
+    RUN_TEST(test_security_post_distance);
+    RUN_TEST(test_security_multiple_guards);
+
+    // AI Wallet System
+    log.BeginSection("AI Wallet System");
+    RUN_TEST(test_wallet_defaults);
+    RUN_TEST(test_wallet_create);
+    RUN_TEST(test_wallet_create_duplicate_rejected);
+    RUN_TEST(test_wallet_create_negative_balance_rejected);
+    RUN_TEST(test_wallet_remove);
+    RUN_TEST(test_wallet_remove_nonexistent);
+    RUN_TEST(test_wallet_deposit);
+    RUN_TEST(test_wallet_deposit_nonexistent);
+    RUN_TEST(test_wallet_deposit_zero_rejected);
+    RUN_TEST(test_wallet_withdraw);
+    RUN_TEST(test_wallet_withdraw_insufficient);
+    RUN_TEST(test_wallet_withdraw_zero_rejected);
+    RUN_TEST(test_wallet_transfer);
+    RUN_TEST(test_wallet_transfer_insufficient);
+    RUN_TEST(test_wallet_transfer_self_rejected);
+    RUN_TEST(test_wallet_total_circulation);
+    RUN_TEST(test_wallet_wealthiest_entity);
+    RUN_TEST(test_wallet_clear);
+    RUN_TEST(test_wallet_get_balance_nonexistent);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);

@@ -97,14 +97,15 @@ void test_miner_full_cycle() {
 
     // Tick through: Idle → SelectTarget → TravelToField (1s) → Mining (2s) →
     //   CargoFull → ReturnToStation (1s) → SellOre → Idle
-    // Run enough ticks to complete a full cycle
+    // Run enough ticks to complete at least one full cycle
     for (int i = 0; i < 100; ++i) {
         sm.Tick(0.1f);
     }
 
     const MinerRuntime* rt = sm.GetMiner(1);
     assert(rt->cyclesCompleted >= 1);
-    assert(approxEq(rt->totalEarnings, 1000.0f, 1.0f)); // 100 * 10 = 1000
+    // Each cycle earns cargoCapacity * sellPrice = 100 * 10 = 1000 credits
+    assert(approxEq(rt->totalEarnings, rt->cyclesCompleted * 1000.0f, 1.0f));
 }
 
 void test_miner_travel_progress() {

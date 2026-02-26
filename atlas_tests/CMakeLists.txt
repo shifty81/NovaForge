@@ -40,6 +40,9 @@ set(ATLAS_TEST_SOURCES
     test_alert_stack.cpp
     test_ai_miner.cpp
     test_ai_hauler.cpp
+    test_ai_pirate.cpp
+    test_ai_security.cpp
+    test_ai_wallet.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
