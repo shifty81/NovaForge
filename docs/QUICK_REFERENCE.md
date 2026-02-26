@@ -7,8 +7,8 @@
 python build_and_test.py --quick
 
 # Or use the convenience script
-./build.sh --quick          # Linux/Mac
-build.bat --quick           # Windows
+./scripts/build.sh --quick          # Linux/Mac
+scripts\build.bat --quick           # Windows
 
 # Or use make
 make quick

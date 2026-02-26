@@ -78,13 +78,13 @@ From the repository root directory:
 cd C:\path\to\NovaForge
 
 # Run the build script
-build_vs.bat
+scripts\build_vs.bat
 
 # Or for a clean build:
-build_vs.bat --clean
+scripts\build_vs.bat --clean
 
 # Or to open Visual Studio after building:
-build_vs.bat --open
+scripts\build_vs.bat --open
 ```
 
 This will:
@@ -100,10 +100,10 @@ From the repository root directory:
 
 ```cmd
 # Generate a unified solution with both client and server
-generate_solution.bat
+scripts\generate_solution.bat
 
 # Or to open Visual Studio after generation:
-generate_solution.bat --open
+scripts\generate_solution.bat --open
 ```
 
 This creates a single solution at: `build_vs\EVEOffline.sln` that includes both the C++ client and server projects.
@@ -194,7 +194,7 @@ NovaForge/
 ├── server/                    # Python server
 ├── engine/                    # Python game engine
 ├── data/                      # Game data (JSON files)
-└── build_vs.bat              # VS2022 build script
+└── scripts\build_vs.bat      # VS2022 build script
 ```
 
 ## Troubleshooting
@@ -261,7 +261,7 @@ Then re-run CMake configuration.
 
 Make sure you're opening the correct file:
 - Location: `cpp_client\build_vs\EVEOfflineClient.sln`
-- If it doesn't exist, run `build_vs.bat` first to generate it
+- If it doesn't exist, run `scripts\build_vs.bat` first to generate it
 
 ### For more detailed troubleshooting
 
@@ -356,10 +356,10 @@ git clone https://github.com/shifty81/NovaForge.git
 cd NovaForge
 
 # Build C++ client only
-build_vs.bat
+scripts\build_vs.bat
 
 # Build both client and server (unified solution)
-generate_solution.bat
+scripts\generate_solution.bat
 
 # Open solution in VS2022
 start cpp_client\build_vs\EVEOfflineClient.sln

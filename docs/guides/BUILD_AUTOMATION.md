@@ -17,10 +17,10 @@ This works on Linux, macOS, and Windows!
 
 ```batch
 # Generate Visual Studio solution and build
-build_vs.bat
+scripts\build_vs.bat
 
 # Or open in Visual Studio after generation
-build_vs.bat --open
+scripts\build_vs.bat --open
 ```
 
 ## What's Included
@@ -34,7 +34,7 @@ build_vs.bat --open
    - Runs tests
    - Works on Linux, macOS, Windows
 
-2. **`build_vs.bat`** - Windows Visual Studio build script
+2. **`scripts\build_vs.bat`** - Windows Visual Studio build script
    - Generates Visual Studio solution
    - Builds using MSBuild
    - Optionally opens Visual Studio

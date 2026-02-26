@@ -26,7 +26,7 @@ cd vcpkg
 Then build using:
 ```cmd
 cd C:\path\to\NovaForge
-.\build_vs.bat
+.\scripts\build_vs.bat
 ```
 
 The build script will automatically detect vcpkg at `C:\vcpkg` and use it.
@@ -97,7 +97,7 @@ cmake --build . --config Release
 
 Or use the automated script:
 ```cmd
-.\build_vs.bat
+.\scripts\build_vs.bat
 ```
 
 ### Linux (Using System Libraries)

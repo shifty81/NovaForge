@@ -17,10 +17,10 @@ Before running any build scripts, you must install the required dependencies usi
 
 | Script | What It Does | When to Use |
 |--------|-------------|-------------|
-| **`build_vs.bat`** | Builds the **C++ client only** | **Use this one** for most development |
-| `generate_solution.bat` | Generates solution for **both client + server** | Only if you need to work on the C++ server too |
+| **`scripts\build_vs.bat`** | Builds the **C++ client only** | **Use this one** for most development |
+| `scripts\generate_solution.bat` | Generates solution for **both client + server** | Only if you need to work on the C++ server too |
 
-**Recommended**: Use `build_vs.bat` — it builds and compiles the client in one step.
+**Recommended**: Use `scripts\build_vs.bat` — it builds and compiles the client in one step.
 
 ## ⚡ Quick Commands
 
@@ -45,14 +45,14 @@ cd vcpkg
 
 # 5. Return to repository and generate Visual Studio solution
 cd C:\path\to\NovaForge
-build_vs.bat
+scripts\build_vs.bat
 ```
 
 ### Daily Development
 
 ```cmd
 # Build latest changes
-build_vs.bat
+scripts\build_vs.bat
 
 # Or open in Visual Studio to edit and build
 start cpp_client\build_vs\EVEOfflineClient.sln
@@ -62,11 +62,11 @@ start cpp_client\build_vs\EVEOfflineClient.sln
 
 | Command | Description |
 |---------|-------------|
-| `build_vs.bat` | Build C++ client in Release mode |
-| `build_vs.bat --debug` | Build in Debug mode |
-| `build_vs.bat --clean` | Clean rebuild from scratch |
-| `build_vs.bat --open` | Open Visual Studio after build |
-| `generate_solution.bat` | Generate unified client+server solution |
+| `scripts\build_vs.bat` | Build C++ client in Release mode |
+| `scripts\build_vs.bat --debug` | Build in Debug mode |
+| `scripts\build_vs.bat --clean` | Clean rebuild from scratch |
+| `scripts\build_vs.bat --open` | Open Visual Studio after build |
+| `scripts\generate_solution.bat` | Generate unified client+server solution |
 
 ## 📂 Important Locations
 
@@ -89,7 +89,7 @@ start cpp_client\build_vs\EVEOfflineClient.sln
 
 | Issue | Fix |
 |-------|-----|
-| **"Does not match the generator used previously"** | **Fixed in latest version.** Run `build_vs.bat --clean` to clear old cache, or delete `cpp_client\build_vs\` folder |
+| **"Does not match the generator used previously"** | **Fixed in latest version.** Run `scripts\build_vs.bat --clean` to clear old cache, or delete `cpp_client\build_vs\` folder |
 | **"Could NOT find GLEW"** | **Install dependencies FIRST**: See Initial Setup above |
 | "ImGui not found" | Install ImGui: `vcpkg install imgui[glfw-binding,opengl3-binding]:x64-windows` |
 | "Cannot find glfw3.h" | Install dependencies: `vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows nlohmann-json:x64-windows imgui[glfw-binding,opengl3-binding]:x64-windows` |

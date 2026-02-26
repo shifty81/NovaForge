@@ -16,7 +16,7 @@ This document provides solutions to common issues when building Nova Forge in Vi
 
 ### "\Microsoft was unexpected at this time"
 
-**Symptoms**: Running `build_vs.bat` fails immediately with this error.
+**Symptoms**: Running `scripts\build_vs.bat` fails immediately with this error.
 
 **Cause**: Batch file syntax issue with paths containing parentheses (e.g., "Program Files (x86)").
 
@@ -40,7 +40,7 @@ If still experiencing issues, the problem might be with your local modifications
 **Solution**: Always run from the repository root:
 ```cmd
 cd C:\path\to\NovaForge
-.\build_vs.bat
+.\scripts\build_vs.bat
 ```
 
 ---
@@ -108,7 +108,7 @@ cd build_vs
 del /f CMakeCache.txt
 rmdir /s /q CMakeFiles
 cd ..
-.\generate_solution.bat
+.\scripts\generate_solution.bat
 ```
 
 ---
@@ -366,7 +366,7 @@ test_lighting.exe
 **Solution 1 - Use Release build**:
 Debug builds are 5-10x slower. Always use Release for testing:
 ```cmd
-.\build_vs.bat --release
+.\scripts\build_vs.bat --release
 ```
 
 Or in Visual Studio: Select "Release" from the configuration dropdown.

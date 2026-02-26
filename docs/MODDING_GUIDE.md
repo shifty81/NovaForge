@@ -478,7 +478,7 @@ See [tools/README.md](../tools/README.md) for more modding utilities.
 ### Step 2: Start the Game
 ```bash
 # Build and run
-./build.sh
+./scripts/build.sh
 cd build/bin
 ./eve_client "YourName"
 ```

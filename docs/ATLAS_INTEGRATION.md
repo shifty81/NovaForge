@@ -111,7 +111,7 @@ Nova Forge/
 ### Build Everything
 
 ```bash
-./build.sh
+./scripts/build.sh
 ```
 
 ### Build Atlas Engine Only
