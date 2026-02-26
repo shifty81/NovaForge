@@ -209,7 +209,9 @@ Data-driven modding without code injection:
 | AllianceSystem | ✅ Complete | 17 assertions |
 | SovereigntySystem | ✅ Complete | 19 assertions |
 | WarDeclarationSystem | ✅ Complete | 16 assertions |
-| **Total** | **41 systems** | **2048 assertions** |
+| AITraderStateMachine | ✅ Complete | 18 assertions |
+| AIIndustrialistStateMachine | ✅ Complete | 16 assertions |
+| **Total** | **43 systems** | **2082 assertions** |
 
 ### Data Loaders Status
 

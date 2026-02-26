@@ -43,6 +43,8 @@ set(ATLAS_TEST_SOURCES
     test_ai_pirate.cpp
     test_ai_security.cpp
     test_ai_wallet.cpp
+    test_ai_trader.cpp
+    test_ai_industrialist.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
