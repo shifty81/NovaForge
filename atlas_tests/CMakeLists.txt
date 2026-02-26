@@ -47,6 +47,8 @@ set(ATLAS_TEST_SOURCES
     test_ai_industrialist.cpp
     test_advanced_mission.cpp
     test_universe_map.cpp
+    test_ai_profile.cpp
+    test_economy_rules.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp

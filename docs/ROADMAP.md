@@ -166,7 +166,7 @@ Data-driven modding without code injection:
 9. 🔄 Full economy simulation — Refining system complete, market pricing validated
 10. 🔄 Advanced mission generation
 11. 🔄 Universe map & travel
-12. ⬜ Polish & modding tools
+12. 🔄 Polish & modding tools — AIProfileLoader + EconomyRulesLoader complete
 
 ### C++ Server Systems Status
 
@@ -213,7 +213,9 @@ Data-driven modding without code injection:
 | AIIndustrialistStateMachine | ✅ Complete | 16 assertions |
 | AdvancedMissionGenerator | ✅ Complete | 21 assertions |
 | UniverseMapSystem | ✅ Complete | 23 assertions |
-| **Total** | **45 systems** | **2126 assertions** |
+| AIProfileLoader | ✅ Complete | 15 assertions |
+| EconomyRulesLoader | ✅ Complete | 17 assertions |
+| **Total** | **47 systems** | **2158 assertions** |
 
 ### Data Loaders Status
 
@@ -1316,8 +1318,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [ ] Ship designer
 - [ ] Modding documentation and tutorials
 - [ ] Community content repository
-- [ ] AI profile mods (`ai_profiles.json` for behavior customization)
-- [ ] Economy rule mods (`economy_rules.json` for system economy curves)
+- [x] AI profile mods (`ai_profiles.json` for behavior customization)
+- [x] Economy rule mods (`economy_rules.json` for system economy curves)
 - [ ] Ship template mods (`ship_templates.json` for custom ships)
 
 #### Additional Features
