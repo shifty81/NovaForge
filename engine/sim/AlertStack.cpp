@@ -20,7 +20,6 @@ uint32_t AlertStack::Push(const std::string& message,
     a.dismissed = false;
     m_alerts.push_back(a);
     evictIfNeeded();
-    sortAlerts();
     return a.id;
 }
 
@@ -115,14 +114,6 @@ void AlertStack::evictIfNeeded() {
         }
         m_alerts.erase(worst);
     }
-}
-
-void AlertStack::sortAlerts() {
-    std::sort(m_alerts.begin(), m_alerts.end(), [](const Alert& a, const Alert& b) {
-        if (a.priority != b.priority)
-            return static_cast<uint8_t>(a.priority) > static_cast<uint8_t>(b.priority);
-        return a.age < b.age;
-    });
 }
 
 } // namespace atlas::sim

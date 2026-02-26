@@ -162,7 +162,7 @@ void AIMinerStateMachine::tickMiner(MinerRuntime& m, float dt) {
 
 uint32_t AIMinerStateMachine::pickDeposit() const {
     if (m_availableDeposits.empty()) return 0;
-    // Simple round-robin / first available
+    // Pick first available deposit
     return m_availableDeposits[0];
 }
 

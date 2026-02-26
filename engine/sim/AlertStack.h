@@ -84,7 +84,6 @@ public:
 
 private:
     void evictIfNeeded();
-    void sortAlerts();
 
     std::vector<Alert> m_alerts;
     size_t   m_maxAlerts;
