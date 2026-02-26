@@ -41,6 +41,16 @@ void CharacterSelectPanel::Draw() {
             << "  Dist: " << m_cameraDistance;
         atlas::label(ctx, {b.x + pad, y}, oss.str(), ctx.theme().textPrimary);
         y += rowH + pad;
+
+        if (m_preview.populated) {
+            std::ostringstream info;
+            info << pcg::archetypeName(m_preview.generatedCharacter.archetype)
+                 << " (" << (m_preview.generatedCharacter.isMale ? "M" : "F")
+                 << ")  Parts: " << m_preview.generatedCharacter.bodyParts.size()
+                 << "  Clothing: " << m_preview.generatedCharacter.clothing.size();
+            atlas::label(ctx, {b.x + pad, y}, info.str(), ctx.theme().success);
+            y += rowH + pad;
+        }
     }
 
     atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);

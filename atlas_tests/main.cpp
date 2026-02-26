@@ -238,6 +238,8 @@ void test_gsp_generate();
 void test_gsp_generate_with_asset_style();
 void test_gsp_save_load_string();
 void test_gsp_draw_does_not_crash();
+void test_gsp_save_load_file();
+void test_gsp_load_nonexistent_file();
 
 // Asset Style Library tests
 void test_as_library_add_find();
@@ -298,6 +300,8 @@ void test_archp_generate_preview_with_subsystems();
 void test_archp_generate_preview_with_modules();
 void test_archp_save_load_string();
 void test_archp_draw_does_not_crash();
+void test_archp_save_load_file();
+void test_archp_load_nonexistent_file();
 
 // Editor Panel tests — ECS Inspector
 void test_ecsi_defaults();
@@ -1161,6 +1165,8 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_gsp_generate_with_asset_style);
     RUN_TEST(test_gsp_save_load_string);
     RUN_TEST(test_gsp_draw_does_not_crash);
+    RUN_TEST(test_gsp_save_load_file);
+    RUN_TEST(test_gsp_load_nonexistent_file);
 
     // Asset Style Library
     log.BeginSection("Asset Style Library");
@@ -1225,6 +1231,8 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_archp_generate_preview_with_modules);
     RUN_TEST(test_archp_save_load_string);
     RUN_TEST(test_archp_draw_does_not_crash);
+    RUN_TEST(test_archp_save_load_file);
+    RUN_TEST(test_archp_load_nonexistent_file);
 
     // Viewport Panel
     log.BeginSection("Viewport Panel");

@@ -154,6 +154,9 @@ public:
     std::string SaveToString() const;
     void LoadFromString(const std::string& data);
 
+    bool SaveToFile(const std::string& path = "data/ship_archetype.json");
+    bool LoadFromFile(const std::string& path = "data/ship_archetype.json");
+
     // ── Log ─────────────────────────────────────────────────────────
 
     const std::vector<std::string>& Log() const { return m_log; }

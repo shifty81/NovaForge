@@ -92,6 +92,12 @@ public:
     /// Load a style from a serialised string.
     void LoadStyleFromString(const std::string& data);
 
+    /// Save the current style to a file.
+    bool SaveStyleToFile(const std::string& path = "data/generation_style.json");
+
+    /// Load a style from a file.
+    bool LoadStyleFromFile(const std::string& path = "data/generation_style.json");
+
     // ── Log ─────────────────────────────────────────────────────────
 
     const std::vector<std::string>& Log() const { return m_log; }

@@ -1,6 +1,8 @@
 #include "ShipArchetypePanel.h"
 #include <sstream>
 #include <algorithm>
+#include <fstream>
+#include <filesystem>
 
 namespace atlas::editor {
 
@@ -65,10 +67,10 @@ void ShipArchetypePanel::Draw() {
     // Save / Load buttons
     float halfW = (b.w - 3.0f * pad) * 0.5f;
     if (atlas::button(ctx, "Save", {b.x + pad, y, halfW, rowH + pad})) {
-        SaveToString();
+        SaveToFile();
     }
     if (atlas::button(ctx, "Load", {b.x + 2.0f * pad + halfW, y, halfW, rowH + pad})) {
-        // Load would require external data; placeholder
+        LoadFromFile();
     }
     y += rowH + pad + pad;
 
@@ -356,6 +358,43 @@ void ShipArchetypePanel::LoadFromString(const std::string& data) {
     m_hasPreview = false;
     m_log.clear();
     log("Loaded archetype: " + m_archetype.name);
+}
+
+bool ShipArchetypePanel::SaveToFile(const std::string& path) {
+    std::filesystem::path fspath(path);
+    if (fspath.has_parent_path()) {
+        std::filesystem::create_directories(fspath.parent_path());
+    }
+
+    std::ofstream out(path);
+    if (!out.is_open()) {
+        log("ERROR: Could not open " + path + " for writing");
+        return false;
+    }
+
+    out << SaveToString();
+    out.close();
+    log("Saved archetype to " + path);
+    return true;
+}
+
+bool ShipArchetypePanel::LoadFromFile(const std::string& path) {
+    if (!std::filesystem::exists(path)) {
+        log("File not found: " + path);
+        return false;
+    }
+
+    std::ifstream in(path);
+    if (!in.is_open()) {
+        log("ERROR: Could not open " + path + " for reading");
+        return false;
+    }
+
+    std::string data((std::istreambuf_iterator<char>(in)),
+                      std::istreambuf_iterator<char>());
+    in.close();
+    LoadFromString(data);
+    return true;
 }
 
 // ── Logging ────────────────────────────────────────────────────────

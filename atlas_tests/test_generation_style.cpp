@@ -1750,3 +1750,53 @@ void test_archp_draw_does_not_crash() {
     panel.Draw();
     ok("test_archp_draw_does_not_crash");
 }
+
+void test_archp_save_load_file() {
+    atlas::editor::ShipArchetypePanel panel;
+    panel.SelectHullClass(atlas::pcg::HullClass::Cruiser);
+
+    std::string path = "/tmp/test_archp_save_load.json";
+    bool saved = panel.SaveToFile(path);
+    assert(saved);
+
+    atlas::editor::ShipArchetypePanel panel2;
+    bool loaded = panel2.LoadFromFile(path);
+    assert(loaded);
+    assert(panel2.GetArchetype().hullClass ==
+           atlas::pcg::HullClass::Cruiser);
+    assert(panel2.RoomCount() == panel.RoomCount());
+    assert(panel2.HardpointCount() == panel.HardpointCount());
+    ok("test_archp_save_load_file");
+}
+
+void test_archp_load_nonexistent_file() {
+    atlas::editor::ShipArchetypePanel panel;
+    bool loaded = panel.LoadFromFile("/tmp/nonexistent_archetype_test.json");
+    assert(!loaded);
+    ok("test_archp_load_nonexistent_file");
+}
+
+void test_gsp_save_load_file() {
+    atlas::editor::GenerationStylePanel panel;
+    panel.NewStyle(atlas::pcg::GenerationStyleType::StationLayout,
+                   "FileTestStation");
+
+    std::string path = "/tmp/test_gsp_save_load.json";
+    bool saved = panel.SaveStyleToFile(path);
+    assert(saved);
+
+    atlas::editor::GenerationStylePanel panel2;
+    bool loaded = panel2.LoadStyleFromFile(path);
+    assert(loaded);
+    assert(panel2.GetStyle().name == "FileTestStation");
+    assert(panel2.GetStyle().type ==
+           atlas::pcg::GenerationStyleType::StationLayout);
+    ok("test_gsp_save_load_file");
+}
+
+void test_gsp_load_nonexistent_file() {
+    atlas::editor::GenerationStylePanel panel;
+    bool loaded = panel.LoadStyleFromFile("/tmp/nonexistent_style_test.json");
+    assert(!loaded);
+    ok("test_gsp_load_nonexistent_file");
+}

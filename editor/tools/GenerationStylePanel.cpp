@@ -1,5 +1,7 @@
 #include "GenerationStylePanel.h"
 #include <sstream>
+#include <fstream>
+#include <filesystem>
 
 namespace atlas::editor {
 
@@ -53,10 +55,10 @@ void GenerationStylePanel::Draw() {
     // Save / Load buttons
     float halfW = (b.w - 3.0f * pad) * 0.5f;
     if (atlas::button(ctx, "Save", {b.x + pad, y, halfW, rowH + pad})) {
-        SaveStyleToString();
+        SaveStyleToFile();
     }
     if (atlas::button(ctx, "Load", {b.x + 2.0f * pad + halfW, y, halfW, rowH + pad})) {
-        // Load would require external data; log placeholder action
+        LoadStyleFromFile();
     }
     y += rowH + pad + pad;
 
@@ -216,6 +218,43 @@ void GenerationStylePanel::LoadStyleFromString(const std::string& data) {
     m_style = pcg::GenerationStyleEngine::deserialize(data);
     m_log.clear();
     log("Loaded style: " + m_style.name);
+}
+
+bool GenerationStylePanel::SaveStyleToFile(const std::string& path) {
+    std::filesystem::path fspath(path);
+    if (fspath.has_parent_path()) {
+        std::filesystem::create_directories(fspath.parent_path());
+    }
+
+    std::ofstream out(path);
+    if (!out.is_open()) {
+        log("ERROR: Could not open " + path + " for writing");
+        return false;
+    }
+
+    out << SaveStyleToString();
+    out.close();
+    log("Saved style to " + path);
+    return true;
+}
+
+bool GenerationStylePanel::LoadStyleFromFile(const std::string& path) {
+    if (!std::filesystem::exists(path)) {
+        log("File not found: " + path);
+        return false;
+    }
+
+    std::ifstream in(path);
+    if (!in.is_open()) {
+        log("ERROR: Could not open " + path + " for reading");
+        return false;
+    }
+
+    std::string data((std::istreambuf_iterator<char>(in)),
+                      std::istreambuf_iterator<char>());
+    in.close();
+    LoadStyleFromString(data);
+    return true;
 }
 
 // ── Logging ────────────────────────────────────────────────────────
