@@ -3572,6 +3572,115 @@ public:
     COMPONENT_TYPE(ModRegistry)
 };
 
+// ==================== Ancient AI Remnants ====================
+
+/**
+ * @brief An AI remnant boss guarding an ancient tech site
+ *
+ * These are autonomous AI entities that persist at ancient sites,
+ * with difficulty and type determined by the site tier.
+ */
+class AncientAIRemnant : public ecs::Component {
+public:
+    enum class RemnantType {
+        Sentinel,   // Tier 1 - Single defensive guardian
+        Swarm,      // Tier 2 - Multiple small drones
+        Construct,  // Tier 3 - Assembled ancient machine
+        Warden,     // Tier 4 - Powerful site protector
+        Leviathan   // Tier 5 - Massive ancient entity
+    };
+
+    struct RewardEntry {
+        std::string item_id;
+        float drop_chance = 0.5f;
+        int quantity = 1;
+    };
+
+    std::string remnant_id;
+    std::string site_id;          // Ancient site this remnant guards
+    RemnantType remnant_type = RemnantType::Sentinel;
+    int tier = 1;                 // 1-5 site tier
+    float difficulty = 1.0f;
+    float hit_points = 1500.0f;
+    float damage_output = 50.0f;
+    float active_time = 0.0f;
+    float max_duration = 7200.0f; // 2 hours before despawn
+    bool active = true;
+    bool defeated = false;
+    int recommended_fleet_size = 1;
+    std::vector<RewardEntry> rewards;
+
+    bool isActive() const { return active && active_time < max_duration; }
+    bool isExpired() const { return active_time >= max_duration; }
+
+    static std::string getRemnantTypeName(RemnantType t) {
+        switch (t) {
+            case RemnantType::Sentinel: return "Sentinel";
+            case RemnantType::Swarm: return "Swarm";
+            case RemnantType::Construct: return "Construct";
+            case RemnantType::Warden: return "Warden";
+            case RemnantType::Leviathan: return "Leviathan";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(AncientAIRemnant)
+};
+
+// ==================== Character Creation Screen ====================
+
+/**
+ * @brief Server-side state for the character creation screen
+ *
+ * Tracks race/faction selection, attribute sliders, appearance
+ * customization, and validation state during character creation.
+ */
+class CharacterCreationScreen : public ecs::Component {
+public:
+    std::string player_id;
+    bool is_open = false;
+    bool finalized = false;
+    float time_open = 0.0f;
+
+    std::string selected_race;
+    std::string selected_faction;
+    std::string character_name;
+
+    std::map<std::string, float> attribute_sliders;    // attribute_name -> value (0.0 - 1.0)
+    std::map<std::string, float> appearance_sliders;   // feature_name -> value (0.0 - 1.0)
+
+    COMPONENT_TYPE(CharacterCreationScreen)
+};
+
+// ==================== View Mode State ====================
+
+/**
+ * @brief Tracks the current view mode and transition state
+ *
+ * Manages seamless transitions between Cockpit, Interior, EVA,
+ * and RTS Overlay view modes with transition progress tracking.
+ */
+class ViewModeState : public ecs::Component {
+public:
+    enum class Mode {
+        Cockpit = 0,    // Ship piloting view
+        Interior = 1,   // FPS walking inside ship
+        EVA = 2,        // Space walk / EVA
+        RTSOverlay = 3  // Tactical fleet command overlay
+    };
+
+    std::string player_id;
+    int current_mode = 0;    // Mode enum as int
+    int previous_mode = 0;
+    int target_mode = 0;
+    bool transitioning = false;
+    float transition_progress = 0.0f;
+    float transition_duration = 1.5f;
+    float cooldown_remaining = 0.0f;
+
+    COMPONENT_TYPE(ViewModeState)
+};
+
 } // namespace components
 } // namespace atlas
 
