@@ -1,6 +1,15 @@
 # OpenGL (required by atlas_renderer.cpp when not in headless mode)
 find_package(OpenGL REQUIRED)
 
+# GLFW (required for the editor window)
+find_package(glfw3 3.3 REQUIRED)
+
+# GLEW (OpenGL extension wrangler)
+find_package(GLEW QUIET)
+if(GLEW_FOUND)
+    message(STATUS "AtlasEditor: using system GLEW")
+endif()
+
 # GLM (header-only, required by character_mesh_system.h)
 find_package(glm QUIET)
 if(NOT glm_FOUND)
@@ -55,13 +64,20 @@ add_executable(AtlasEditor
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/galaxy_generator.cpp
     # Character mesh system used by Character Select panel
     ${CMAKE_SOURCE_DIR}/cpp_client/src/characters/character_mesh_system.cpp
+    # Window (GLFW) used by editor for the GUI window
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/rendering/window.cpp
     # Atlas UI sources used by editor panels
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
 )
 
-target_link_libraries(AtlasEditor AtlasEngine OpenGL::GL)
+target_link_libraries(AtlasEditor AtlasEngine OpenGL::GL glfw)
+
+if(GLEW_FOUND)
+    target_compile_definitions(AtlasEditor PRIVATE USE_GLEW)
+    target_link_libraries(AtlasEditor GLEW::GLEW)
+endif()
 
 if(glm_FOUND)
     target_link_libraries(AtlasEditor glm::glm)

@@ -19,6 +19,8 @@
 #include "ui/UndoStack.h"
 #include "assets/AssetRegistry.h"
 #include "../cpp_client/include/ui/atlas/atlas_context.h"
+#include "rendering/window.h"
+#include <GL/glew.h>
 #include <iostream>
 #include <memory>
 
@@ -170,6 +172,9 @@ int main() {
               << "Console, Game Packager, Live Scene Manager" << std::endl;
 
     // ── Atlas UI context for editor panels ────────────────────
+    // Create the editor window (GLFW + OpenGL context) before UI init
+    atlas::Window window("Atlas Editor", 1600, 900);
+
     atlas::AtlasContext uiContext;
     uiContext.init();
     layout.SetContext(&uiContext);
@@ -208,8 +213,34 @@ int main() {
 
     // ── Per-frame callback: UI drawing, hot-reload, keybinds ────
     engine.SetFrameCallback([&](float /*dt*/) {
+        // Close the editor when the window is closed
+        if (window.shouldClose()) {
+            engine.Shutdown();
+            return;
+        }
+
+        // Poll window events (keyboard, mouse, resize)
+        window.pollEvents();
+
+        // Hot-reload assets
         assetRegistry.PollHotReload();
+
+        // Clear the framebuffer
+        glClearColor(0.05f, 0.06f, 0.08f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Build per-frame input state for the Atlas UI
+        atlas::InputState input;
+        input.windowW = window.getWidth();
+        input.windowH = window.getHeight();
+
+        // Begin UI frame, draw layout, end UI frame
+        uiContext.beginFrame(input);
         layout.Draw();
+        uiContext.endFrame();
+
+        // Present the frame
+        window.swapBuffers();
     });
 
     // ── Run editor loop ───────────────────────────────────────
