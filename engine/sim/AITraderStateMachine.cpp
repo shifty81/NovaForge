@@ -151,7 +151,7 @@ void AITraderStateMachine::tickTrader(TraderRuntime& t, float dt) {
                     break;
                 }
             }
-            float affordable = (t.cargoBuyPrice > 0.0f) ? (t.credits / t.cargoBuyPrice) : 0.0f;
+            float affordable = (t.cargoBuyPrice > 0.001f) ? (t.credits / t.cargoBuyPrice) : 0.0f;
             float canCarry = t.config.cargoCapacity - t.cargoFill;
             float bought = std::min({available, affordable, canCarry});
 

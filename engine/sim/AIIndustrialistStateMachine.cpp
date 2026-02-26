@@ -104,6 +104,11 @@ void AIIndustrialistStateMachine::tickIndustrialist(IndustrialistRuntime& ind, f
             break;
         }
         case IndustrialistState::AcquireMaterials: {
+            if (ind.activeMaterialCost <= 0.0f) {
+                ind.state = IndustrialistState::Idle;
+                ind.stateTimer = 0.0f;
+                break;
+            }
             // Calculate how many units we can produce (limited by credits and capacity)
             float unitsAffordable = ind.credits / ind.activeMaterialCost;
             float unitsByCapacity = ind.config.productionCapacity;
