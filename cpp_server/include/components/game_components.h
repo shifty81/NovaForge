@@ -3447,6 +3447,62 @@ public:
     COMPONENT_TYPE(RestingState)
 };
 
+// ==================== Myth Boss Encounters ====================
+
+/**
+ * @brief A boss encounter generated from myth/propaganda content
+ * 
+ * When myths about events, players, or factions reach critical mass,
+ * ancient sites manifest as boss encounters reflecting the myth.
+ */
+class MythBossEncounter : public ecs::Component {
+public:
+    enum class BossType {
+        Guardian,   // From heroic myths - protective ancient entity
+        Destroyer,  // From villainous myths - aggressive ancient weapon
+        Phantom,    // From mysterious myths - elusive anomaly entity
+        Colossus,   // From exaggerated myths - massive ancient construct
+        Mirage      // From fabricated myths - illusion-based encounter
+    };
+
+    struct LootEntry {
+        std::string item_id;
+        float drop_chance = 0.5f;
+        int quantity = 1;
+    };
+
+    std::string encounter_id;
+    std::string myth_id;          // Source myth that generated this encounter
+    std::string system_id;        // Star system where encounter spawns
+    BossType boss_type = BossType::Guardian;
+    float difficulty = 1.0f;      // 1.0 = normal, 5.0 = extreme
+    float active_time = 0.0f;     // Time since encounter started
+    float max_duration = 3600.0f; // Max time before encounter despawns (1 hour)
+    bool active = true;
+    bool completion_success = false;
+    float shield_hp = 1000.0f;
+    float armor_hp = 500.0f;
+    float hull_hp = 2000.0f;
+    std::vector<LootEntry> loot_table;
+    int recommended_fleet_size = 3;
+
+    bool isActive() const { return active && active_time < max_duration; }
+    bool isExpired() const { return active_time >= max_duration; }
+
+    static std::string getBossTypeName(BossType t) {
+        switch (t) {
+            case BossType::Guardian: return "Guardian";
+            case BossType::Destroyer: return "Destroyer";
+            case BossType::Phantom: return "Phantom";
+            case BossType::Colossus: return "Colossus";
+            case BossType::Mirage: return "Mirage";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(MythBossEncounter)
+};
+
 } // namespace components
 } // namespace atlas
 
