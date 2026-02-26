@@ -13,8 +13,10 @@
 #include "tools/CharacterSelectPanel.h"
 #include "tools/MissionEditorPanel.h"
 #include "tools/SceneGraphPanel.h"
+#include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
 #include "ui/KeybindManager.h"
+#include "ui/UndoStack.h"
 #include "assets/AssetRegistry.h"
 #include "../cpp_client/include/ui/atlas/atlas_context.h"
 #include <iostream>
@@ -49,9 +51,35 @@ int main() {
 
     // ── Keyboard shortcut manager ────────────────────────────────
     atlas::editor::KeybindManager keybinds;
+    // Try to load saved keybind overrides; defaults remain if no file exists
+    keybinds.LoadFromFile("data/editor_keybinds.json");
+
+    // ── Undo/Redo stack ──────────────────────────────────────────
+    atlas::editor::UndoStack undoStack;
+
+    // Wire undo/redo to keyboard shortcuts
+    keybinds.RegisterCallback("Undo", [&undoStack, &console]() {
+        if (undoStack.CanUndo()) {
+            std::string desc = undoStack.UndoDescription();
+            undoStack.Undo();
+            console.AddLine("[Undo] " + desc);
+        }
+    });
+    keybinds.RegisterCallback("Redo", [&undoStack, &console]() {
+        if (undoStack.CanRedo()) {
+            std::string desc = undoStack.RedoDescription();
+            undoStack.Redo();
+            console.AddLine("[Redo] " + desc);
+        }
+    });
 
     // ── AI backend: template-based offline suggestions ────────────
+    atlas::ai::AIAggregator aiAggregator;
     atlas::ai::TemplateAIBackend templateAI;
+    aiAggregator.RegisterBackend(&templateAI);
+
+    // Connect AI to console so `ai.query` commands work
+    console.SetAIAggregator(&aiAggregator);
 
     // ── Live scene manager: connects viewport ↔ PCG ──────────
     // This is the core of the in-engine content creation workflow.

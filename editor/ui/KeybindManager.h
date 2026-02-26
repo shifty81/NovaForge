@@ -118,6 +118,21 @@ public:
     /** Clear all bindings and callbacks. */
     void Clear();
 
+    // ── Persistence ─────────────────────────────────────────────
+
+    /** Save all bindings to a JSON file.  Returns true on success. */
+    bool SaveToFile(const std::string& path) const;
+
+    /** Load bindings from a JSON file (replaces current bindings,
+     *  preserves registered callbacks).  Returns true on success. */
+    bool LoadFromFile(const std::string& path);
+
+    /** Serialise all bindings to a JSON string. */
+    std::string SerializeToJSON() const;
+
+    /** Deserialise bindings from a JSON string, replacing current bindings. */
+    bool DeserializeFromJSON(const std::string& json);
+
 private:
     Keybind* findMutable(const std::string& action);
 

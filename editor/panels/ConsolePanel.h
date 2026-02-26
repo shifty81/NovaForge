@@ -4,6 +4,7 @@
 #include "../../engine/net/NetContext.h"
 #include "../../engine/sim/TickScheduler.h"
 #include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
+#include "../ai/AIAggregator.h"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -23,12 +24,16 @@ public:
 
     const std::vector<std::string>& History() const { return m_history; }
 
+    /** Attach an AI aggregator so that `ai.query` commands work. */
+    void SetAIAggregator(atlas::ai::AIAggregator* agg) { m_ai = agg; }
+
 private:
     std::vector<std::string> m_history;
     std::string m_inputBuffer;
     ecs::World& m_world;
     net::NetContext& m_net;
     sim::TickScheduler& m_scheduler;
+    atlas::ai::AIAggregator* m_ai = nullptr;
 
     atlas::PanelState     m_panelState;
     atlas::TextInputState m_inputState;

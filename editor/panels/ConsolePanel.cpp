@@ -70,6 +70,17 @@ void ConsolePanel::Execute(const std::string& command) {
             auto types = m_world.GetComponentTypes(e);
             m_history.push_back("  Entity " + std::to_string(e) + " (" + std::to_string(types.size()) + " components)");
         }
+    } else if (cmd == "ecs.count") {
+        m_history.push_back("Entity count: " + std::to_string(m_world.EntityCount()));
+    } else if (cmd == "ecs.destroy") {
+        uint64_t id = 0;
+        iss >> id;
+        if (id > 0 && m_world.IsAlive(id)) {
+            m_world.DestroyEntity(id);
+            m_history.push_back("Destroyed entity " + std::to_string(id));
+        } else {
+            m_history.push_back("Invalid or dead entity: " + std::to_string(id));
+        }
     } else if (cmd == "set") {
         std::string key;
         iss >> key;
@@ -96,8 +107,56 @@ void ConsolePanel::Execute(const std::string& command) {
             case net::NetMode::P2P_Peer: modeStr = "P2P_Peer"; break;
         }
         m_history.push_back("Net mode: " + modeStr);
+    } else if (cmd == "net.stats") {
+        auto& peers = m_net.Peers();
+        size_t connected = 0;
+        for (const auto& p : peers) {
+            if (p.connected) ++connected;
+        }
+        m_history.push_back("Peers total:     " + std::to_string(peers.size()));
+        m_history.push_back("Peers connected: " + std::to_string(connected));
+        m_history.push_back("Authority:       " + std::string(m_net.IsAuthority() ? "yes" : "no"));
+    } else if (cmd == "net.peers") {
+        auto& peers = m_net.Peers();
+        m_history.push_back("Connected peers: " + std::to_string(peers.size()));
+        for (const auto& p : peers) {
+            std::ostringstream oss;
+            oss << "  Peer " << p.id
+                << (p.connected ? " [connected]" : " [disconnected]")
+                << " rtt=" << p.rtt << "ms";
+            m_history.push_back(oss.str());
+        }
+    } else if (cmd == "clear") {
+        m_history.clear();
+    } else if (cmd == "ai.query") {
+        // Collect the rest of the line as the prompt
+        std::string prompt;
+        std::getline(iss, prompt);
+        // Trim leading whitespace
+        size_t start = prompt.find_first_not_of(" \t");
+        if (start != std::string::npos) prompt = prompt.substr(start);
+
+        if (prompt.empty()) {
+            m_history.push_back("Usage: ai.query <prompt>");
+        } else if (!m_ai) {
+            m_history.push_back("AI backend not connected");
+        } else {
+            atlas::ai::AIContext ctx;
+            auto resp = m_ai->Execute(atlas::ai::AIRequestType::Analysis,
+                                       prompt, ctx);
+            if (resp.confidence > 0.0f) {
+                m_history.push_back("[AI] " + resp.content);
+                std::ostringstream oss;
+                oss << "[AI] Confidence: " << static_cast<int>(resp.confidence * 100.0f) << "%";
+                m_history.push_back(oss.str());
+            } else {
+                m_history.push_back("[AI] No relevant response found");
+            }
+        }
     } else if (cmd == "help") {
-        m_history.push_back("Commands: spawn_entity, ecs.dump, set tickrate <N>, net.mode, help");
+        m_history.push_back("Commands: spawn_entity, ecs.dump, ecs.count, "
+                            "ecs.destroy <id>, set tickrate <N>, net.mode, "
+                            "net.stats, net.peers, ai.query <prompt>, clear, help");
     } else {
         m_history.push_back("Unknown command: " + cmd);
     }
