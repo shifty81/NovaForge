@@ -730,6 +730,44 @@ void test_wallet_wealthiest_entity();
 void test_wallet_clear();
 void test_wallet_get_balance_nonexistent();
 
+// AI Trader State Machine tests
+void test_trader_defaults();
+void test_trader_add();
+void test_trader_add_duplicate_rejected();
+void test_trader_remove();
+void test_trader_remove_nonexistent();
+void test_trader_idle_without_listings();
+void test_trader_full_cycle();
+void test_trader_travel_progress();
+void test_trader_finds_best_trade();
+void test_trader_damage();
+void test_trader_damage_kills();
+void test_trader_damage_nonexistent();
+void test_trader_kill();
+void test_trader_kill_nonexistent();
+void test_trader_respawn();
+void test_trader_count_in_state();
+void test_trader_default_distance();
+void test_trader_multiple_traders();
+
+// AI Industrialist State Machine tests
+void test_industrialist_defaults();
+void test_industrialist_add();
+void test_industrialist_add_duplicate_rejected();
+void test_industrialist_remove();
+void test_industrialist_remove_nonexistent();
+void test_industrialist_idle_without_blueprints();
+void test_industrialist_full_cycle();
+void test_industrialist_build_progress();
+void test_industrialist_picks_best_blueprint();
+void test_industrialist_cant_afford();
+void test_industrialist_kill();
+void test_industrialist_kill_nonexistent();
+void test_industrialist_respawn();
+void test_industrialist_count_in_state();
+void test_industrialist_market_distance();
+void test_industrialist_multiple();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1527,6 +1565,46 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_wallet_wealthiest_entity);
     RUN_TEST(test_wallet_clear);
     RUN_TEST(test_wallet_get_balance_nonexistent);
+
+    // AI Trader State Machine
+    log.BeginSection("AI Trader State Machine");
+    RUN_TEST(test_trader_defaults);
+    RUN_TEST(test_trader_add);
+    RUN_TEST(test_trader_add_duplicate_rejected);
+    RUN_TEST(test_trader_remove);
+    RUN_TEST(test_trader_remove_nonexistent);
+    RUN_TEST(test_trader_idle_without_listings);
+    RUN_TEST(test_trader_full_cycle);
+    RUN_TEST(test_trader_travel_progress);
+    RUN_TEST(test_trader_finds_best_trade);
+    RUN_TEST(test_trader_damage);
+    RUN_TEST(test_trader_damage_kills);
+    RUN_TEST(test_trader_damage_nonexistent);
+    RUN_TEST(test_trader_kill);
+    RUN_TEST(test_trader_kill_nonexistent);
+    RUN_TEST(test_trader_respawn);
+    RUN_TEST(test_trader_count_in_state);
+    RUN_TEST(test_trader_default_distance);
+    RUN_TEST(test_trader_multiple_traders);
+
+    // AI Industrialist State Machine
+    log.BeginSection("AI Industrialist State Machine");
+    RUN_TEST(test_industrialist_defaults);
+    RUN_TEST(test_industrialist_add);
+    RUN_TEST(test_industrialist_add_duplicate_rejected);
+    RUN_TEST(test_industrialist_remove);
+    RUN_TEST(test_industrialist_remove_nonexistent);
+    RUN_TEST(test_industrialist_idle_without_blueprints);
+    RUN_TEST(test_industrialist_full_cycle);
+    RUN_TEST(test_industrialist_build_progress);
+    RUN_TEST(test_industrialist_picks_best_blueprint);
+    RUN_TEST(test_industrialist_cant_afford);
+    RUN_TEST(test_industrialist_kill);
+    RUN_TEST(test_industrialist_kill_nonexistent);
+    RUN_TEST(test_industrialist_respawn);
+    RUN_TEST(test_industrialist_count_in_state);
+    RUN_TEST(test_industrialist_market_distance);
+    RUN_TEST(test_industrialist_multiple);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
