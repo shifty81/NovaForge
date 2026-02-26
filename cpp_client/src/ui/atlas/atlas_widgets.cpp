@@ -2237,6 +2237,7 @@ int menuBar(AtlasContext& ctx, const Rect& r,
     auto& rr = ctx.renderer();
 
     int result = -1;
+    constexpr int kItemsPerMenu = 1000; // encoding: menuIndex * kItemsPerMenu + itemIndex
 
     // Bar background — solid dark header
     rr.drawRect(r, t.bgHeader);
@@ -2346,7 +2347,7 @@ int menuBar(AtlasContext& ctx, const Rect& r,
 
                 // Click handling
                 if (item.enabled && ctx.buttonBehavior(itemRect, itemID)) {
-                    result = mi * 1000 + ii;
+                    result = mi * kItemsPerMenu + ii;
                     state.openMenu = -1; // close menu after click
                 }
 

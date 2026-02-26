@@ -3,6 +3,8 @@
 
 namespace atlas::editor {
 
+static constexpr int kItemsPerMenu = 1000;
+
 void EditorMenuBar::RegisterPanel(EditorPanel* panel) {
     if (panel) m_panels.push_back(panel);
 }
@@ -55,23 +57,26 @@ float EditorMenuBar::Draw(atlas::AtlasContext* ctx, float windowW) {
     // Rebuild the View and PCG Content menus each frame so that the
     // checked state stays in sync with panel visibility.
     if (m_menus.size() >= 2) {
-        // View menu (index 1): refresh checked state
+        // View menu (index 1): refresh checked state by matching panel name
         auto& viewItems = m_menus[1].items;
-        for (size_t i = 0; i < viewItems.size() && i < m_panels.size(); ++i) {
-            if (m_panels[i]) {
-                viewItems[i].checked = m_panels[i]->IsVisible();
+        for (auto& item : viewItems) {
+            for (auto* panel : m_panels) {
+                if (panel && item.label == panel->Name()) {
+                    item.checked = panel->IsVisible();
+                    break;
+                }
             }
         }
         // PCG Content menu (index 2 if present)
         if (m_menus.size() >= 3) {
             auto& pcgItems = m_menus[2].items;
-            size_t pi = 0;
-            for (auto* panel : m_panels) {
-                if (!panel || !IsPCGPanel(panel->Name())) continue;
-                if (pi < pcgItems.size()) {
-                    pcgItems[pi].checked = panel->IsVisible();
+            for (auto& item : pcgItems) {
+                for (auto* panel : m_panels) {
+                    if (panel && item.label == panel->Name()) {
+                        item.checked = panel->IsVisible();
+                        break;
+                    }
                 }
-                ++pi;
             }
         }
     }
@@ -83,8 +88,8 @@ float EditorMenuBar::Draw(atlas::AtlasContext* ctx, float windowW) {
     int clicked = atlas::menuBar(*ctx, barRect, m_menus, m_state);
 
     if (clicked >= 0) {
-        int menuIdx = clicked / 1000;
-        int itemIdx = clicked % 1000;
+        int menuIdx = clicked / kItemsPerMenu;
+        int itemIdx = clicked % kItemsPerMenu;
 
         if (menuIdx == 0) {
             // File menu
