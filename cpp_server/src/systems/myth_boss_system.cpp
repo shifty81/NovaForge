@@ -6,6 +6,15 @@
 namespace atlas {
 namespace systems {
 
+// Tuning constants for encounter generation
+static constexpr float MAX_SPREAD_FOR_DIFFICULTY = 10.0f;
+static constexpr float SPREAD_DIVISOR = 2.0f;
+static constexpr float BASE_SHIELD_HP = 1000.0f;
+static constexpr float BASE_ARMOR_HP = 500.0f;
+static constexpr float BASE_HULL_HP = 2000.0f;
+static constexpr float BASE_DROP_CHANCE = 0.3f;
+static constexpr float DIFFICULTY_DROP_BONUS = 0.1f;
+
 MythBossSystem::MythBossSystem(ecs::World* world)
     : System(world) {
 }
@@ -65,14 +74,14 @@ std::string MythBossSystem::generateEncounter(const std::string& myth_id,
                 break;
         }
 
-        // Calculate difficulty from spread_count and credibility
-        float spread_factor = std::min(static_cast<float>(myth->spread_count), 10.0f) / 2.0f;
+        // Difficulty scales with how widely the myth has spread (capped) and its credibility
+        float spread_factor = std::min(static_cast<float>(myth->spread_count), MAX_SPREAD_FOR_DIFFICULTY) / SPREAD_DIVISOR;
         comp->difficulty = std::max(1.0f, spread_factor * myth->credibility);
 
         // Scale stats by difficulty
-        comp->shield_hp = 1000.0f * comp->difficulty;
-        comp->armor_hp = 500.0f * comp->difficulty;
-        comp->hull_hp = 2000.0f * comp->difficulty;
+        comp->shield_hp = BASE_SHIELD_HP * comp->difficulty;
+        comp->armor_hp = BASE_ARMOR_HP * comp->difficulty;
+        comp->hull_hp = BASE_HULL_HP * comp->difficulty;
         comp->recommended_fleet_size = std::max(3, static_cast<int>(comp->difficulty * 2.0f));
 
         // Generate loot table based on difficulty
@@ -80,7 +89,7 @@ std::string MythBossSystem::generateEncounter(const std::string& myth_id,
         for (int i = 0; i < loot_count; ++i) {
             components::MythBossEncounter::LootEntry entry;
             entry.item_id = "myth_loot_" + std::to_string(i + 1);
-            entry.drop_chance = std::min(1.0f, 0.3f + comp->difficulty * 0.1f);
+            entry.drop_chance = std::min(1.0f, BASE_DROP_CHANCE + comp->difficulty * DIFFICULTY_DROP_BONUS);
             entry.quantity = 1 + static_cast<int>(comp->difficulty * 0.5f);
             comp->loot_table.push_back(entry);
         }
