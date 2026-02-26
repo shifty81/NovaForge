@@ -374,6 +374,7 @@ endif()
 
 # Link GLEW if available
 if(USE_GLEW)
+    target_compile_definitions(atlas_client PRIVATE USE_GLEW)
     target_link_libraries(atlas_client GLEW::GLEW)
 endif()
 

@@ -17,7 +17,10 @@
 // stub types so the translation unit compiles without GPU access.
 // ATLAS_HEADLESS is defined for test targets to force stub mode even
 // when GLEW/GLAD headers are present in the build environment.
-#if !defined(ATLAS_HEADLESS) && __has_include(<GL/glew.h>)
+// USE_GLEW is defined by CMake when the GLEW library is found and linked;
+// we check for it instead of __has_include(<GL/glew.h>) to avoid pulling
+// in GLEW declarations when the library is not actually linked.
+#if !defined(ATLAS_HEADLESS) && defined(USE_GLEW)
 #include <GL/glew.h>
 #define ATLAS_HAS_GL 1
 #elif !defined(ATLAS_HEADLESS) && __has_include(<glad/glad.h>)
