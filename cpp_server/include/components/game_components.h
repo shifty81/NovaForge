@@ -3037,7 +3037,7 @@ public:
         // Don't add duplicate rumors
         for (auto& r : rumors) {
             if (r.rumor_id == rumor_id) {
-                if (witnessed) r.belief_strength = std::min(r.belief_strength + 0.3f, 1.0f);
+                if (witnessed) r.belief_strength = (std::min)(r.belief_strength + 0.3f, 1.0f);
                 return;
             }
         }
