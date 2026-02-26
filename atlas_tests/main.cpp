@@ -816,6 +816,42 @@ void test_universe_travel_time_empty();
 void test_universe_systems_by_security();
 void test_universe_neighbours_nonexistent();
 
+// AIProfileLoader tests
+void test_ai_profile_defaults();
+void test_ai_profile_install_defaults();
+void test_ai_profile_add();
+void test_ai_profile_add_overwrites();
+void test_ai_profile_remove();
+void test_ai_profile_remove_nonexistent();
+void test_ai_profile_get_nonexistent();
+void test_ai_profile_get_by_archetype();
+void test_ai_profile_get_by_archetype_multiple();
+void test_ai_profile_ids();
+void test_ai_profile_load_empty();
+void test_ai_profile_load_single();
+void test_ai_profile_load_multiple();
+void test_ai_profile_load_overwrites_defaults();
+void test_ai_profile_all_archetypes();
+
+// EconomyRulesLoader tests
+void test_economy_rules_defaults();
+void test_economy_rules_install_defaults();
+void test_economy_rules_add();
+void test_economy_rules_add_overwrites();
+void test_economy_rules_remove();
+void test_economy_rules_remove_nonexistent();
+void test_economy_rules_get_nonexistent();
+void test_economy_rules_security_highsec();
+void test_economy_rules_security_lowsec();
+void test_economy_rules_security_nullsec();
+void test_economy_rules_security_boundary();
+void test_economy_rules_ids();
+void test_economy_rules_load_empty();
+void test_economy_rules_load_single();
+void test_economy_rules_load_multiple();
+void test_economy_rules_load_overwrites_defaults();
+void test_economy_rules_all_bands();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1703,6 +1739,42 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_universe_travel_time_empty);
     RUN_TEST(test_universe_systems_by_security);
     RUN_TEST(test_universe_neighbours_nonexistent);
+
+    // AIProfileLoader tests
+    RUN_TEST(test_ai_profile_defaults);
+    RUN_TEST(test_ai_profile_install_defaults);
+    RUN_TEST(test_ai_profile_add);
+    RUN_TEST(test_ai_profile_add_overwrites);
+    RUN_TEST(test_ai_profile_remove);
+    RUN_TEST(test_ai_profile_remove_nonexistent);
+    RUN_TEST(test_ai_profile_get_nonexistent);
+    RUN_TEST(test_ai_profile_get_by_archetype);
+    RUN_TEST(test_ai_profile_get_by_archetype_multiple);
+    RUN_TEST(test_ai_profile_ids);
+    RUN_TEST(test_ai_profile_load_empty);
+    RUN_TEST(test_ai_profile_load_single);
+    RUN_TEST(test_ai_profile_load_multiple);
+    RUN_TEST(test_ai_profile_load_overwrites_defaults);
+    RUN_TEST(test_ai_profile_all_archetypes);
+
+    // EconomyRulesLoader tests
+    RUN_TEST(test_economy_rules_defaults);
+    RUN_TEST(test_economy_rules_install_defaults);
+    RUN_TEST(test_economy_rules_add);
+    RUN_TEST(test_economy_rules_add_overwrites);
+    RUN_TEST(test_economy_rules_remove);
+    RUN_TEST(test_economy_rules_remove_nonexistent);
+    RUN_TEST(test_economy_rules_get_nonexistent);
+    RUN_TEST(test_economy_rules_security_highsec);
+    RUN_TEST(test_economy_rules_security_lowsec);
+    RUN_TEST(test_economy_rules_security_nullsec);
+    RUN_TEST(test_economy_rules_security_boundary);
+    RUN_TEST(test_economy_rules_ids);
+    RUN_TEST(test_economy_rules_load_empty);
+    RUN_TEST(test_economy_rules_load_single);
+    RUN_TEST(test_economy_rules_load_multiple);
+    RUN_TEST(test_economy_rules_load_overwrites_defaults);
+    RUN_TEST(test_economy_rules_all_bands);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
