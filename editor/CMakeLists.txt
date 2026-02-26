@@ -1,3 +1,16 @@
+# GLM (header-only, required by character_mesh_system.h)
+find_package(glm QUIET)
+if(NOT glm_FOUND)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(GLM QUIET glm)
+    endif()
+endif()
+
+if(NOT glm_FOUND AND NOT GLM_FOUND)
+    message(FATAL_ERROR "GLM not found -- required by AtlasEditor (character_mesh_system.h)")
+endif()
+
 add_executable(AtlasEditor
     main.cpp
     ui/EditorLayout.cpp
@@ -46,6 +59,13 @@ add_executable(AtlasEditor
 )
 
 target_link_libraries(AtlasEditor AtlasEngine)
+
+if(glm_FOUND)
+    target_link_libraries(AtlasEditor glm::glm)
+elseif(GLM_FOUND)
+    target_include_directories(AtlasEditor PRIVATE ${GLM_INCLUDE_DIRS})
+endif()
+
 target_include_directories(AtlasEditor PRIVATE
     ${CMAKE_SOURCE_DIR}/cpp_server/include
     ${CMAKE_SOURCE_DIR}/cpp_client/include
