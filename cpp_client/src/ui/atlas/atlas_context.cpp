@@ -125,7 +125,7 @@ static std::string extractJsonString(const std::string& json, const std::string&
     size_t q1 = json.find('\"', colon + 1);
     if (q1 == std::string::npos || q1 >= searchEnd) return "";
     size_t q2 = json.find('\"', q1 + 1);
-    if (q2 == std::string::npos || q2 > searchEnd) return "";
+    if (q2 == std::string::npos || q2 >= searchEnd) return "";
     return json.substr(q1 + 1, q2 - q1 - 1);
 }
 
@@ -155,7 +155,8 @@ bool AtlasContext::loadThemeFromFile(const std::string& path) {
         return parseHexColor(val);
     };
 
-    // Background colors
+    // Background colors — JSON uses #RRGGBB without alpha, so we apply
+    // translucency alphas matching the Photon Dark design guidelines
     Color bg0 = colorHex("bg_0");
     Color bg1 = colorHex("bg_1");
     Color bg2 = colorHex("bg_2");

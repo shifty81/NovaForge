@@ -19,6 +19,7 @@
 #include "ui/UndoStack.h"
 #include "assets/AssetRegistry.h"
 #include "../cpp_client/include/ui/atlas/atlas_context.h"
+#include "ui/input_handler.h"
 #include "rendering/window.h"
 #include <GL/glew.h>
 #include <iostream>
@@ -218,6 +219,7 @@ int main() {
     if (dpiScale > 1.0f) {
         atlas::Theme t = uiContext.theme();
         t.applyDpiScale(dpiScale);
+        // fontScale is independent — text rendering uses it separately
         t.fontScale = dpiScale;
         uiContext.setTheme(t);
         std::cout << "[Editor] DPI scale: " << dpiScale << "x" << std::endl;
@@ -226,6 +228,33 @@ int main() {
     }
 
     layout.SetContext(&uiContext);
+
+    // ── Wire GLFW input → InputHandler for mouse/keyboard ────────
+    atlas::InputHandler inputHandler;
+    window.setMouseCallback([&inputHandler](double x, double y) {
+        inputHandler.handleMouse(x, y);
+    });
+    window.setMouseButtonCallback([&inputHandler](int button, int action, int mods) {
+        inputHandler.handleMouseButton(button, action, mods,
+                                        inputHandler.getMouseX(),
+                                        inputHandler.getMouseY());
+    });
+    window.setScrollCallback([&inputHandler](double xoff, double yoff) {
+        inputHandler.handleScroll(xoff, yoff);
+    });
+    window.setKeyCallback([&inputHandler, &keybinds](int key, int /*scancode*/, int action, int mods) {
+        inputHandler.handleKey(key, action, mods);
+        // Dispatch editor keybinds on key press (GLFW action 1 = PRESS)
+        if (action == 1) {
+            atlas::editor::KeyMod km = atlas::editor::KeyMod::None;
+            if (mods & 0x0002) km = km | atlas::editor::KeyMod::Ctrl;
+            if (mods & 0x0001) km = km | atlas::editor::KeyMod::Shift;
+            if (mods & 0x0004) km = km | atlas::editor::KeyMod::Alt;
+            keybinds.HandleKeyPress(key, km);
+        }
+    });
+
+    std::cout << "[Editor] Input handler connected" << std::endl;
 
     std::cout << "[Editor] Atlas UI context initialized for "
               << layout.Panels().size() << " panels" << std::endl;
@@ -273,6 +302,9 @@ int main() {
             return;
         }
 
+        // Reset per-frame transient input (clicked/released flags)
+        inputHandler.beginFrame();
+
         // Poll window events (keyboard, mouse, resize)
         window.pollEvents();
 
@@ -287,6 +319,18 @@ int main() {
         atlas::InputState input;
         input.windowW = window.getWidth();
         input.windowH = window.getHeight();
+        input.mousePos = {static_cast<float>(inputHandler.getMouseX()),
+                          static_cast<float>(inputHandler.getMouseY())};
+        input.mouseDown[0]     = inputHandler.isMouseDown(0);
+        input.mouseDown[1]     = inputHandler.isMouseDown(1);
+        input.mouseDown[2]     = inputHandler.isMouseDown(2);
+        input.mouseClicked[0]  = inputHandler.isMouseClicked(0);
+        input.mouseClicked[1]  = inputHandler.isMouseClicked(1);
+        input.mouseClicked[2]  = inputHandler.isMouseClicked(2);
+        input.mouseReleased[0] = inputHandler.isMouseReleased(0);
+        input.mouseReleased[1] = inputHandler.isMouseReleased(1);
+        input.mouseReleased[2] = inputHandler.isMouseReleased(2);
+        input.scrollY = inputHandler.getScrollDeltaY();
 
         // Begin UI frame, draw layout, end UI frame
         uiContext.beginFrame(input);

@@ -71,6 +71,8 @@ add_executable(AtlasEditor
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
+    # Input handler for GLFW mouse/keyboard → Atlas InputState
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/input_handler.cpp
 )
 
 target_link_libraries(AtlasEditor AtlasEngine OpenGL::GL glfw)
