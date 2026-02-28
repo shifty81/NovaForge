@@ -261,3 +261,40 @@ void test_console_ai_query_empty() {
     auto& history = console.History();
     assert(history.back() == "Usage: ai.query <prompt>");
 }
+
+void test_console_list_command() {
+    World world;
+    NetContext net;
+    net.Init(NetMode::Standalone);
+    TickScheduler scheduler;
+
+    ConsolePanel console(world, net, scheduler);
+    console.Execute("list");
+
+    auto& history = console.History();
+    assert(history.size() >= 2);
+    assert(history[1].find("Available panels") != std::string::npos);
+}
+
+void test_console_status_command() {
+    World world;
+    NetContext net;
+    net.Init(NetMode::Standalone);
+    TickScheduler scheduler;
+
+    ConsolePanel console(world, net, scheduler);
+    world.CreateEntity();
+    world.CreateEntity();
+
+    console.Execute("status");
+
+    auto& history = console.History();
+    bool foundEntities = false;
+    bool foundNetMode = false;
+    for (auto& line : history) {
+        if (line.find("Entities: 2") != std::string::npos) foundEntities = true;
+        if (line.find("Net Mode: Standalone") != std::string::npos) foundNetMode = true;
+    }
+    assert(foundEntities);
+    assert(foundNetMode);
+}

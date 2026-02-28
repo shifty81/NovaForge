@@ -110,8 +110,28 @@ void ECSInspectorPanel::Draw() {
             label(*ctx, {x, y}, countText);
             y += rowH + 4;
 
-            // Destroy button (only when an entity is selected)
+            // Component detail section (when an entity is selected)
             if (m_selectedEntity != 0) {
+                label(*ctx, {x, y}, "Entity " + std::to_string(m_selectedEntity) + " Components:",
+                      ctx->theme().textPrimary);
+                y += rowH + 4;
+
+                auto types = m_world.GetComponentTypes(m_selectedEntity);
+                if (types.empty()) {
+                    label(*ctx, {x + 8, y}, "(no components)", ctx->theme().textSecondary);
+                    y += rowH + 4;
+                } else {
+                    for (const auto& t : types) {
+                        std::string typeName = t.name();
+                        label(*ctx, {x + 8, y}, typeName, ctx->theme().textSecondary);
+                        y += rowH + 2;
+                    }
+                }
+                y += 4;
+
+                separator(*ctx, {x, y}, contentW);
+                y += 4;
+
                 Rect destroyRect{x, y, contentW, rowH + 4};
                 if (button(*ctx, "Destroy", destroyRect)) {
                     DestroySelectedEntity();

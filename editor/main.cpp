@@ -81,6 +81,95 @@ int main() {
         }
     });
 
+    // ── Viewport gizmo keybinds ──────────────────────────────────
+    keybinds.RegisterCallback("Translate", [&viewport]() {
+        viewport.SetGizmoMode(atlas::editor::GizmoMode::Translate);
+    });
+    keybinds.RegisterCallback("Rotate", [&viewport]() {
+        viewport.SetGizmoMode(atlas::editor::GizmoMode::Rotate);
+    });
+    keybinds.RegisterCallback("Scale", [&viewport]() {
+        viewport.SetGizmoMode(atlas::editor::GizmoMode::Scale);
+    });
+    keybinds.RegisterCallback("ToggleGrid", [&viewport]() {
+        viewport.SetGridVisible(!viewport.IsGridVisible());
+    });
+    keybinds.RegisterCallback("FocusSelected", [&viewport]() {
+        if (viewport.SelectedObjectId() != 0) {
+            viewport.SetCameraDistance(200.0f);
+        }
+    });
+
+    // ── Panel toggle keybinds ────────────────────────────────────
+    keybinds.RegisterCallback("ToggleConsole", [&console]() {
+        console.SetVisible(!console.IsVisible());
+    });
+    keybinds.RegisterCallback("ToggleInspector", [&ecsInspector]() {
+        ecsInspector.SetVisible(!ecsInspector.IsVisible());
+    });
+    keybinds.RegisterCallback("ToggleSceneGraph", [&sceneGraph]() {
+        sceneGraph.SetVisible(!sceneGraph.IsVisible());
+    });
+
+    // ── Save keybind (Ctrl+S) ────────────────────────────────────
+    keybinds.RegisterCallback("Save", [&layout, &liveScene, &keybinds, &console]() {
+        layout.SaveToFile("data/editor_layout.json");
+        liveScene.CaptureViewportChanges();
+        liveScene.SaveOverrides("data/pcg_overrides.json");
+        keybinds.SaveToFile("data/editor_keybinds.json");
+        console.AddLine("[Editor] Layout, overrides, and keybinds saved");
+    });
+
+    // ── Delete keybind ───────────────────────────────────────────
+    keybinds.RegisterCallback("Delete", [&viewport, &ecsInspector, &sceneGraph,
+                                          &undoStack, &console]() {
+        // Delete selected viewport object
+        if (viewport.SelectedObjectId() != 0) {
+            uint32_t id = viewport.SelectedObjectId();
+            console.AddLine("[Delete] Viewport object " + std::to_string(id));
+            viewport.DeselectAll();
+        }
+        // Delete selected ECS entity
+        else if (ecsInspector.SelectedEntity() != 0) {
+            atlas::ecs::EntityID eid = ecsInspector.SelectedEntity();
+            undoStack.PushAction({
+                "Delete entity " + std::to_string(eid),
+                [&ecsInspector, &console, eid]() {
+                    // Undo: entity already destroyed, cannot recreate — log the limitation
+                    console.AddLine("[Undo] Entity " + std::to_string(eid) + " was destroyed (cannot recreate)");
+                    ecsInspector.ClearSelection();
+                },
+                [&ecsInspector, &console, eid]() {
+                    // Redo: entity already gone, log the operation
+                    console.AddLine("[Redo] Entity " + std::to_string(eid) + " deletion confirmed");
+                }
+            });
+            console.AddLine("[Delete] Entity " + std::to_string(eid));
+            ecsInspector.DestroySelectedEntity();
+        }
+        // Delete selected scene graph node
+        else if (sceneGraph.SelectedNode() != 0) {
+            uint32_t nid = sceneGraph.SelectedNode();
+            const auto* node = sceneGraph.GetNode(nid);
+            std::string nodeName = node ? node->name : std::to_string(nid);
+            std::string nodeType = node ? node->type : "Entity";
+            uint32_t parentId = node ? node->parentId : 0;
+            undoStack.PushAction({
+                "Delete node '" + nodeName + "'",
+                [&sceneGraph, nodeName, nodeType, parentId]() {
+                    // Undo: re-add the node (new id, same name/type/parent)
+                    sceneGraph.AddNode(nodeName, nodeType, parentId);
+                },
+                [&sceneGraph, nid]() {
+                    // Redo: remove the specific node by its captured ID
+                    sceneGraph.RemoveNode(nid);
+                }
+            });
+            sceneGraph.RemoveNode(nid);
+            console.AddLine("[Delete] Scene node '" + nodeName + "'");
+        }
+    });
+
     // ── AI backend: template-based offline suggestions ────────────
     atlas::ai::AIAggregator aiAggregator;
     atlas::ai::TemplateAIBackend templateAI;

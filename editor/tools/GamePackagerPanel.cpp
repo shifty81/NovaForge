@@ -19,19 +19,52 @@ void GamePackagerPanel::Draw() {
     float y = b.y + headerH + pad;
     float scrollOff = 0.0f;
 
-    // Build target / mode labels
-    atlas::label(ctx, {b.x + pad, y},
-        "Target: " + TargetToString(m_settings.target), ctx.theme().textPrimary);
+    // Build target toggle
+    {
+        std::string targetLabel = "Target: " + TargetToString(m_settings.target);
+        atlas::Rect targetBtn{b.x + pad, y, b.w - 2.0f * pad, rowH + pad};
+        if (!IsPackaging() && atlas::button(ctx, targetLabel.c_str(), targetBtn)) {
+            m_settings.target = (m_settings.target == BuildTarget::Client)
+                                ? BuildTarget::Server : BuildTarget::Client;
+        } else {
+            atlas::label(ctx, {b.x + pad, y + 2},
+                "Target: " + TargetToString(m_settings.target), ctx.theme().textPrimary);
+        }
+    }
     y += rowH + pad;
 
-    atlas::label(ctx, {b.x + pad, y},
-        "Mode: " + ModeToString(m_settings.mode), ctx.theme().textPrimary);
+    // Build mode toggle
+    {
+        std::string modeLabel = "Mode: " + ModeToString(m_settings.mode);
+        atlas::Rect modeBtn{b.x + pad, y, b.w - 2.0f * pad, rowH + pad};
+        if (!IsPackaging() && atlas::button(ctx, modeLabel.c_str(), modeBtn)) {
+            if (m_settings.mode == BuildMode::Debug)
+                m_settings.mode = BuildMode::Development;
+            else if (m_settings.mode == BuildMode::Development)
+                m_settings.mode = BuildMode::Release;
+            else
+                m_settings.mode = BuildMode::Debug;
+        } else {
+            atlas::label(ctx, {b.x + pad, y + 2},
+                "Mode: " + ModeToString(m_settings.mode), ctx.theme().textPrimary);
+        }
+    }
     y += rowH + pad;
 
     // Output path
     atlas::label(ctx, {b.x + pad, y},
         "Output: " + m_settings.outputPath, ctx.theme().textSecondary);
     y += rowH + pad;
+
+    // Option checkboxes (editable only when not packaging)
+    if (!IsPackaging()) {
+        atlas::checkbox(ctx, "Single EXE", {b.x + pad, y, b.w - 2.0f * pad, rowH + pad}, &m_settings.singleExe);
+        y += rowH + pad;
+        atlas::checkbox(ctx, "Include Mods", {b.x + pad, y, b.w - 2.0f * pad, rowH + pad}, &m_settings.includeMods);
+        y += rowH + pad;
+        atlas::checkbox(ctx, "Strip Editor Data", {b.x + pad, y, b.w - 2.0f * pad, rowH + pad}, &m_settings.stripEditorData);
+        y += rowH + pad;
+    }
 
     // Progress bar
     atlas::Rect progRect{b.x + pad, y, b.w - 2.0f * pad, rowH + pad};
