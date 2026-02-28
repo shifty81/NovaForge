@@ -156,7 +156,35 @@ void ConsolePanel::Execute(const std::string& command) {
     } else if (cmd == "help") {
         m_history.push_back("Commands: spawn_entity, ecs.dump, ecs.count, "
                             "ecs.destroy <id>, set tickrate <N>, net.mode, "
-                            "net.stats, net.peers, ai.query <prompt>, clear, help");
+                            "net.stats, net.peers, ai.query <prompt>, "
+                            "list, status, scene, clear, help");
+    } else if (cmd == "list") {
+        m_history.push_back("Available panels:");
+        m_history.push_back("  Console, ECS Inspector, Network, Viewport,");
+        m_history.push_back("  PCG Preview, Generation Style, Asset Style,");
+        m_history.push_back("  Ship Archetype, Game Packager, Character Select,");
+        m_history.push_back("  Mission Editor, Scene Graph, Galaxy Map,");
+        m_history.push_back("  Fleet Formation, Live Scene");
+    } else if (cmd == "status") {
+        m_history.push_back("Editor Status:");
+        m_history.push_back("  Entities: " + std::to_string(m_world.EntityCount()));
+        auto& peers = m_net.Peers();
+        size_t connected = 0;
+        for (const auto& p : peers) {
+            if (p.connected) ++connected;
+        }
+        m_history.push_back("  Peers: " + std::to_string(connected) + "/" + std::to_string(peers.size()));
+        auto mode = m_net.Mode();
+        std::string modeStr;
+        switch (mode) {
+            case net::NetMode::Standalone: modeStr = "Standalone"; break;
+            case net::NetMode::Client: modeStr = "Client"; break;
+            case net::NetMode::Server: modeStr = "Server"; break;
+            case net::NetMode::P2P_Host: modeStr = "P2P_Host"; break;
+            case net::NetMode::P2P_Peer: modeStr = "P2P_Peer"; break;
+        }
+        m_history.push_back("  Net Mode: " + modeStr);
+        m_history.push_back("  Tick Rate: " + std::to_string(m_scheduler.TickRate()));
     } else {
         m_history.push_back("Unknown command: " + cmd);
     }

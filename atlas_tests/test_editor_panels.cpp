@@ -6,13 +6,18 @@
 #include <iostream>
 #include <cassert>
 #include <string>
+#include <cmath>
 #include "../editor/panels/ECSInspectorPanel.h"
 #include "../editor/panels/NetInspectorPanel.h"
 #include "../editor/tools/GamePackagerPanel.h"
+#include "../editor/tools/ViewportPanel.h"
 #include "../editor/ai/AIAggregator.h"
 #include "../editor/ui/EditorLayout.h"
+#include "../editor/ui/KeybindManager.h"
+#include "../editor/ui/UndoStack.h"
 #include "../engine/ecs/ECS.h"
 #include "../engine/net/NetContext.h"
+#include "../cpp_server/include/pcg/ship_generator.h"
 
 using namespace atlas::editor;
 using namespace atlas::ecs;
@@ -428,4 +433,173 @@ void test_dock_register_panels() {
     assert(layout.Panels()[0] == &a);
     assert(layout.Panels()[1] == &b);
     assert(layout.Panels()[2] == &c);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GamePackager settings interaction tests
+// ══════════════════════════════════════════════════════════════════
+
+void test_pkg_settings_target_toggle() {
+    GamePackagerPanel panel;
+    assert(panel.Settings().target == BuildTarget::Client);
+    PackageSettings s = panel.Settings();
+    s.target = BuildTarget::Server;
+    panel.SetSettings(s);
+    assert(panel.Settings().target == BuildTarget::Server);
+    s.target = BuildTarget::Client;
+    panel.SetSettings(s);
+    assert(panel.Settings().target == BuildTarget::Client);
+}
+
+void test_pkg_settings_mode_cycle() {
+    GamePackagerPanel panel;
+    PackageSettings s = panel.Settings();
+    s.mode = BuildMode::Debug;
+    panel.SetSettings(s);
+    assert(panel.Settings().mode == BuildMode::Debug);
+    s.mode = BuildMode::Development;
+    panel.SetSettings(s);
+    assert(panel.Settings().mode == BuildMode::Development);
+    s.mode = BuildMode::Release;
+    panel.SetSettings(s);
+    assert(panel.Settings().mode == BuildMode::Release);
+}
+
+void test_pkg_settings_options() {
+    GamePackagerPanel panel;
+    PackageSettings s = panel.Settings();
+    assert(s.singleExe == false);
+    assert(s.includeMods == false);
+    assert(s.stripEditorData == true);
+    s.singleExe = true;
+    s.includeMods = true;
+    s.stripEditorData = false;
+    panel.SetSettings(s);
+    assert(panel.Settings().singleExe == true);
+    assert(panel.Settings().includeMods == true);
+    assert(panel.Settings().stripEditorData == false);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Keybind wiring integration tests
+// ══════════════════════════════════════════════════════════════════
+
+void test_keybind_viewport_gizmo_wiring() {
+    KeybindManager keybinds;
+    // Verify viewport keybinds exist
+    assert(keybinds.FindBinding("Translate") != nullptr);
+    assert(keybinds.FindBinding("Rotate") != nullptr);
+    assert(keybinds.FindBinding("Scale") != nullptr);
+    assert(keybinds.FindBinding("ToggleGrid") != nullptr);
+    assert(keybinds.FindBinding("FocusSelected") != nullptr);
+
+    // Test that callbacks fire via HandleKeyPress
+    GizmoMode mode = GizmoMode::None;
+    keybinds.RegisterCallback("Translate", [&mode]() { mode = GizmoMode::Translate; });
+    keybinds.RegisterCallback("Rotate", [&mode]() { mode = GizmoMode::Rotate; });
+    keybinds.RegisterCallback("Scale", [&mode]() { mode = GizmoMode::Scale; });
+
+    keybinds.HandleKeyPress('W', KeyMod::None);
+    assert(mode == GizmoMode::Translate);
+    keybinds.HandleKeyPress('E', KeyMod::None);
+    assert(mode == GizmoMode::Rotate);
+    keybinds.HandleKeyPress('R', KeyMod::None);
+    assert(mode == GizmoMode::Scale);
+}
+
+void test_keybind_panel_toggle_wiring() {
+    KeybindManager keybinds;
+    assert(keybinds.FindBinding("ToggleConsole") != nullptr);
+    assert(keybinds.FindBinding("ToggleInspector") != nullptr);
+    assert(keybinds.FindBinding("ToggleSceneGraph") != nullptr);
+
+    bool consoleToggled = false;
+    keybinds.RegisterCallback("ToggleConsole", [&consoleToggled]() { consoleToggled = true; });
+    keybinds.HandleKeyPress('`', KeyMod::None);
+    assert(consoleToggled);
+}
+
+void test_keybind_save_wiring() {
+    KeybindManager keybinds;
+    assert(keybinds.FindBinding("Save") != nullptr);
+
+    bool saved = false;
+    keybinds.RegisterCallback("Save", [&saved]() { saved = true; });
+    keybinds.HandleKeyPress('S', KeyMod::Ctrl);
+    assert(saved);
+}
+
+void test_keybind_delete_wiring() {
+    KeybindManager keybinds;
+    assert(keybinds.FindBinding("Delete") != nullptr);
+
+    bool deleted = false;
+    keybinds.RegisterCallback("Delete", [&deleted]() { deleted = true; });
+    keybinds.HandleKeyPress(127, KeyMod::None);
+    assert(deleted);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ECS Inspector component display test
+// ══════════════════════════════════════════════════════════════════
+
+void test_ecsi_component_types_visible() {
+    World w;
+    ECSInspectorPanel panel(w);
+    EntityID e = w.CreateEntity();
+    // Add a component (just int for testing)
+    w.AddComponent<int>(e, 42);
+    panel.SelectEntity(e);
+    assert(panel.SelectedEntity() == e);
+
+    // Verify that the entity has components
+    auto types = w.GetComponentTypes(e);
+    assert(types.size() == 1);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Undo integration test
+// ══════════════════════════════════════════════════════════════════
+
+void test_undo_viewport_transform() {
+    // Test that UndoStack can revert viewport transforms
+    atlas::editor::UndoStack undoStack;
+    atlas::editor::ViewportPanel viewport;
+
+    atlas::pcg::GeneratedShip ship;
+    ship.shipName = "TestShip";
+    ship.mass = 1000.0f;
+    ship.turretSlots = 0;
+    viewport.LoadShip(ship, 42);
+    assert(viewport.ObjectCount() == 1);
+
+    uint32_t objId = viewport.GetObject(0).id;
+    viewport.SelectObject(objId);
+
+    auto oldTransform = viewport.GetTransform(objId);
+    float oldX = oldTransform.posX;
+
+    // Record undo action for translate
+    float dx = 10.0f, dy = 0.0f, dz = 0.0f;
+    viewport.TranslateSelected(dx, dy, dz);
+    float newX = viewport.GetTransform(objId).posX;
+    assert(newX != oldX);
+
+    undoStack.PushAction({
+        "Translate object",
+        [&viewport, objId, dx, dy, dz]() { viewport.TranslateSelected(-dx, -dy, -dz); },
+        [&viewport, objId, dx, dy, dz]() { viewport.TranslateSelected(dx, dy, dz); }
+    });
+
+    // Undo should revert
+    undoStack.Undo();
+    // The position should be close to original + 2 changes (translate + undo translate)
+    // Actually undo calls TranslateSelected(-dx,...) which adds -dx, so posX should be ~oldX
+    float afterUndo = viewport.GetTransform(objId).posX;
+    assert(std::abs(afterUndo - oldX) < 0.01f);
+
+    // Redo should re-apply
+    undoStack.Redo();
+    float afterRedo = viewport.GetTransform(objId).posX;
+    assert(std::abs(afterRedo - newX) < 0.01f);
 }

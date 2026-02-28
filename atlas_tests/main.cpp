@@ -94,6 +94,8 @@ void test_console_net_peers();
 void test_console_clear();
 void test_console_ai_query();
 void test_console_ai_query_empty();
+void test_console_list_command();
+void test_console_status_command();
 
 // HUD Panel tests
 void test_station_panel_defaults();
@@ -348,6 +350,15 @@ void test_ai_best_confidence_wins();
 void test_dock_tab_draw();
 void test_dock_tab_switch();
 void test_dock_register_panels();
+void test_pkg_settings_target_toggle();
+void test_pkg_settings_mode_cycle();
+void test_pkg_settings_options();
+void test_keybind_viewport_gizmo_wiring();
+void test_keybind_panel_toggle_wiring();
+void test_keybind_save_wiring();
+void test_keybind_delete_wiring();
+void test_ecsi_component_types_visible();
+void test_undo_viewport_transform();
 
 // Viewport Panel tests
 void test_viewport_defaults();
@@ -1025,6 +1036,8 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_console_clear);
     RUN_TEST(test_console_ai_query);
     RUN_TEST(test_console_ai_query_empty);
+    RUN_TEST(test_console_list_command);
+    RUN_TEST(test_console_status_command);
 
     // HUD Panels
     log.BeginSection("HUD Panels");
@@ -1469,6 +1482,27 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_dock_tab_draw);
     RUN_TEST(test_dock_tab_switch);
     RUN_TEST(test_dock_register_panels);
+
+    // GamePackager Settings
+    log.BeginSection("GamePackager Settings");
+    RUN_TEST(test_pkg_settings_target_toggle);
+    RUN_TEST(test_pkg_settings_mode_cycle);
+    RUN_TEST(test_pkg_settings_options);
+
+    // Keybind Wiring
+    log.BeginSection("Keybind Wiring");
+    RUN_TEST(test_keybind_viewport_gizmo_wiring);
+    RUN_TEST(test_keybind_panel_toggle_wiring);
+    RUN_TEST(test_keybind_save_wiring);
+    RUN_TEST(test_keybind_delete_wiring);
+
+    // ECS Inspector Component Display
+    log.BeginSection("ECS Inspector Component Display");
+    RUN_TEST(test_ecsi_component_types_visible);
+
+    // Undo Integration
+    log.BeginSection("Undo Integration");
+    RUN_TEST(test_undo_viewport_transform);
 
     // Mission Editor Panel
     log.BeginSection("Mission Editor Panel");
