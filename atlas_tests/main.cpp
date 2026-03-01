@@ -586,6 +586,46 @@ void test_interp_out_of_order_ticks();
 void test_interp_multiple_segments();
 void test_interp_snapshot_count_nonexistent();
 
+// DeltaCompression tests
+void test_dc_defaults();
+void test_dc_custom_interval();
+void test_dc_zero_interval_clamped();
+void test_dc_quantize_position();
+void test_dc_quantize_negative();
+void test_dc_quantize_rotation();
+void test_dc_quantize_zero();
+void test_dc_keyframe_roundtrip();
+void test_dc_first_encode_is_keyframe();
+void test_dc_delta_after_keyframe();
+void test_dc_delta_values_small();
+void test_dc_delta_stationary_entity();
+void test_dc_multiple_entities();
+void test_dc_periodic_keyframe();
+void test_dc_force_keyframe();
+void test_dc_force_all_keyframes();
+void test_dc_remove_entity();
+void test_dc_clear();
+void test_dc_decode_delta_without_baseline();
+void test_dc_empty_encode();
+void test_dc_encode_decode_full_sequence();
+
+// JitterBuffer tests
+void test_jb_defaults();
+void test_jb_custom_config();
+void test_jb_min_delay_clamped();
+void test_jb_push_single();
+void test_jb_flush_after_delay();
+void test_jb_flush_releases_in_order();
+void test_jb_flush_partial();
+void test_jb_late_packet_dropped();
+void test_jb_overflow_trims();
+void test_jb_out_of_order_sorted();
+void test_jb_duplicate_tick_replaces();
+void test_jb_adaptive_adjusts_delay();
+void test_jb_non_adaptive_fixed_delay();
+void test_jb_reset();
+void test_jb_flush_empty();
+
 // SceneGraphPanel tests
 void test_sg_defaults();
 void test_sg_add_node();
@@ -1579,6 +1619,48 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_interp_out_of_order_ticks);
     RUN_TEST(test_interp_multiple_segments);
     RUN_TEST(test_interp_snapshot_count_nonexistent);
+
+    // Delta Compression
+    log.BeginSection("Delta Compression");
+    RUN_TEST(test_dc_defaults);
+    RUN_TEST(test_dc_custom_interval);
+    RUN_TEST(test_dc_zero_interval_clamped);
+    RUN_TEST(test_dc_quantize_position);
+    RUN_TEST(test_dc_quantize_negative);
+    RUN_TEST(test_dc_quantize_rotation);
+    RUN_TEST(test_dc_quantize_zero);
+    RUN_TEST(test_dc_keyframe_roundtrip);
+    RUN_TEST(test_dc_first_encode_is_keyframe);
+    RUN_TEST(test_dc_delta_after_keyframe);
+    RUN_TEST(test_dc_delta_values_small);
+    RUN_TEST(test_dc_delta_stationary_entity);
+    RUN_TEST(test_dc_multiple_entities);
+    RUN_TEST(test_dc_periodic_keyframe);
+    RUN_TEST(test_dc_force_keyframe);
+    RUN_TEST(test_dc_force_all_keyframes);
+    RUN_TEST(test_dc_remove_entity);
+    RUN_TEST(test_dc_clear);
+    RUN_TEST(test_dc_decode_delta_without_baseline);
+    RUN_TEST(test_dc_empty_encode);
+    RUN_TEST(test_dc_encode_decode_full_sequence);
+
+    // Jitter Buffer
+    log.BeginSection("Jitter Buffer");
+    RUN_TEST(test_jb_defaults);
+    RUN_TEST(test_jb_custom_config);
+    RUN_TEST(test_jb_min_delay_clamped);
+    RUN_TEST(test_jb_push_single);
+    RUN_TEST(test_jb_flush_after_delay);
+    RUN_TEST(test_jb_flush_releases_in_order);
+    RUN_TEST(test_jb_flush_partial);
+    RUN_TEST(test_jb_late_packet_dropped);
+    RUN_TEST(test_jb_overflow_trims);
+    RUN_TEST(test_jb_out_of_order_sorted);
+    RUN_TEST(test_jb_duplicate_tick_replaces);
+    RUN_TEST(test_jb_adaptive_adjusts_delay);
+    RUN_TEST(test_jb_non_adaptive_fixed_delay);
+    RUN_TEST(test_jb_reset);
+    RUN_TEST(test_jb_flush_empty);
 
     // Scene Graph Panel
     log.BeginSection("Scene Graph Panel");

@@ -26,7 +26,7 @@ Nova Forge is a PVE-focused space simulator designed for solo play or small grou
 - Fully moddable via editable JSON files
 - Focus on PVE content without PVP stress
 - AI-driven economy where NPCs are real economic actors
-- Custom retained-mode UI system (replacing ImGui for game UI)
+- Custom Atlas UI system — retained-mode, GPU-accelerated, sci-fi themed
 - Deterministic simulation for networking and replays
 
 **What we are NOT building:**
@@ -72,14 +72,14 @@ Each AI owns ships, has a wallet, responds to market prices, and can die permane
 - Dynamic taxation and broker fees
 - Shipping risk and supply/demand curves
 
-### Custom UI Strategy (Replacing ImGui for Game UI)
+### Custom Atlas UI Strategy
 - **Retained-mode** windowed UI system
 - **Window docking** (DockNode tree with split/leaf nodes)
 - **EVE-style dark theme** (defined in `data/ui/novaforge_dark_theme.json`)
 - **Ship HUD**: Control ring (shield/armor/hull), capacitor bar, module rack, target brackets
 - **Keyboard-first** interaction with mouse support
 - **Data binding** via observer pattern (no polling)
-- ImGui retained only for debug/dev tools
+- Atlas UI is the sole UI framework for all game and editor UI
 
 ### Modular Procedural Ship Generation
 - Ships generated from modular parts assembled along a hull spine

@@ -19,10 +19,10 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 **Why First**: Poor network smoothness hurts all gameplay  
 **Current State**: Server broadcasts snapshots, but client doesn't interpolate  
 **Work Required**:
-- [ ] Client-side entity position interpolation
-- [ ] Velocity-based prediction
-- [ ] Delta compression for bandwidth
-- [ ] Jitter buffer for packet timing
+- [x] Client-side entity position interpolation
+- [x] Velocity-based prediction
+- [x] Delta compression for bandwidth
+- [x] Jitter buffer for packet timing
 - [ ] Lag compensation testing
 
 **Success Criteria**:
@@ -40,9 +40,9 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 
 #### 2. Ship HUD Control Ring (2-3 weeks)
 **Why Second**: Core UI element for all gameplay  
-**Current State**: ImGui panels for stats, needs custom HUD  
+**Current State**: Basic panels for stats, needs custom HUD  
 **Work Required**:
-- [ ] Design retained-mode UI framework (replacing ImGui for game UI)
+- [ ] Extend Atlas UI retained-mode framework for HUD elements
 - [ ] Implement circular shield/armor/hull arcs
 - [ ] Add capacitor vertical bar
 - [ ] Display velocity arc with color states
@@ -53,7 +53,7 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 - HUD renders at 60 FPS with 200 entities
 - Readable from peripheral vision
 - EVE-style visual theme
-- No ImGui for game UI (keep for debug)
+- All game UI uses custom Atlas UI system
 
 **Technical Notes**:
 - Bottom-center anchored
@@ -125,19 +125,19 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 - [ ] Design retained-mode window framework
 - [ ] Implement DockNode tree (split/leaf nodes)
 - [ ] Add window docking/undocking
-- [ ] Port existing ImGui panels (inventory, fitting, market)
+- [ ] Port existing panels to Atlas UI (inventory, fitting, market)
 - [ ] Add keyboard-first navigation
 - [ ] Implement data binding (observer pattern)
 
 **Success Criteria**:
-- All game UI uses custom system (ImGui only for debug)
+- All game UI uses custom Atlas UI system
 - Windows can dock/float
 - Keyboard navigation works
 - EVE-style theme applied
 - <2ms render time per frame
 
 **Technical Notes**:
-- Keep ImGui available for dev tools
+- Atlas UI is the sole UI framework for all game and editor UI
 - Use theme from `data/ui/novaforge_dark_theme.json`
 - Support window presets (combat, trading, mining)
 - Persist window layout in player profile
@@ -297,9 +297,9 @@ For the immediate next coding session:
    - **Fallback**: Keep current snapshot system as option
 
 2. **Custom UI Performance**
-   - **Risk**: Custom UI slower than ImGui
+   - **Risk**: Custom Atlas UI performance bottleneck
    - **Mitigation**: Profile early, optimize hot paths
-   - **Fallback**: Keep ImGui if performance suffers
+   - **Fallback**: Batch draw calls, reduce widget count
 
 3. **AI Actor Complexity**
    - **Risk**: AI behavior creates server lag
