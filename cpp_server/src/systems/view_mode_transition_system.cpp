@@ -50,7 +50,7 @@ bool ViewModeTransitionSystem::initializePlayer(const std::string& player_id) {
     entity = world_->createEntity(entity_id);
     auto comp = std::make_unique<components::ViewModeState>();
     comp->player_id = player_id;
-    comp->current_mode = static_cast<int>(components::ViewModeState::Mode::Cockpit);
+    comp->current_mode = static_cast<int>(components::ViewModeState::Mode::Interior);
     comp->previous_mode = comp->current_mode;
     entity->addComponent(std::move(comp));
     return true;

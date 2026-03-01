@@ -20667,7 +20667,7 @@ void testCharCreationScreenAppearance() {
 void testViewModeDefaults() {
     std::cout << "\n=== View Mode Defaults ===" << std::endl;
     components::ViewModeState state;
-    assertTrue(state.current_mode == 0, "Default mode is Cockpit (0)");
+    assertTrue(state.current_mode == 1, "Default mode is Interior (1)");
     assertTrue(!state.transitioning, "Default not transitioning");
     assertTrue(approxEqual(state.transition_progress, 0.0f), "Default zero progress");
 }
@@ -20678,7 +20678,7 @@ void testViewModeInitialize() {
     systems::ViewModeTransitionSystem sys(&world);
 
     assertTrue(sys.initializePlayer("player1"), "Initialize succeeds");
-    assertTrue(sys.getCurrentMode("player1") == 0, "Default Cockpit mode");
+    assertTrue(sys.getCurrentMode("player1") == 1, "Default Interior mode");
     assertTrue(!sys.isTransitioning("player1"), "Not transitioning initially");
 }
 
@@ -20688,14 +20688,14 @@ void testViewModeTransition() {
     systems::ViewModeTransitionSystem sys(&world);
     sys.initializePlayer("player1");
 
-    int interior = static_cast<int>(components::ViewModeState::Mode::Interior);
-    assertTrue(sys.requestTransition("player1", interior), "Cockpit to Interior valid");
+    int cockpit = static_cast<int>(components::ViewModeState::Mode::Cockpit);
+    assertTrue(sys.requestTransition("player1", cockpit), "Interior to Cockpit valid");
     assertTrue(sys.isTransitioning("player1"), "Transitioning after request");
 
     // Complete transition
     sys.update(2.0f);
     assertTrue(!sys.isTransitioning("player1"), "Not transitioning after completion");
-    assertTrue(sys.getCurrentMode("player1") == interior, "Now in Interior mode");
+    assertTrue(sys.getCurrentMode("player1") == cockpit, "Now in Cockpit mode");
 }
 
 void testViewModeInvalidTransition() {
@@ -20705,8 +20705,12 @@ void testViewModeInvalidTransition() {
     sys.initializePlayer("player1");
 
     int eva = static_cast<int>(components::ViewModeState::Mode::EVA);
-    // Cockpit -> EVA is not a valid direct transition
-    assertTrue(!sys.requestTransition("player1", eva), "Cockpit to EVA invalid (not adjacent)");
+    // Interior -> EVA is a valid adjacent transition, so test a truly invalid one:
+    // First transition to RTS Overlay, then try EVA which is not adjacent to RTS
+    int rts = static_cast<int>(components::ViewModeState::Mode::RTSOverlay);
+    sys.requestTransition("player1", rts);
+    sys.update(2.0f); // complete transition to RTS
+    assertTrue(!sys.requestTransition("player1", eva), "RTS to EVA invalid (not adjacent)");
 }
 
 void testViewModeCancel() {
@@ -20715,12 +20719,12 @@ void testViewModeCancel() {
     systems::ViewModeTransitionSystem sys(&world);
     sys.initializePlayer("player1");
 
-    int interior = static_cast<int>(components::ViewModeState::Mode::Interior);
-    sys.requestTransition("player1", interior);
+    int cockpit = static_cast<int>(components::ViewModeState::Mode::Cockpit);
+    sys.requestTransition("player1", cockpit);
     assertTrue(sys.isTransitioning("player1"), "Transitioning");
     assertTrue(sys.cancelTransition("player1"), "Cancel succeeds");
     assertTrue(!sys.isTransitioning("player1"), "No longer transitioning");
-    assertTrue(sys.getCurrentMode("player1") == 0, "Still in Cockpit after cancel");
+    assertTrue(sys.getCurrentMode("player1") == 1, "Still in Interior after cancel");
 }
 
 void testViewModeProgress() {
@@ -20729,8 +20733,8 @@ void testViewModeProgress() {
     systems::ViewModeTransitionSystem sys(&world);
     sys.initializePlayer("player1");
 
-    int interior = static_cast<int>(components::ViewModeState::Mode::Interior);
-    sys.requestTransition("player1", interior);
+    int cockpit = static_cast<int>(components::ViewModeState::Mode::Cockpit);
+    sys.requestTransition("player1", cockpit);
     sys.update(0.75f); // Half of 1.5s default duration
     float progress = sys.getTransitionProgress("player1");
     assertTrue(progress > 0.0f && progress < 1.0f, "Progress is mid-transition");

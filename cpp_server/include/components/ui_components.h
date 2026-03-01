@@ -144,7 +144,7 @@ public:
     };
 
     std::string player_id;
-    int current_mode = 0;    // Mode enum as int
+    int current_mode = 1;    // Mode enum as int (Interior/FPS)
     int previous_mode = 0;
     int target_mode = 0;
     bool transitioning = false;
