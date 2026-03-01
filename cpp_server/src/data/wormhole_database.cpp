@@ -1,4 +1,5 @@
 #include "data/wormhole_database.h"
+#include "utils/json_helpers.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -224,45 +225,15 @@ int WormholeDatabase::loadEffects(const std::string& filepath) {
 // ---------------------------------------------------------------------------
 
 std::string WormholeDatabase::extractString(const std::string& json, const std::string& key) {
-    std::string search = "\"" + key + "\"";
-    size_t pos = json.find(search);
-    if (pos == std::string::npos) return "";
-    pos = json.find(':', pos + search.size());
-    if (pos == std::string::npos) return "";
-    pos = json.find('\"', pos + 1);
-    if (pos == std::string::npos) return "";
-    size_t end = pos + 1;
-    while (end < json.size()) {
-        if (json[end] == '\\') { end += 2; continue; }
-        if (json[end] == '\"') break;
-        ++end;
-    }
-    if (end >= json.size()) return "";
-    return json.substr(pos + 1, end - pos - 1);
+    return atlas::json::extractString(json, key);
 }
 
 float WormholeDatabase::extractFloat(const std::string& json, const std::string& key, float fallback) {
-    std::string search = "\"" + key + "\"";
-    size_t pos = json.find(search);
-    if (pos == std::string::npos) return fallback;
-    pos = json.find(':', pos + search.size());
-    if (pos == std::string::npos) return fallback;
-    ++pos;
-    while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t' || json[pos] == '\n' || json[pos] == '\r'))
-        ++pos;
-    try {
-        size_t end = pos;
-        while (end < json.size() &&
-               (json[end] == '-' || json[end] == '.' ||
-                (json[end] >= '0' && json[end] <= '9') ||
-                json[end] == 'e' || json[end] == 'E' || json[end] == '+'))
-            ++end;
-        return std::stof(json.substr(pos, end - pos));
-    } catch (...) { return fallback; }
+    return atlas::json::extractFloat(json, key, fallback);
 }
 
 int WormholeDatabase::extractInt(const std::string& json, const std::string& key, int fallback) {
-    return static_cast<int>(extractFloat(json, key, static_cast<float>(fallback)));
+    return atlas::json::extractInt(json, key, fallback);
 }
 
 std::string WormholeDatabase::extractBlock(const std::string& json, const std::string& key) {
