@@ -465,6 +465,62 @@ void Application::setupUICallbacks() {
             default:
                 break;
         }
+
+        // ── FPS mode actions ───────────────────────────────────────
+        // These are dispatched to the server via network messages.
+        // For now, log the action; full server integration follows.
+        switch (action) {
+            case UI::RadialMenu::Action::FPS_USE:
+                std::cout << "[FPS] Use: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_OPEN:
+                std::cout << "[FPS] Open: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_CLOSE:
+                std::cout << "[FPS] Close: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_LOCK:
+                std::cout << "[FPS] Lock: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_UNLOCK:
+                std::cout << "[FPS] Unlock: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_HACK:
+                std::cout << "[FPS] Hack: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_LOOT_ALL:
+                std::cout << "[FPS] Loot All: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_SEARCH:
+                std::cout << "[FPS] Search: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_REPAIR:
+                std::cout << "[FPS] Repair: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_HEAL:
+                std::cout << "[FPS] Heal: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_RESTOCK:
+                std::cout << "[FPS] Restock: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_CRAFT:
+                std::cout << "[FPS] Craft: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_EVA_BEGIN:
+                std::cout << "[FPS] Begin EVA: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_EVA_ABORT:
+                std::cout << "[FPS] Abort EVA: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_ACCESS_TERMINAL:
+                std::cout << "[FPS] Access Terminal: " << entityId << std::endl;
+                break;
+            case UI::RadialMenu::Action::FPS_EXAMINE:
+                std::cout << "[FPS] Examine: " << entityId << std::endl;
+                break;
+            default:
+                break;
+        }
     });
     
     std::cout << "  - Radial menu callbacks wired" << std::endl;

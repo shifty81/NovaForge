@@ -13,19 +13,23 @@ namespace atlas {
 namespace UI {
 
 /**
- * Astralis-style radial menu for in-space interaction.
+ * Astralis-style radial menu for in-space and FPS interaction.
  *
- * Activated by holding left mouse button on an entity in space.
- * Shows a circular menu with options: Orbit, Approach, Warp To, Lock,
- * Keep at Range, Look At, and Show Info arranged in pie-slice segments.
+ * **Space mode** — Activated by holding left mouse button on an entity in
+ * space.  Shows: Orbit, Approach, Warp To, Lock, Keep at Range, Look At,
+ * Align, and Show Info.
  *
- * The player moves the mouse toward a segment to highlight it,
- * then releases to select. If released in the dead zone (center),
- * the menu cancels.
+ * **FPS mode** — Activated by holding left mouse button while looking at
+ * an interactable object inside a ship or station.  The menu adapts to
+ * the type of object: doors, terminals, loot containers, fabricators,
+ * medical bays, and airlocks each present their own relevant options.
+ *
+ * In both modes the player moves the mouse toward a segment to highlight
+ * it, then releases to select.  Releasing in the dead zone cancels.
  */
 class RadialMenu {
 public:
-    // Radial menu action options
+    // ── Space-mode actions ─────────────────────────────────────────
     enum class Action {
         NONE = 0,
         ORBIT,
@@ -35,7 +39,40 @@ public:
         KEEP_AT_RANGE,
         LOOK_AT,
         SHOW_INFO,
-        ALIGN_TO
+        ALIGN_TO,
+
+        // ── FPS-mode actions ───────────────────────────────────────
+        FPS_USE,             // Generic "use" / activate
+        FPS_OPEN,            // Open a door / container
+        FPS_CLOSE,           // Close a door
+        FPS_LOCK,            // Lock a door
+        FPS_UNLOCK,          // Unlock a door
+        FPS_HACK,            // Hack a terminal / security door
+        FPS_LOOT_ALL,        // Loot all items from a container
+        FPS_SEARCH,          // Search / examine an object
+        FPS_REPAIR,          // Repair a system / hazard
+        FPS_HEAL,            // Use medical bay for healing
+        FPS_RESTOCK,         // Restock oxygen / supplies
+        FPS_CRAFT,           // Begin crafting at fabricator
+        FPS_EVA_BEGIN,       // Begin EVA sequence (airlock)
+        FPS_EVA_ABORT,       // Abort EVA sequence
+        FPS_ACCESS_TERMINAL, // Access a computer terminal
+        FPS_EXAMINE          // Examine / inspect an interactable
+    };
+
+    /**
+     * Interaction context — describes the type of FPS interactable the
+     * player is targeting.  Determines which actions appear in the menu.
+     */
+    enum class InteractionContext {
+        None = 0,           // No interactable (space mode or nothing targeted)
+        Door,               // Standard interior door
+        SecurityDoor,       // Access-restricted door
+        Airlock,            // EVA airlock
+        Terminal,           // Computer terminal
+        LootContainer,      // Storage / loot box
+        Fabricator,         // Crafting workbench
+        MedicalBay          // Medical / oxygen station
     };
 
     // Callback for when an action is selected (with optional distance)
@@ -47,10 +84,29 @@ public:
 
     /**
      * Open the radial menu at screen position, targeting an entity.
-     * Call when the user holds left-click on an entity.
+     * Call when the user holds left-click on an entity in space.
      * @param distanceToTarget Distance in metres to the target entity (used to disable warp for nearby entities)
      */
     void Open(float screenX, float screenY, const std::string& entityId, float distanceToTarget = 0.0f);
+
+    /**
+     * Open the radial menu in FPS mode for an interactable object.
+     * The menu segments are chosen based on the interaction context.
+     *
+     * @param screenX       Screen X position to center the menu
+     * @param screenY       Screen Y position to center the menu
+     * @param entityId      ID of the interactable entity
+     * @param context       Type of interactable (door, terminal, loot, etc.)
+     * @param displayName   Human-readable label for the target (e.g. "Airlock B-2")
+     * @param isDoorOpen    Hint: true if a door/airlock is currently open
+     * @param isLocked      Hint: true if the target is locked / access-restricted
+     */
+    void OpenFPS(float screenX, float screenY,
+                 const std::string& entityId,
+                 InteractionContext context,
+                 const std::string& displayName = "",
+                 bool isDoorOpen = false,
+                 bool isLocked = false);
 
     /**
      * Close/cancel the radial menu.
@@ -83,6 +139,16 @@ public:
      * Check if menu is currently open.
      */
     bool IsOpen() const { return m_open; }
+
+    /**
+     * Check if the menu is in FPS mode.
+     */
+    bool IsFPSMode() const { return m_fpsMode; }
+
+    /**
+     * Get the current interaction context (FPS mode only).
+     */
+    InteractionContext GetInteractionContext() const { return m_interactionContext; }
 
     /**
      * Set callback for action selection.
@@ -122,6 +188,7 @@ private:
     };
 
     void SetupSegments();
+    void SetupFPSSegments(InteractionContext context, bool isDoorOpen, bool isLocked);
     int GetSegmentAtAngle(float angle) const;
     void UpdateRangeDistance(float dist);
 
@@ -129,12 +196,15 @@ private:
     static constexpr float MIN_WARP_DISTANCE = 150000.0f;
 
     bool m_open;
-    float m_centerX, m_centerY;        // Screen center of the menu
-    float m_mouseX, m_mouseY;          // Current mouse position
-    std::string m_entityId;            // Target entity
-    Action m_highlightedAction;        // Currently highlighted segment
-    int m_rangeDistance = 0;            // Drag-to-range distance (metres)
-    float m_distanceToTarget = 0.0f;   // Distance in metres to target entity
+    bool m_fpsMode = false;                // True when in FPS interaction mode
+    InteractionContext m_interactionContext = InteractionContext::None;
+    std::string m_displayName;             // FPS: human-readable target name
+    float m_centerX, m_centerY;            // Screen center of the menu
+    float m_mouseX, m_mouseY;             // Current mouse position
+    std::string m_entityId;                // Target entity
+    Action m_highlightedAction;            // Currently highlighted segment
+    int m_rangeDistance = 0;               // Drag-to-range distance (metres)
+    float m_distanceToTarget = 0.0f;       // Distance in metres to target entity
 
     /** Check if warp is disabled for the current target (too close). */
     bool isWarpDisabled() const {

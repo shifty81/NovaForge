@@ -57,8 +57,102 @@ void RadialMenu::SetupSegments() {
     }
 }
 
+void RadialMenu::SetupFPSSegments(InteractionContext context, bool isDoorOpen, bool isLocked) {
+    // Build the action list based on context — each interactable type
+    // shows a different set of relevant FPS actions.
+    struct SegmentDef {
+        Action action;
+        const char* label;
+        const char* icon;
+    };
+
+    std::vector<SegmentDef> defs;
+
+    switch (context) {
+        case InteractionContext::Door:
+            if (isDoorOpen) {
+                defs.push_back({ Action::FPS_CLOSE,   "Close",   "X" });
+            } else {
+                defs.push_back({ Action::FPS_OPEN,    "Open",    "O" });
+            }
+            defs.push_back({ Action::FPS_EXAMINE, "Examine", "?" });
+            break;
+
+        case InteractionContext::SecurityDoor:
+            if (isLocked) {
+                defs.push_back({ Action::FPS_UNLOCK,  "Unlock",  "U" });
+                defs.push_back({ Action::FPS_HACK,    "Hack",    "H" });
+            } else if (isDoorOpen) {
+                defs.push_back({ Action::FPS_CLOSE,   "Close",   "X" });
+                defs.push_back({ Action::FPS_LOCK,    "Lock",    "L" });
+            } else {
+                defs.push_back({ Action::FPS_OPEN,    "Open",    "O" });
+                defs.push_back({ Action::FPS_LOCK,    "Lock",    "L" });
+            }
+            defs.push_back({ Action::FPS_EXAMINE, "Examine", "?" });
+            break;
+
+        case InteractionContext::Airlock:
+            defs.push_back({ Action::FPS_EVA_BEGIN,  "Begin EVA",  "E" });
+            defs.push_back({ Action::FPS_EVA_ABORT,  "Abort EVA",  "!" });
+            defs.push_back({ Action::FPS_EXAMINE,    "Examine",    "?" });
+            break;
+
+        case InteractionContext::Terminal:
+            defs.push_back({ Action::FPS_ACCESS_TERMINAL, "Access",  "T" });
+            defs.push_back({ Action::FPS_HACK,            "Hack",    "H" });
+            defs.push_back({ Action::FPS_EXAMINE,         "Examine", "?" });
+            break;
+
+        case InteractionContext::LootContainer:
+            defs.push_back({ Action::FPS_OPEN,     "Open",     "O" });
+            defs.push_back({ Action::FPS_LOOT_ALL, "Loot All", "$" });
+            defs.push_back({ Action::FPS_SEARCH,   "Search",   "S" });
+            defs.push_back({ Action::FPS_EXAMINE,  "Examine",  "?" });
+            break;
+
+        case InteractionContext::Fabricator:
+            defs.push_back({ Action::FPS_CRAFT,   "Craft",   "C" });
+            defs.push_back({ Action::FPS_REPAIR,  "Repair",  "R" });
+            defs.push_back({ Action::FPS_EXAMINE, "Examine", "?" });
+            break;
+
+        case InteractionContext::MedicalBay:
+            defs.push_back({ Action::FPS_HEAL,    "Heal",    "+" });
+            defs.push_back({ Action::FPS_RESTOCK, "Restock", "S" });
+            defs.push_back({ Action::FPS_EXAMINE, "Examine", "?" });
+            break;
+
+        default:
+            defs.push_back({ Action::FPS_USE,     "Use",     "U" });
+            defs.push_back({ Action::FPS_EXAMINE, "Examine", "?" });
+            break;
+    }
+
+    // Layout segments evenly around the circle
+    int numSegments = static_cast<int>(defs.size());
+    if (numSegments == 0) return;
+
+    float segmentAngle = 2.0f * static_cast<float>(M_PI) / numSegments;
+    float startOffset = -static_cast<float>(M_PI) / 2.0f - segmentAngle / 2.0f;
+
+    m_segments.clear();
+    for (int i = 0; i < numSegments; i++) {
+        Segment seg;
+        seg.action = defs[i].action;
+        seg.label = defs[i].label;
+        seg.icon = defs[i].icon;
+        seg.startAngle = startOffset + i * segmentAngle;
+        seg.endAngle = seg.startAngle + segmentAngle;
+        m_segments.push_back(seg);
+    }
+}
+
 void RadialMenu::Open(float screenX, float screenY, const std::string& entityId, float distanceToTarget) {
     m_open = true;
+    m_fpsMode = false;
+    m_interactionContext = InteractionContext::None;
+    m_displayName.clear();
     m_centerX = screenX;
     m_centerY = screenY;
     m_mouseX = screenX;
@@ -67,10 +161,35 @@ void RadialMenu::Open(float screenX, float screenY, const std::string& entityId,
     m_highlightedAction = Action::NONE;
     m_rangeDistance = 0;
     m_distanceToTarget = distanceToTarget;
+    SetupSegments();
+}
+
+void RadialMenu::OpenFPS(float screenX, float screenY,
+                          const std::string& entityId,
+                          InteractionContext context,
+                          const std::string& displayName,
+                          bool isDoorOpen,
+                          bool isLocked) {
+    m_open = true;
+    m_fpsMode = true;
+    m_interactionContext = context;
+    m_displayName = displayName;
+    m_centerX = screenX;
+    m_centerY = screenY;
+    m_mouseX = screenX;
+    m_mouseY = screenY;
+    m_entityId = entityId;
+    m_highlightedAction = Action::NONE;
+    m_rangeDistance = 0;
+    m_distanceToTarget = 0.0f;
+    SetupFPSSegments(context, isDoorOpen, isLocked);
 }
 
 void RadialMenu::Close() {
     m_open = false;
+    m_fpsMode = false;
+    m_interactionContext = InteractionContext::None;
+    m_displayName.clear();
     m_highlightedAction = Action::NONE;
     m_entityId.clear();
 }
@@ -98,7 +217,7 @@ void RadialMenu::UpdateMousePosition(float mouseX, float mouseY) {
     if (segIdx >= 0 && segIdx < static_cast<int>(m_segments.size())) {
         Action candidate = m_segments[segIdx].action;
         // Disable "Warp To" for on-grid entities (within 150km, same as ShipPhysics::MIN_WARP_DISTANCE)
-        if (candidate == Action::WARP_TO && isWarpDisabled()) {
+        if (!m_fpsMode && candidate == Action::WARP_TO && isWarpDisabled()) {
             m_highlightedAction = Action::NONE;
         } else {
             m_highlightedAction = candidate;
@@ -113,6 +232,12 @@ void RadialMenu::UpdateMousePosition(float mouseX, float mouseY) {
 }
 
 void RadialMenu::UpdateRangeDistance(float dist) {
+    // FPS mode has no drag-to-range actions
+    if (m_fpsMode) {
+        m_rangeDistance = 0;
+        return;
+    }
+
     // Only compute range for distance-based actions
     if (m_highlightedAction != Action::ORBIT &&
         m_highlightedAction != Action::KEEP_AT_RANGE) {
@@ -201,6 +326,14 @@ void RadialMenu::RenderAtlas(atlas::AtlasContext& ctx) {
     r.drawCircle(center, INNER_RADIUS, atlas::Color(0.02f, 0.03f, 0.05f, 0.9f));
     r.drawCircleOutline(center, INNER_RADIUS, accentDim, 1.0f);
 
+    // In FPS mode, draw the interactable name in the dead-zone center
+    if (m_fpsMode && !m_displayName.empty()) {
+        float nameW = r.measureText(m_displayName.c_str());
+        r.drawText(m_displayName.c_str(),
+                   {center.x - nameW * 0.5f, center.y - 5.0f},
+                   accentTeal);
+    }
+
     // Draw outer ring outline
     r.drawCircleOutline(center, OUTER_RADIUS, accentDim, 1.5f);
 
@@ -211,7 +344,7 @@ void RadialMenu::RenderAtlas(atlas::AtlasContext& ctx) {
         bool highlighted = (seg.action == m_highlightedAction && m_highlightedAction != Action::NONE);
 
         // Check if this action is disabled (e.g. Warp To when target is on-grid)
-        bool disabled = (seg.action == Action::WARP_TO && isWarpDisabled());
+        bool disabled = (!m_fpsMode && seg.action == Action::WARP_TO && isWarpDisabled());
 
         // Highlight the selected segment
         if (highlighted && !disabled) {

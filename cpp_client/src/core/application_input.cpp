@@ -282,6 +282,77 @@ void Application::handleMouseMove(double x, double y, double deltaX, double delt
             
             // Only open if not dragging significantly
             if (dist < 10.0) {
+                // ── FPS mode: open context-aware FPS radial menu ───────
+                if (m_gameState == GameState::StationInterior ||
+                    m_gameState == GameState::ShipInterior) {
+                    // In FPS mode, open the radial menu in the screen center
+                    // with context based on what the player is looking at
+                    float cx = static_cast<float>(m_window->getWidth()) * 0.5f;
+                    float cy = static_cast<float>(m_window->getHeight()) * 0.5f;
+
+                    // Pick the nearest interactable entity from the crosshair
+                    auto entities = m_gameClient->getEntityManager().getAllEntities();
+                    std::string nearestId;
+                    float nearestDist = 4.0f; // 4m max FPS interaction range
+                    UI::RadialMenu::InteractionContext fpsCtx =
+                        UI::RadialMenu::InteractionContext::None;
+                    std::string fpsDisplayName;
+                    bool fpsIsDoorOpen = false;
+                    bool fpsIsLocked = false;
+
+                    for (const auto& pair : entities) {
+                        const auto& ent = pair.second;
+                        if (!ent) continue;
+                        // Check tag for interactable type
+                        const std::string& tag = ent->getTag();
+                        if (tag.empty()) continue;
+
+                        // Determine distance (simplified — use entity distance)
+                        float d = glm::distance(m_camera->getPosition(), ent->getPosition());
+                        if (d < nearestDist) {
+                            UI::RadialMenu::InteractionContext ctx =
+                                UI::RadialMenu::InteractionContext::None;
+                            bool doorOpen = false;
+                            bool locked = false;
+
+                            if (tag == "door") {
+                                ctx = UI::RadialMenu::InteractionContext::Door;
+                            } else if (tag == "security_door") {
+                                ctx = UI::RadialMenu::InteractionContext::SecurityDoor;
+                                locked = true; // Default hint, actual state from server
+                            } else if (tag == "airlock") {
+                                ctx = UI::RadialMenu::InteractionContext::Airlock;
+                            } else if (tag == "terminal") {
+                                ctx = UI::RadialMenu::InteractionContext::Terminal;
+                            } else if (tag == "loot_container") {
+                                ctx = UI::RadialMenu::InteractionContext::LootContainer;
+                            } else if (tag == "fabricator") {
+                                ctx = UI::RadialMenu::InteractionContext::Fabricator;
+                            } else if (tag == "medical_bay") {
+                                ctx = UI::RadialMenu::InteractionContext::MedicalBay;
+                            }
+
+                            if (ctx != UI::RadialMenu::InteractionContext::None) {
+                                nearestDist = d;
+                                nearestId = pair.first;
+                                fpsCtx = ctx;
+                                fpsDisplayName = ent->getName().empty() ? tag : ent->getName();
+                                fpsIsDoorOpen = doorOpen;
+                                fpsIsLocked = locked;
+                            }
+                        }
+                    }
+
+                    if (!nearestId.empty()) {
+                        m_radialMenu->OpenFPS(cx, cy, nearestId, fpsCtx,
+                                              fpsDisplayName, fpsIsDoorOpen, fpsIsLocked);
+                        m_radialMenuOpen = true;
+                        std::cout << "[Radial Menu] FPS mode opened for: " << fpsDisplayName
+                                  << " (" << nearestId << ")" << std::endl;
+                    }
+                }
+                // ── Space mode: open standard space radial menu ────────
+                else {
                 // Pick entity at hold position
                 auto entities = m_gameClient->getEntityManager().getAllEntities();
                 std::vector<std::shared_ptr<Entity>> entityList;
@@ -312,6 +383,7 @@ void Application::handleMouseMove(double x, double y, double deltaX, double delt
                     std::cout << "[Radial Menu] Opened for entity: " << pickedId
                               << " (distance: " << (distToTarget / 1000.0f) << " km)" << std::endl;
                 }
+                } // end space mode
             }
         }
     }
