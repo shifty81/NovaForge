@@ -1,0 +1,1047 @@
+Log file: /c/GIT PROJECTS/NovaForge/logs/build_all_20260301_144315.log
+
+================================================
+Nova Forge - Windows Build (All Targets)
+================================================
+
+Checking dependencies...
+  CMake cmake version 4.2.3
+  Visual Studio: Visual Studio 17 2022
+  vcpkg: C:\vcpkg
+
+Configuration:
+  Build Type:   Release
+  Build Dir:    /c/GIT PROJECTS/NovaForge/build
+  Output Dir:   /c/GIT PROJECTS/NovaForge/build/bin
+  Run Tests:    false
+  Generator:    Visual Studio 17 2022
+  Architecture: x64
+
+Configuring CMake (Release) — all targets...
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.19045.
+-- The C compiler identification is MSVC 19.38.33145.0
+-- The CXX compiler identification is MSVC 19.38.33145.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Adding Atlas Engine library...
+-- Adding Atlas Editor...
+-- Found OpenGL: opengl32
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- AtlasEditor: using system GLEW
+-- Adding Atlas Engine tests...
+-- GLM found -- camera & character select tests enabled
+-- Adding C++ Client to solution...
+-- OpenAL found - audio support enabled
+-- GLEW found - using system GLEW
+-- Using system GLEW (GLAD not needed)
+-- Using system nlohmann/json
+-- Using bundled STB image loader
+-- Using bundled tinyobjloader for .obj model loading
+-- Using bundled tinygltf for .gltf/.glb model loading
+-- RmlUi disabled (UI stubs only). Enable with -DUSE_RMLUI=ON
+-- 7z not found - install p7zip-full (Linux) or 7-Zip (Windows) to auto-extract ship models
+-- 7z not found - testing model archives will be extracted at runtime by ReferenceModelAnalyzer
+-- Building test suite...
+-- 
+-- Atlas Client Configuration:
+--   C++ Standard: 17
+--   OpenGL: 
+--   Use System Libraries: ON
+--   Build Tests: ON
+--   RmlUi Enabled: OFF
+-- 
+-- Adding C++ Server to solution...
+-- Found ZLIB: optimized;C:/vcpkg/installed/x64-windows/lib/zlib.lib;debug;C:/vcpkg/installed/x64-windows/debug/lib/zlibd.lib (found version "1.3.1")
+CMake Warning at cpp_server/CMakeLists.txt:432 (message):
+  Steamworks SDK not found.  Steam integration will be disabled.
+
+
+CMake Warning at cpp_server/CMakeLists.txt:433 (message):
+  Download SDK from: https://partner.steamgames.com/
+
+
+-- 
+-- Atlas Dedicated Server Configuration:
+--   C++ Standard: 17
+--   Steam Integration: OFF
+--   Build Tests: ON
+-- 
+-- 
+-- Atlas Configuration:
+--   C++ Standard: 17
+--   Atlas Engine:  ON
+--   Atlas Editor:  ON
+--   Atlas Tests:   ON
+--   Game Client:   ON
+--   Game Server:   ON
+-- 
+-- After generation, open the solution file in Visual Studio:
+--   build_vs/Atlas.sln
+-- 
+-- Configuring done (4.9s)
+-- Generating done (0.3s)
+-- Build files have been written to: C:/GIT PROJECTS/NovaForge/build
+
+Building all targets (Engine, Editor, Client, Server, Tests)...
+MSBuild version 17.14.40+3e7442088 for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  test_post_processing.cpp
+  test_layout_manager.cpp
+  test_entity_sync.cpp
+  test_network.cpp
+  test_model_analyzer.cpp
+  test_deferred_rendering.cpp
+  test_server_responses.cpp
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/engine/CMakeLists.txt
+  test_shadow_mapping.cpp
+  layout_manager.cpp
+  tcp_client.cpp
+  window.cpp
+  window.cpp
+  Engine.cpp
+  test_ship_physics.cpp
+  window.cpp
+  reference_model_analyzer.cpp
+  Generating Code...
+  shader.cpp
+  Logger.cpp
+  shader.cpp
+  tcp_client.cpp
+  shader.cpp
+  ship_physics.cpp
+  entity.cpp
+  protocol_handler.cpp
+  EventBus.cpp
+  Generating Code...
+  entity_manager.cpp
+  procedural_mesh_ops.cpp
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  ECS.cpp
+  test_ship_physics.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_ship_physics.exe
+  protocol_handler.cpp
+  GraphVM.cpp
+  camera.cpp
+  camera.cpp
+  entity_message_parser.cpp
+  test_asteroid_field.cpp
+  camera.cpp
+  ship_generation_rules.cpp
+  GraphCompiler.cpp
+  mesh.cpp
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  lighting.cpp
+  network_manager.cpp
+  mesh.cpp
+  AssetRegistry.cpp
+  gbuffer.cpp
+  window.cpp
+  Generating Code...
+  shadow_map.cpp
+  post_processing.cpp
+  network_manager.cpp
+  lighting.cpp
+  AssetBinary.cpp
+  shader.cpp
+  Generating Code...
+  lighting.cpp
+  Generating Code...
+  test_atlas_ui.cpp
+  NetContext.cpp
+  Generating Code...
+  input_handler.cpp
+  NetworkQualityMonitor.cpp
+  input_handler.cpp
+  NetworkInterpolationBuffer.cpp
+  Generating Code...
+  atlas_renderer.cpp
+  DeltaCompression.cpp
+  camera.cpp
+  Generating Code...
+  Generating Code...
+  JitterBuffer.cpp
+  mesh.cpp
+  LagCompensation.cpp
+  atlas_context.cpp
+  TickScheduler.cpp
+  instanced_renderer.cpp
+  AlertStack.cpp
+  AIMinerStateMachine.cpp
+  atlas_widgets.cpp
+  asteroid_field_renderer.cpp
+  AIHaulerStateMachine.cpp
+  atlas_hud.cpp
+  AIPirateStateMachine.cpp
+  test_post_processing.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_post_processing.exe
+  AISecurityStateMachine.cpp
+  test_model_analyzer.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_model_analyzer.exe
+  input_handler.cpp
+  atlas_console.cpp
+  test_entity_sync.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_entity_sync.exe
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Generating Code...
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_server/CMakeLists.txt
+  Generating Code...
+  test_audio_system.cpp
+  atlas_pause_menu.cpp
+  test_systems.cpp
+  atlas_title_screen.cpp
+  context_menu.cpp
+  audio_manager.cpp
+  radial_menu.cpp
+  audio_generator.cpp
+  Generating Code...
+  Generating Code...
+  test_server_responses.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_server_responses.exe
+  test_shadow_mapping.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_shadow_mapping.exe
+  test_deferred_rendering.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_deferred_rendering.exe
+  Compiling...
+  AIWalletSystem.cpp
+  test_asteroid_field.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_asteroid_field.exe
+  AITraderStateMachine.cpp
+  test_audio_system.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_audio_system.exe
+  test_network.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_network.exe
+  AIIndustrialistStateMachine.cpp
+  entity.cpp
+  AdvancedMissionGenerator.cpp
+  world.cpp
+  UniverseMapSystem.cpp
+  test_layout_manager.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_layout_manager.exe
+  capacitor_system.cpp
+  AIProfileLoader.cpp
+  EconomyRulesLoader.cpp
+  PirateSecurityCoordinator.cpp
+  CubeSphereLayout.cpp
+  shield_recharge_system.cpp
+  VoxelGridLayout.cpp
+  PhysicsWorld.cpp
+  InputManager.cpp
+  test_atlas_ui.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_atlas_ui.exe
+  Camera.cpp
+  AudioEngine.cpp
+  AnimationGraph.cpp
+  weapon_system.cpp
+  AnimationNodes.cpp
+  PluginSystem.cpp
+  Generating Code...
+  combat_system.cpp
+  targeting_system.cpp
+  AtlasEngine.vcxproj -> C:\GIT PROJECTS\NovaForge\build\engine\Release\AtlasEngine.lib
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_server/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/editor/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/atlas_tests/CMakeLists.txt
+  main.cpp
+  main.cpp
+  main.cpp
+  main.cpp
+  application.cpp
+  test_graphvm.cpp
+  server.cpp
+  test_ecs.cpp
+C:\GIT PROJECTS\NovaForge\editor\main.cpp(121,19): error C2660: 'atlas::editor::SceneGraphPanel::SetVisible': function does not take 1 arguments [C:\GIT PROJECTS\NovaForge\build\editor\AtlasEditor.vcxproj]
+      C:\GIT PROJECTS\NovaForge\editor\tools\SceneGraphPanel.h(83,10):
+      see declaration of 'atlas::editor::SceneGraphPanel::SetVisible'
+      C:\GIT PROJECTS\NovaForge\editor\main.cpp(121,19):
+      while trying to match the argument list '(bool)'
+  
+C:\GIT PROJECTS\NovaForge\editor\main.cpp(125,41): error C3481: 'layout': lambda capture variable not found [C:\GIT PROJECTS\NovaForge\build\editor\AtlasEditor.vcxproj]
+C:\GIT PROJECTS\NovaForge\editor\main.cpp(125,50): error C3481: 'liveScene': lambda capture variable not found [C:\GIT PROJECTS\NovaForge\build\editor\AtlasEditor.vcxproj]
+  EditorLayout.cpp
+  movement_system.cpp
+  test_components.cpp
+  application_rendering.cpp
+  game_session.cpp
+  test_asset.cpp
+  EditorMenuBar.cpp
+  ECSInspectorPanel.cpp
+  application_input.cpp
+  test_net.cpp
+  NetInspectorPanel.cpp
+  game_session_network.cpp
+  ai_system.cpp
+  test_net_queue.cpp
+  ConsolePanel.cpp
+  application_entities.cpp
+  test_net_quality.cpp
+  GamePackagerPanel.cpp
+  PCGPreviewPanel.cpp
+  test_world.cpp
+  application_movement.cpp
+  test_compiler.cpp
+  ship_database.cpp
+  GenerationStylePanel.cpp
+  application_state.cpp
+  test_engine.cpp
+  wormhole_database.cpp
+  game_session_entities.cpp
+  test_console.cpp
+  AssetStylePanel.cpp
+  game_client.cpp
+  npc_database.cpp
+  test_hud_panels.cpp
+  ShipArchetypePanel.cpp
+  wormhole_system.cpp
+  test_hud_control_ring.cpp
+  test_pcg_preview.cpp
+  ViewportPanel.cpp
+  embedded_server.cpp
+  test_lowpoly_character.cpp
+  CharacterSelectPanel.cpp
+  session_manager.cpp
+  game_session_combat.cpp
+  test_character_select.cpp
+  fleet_system.cpp
+  PCGOverrideStore.cpp
+  entity.cpp
+  test_generation_style.cpp
+  entity_manager.cpp
+  LiveSceneManager.cpp
+  test_viewport.cpp
+  GalaxyMapPanel.cpp
+  entity_message_parser.cpp
+  test_editor_panels.cpp
+  game_session_utils.cpp
+  FleetFormationPanel.cpp
+  mission_system.cpp
+  Generating Code...
+  game_session_stations.cpp
+  file_logger.cpp
+  skill_system.cpp
+  window.cpp
+  MissionEditorPanel.cpp
+  shader.cpp
+  game_session_movement.cpp
+  module_system.cpp
+  camera.cpp
+  SceneGraphPanel.cpp
+  renderer.cpp
+  game_session_scanning.cpp
+  DataBrowserPanel.cpp
+  Generating Code...
+  mesh.cpp
+  model.cpp
+  inventory_system.cpp
+  game_session_missions.cpp
+  loot_system.cpp
+  Generating Code...
+  tcp_server.cpp
+  Generating Code...
+  protocol_handler.cpp
+  server_config.cpp
+  steam_auth.cpp
+  Compiling...
+  ModuleEditorPanel.cpp
+  whitelist.cpp
+  NPCEditorPanel.cpp
+  name_generator.cpp
+  AIAggregator.cpp
+  logger.cpp
+  TemplateAIBackend.cpp
+  server_metrics.cpp
+  UndoStack.cpp
+  KeybindManager.cpp
+  server_console.cpp
+  pcg_manager.cpp
+  ship_generator.cpp
+  station_generator.cpp
+  Generating Code...
+  interior_generator.cpp
+  interior_budget.cpp
+  constraint_solver.cpp
+  pcg_trace.cpp
+  lowpoly_character_generator.cpp
+  generation_style.cpp
+  pcg_asset_style.cpp
+  ship_archetype.cpp
+  spine_hull_generator.cpp
+  turret_placement_system.cpp
+  turret_generator.cpp
+  Generating Code...
+  Compiling...
+  entity.cpp
+  world.cpp
+  Compiling...
+  ship_part_library.cpp
+  movement_system.cpp
+  ship_generation_rules.cpp
+  procedural_mesh_ops.cpp
+  combat_system.cpp
+  procedural_ship_generator.cpp
+  reference_model_analyzer.cpp
+  Compiling...
+  galaxy_generator.cpp
+  character_mesh_system.cpp
+  ai_system.cpp
+  texture.cpp
+  window.cpp
+  particle_system.cpp
+  atlas_renderer.cpp
+  healthbar_renderer.cpp
+  targeting_system.cpp
+  atlas_context.cpp
+  visual_effects.cpp
+  atlas_widgets.cpp
+  warp_effect_renderer.cpp
+  input_handler.cpp
+  Compiling...
+  test_live_scene.cpp
+  pbr_materials.cpp
+  Generating Code...
+  capacitor_system.cpp
+  test_sim_systems.cpp
+  lod_manager.cpp
+  test_galaxy_map.cpp
+  frustum_culler.cpp
+  test_eventbus.cpp
+  instanced_renderer.cpp
+  test_fleet_formation.cpp
+  shield_recharge_system.cpp
+  asteroid_field_renderer.cpp
+  station_renderer.cpp
+  test_mission_editor.cpp
+  weapon_system.cpp
+  lighting.cpp
+  shadow_map.cpp
+  Compiling...
+  insurance_system.cpp
+  gbuffer.cpp
+  wormhole_system.cpp
+  test_net_interpolation.cpp
+  test_delta_compression.cpp
+  post_processing.cpp
+  test_jitter_buffer.cpp
+  test_lag_compensation.cpp
+  test_scene_graph.cpp
+  captain_personality_system.cpp
+  Generating Code...
+  test_keybind_manager.cpp
+  fleet_system.cpp
+  test_alert_stack.cpp
+  test_ai_miner.cpp
+  test_ai_hauler.cpp
+  test_ai_pirate.cpp
+  corporation_system.cpp
+  test_ai_security.cpp
+  test_ai_wallet.cpp
+  test_ai_trader.cpp
+  mission_system.cpp
+  test_ai_industrialist.cpp
+  Generating Code...
+  bounty_system.cpp
+  skill_system.cpp
+  Compiling...
+  test_advanced_mission.cpp
+  test_universe_map.cpp
+  Compiling...
+  tcp_client.cpp
+  market_system.cpp
+  test_ai_profile.cpp
+  test_economy_rules.cpp
+  test_pirate_security_coordinator.cpp
+  module_system.cpp
+  protocol_handler.cpp
+  test_engine_frame_callback.cpp
+  drone_system.cpp
+  test_editor_menubar.cpp
+  test_data_editors.cpp
+  network_manager.cpp
+  ConsolePanel.cpp
+  inventory_system.cpp
+  PCGPreviewPanel.cpp
+  contract_system.cpp
+  GenerationStylePanel.cpp
+  input_handler.cpp
+  loot_system.cpp
+  entity_picker.cpp
+  AssetStylePanel.cpp
+  context_menu.cpp
+  ShipArchetypePanel.cpp
+  pi_system.cpp
+  radial_menu.cpp
+  atlas_renderer.cpp
+  GamePackagerPanel.cpp
+  insurance_system.cpp
+  ViewportPanel.cpp
+  atlas_context.cpp
+  manufacturing_system.cpp
+  PCGOverrideStore.cpp
+  atlas_widgets.cpp
+  atlas_hud.cpp
+  LiveSceneManager.cpp
+  captain_personality_system.cpp
+  atlas_console.cpp
+  GalaxyMapPanel.cpp
+  research_system.cpp
+  FleetFormationPanel.cpp
+  atlas_pause_menu.cpp
+  atlas_title_screen.cpp
+  corporation_system.cpp
+  solar_system_scene.cpp
+  chat_system.cpp
+  ship_physics.cpp
+  MissionEditorPanel.cpp
+  character_mesh_system.cpp
+  bounty_system.cpp
+  character_animation_system.cpp
+  fps_hand_system.cpp
+  character_creation_system.cpp
+  equipment_attachment_system.cpp
+  Generating Code...
+  Generating Code...
+  Generating Code...
+  tournament_system.cpp
+  leaderboard_system.cpp
+  Compiling...
+  market_system.cpp
+  station_system.cpp
+  Compiling...
+  SceneGraphPanel.cpp
+  DataBrowserPanel.cpp
+  drone_system.cpp
+  ModuleEditorPanel.cpp
+  NPCEditorPanel.cpp
+  wreck_salvage_system.cpp
+  AIAggregator.cpp
+  contract_system.cpp
+  TemplateAIBackend.cpp
+  Compiling...
+  audio_manager.cpp
+  UndoStack.cpp
+  audio_generator.cpp
+  KeybindManager.cpp
+  Generating Code...
+  fleet_morale_system.cpp
+  pi_system.cpp
+  ECSInspectorPanel.cpp
+  NetInspectorPanel.cpp
+  atlas_client.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\atlas_client.exe
+  	Copying shaders, assets, and UI resources next to executable	Ensuring models/ships directory exists next to executable
+  EditorLayout.cpp
+  fleet_chatter_system.cpp
+  EditorMenuBar.cpp
+  manufacturing_system.cpp
+  atlas_renderer.cpp
+  atlas_context.cpp
+  warp_anomaly_system.cpp
+  research_system.cpp
+  atlas_widgets.cpp
+  atlas_hud.cpp
+  pcg_manager.cpp
+  ship_generator.cpp
+  station_generator.cpp
+  interior_generator.cpp
+  captain_relationship_system.cpp
+  chat_system.cpp
+  Generating Code...
+  Generating Code...
+  character_creation_system.cpp
+  tournament_system.cpp
+  Compiling...
+  emotional_arc_system.cpp
+  leaderboard_system.cpp
+  Compiling...
+  interior_budget.cpp
+  constraint_solver.cpp
+  pcg_trace.cpp
+  lowpoly_character_generator.cpp
+  generation_style.cpp
+  fleet_cargo_system.cpp
+  station_system.cpp
+  pcg_asset_style.cpp
+  ship_archetype.cpp
+  tactical_overlay_system.cpp
+  spine_hull_generator.cpp
+  wreck_salvage_system.cpp
+  turret_placement_system.cpp
+  turret_generator.cpp
+  galaxy_generator.cpp
+  economy_driven_generator.cpp
+  npc_encounter_generator.cpp
+  mining_system.cpp
+  damage_state_generator.cpp
+  fleet_morale_system.cpp
+  procedural_texture_generator.cpp
+  shield_effect_generator.cpp
+  test_game_state.cpp
+  camera.cpp
+  fleet_formation_system.cpp
+  CharacterSelectPanel.cpp
+  fleet_chatter_system.cpp
+  character_mesh_system.cpp
+  Generating Code...
+  captain_memory_system.cpp
+  warp_anomaly_system.cpp
+  ship_fitting_system.cpp
+  captain_relationship_system.cpp
+  warp_cinematic_system.cpp
+  emotional_arc_system.cpp
+  AtlasTests.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\AtlasTests.exe
+  warp_hud_travel_mode_system.cpp
+  fleet_cargo_system.cpp
+  warp_auto_comfort_system.cpp
+  tactical_overlay_system.cpp
+  refining_system.cpp
+  mining_system.cpp
+  anomaly_system.cpp
+  Generating Code...
+  reputation_system.cpp
+  scanner_system.cpp
+  Compiling...
+  fleet_formation_system.cpp
+  difficulty_scaling_system.cpp
+  captain_memory_system.cpp
+  mission_template_system.cpp
+  ship_fitting_system.cpp
+  mission_generator_system.cpp
+  warp_cinematic_system.cpp
+  lod_system.cpp
+  warp_hud_travel_mode_system.cpp
+  spatial_hash_system.cpp
+  warp_auto_comfort_system.cpp
+  background_simulation_system.cpp
+  refining_system.cpp
+  Generating Code...
+  anomaly_system.cpp
+  reputation_system.cpp
+  Compiling...
+  npc_intent_system.cpp
+  scanner_system.cpp
+  npc_behavior_tree_system.cpp
+  difficulty_scaling_system.cpp
+  combat_threat_system.cpp
+  mission_template_system.cpp
+  security_response_system.cpp
+  mission_generator_system.cpp
+  ambient_traffic_system.cpp
+  lod_system.cpp
+  snapshot_replication_system.cpp
+  spatial_hash_system.cpp
+  interest_management_system.cpp
+  background_simulation_system.cpp
+  fleet_progression_system.cpp
+  npc_intent_system.cpp
+  station_deployment_system.cpp
+  npc_behavior_tree_system.cpp
+  fleet_warp_formation_system.cpp
+  combat_threat_system.cpp
+  warp_meditation_system.cpp
+  security_response_system.cpp
+  rumor_questline_system.cpp
+  Generating Code...
+  captain_departure_system.cpp
+  captain_transfer_system.cpp
+  Compiling...
+  ambient_traffic_system.cpp
+  npc_rerouting_system.cpp
+  snapshot_replication_system.cpp
+  local_reputation_system.cpp
+  interest_management_system.cpp
+  station_news_system.cpp
+  fleet_progression_system.cpp
+  wreck_persistence_system.cpp
+  station_deployment_system.cpp
+  fleet_history_system.cpp
+  fleet_warp_formation_system.cpp
+  rig_system.cpp
+  warp_meditation_system.cpp
+  Generating Code...
+  rumor_questline_system.cpp
+  captain_departure_system.cpp
+  Compiling...
+  legend_system.cpp
+  captain_transfer_system.cpp
+  ancient_tech_system.cpp
+  npc_rerouting_system.cpp
+  docking_system.cpp
+  local_reputation_system.cpp
+  survival_system.cpp
+  station_news_system.cpp
+  menu_system.cpp
+  wreck_persistence_system.cpp
+  crew_system.cpp
+  fleet_history_system.cpp
+  salvage_exploration_system.cpp
+  rig_system.cpp
+  market_order_system.cpp
+  legend_system.cpp
+  ai_economic_actor_system.cpp
+  ancient_tech_system.cpp
+  turret_ai_system.cpp
+  docking_system.cpp
+  titan_assembly_system.cpp
+  alliance_system.cpp
+  survival_system.cpp
+  sovereignty_system.cpp
+  Generating Code...
+  war_declaration_system.cpp
+  convoy_ambush_system.cpp
+  Compiling...
+  menu_system.cpp
+  npc_dialogue_system.cpp
+  crew_system.cpp
+  station_monument_system.cpp
+  salvage_exploration_system.cpp
+  information_propagation_system.cpp
+  market_order_system.cpp
+  crew_activity_system.cpp
+  ai_economic_actor_system.cpp
+  visual_cue_system.cpp
+  turret_ai_system.cpp
+  Generating Code...
+  titan_assembly_system.cpp
+  alliance_system.cpp
+  sovereignty_system.cpp
+  Compiling...
+  supply_demand_system.cpp
+  war_declaration_system.cpp
+  black_market_system.cpp
+  information_propagation_system.cpp
+  price_history_system.cpp
+  crew_activity_system.cpp
+  propaganda_system.cpp
+  visual_cue_system.cpp
+  rest_station_system.cpp
+  supply_demand_system.cpp
+  myth_boss_system.cpp
+  black_market_system.cpp
+  ancient_tech_upgrade_system.cpp
+  price_history_system.cpp
+  mod_manifest_system.cpp
+  propaganda_system.cpp
+  ancient_ai_remnant_system.cpp
+  rest_station_system.cpp
+  character_creation_screen_system.cpp
+  myth_boss_system.cpp
+  view_mode_transition_system.cpp
+  ancient_tech_upgrade_system.cpp
+  station_hangar_system.cpp
+  Generating Code...
+  tether_docking_system.cpp
+  fps_spawn_system.cpp
+  Compiling...
+  mod_manifest_system.cpp
+  interior_door_system.cpp
+  ancient_ai_remnant_system.cpp
+  fps_character_controller_system.cpp
+  character_creation_screen_system.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244: 'initializing': conversion from '_Ty' to '_Ty1', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:             _Ty1=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16):
+      the template instantiation context (the oldest one first) is
+          C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(188,18):
+          see reference to function template instantiation 'std::pair<float,float>::pair<int,int,0>(_Other1 &&,_Other2 &&) noexcept' being compiled
+          with
+          [
+              _Other1=int,
+              _Other2=int
+          ]
+              C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(188,18):
+              see the first reference to 'std::pair<float,float>::pair' in 'atlas::systems::FPSCharacterControllerSystem::getLookDirection'
+  
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:             _Ty2=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244: 'initializing': conversion from '_Ty' to '_Ty', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:             _Ty=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47):
+      the template instantiation context (the oldest one first) is
+          C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(178,18):
+          see reference to function template instantiation 'std::tuple<float,float,float>::tuple<int,int,int,0>(_This2 &&,int &&,int &&) noexcept' being compiled
+          with
+          [
+              _This2=int
+          ]
+              C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(178,18):
+              see the first reference to 'std::tuple<float,float,float>::tuple' in 'atlas::systems::FPSCharacterControllerSystem::getPosition'
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(361,16):
+          see reference to function template instantiation 'std::tuple<float,float,float>::tuple<std::_Exact_args_t,_Ty,_Ty,_Ty,0>(_Tag,_This2 &&,_Ty &&,_Ty &&)' being compiled
+          with
+          [
+              _Ty=int,
+              _Tag=std::_Exact_args_t,
+              _This2=int
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(315,102):
+          see reference to function template instantiation 'std::_Tuple_val<_This>::_Tuple_val<_Ty>(_Other &&)' being compiled
+          with
+          [
+              _This=float,
+              _Ty=int,
+              _Other=int
+          ]
+  
+  eva_airlock_system.cpp
+  view_mode_transition_system.cpp
+  fps_interaction_system.cpp
+  station_hangar_system.cpp
+  fps_combat_system.cpp
+  tether_docking_system.cpp
+  fps_inventory_system.cpp
+  fps_spawn_system.cpp
+  Generating Code...
+  interior_door_system.cpp
+  fps_character_controller_system.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244: 'initializing': conversion from '_Ty' to '_Ty1', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:             _Ty1=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16):
+      the template instantiation context (the oldest one first) is
+          C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(188,18):
+          see reference to function template instantiation 'std::pair<float,float>::pair<int,int,0>(_Other1 &&,_Other2 &&) noexcept' being compiled
+          with
+          [
+              _Other1=int,
+              _Other2=int
+          ]
+              C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(188,18):
+              see the first reference to 'std::pair<float,float>::pair' in 'atlas::systems::FPSCharacterControllerSystem::getLookDirection'
+  
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:             _Ty2=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+  
+  Compiling...
+  ship_interior_layout_system.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244: 'initializing': conversion from '_Ty' to '_Ty', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:             _Ty=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47):
+      the template instantiation context (the oldest one first) is
+          C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(178,18):
+          see reference to function template instantiation 'std::tuple<float,float,float>::tuple<int,int,int,0>(_This2 &&,int &&,int &&) noexcept' being compiled
+          with
+          [
+              _This2=int
+          ]
+              C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(178,18):
+              see the first reference to 'std::tuple<float,float,float>::tuple' in 'atlas::systems::FPSCharacterControllerSystem::getPosition'
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(361,16):
+          see reference to function template instantiation 'std::tuple<float,float,float>::tuple<std::_Exact_args_t,_Ty,_Ty,_Ty,0>(_Tag,_This2 &&,_Ty &&,_Ty &&)' being compiled
+          with
+          [
+              _Ty=int,
+              _Tag=std::_Exact_args_t,
+              _This2=int
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(315,102):
+          see reference to function template instantiation 'std::_Tuple_val<_This>::_Tuple_val<_Ty>(_Other &&)' being compiled
+          with
+          [
+              _This=float,
+              _Ty=int,
+              _Other=int
+          ]
+  
+  eva_airlock_system.cpp
+  environmental_hazard_system.cpp
+  fps_interaction_system.cpp
+  fps_objective_system.cpp
+  fps_combat_system.cpp
+  wing_management_system.cpp
+  fps_inventory_system.cpp
+  economic_flow_system.cpp
+  ship_interior_layout_system.cpp
+  world_persistence.cpp
+  world_serializer.cpp
+  environmental_hazard_system.cpp
+  fps_objective_system.cpp
+  world_deserializer.cpp
+  wing_management_system.cpp
+  persistence_json_utils.cpp
+  world_persistence_compressed.cpp
+  logger.cpp
+  economic_flow_system.cpp
+  server_metrics.cpp
+  server_console.cpp
+  server.cpp
+  ship_database.cpp
+  npc_database.cpp
+  game_session.cpp
+  Generating Code...
+  game_session_network.cpp
+  game_session_entities.cpp
+  Compiling...
+  wormhole_database.cpp
+  world_persistence.cpp
+  world_serializer.cpp
+  game_session_combat.cpp
+  world_deserializer.cpp
+  game_session_utils.cpp
+  game_session_stations.cpp
+  persistence_json_utils.cpp
+  world_persistence_compressed.cpp
+  pcg_manager.cpp
+  ship_generator.cpp
+  fleet_doctrine.cpp
+  room_graph.cpp
+  Generating Code...
+  deck_graph.cpp
+  elevator_system.cpp
+  hull_mesher.cpp
+  capital_ship_generator.cpp
+  ship_designer.cpp
+  snappable_grid.cpp
+  station_generator.cpp
+  salvage_system.cpp
+  rover_system.cpp
+  collision_manager.cpp
+  Generating Code...
+  Compiling...
+  game_session_movement.cpp
+  Compiling...
+  asteroid_field_generator.cpp
+  anomaly_generator.cpp
+  npc_encounter_generator.cpp
+  game_session_scanning.cpp
+  pcg_trace.cpp
+  constraint_solver.cpp
+  weapon_socket.cpp
+  pcg_verify.cpp
+  interior_budget.cpp
+  interior_generator.cpp
+  character_mesh_system.cpp
+  lowpoly_character_generator.cpp
+  game_session_missions.cpp
+  turret_generator.cpp
+  planet_generator.cpp
+  habitat_generator.cpp
+  grav_bike_generator.cpp
+  spine_hull_generator.cpp
+  terrain_generator.cpp
+  turret_placement_system.cpp
+  tcp_server.cpp
+  damage_state_generator.cpp
+  procedural_texture_generator.cpp
+  Generating Code...
+  protocol_handler.cpp
+  server_config.cpp
+  steam_auth.cpp
+  Compiling...
+  shield_effect_generator.cpp
+  whitelist.cpp
+  economy_driven_generator.cpp
+  star_system_generator.cpp
+  name_generator.cpp
+  galaxy_generator.cpp
+  pcg_manager.cpp
+  ship_generator.cpp
+  generation_style.cpp
+  fleet_doctrine.cpp
+  room_graph.cpp
+  pcg_asset_style.cpp
+  deck_graph.cpp
+  elevator_system.cpp
+  hull_mesher.cpp
+  ship_archetype.cpp
+  capital_ship_generator.cpp
+  ship_designer.cpp
+  snappable_grid.cpp
+  Generating Code...
+  station_generator.cpp
+  Generating Code...
+  Compiling...
+  salvage_system.cpp
+  rover_system.cpp
+  atlas_dedicated_server.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\atlas_dedicated_server.exe
+  collision_manager.cpp
+  asteroid_field_generator.cpp
+  anomaly_generator.cpp
+  npc_encounter_generator.cpp
+  pcg_trace.cpp
+  constraint_solver.cpp
+  weapon_socket.cpp
+  pcg_verify.cpp
+  interior_budget.cpp
+  interior_generator.cpp
+  character_mesh_system.cpp
+  lowpoly_character_generator.cpp
+  turret_generator.cpp
+  planet_generator.cpp
+  habitat_generator.cpp
+  grav_bike_generator.cpp
+  spine_hull_generator.cpp
+  terrain_generator.cpp
+  Generating Code...
+  Compiling...
+  turret_placement_system.cpp
+  damage_state_generator.cpp
+  procedural_texture_generator.cpp
+  shield_effect_generator.cpp
+  economy_driven_generator.cpp
+  star_system_generator.cpp
+  galaxy_generator.cpp
+  generation_style.cpp
+  pcg_asset_style.cpp
+  ship_archetype.cpp
+  Generating Code...
+  test_systems.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_systems.exe
