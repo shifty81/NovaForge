@@ -36,7 +36,7 @@ public:
     // Query API
     float getOverallEfficiency(const std::string& entity_id) const;
     float getTotalOutput(const std::string& entity_id) const;
-    float getStageThoughput(const std::string& entity_id, const std::string& stage_name) const;
+    float getStageThroughput(const std::string& entity_id, const std::string& stage_name) const;
     float getBottleneckFactor(const std::string& entity_id, const std::string& stage_name) const;
     int getStageCount(const std::string& entity_id) const;
     bool isChainActive(const std::string& entity_id) const;

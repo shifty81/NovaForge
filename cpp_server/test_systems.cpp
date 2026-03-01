@@ -23268,7 +23268,7 @@ void testProductionChainThroughput() {
     // refining: input=0.5, rate=0.5, eff=1.0, bottleneck=1.0 → 0.25
     float output = sys.getTotalOutput("system1");
     assertTrue(output > 0.0f, "Total output is positive");
-    assertTrue(approxEqual(sys.getStageThoughput("system1", "refining"), 0.25f), "Refining throughput is 0.25");
+    assertTrue(approxEqual(sys.getStageThroughput("system1", "refining"), 0.25f), "Refining throughput is 0.25");
 }
 
 void testProductionChainBottleneck() {

@@ -163,7 +163,7 @@ float ResourceProductionChainSystem::getTotalOutput(const std::string& entity_id
     return chain->total_output;
 }
 
-float ResourceProductionChainSystem::getStageThoughput(const std::string& entity_id, const std::string& stage_name) const {
+float ResourceProductionChainSystem::getStageThroughput(const std::string& entity_id, const std::string& stage_name) const {
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return 0.0f;
 
