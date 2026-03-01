@@ -1,6 +1,7 @@
 #include "KeybindManager.h"
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <filesystem>
 
@@ -236,7 +237,9 @@ bool KeybindManager::DeserializeFromJSON(const std::string& json) {
             size_t kc = json.find(':', keyKey);
             if (kc != std::string::npos) {
                 try { kb.key = std::stoi(json.substr(kc + 1)); }
-                catch (...) { /* keep default */ }
+                catch (const std::exception& e) {
+                    std::cerr << "[KeybindManager] Failed to parse key: " << e.what() << std::endl;
+                }
             }
         }
 
@@ -246,7 +249,9 @@ bool KeybindManager::DeserializeFromJSON(const std::string& json) {
             size_t mc = json.find(':', modKey);
             if (mc != std::string::npos) {
                 try { kb.mods = static_cast<KeyMod>(std::stoi(json.substr(mc + 1))); }
-                catch (...) { /* keep default */ }
+                catch (const std::exception& e) {
+                    std::cerr << "[KeybindManager] Failed to parse mods: " << e.what() << std::endl;
+                }
             }
         }
 

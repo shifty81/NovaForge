@@ -27,10 +27,10 @@ ShipPhysics::ShipPhysics()
     , m_propulsionMultiplier(1.0f)
 {
     // Default frigate stats — tuned for noticeable align time
-    m_stats.mass = 1200000.0f;           // 1.2 million kg
-    m_stats.inertiaModifier = 4.5f;      // Higher inertia for slower, more visible alignment
-    m_stats.maxVelocity = 350.0f;        // 350 m/s (slightly slower for better feel)
-    m_stats.signatureRadius = 35.0f;     // 35m signature
+    m_stats.mass = DEFAULT_FRIGATE_MASS;
+    m_stats.inertiaModifier = DEFAULT_FRIGATE_INERTIA;
+    m_stats.maxVelocity = DEFAULT_FRIGATE_MAX_VELOCITY;
+    m_stats.signatureRadius = DEFAULT_FRIGATE_SIGNATURE;
 }
 
 void ShipPhysics::setShipStats(const ShipStats& stats) {
@@ -120,7 +120,7 @@ void ShipPhysics::updateHeading(float deltaTime) {
             targetHeading = m_velocity / speed;
         } else {
             // Decay angular velocity and roll when stationary
-            m_angularVelocity *= std::max(0.0f, 1.0f - 5.0f * deltaTime);
+            m_angularVelocity *= std::max(0.0f, 1.0f - ANGULAR_DECAY_RATE * deltaTime);
             m_rollAngle *= std::max(0.0f, 1.0f - ROLL_RESPONSE_RATE * deltaTime);
             return;
         }
@@ -133,7 +133,7 @@ void ShipPhysics::updateHeading(float deltaTime) {
 
     if (angleDiff < 0.001f) {
         // Already facing the right direction
-        m_angularVelocity *= std::max(0.0f, 1.0f - 5.0f * deltaTime);
+        m_angularVelocity *= std::max(0.0f, 1.0f - ANGULAR_DECAY_RATE * deltaTime);
         m_rollAngle *= std::max(0.0f, 1.0f - ROLL_RESPONSE_RATE * deltaTime);
         return;
     }
@@ -172,7 +172,7 @@ void ShipPhysics::updateHeading(float deltaTime) {
     // Calculate roll angle — ship banks into the turn direction
     glm::vec3 crossVec = glm::cross(m_heading, targetHeading);
     float rollSign = (crossVec.y >= 0.0f) ? 1.0f : -1.0f;
-    float turnIntensity = std::min(angleDiff / glm::radians(30.0f), 1.0f);
+    float turnIntensity = std::min(angleDiff / glm::radians(ROLL_TURN_INTENSITY_ANGLE), 1.0f);
     float targetRoll = rollSign * turnIntensity * MAX_ROLL_ANGLE;
     float rollBlend = std::min(ROLL_RESPONSE_RATE * deltaTime, 1.0f);
     m_rollAngle += (targetRoll - m_rollAngle) * rollBlend;
@@ -185,7 +185,7 @@ void ShipPhysics::update(float deltaTime) {
             glm::vec3 toTarget = m_navTarget - m_position;
             float distance = glm::length(toTarget);
             
-            if (distance > m_navRange + 10.0f) {
+            if (distance > m_navRange + APPROACH_ARRIVAL_TOLERANCE) {
                 m_desiredDirection = glm::normalize(toTarget);
             } else {
                 m_navMode = NavigationMode::STOPPED;
@@ -204,7 +204,7 @@ void ShipPhysics::update(float deltaTime) {
             float distance = glm::length(toTarget);
             float error = distance - m_navRange;
             
-            if (std::fabs(error) > 50.0f) {
+            if (std::fabs(error) > KEEP_AT_RANGE_TOLERANCE) {
                 if (error > 0) {
                     // Too far, move closer
                     m_desiredDirection = glm::normalize(toTarget);
@@ -439,7 +439,7 @@ void ShipPhysics::updateWarp(float deltaTime) {
         case WarpPhase::ACCELERATING: {
             // Phase 2: Accelerate from subwarp to max warp speed
             // Covers first ~33% of warp distance, or ~1 AU equivalent
-            float accelDuration = 3.0f;  // ~3 seconds to reach max warp
+            float accelDuration = WARP_ACCEL_DURATION;
             float t = std::min(m_warpPhaseTimer / accelDuration, 1.0f);
             
             // Logarithmic acceleration curve
@@ -459,7 +459,7 @@ void ShipPhysics::updateWarp(float deltaTime) {
             m_warpProgress = m_warpDistanceTraveled / m_warpDistanceTotal;
             
             // Transition to cruise when at max speed or past 33% distance
-            if (t >= 1.0f || m_warpProgress >= 0.33f) {
+            if (t >= 1.0f || m_warpProgress >= WARP_ACCEL_PHASE_THRESHOLD) {
                 m_warpPhase = WarpPhase::CRUISING;
                 m_warpPhaseTimer = 0.0f;
                 m_currentWarpSpeedAU = m_baseWarpSpeedAU;
@@ -480,7 +480,7 @@ void ShipPhysics::updateWarp(float deltaTime) {
             m_warpProgress = m_warpDistanceTraveled / m_warpDistanceTotal;
             
             // Begin deceleration at ~67% of total distance
-            if (m_warpProgress >= 0.67f) {
+            if (m_warpProgress >= WARP_DECEL_PHASE_THRESHOLD) {
                 m_warpPhase = WarpPhase::DECELERATING;
                 m_warpPhaseTimer = 0.0f;
             }
@@ -489,7 +489,7 @@ void ShipPhysics::updateWarp(float deltaTime) {
         
         case WarpPhase::DECELERATING: {
             // Phase 4: Decelerate from warp speed to subwarp
-            float decelDuration = 3.0f;  // ~3 seconds to decelerate
+            float decelDuration = WARP_DECEL_DURATION;
             float t = std::min(m_warpPhaseTimer / decelDuration, 1.0f);
             
             // Smooth deceleration curve

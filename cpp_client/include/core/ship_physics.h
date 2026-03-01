@@ -242,6 +242,24 @@ private:
     static constexpr float MAX_TURN_RATE_DEG = 60.0f;   // Fastest turn rate (frigates)
     static constexpr float MAX_ROLL_ANGLE = 0.35f;       // ~20 degrees max bank into turns
     static constexpr float ROLL_RESPONSE_RATE = 3.0f;    // How fast roll responds to turns
+
+    // Default frigate stats
+    static constexpr float DEFAULT_FRIGATE_MASS = 1200000.0f;           // 1.2 million kg
+    static constexpr float DEFAULT_FRIGATE_INERTIA = 4.5f;              // Higher inertia for slower alignment
+    static constexpr float DEFAULT_FRIGATE_MAX_VELOCITY = 350.0f;       // 350 m/s
+    static constexpr float DEFAULT_FRIGATE_SIGNATURE = 35.0f;           // 35m signature radius
+
+    // Navigation tolerances
+    static constexpr float APPROACH_ARRIVAL_TOLERANCE = 10.0f;          // Meters beyond nav range to stop
+    static constexpr float KEEP_AT_RANGE_TOLERANCE = 50.0f;             // Meters of error before correcting
+    static constexpr float ANGULAR_DECAY_RATE = 5.0f;                   // Per-second decay for angular velocity/roll
+
+    // Warp phase timing
+    static constexpr float WARP_ACCEL_DURATION = 3.0f;                  // Seconds to reach max warp
+    static constexpr float WARP_DECEL_DURATION = 3.0f;                  // Seconds to decelerate from warp
+    static constexpr float WARP_ACCEL_PHASE_THRESHOLD = 0.33f;          // Transition to cruise at 33% distance
+    static constexpr float WARP_DECEL_PHASE_THRESHOLD = 0.67f;          // Begin deceleration at 67% distance
+    static constexpr float ROLL_TURN_INTENSITY_ANGLE = 30.0f;           // Degrees for roll intensity normalization
 };
 
 } // namespace atlas

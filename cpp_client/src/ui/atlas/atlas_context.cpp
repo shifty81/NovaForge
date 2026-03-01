@@ -137,7 +137,10 @@ static float extractJsonFloat(const std::string& json, const std::string& key,
     size_t colon = json.find(':', pos + needle.size());
     if (colon == std::string::npos || colon >= searchEnd) return defaultVal;
     try { return std::stof(json.substr(colon + 1)); }
-    catch (...) { return defaultVal; }
+    catch (const std::exception& e) {
+        std::cerr << "[AtlasContext] Failed to parse float for key '" << key << "': " << e.what() << std::endl;
+        return defaultVal;
+    }
 }
 
 bool AtlasContext::loadThemeFromFile(const std::string& path) {

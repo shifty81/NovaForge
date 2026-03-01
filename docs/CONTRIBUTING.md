@@ -29,7 +29,7 @@ Before creating bug reports, please check the existing issues to avoid duplicate
 - **Clear title and description**
 - **Steps to reproduce** the issue
 - **Expected behavior** vs actual behavior
-- **Environment details** (OS, Python version, etc.)
+- **Environment details** (OS, C++ compiler version, etc.)
 - **Screenshots** if applicable
 
 ### 💡 Suggesting Features
@@ -311,7 +311,7 @@ Help is especially welcome in these areas:
    - Corp hangars and wallets
 
 2. **UI/UX Improvements**
-   - Enhanced pygame GUI
+   - Enhanced ImGui/OpenGL UI
    - Better visual feedback
    - Improved HUD elements
 

@@ -1,6 +1,7 @@
 #include "EditorLayout.h"
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <filesystem>
 
@@ -144,7 +145,10 @@ float EditorLayout::extractFloat(const std::string& json, const std::string& key
     size_t colon = json.find(':', pos + needle.size());
     if (colon == std::string::npos || colon >= searchEnd) return defaultVal;
     try { return std::stof(json.substr(colon + 1)); }
-    catch (...) { return defaultVal; }
+    catch (const std::exception& e) {
+        std::cerr << "[EditorLayout] Failed to parse float for key '" << key << "': " << e.what() << std::endl;
+        return defaultVal;
+    }
 }
 
 int EditorLayout::extractInt(const std::string& json, const std::string& key,
@@ -155,7 +159,10 @@ int EditorLayout::extractInt(const std::string& json, const std::string& key,
     size_t colon = json.find(':', pos + needle.size());
     if (colon == std::string::npos || colon >= searchEnd) return defaultVal;
     try { return std::stoi(json.substr(colon + 1)); }
-    catch (...) { return defaultVal; }
+    catch (const std::exception& e) {
+        std::cerr << "[EditorLayout] Failed to parse int for key '" << key << "': " << e.what() << std::endl;
+        return defaultVal;
+    }
 }
 
 // Find matching brace from a given opening brace position

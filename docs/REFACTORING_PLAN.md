@@ -135,9 +135,11 @@ stdout).  These are all justified exceptions.  Convention documented in
 `world_persistence.cpp`, `wormhole_database.cpp`, `ship_database.cpp`).
 
 **Fix**: Changed bare `catch (...)` to `catch (const std::exception&)` in
-`json_helpers.h` and `game_session_utils.cpp`.  The `main.cpp` catch-all
+`json_helpers.h`, `game_session_utils.cpp`, `EditorLayout.cpp`,
+`KeybindManager.cpp`, and `atlas_context.cpp`.  The `main.cpp` catch-all
 already had logging.  Database wrapper methods removed entirely (now use
-`json_helpers.h` directly).
+`json_helpers.h` directly).  Test-framework catch-alls (`test_log.h`) are
+intentionally kept to catch unknown exceptions in test harness.
 
 ---
 
@@ -152,6 +154,12 @@ Hardcoded gameplay values scattered across:
 - `solar_system_scene.cpp` — planet radii
 
 **Fix**: Extract to named `constexpr` constants at file / namespace scope.
+
+**Status**: ✅ `ship_physics.cpp` / `ship_physics.h` completed — extracted
+default frigate stats, navigation tolerances, angular/roll decay rates, warp
+phase timing, and roll normalization angle to named `constexpr` constants.
+Remaining files (`application.cpp`, `station_renderer.cpp`, `radial_menu.cpp`,
+`solar_system_scene.cpp`) deferred to future PRs.
 
 ---
 
@@ -174,7 +182,7 @@ Hardcoded gameplay values scattered across:
 
 | Item | Status |
 |------|--------|
-| `CONTRIBUTING.md` references Python/pip instead of C++/CMake | Needs update |
+| `CONTRIBUTING.md` references Python/pip instead of C++/CMake | ✅ Fixed — updated to reference C++ compiler and ImGui/OpenGL |
 | `cpp_client/include/` header doc coverage | ~28 % — needs `@brief` on public classes |
 | No C++ coding style guide | ✅ Created `docs/CODING_GUIDELINES.md` |
 | 60+ session-log files in `docs/sessions/` | Low priority — leave as-is |
