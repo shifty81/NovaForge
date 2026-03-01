@@ -3683,6 +3683,166 @@ public:
     COMPONENT_TYPE(ViewModeState)
 };
 
+// ==================== Station Hangar ====================
+
+/**
+ * @brief Station hangar — personal or corporation ship storage
+ *
+ * Hangars come in different types depending on ownership:
+ *   - Personal: owned by a player, built or leased at a station
+ *   - Corporation: shared corp hangar, upgradable
+ *   - Leased: rented from a station, charged per day
+ *
+ * Ships that are not capital-class dock inside the hangar.
+ * Capital-class and larger ships tether to external docking arms instead.
+ *
+ * The hangar also serves as the FPS spawn point when a player is docked.
+ */
+class StationHangar : public ecs::Component {
+public:
+    enum class HangarType {
+        Personal,       // Player-owned hangar
+        Corporation,    // Corp shared hangar (upgradable)
+        Leased          // Rented from station (daily charge)
+    };
+
+    enum class UpgradeLevel {
+        Basic = 0,      // 1 small ship slot
+        Standard = 1,   // 2 small/medium ship slots
+        Advanced = 2,   // 3 slots including large ships
+        Premium = 3     // 4 slots with maintenance bay
+    };
+
+    std::string hangar_id;
+    std::string station_id;               // Station this hangar belongs to
+    std::string owner_id;                 // Player or corp who owns/leases
+    HangarType type = HangarType::Leased;
+    UpgradeLevel upgrade_level = UpgradeLevel::Basic;
+
+    double daily_rental_cost = 5000.0;    // Credits per day (leased only)
+    double accumulated_rental = 0.0;      // Unpaid rental balance
+    float days_rented = 0.0f;             // Total days rented
+
+    int max_ship_slots = 1;               // Depends on upgrade level
+    int occupied_ship_slots = 0;
+    std::vector<std::string> stored_ship_ids;  // Ships parked in hangar
+
+    float capacity_volume = 500.0f;       // m³ storage for items
+    float used_volume = 0.0f;
+
+    // FPS spawn offset inside the hangar (relative to station)
+    float spawn_x = 0.0f;
+    float spawn_y = 0.0f;
+    float spawn_z = 0.0f;
+
+    static int maxSlotsForLevel(UpgradeLevel lvl) {
+        switch (lvl) {
+            case UpgradeLevel::Basic:    return 1;
+            case UpgradeLevel::Standard: return 2;
+            case UpgradeLevel::Advanced: return 3;
+            case UpgradeLevel::Premium:  return 4;
+            default: return 1;
+        }
+    }
+
+    static float capacityForLevel(UpgradeLevel lvl) {
+        switch (lvl) {
+            case UpgradeLevel::Basic:    return 500.0f;
+            case UpgradeLevel::Standard: return 1500.0f;
+            case UpgradeLevel::Advanced: return 5000.0f;
+            case UpgradeLevel::Premium:  return 15000.0f;
+            default: return 500.0f;
+        }
+    }
+
+    bool hasRoom() const { return occupied_ship_slots < max_ship_slots; }
+    bool isLeased() const { return type == HangarType::Leased; }
+
+    COMPONENT_TYPE(StationHangar)
+};
+
+// ==================== Tether Docking Arm ====================
+
+/**
+ * @brief Tether docking arm — external arm for capital+ ships
+ *
+ * Capital-class ships and larger (Carrier, Dreadnought, Titan) are too
+ * large to fit inside a station hangar. Instead they tether to an
+ * external docking arm that extends from the station.
+ *
+ * While tethered:
+ *   - The ship remains visible in space, attached to the arm
+ *   - Crew can transition between the ship interior and the station
+ *   - The ship receives station shield protection while tethered
+ *   - Undocking requires retracting the arm first
+ */
+class TetherDockingArm : public ecs::Component {
+public:
+    enum class ArmState {
+        Retracted,      // Arm stowed, no ship attached
+        Extending,      // Arm reaching out to lock ship
+        Locked,         // Ship secured to arm
+        Retracting      // Arm pulling back after undock
+    };
+
+    std::string arm_id;
+    std::string station_id;
+    std::string tethered_ship_id;         // Ship currently tethered
+    ArmState state = ArmState::Retracted;
+
+    float extend_progress = 0.0f;         // 0.0 = retracted, 1.0 = fully extended
+    float extend_speed = 0.5f;            // Progress per second
+    float arm_length = 500.0f;            // Metres
+    float min_ship_mass = 50000.0f;       // Only capital+ ships (mass threshold)
+
+    bool station_shield_active = true;    // Whether tethered ship is protected
+    bool crew_transfer_enabled = false;   // True only when fully locked
+
+    bool isOccupied() const { return !tethered_ship_id.empty(); }
+    bool isFullyExtended() const { return extend_progress >= 1.0f; }
+    bool isFullyRetracted() const { return extend_progress <= 0.0f; }
+
+    COMPONENT_TYPE(TetherDockingArm)
+};
+
+// ==================== FPS Spawn Point ====================
+
+/**
+ * @brief FPS spawn point — where a player materialises in first-person mode
+ *
+ * When a player transitions to FPS / Interior mode (e.g. after docking),
+ * this component defines the position and orientation of the spawn.
+ *
+ * Spawn locations depend on context:
+ *   - Hangar: spawn inside the hangar next to docked ship
+ *   - Station: spawn in the station main concourse
+ *   - Ship: spawn in the bridge / cockpit area
+ *   - Tether arm: spawn at the docking arm airlock
+ */
+class FPSSpawnPoint : public ecs::Component {
+public:
+    enum class SpawnContext {
+        Hangar,         // Inside station hangar (small/medium ships)
+        StationLobby,   // Station main concourse
+        ShipBridge,     // Ship bridge / cockpit
+        TetherAirlock,  // Docking arm airlock (capital+ ships)
+        EVAHatch        // EVA exit point
+    };
+
+    std::string spawn_id;
+    std::string parent_entity_id;         // Station, ship, or arm entity
+    SpawnContext context = SpawnContext::Hangar;
+
+    float pos_x = 0.0f;
+    float pos_y = 0.0f;
+    float pos_z = 0.0f;
+    float yaw = 0.0f;                    // Facing direction (degrees)
+
+    bool is_active = true;               // Can be disabled during events
+
+    COMPONENT_TYPE(FPSSpawnPoint)
+};
+
 } // namespace components
 } // namespace atlas
 

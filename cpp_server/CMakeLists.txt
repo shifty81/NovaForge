@@ -150,6 +150,9 @@ set(SERVER_SOURCES
     src/systems/ancient_ai_remnant_system.cpp
     src/systems/character_creation_screen_system.cpp
     src/systems/view_mode_transition_system.cpp
+    src/systems/station_hangar_system.cpp
+    src/systems/tether_docking_system.cpp
+    src/systems/fps_spawn_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -316,6 +319,9 @@ set(SERVER_HEADERS
     include/systems/ancient_ai_remnant_system.h
     include/systems/character_creation_screen_system.h
     include/systems/view_mode_transition_system.h
+    include/systems/station_hangar_system.h
+    include/systems/tether_docking_system.h
+    include/systems/fps_spawn_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -551,6 +557,9 @@ if(BUILD_TESTS)
         src/systems/ancient_ai_remnant_system.cpp
         src/systems/character_creation_screen_system.cpp
         src/systems/view_mode_transition_system.cpp
+        src/systems/station_hangar_system.cpp
+        src/systems/tether_docking_system.cpp
+        src/systems/fps_spawn_system.cpp
         src/data/world_persistence.cpp
         src/utils/logger.cpp
         src/utils/server_metrics.cpp
