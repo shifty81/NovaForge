@@ -37,6 +37,14 @@ set(SERVER_SOURCES
     src/main.cpp
     src/server.cpp
     src/game_session.cpp
+    src/game_session_network.cpp
+    src/game_session_entities.cpp
+    src/game_session_combat.cpp
+    src/game_session_utils.cpp
+    src/game_session_stations.cpp
+    src/game_session_movement.cpp
+    src/game_session_scanning.cpp
+    src/game_session_missions.cpp
     src/network/tcp_server.cpp
     src/network/protocol_handler.cpp
     src/config/server_config.cpp
@@ -593,6 +601,14 @@ if(BUILD_TESTS)
         src/ui/server_console.cpp
         src/server.cpp
         src/game_session.cpp
+        src/game_session_network.cpp
+        src/game_session_entities.cpp
+        src/game_session_combat.cpp
+        src/game_session_utils.cpp
+        src/game_session_stations.cpp
+        src/game_session_movement.cpp
+        src/game_session_scanning.cpp
+        src/game_session_missions.cpp
         src/network/tcp_server.cpp
         src/network/protocol_handler.cpp
         src/config/server_config.cpp
