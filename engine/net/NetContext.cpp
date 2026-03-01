@@ -8,6 +8,7 @@ void NetContext::Init(NetMode mode) {
     m_mode = mode;
     m_peers.clear();
     m_snapshots.clear();
+    m_inputHistory.clear();
     m_nextPeerID = 1;
     m_nextSequence = 1;
     while (!m_outgoing.empty()) m_outgoing.pop();
@@ -17,6 +18,7 @@ void NetContext::Init(NetMode mode) {
 void NetContext::Shutdown() {
     m_peers.clear();
     m_snapshots.clear();
+    m_inputHistory.clear();
     while (!m_outgoing.empty()) m_outgoing.pop();
     while (!m_incoming.empty()) m_incoming.pop();
     m_mode = NetMode::Standalone;
