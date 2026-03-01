@@ -1,7 +1,7 @@
 #include "data/world_persistence.h"
 #include <fstream>
 #include <sstream>
-#include <iostream>
+#include "utils/logger.h"
 
 namespace atlas {
 namespace data {
@@ -16,15 +16,14 @@ bool WorldPersistence::saveWorld(const ecs::World* world,
 
     std::ofstream file(filepath);
     if (!file.is_open()) {
-        std::cerr << "[WorldPersistence] Cannot open file for writing: "
-                  << filepath << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Cannot open file for writing: " + filepath);
         return false;
     }
 
     file << json;
     file.close();
 
-    std::cout << "[WorldPersistence] World saved to " << filepath << std::endl;
+    atlas::utils::Logger::instance().info("[WorldPersistence] World saved to " + filepath);
     return true;
 }
 
@@ -32,8 +31,7 @@ bool WorldPersistence::loadWorld(ecs::World* world,
                                  const std::string& filepath) {
     std::ifstream file(filepath);
     if (!file.is_open()) {
-        std::cerr << "[WorldPersistence] Cannot open file for reading: "
-                  << filepath << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Cannot open file for reading: " + filepath);
         return false;
     }
 

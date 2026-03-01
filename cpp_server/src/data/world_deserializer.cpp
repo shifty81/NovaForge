@@ -1,6 +1,6 @@
 #include "data/world_persistence.h"
 #include "components/game_components.h"
-#include <iostream>
+#include "utils/logger.h"
 
 namespace atlas {
 namespace data {
@@ -12,7 +12,7 @@ bool WorldPersistence::deserializeWorld(ecs::World* world,
     size_t arr_end   = json.rfind("]");
     if (arr_start == std::string::npos || arr_end == std::string::npos ||
         arr_end <= arr_start) {
-        std::cerr << "[WorldPersistence] Invalid JSON structure" << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Invalid JSON structure");
         return false;
     }
 
@@ -42,8 +42,7 @@ bool WorldPersistence::deserializeWorld(ecs::World* world,
         }
     }
 
-    std::cout << "[WorldPersistence] Loaded " << entity_count
-              << " entities" << std::endl;
+    atlas::utils::Logger::instance().info("[WorldPersistence] Loaded " + std::to_string(entity_count) + " entities");
     return true;
 }
 

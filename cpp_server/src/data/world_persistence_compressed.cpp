@@ -1,8 +1,8 @@
 #include "data/world_persistence.h"
 #include <fstream>
 #include <vector>
-#include <iostream>
 #include <zlib.h>
+#include "utils/logger.h"
 
 namespace atlas {
 namespace data {
@@ -11,14 +11,13 @@ bool WorldPersistence::saveWorldCompressed(const ecs::World* world,
                                            const std::string& filepath) {
     std::string json = serializeWorld(world);
     if (json.empty()) {
-        std::cerr << "[WorldPersistence] Nothing to compress" << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Nothing to compress");
         return false;
     }
 
     gzFile gz = gzopen(filepath.c_str(), "wb9");  // max compression
     if (!gz) {
-        std::cerr << "[WorldPersistence] Cannot open compressed file for writing: "
-                  << filepath << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Cannot open compressed file for writing: " + filepath);
         return false;
     }
 
@@ -26,12 +25,11 @@ bool WorldPersistence::saveWorldCompressed(const ecs::World* world,
     gzclose(gz);
 
     if (written <= 0) {
-        std::cerr << "[WorldPersistence] Compressed write failed" << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Compressed write failed");
         return false;
     }
 
-    std::cout << "[WorldPersistence] World saved (compressed) to " << filepath
-              << " (" << written << " bytes source, compressed on disk)" << std::endl;
+    atlas::utils::Logger::instance().info("[WorldPersistence] World saved (compressed) to " + filepath + " (" + std::to_string(written) + " bytes source, compressed on disk)");
     return true;
 }
 
@@ -39,8 +37,7 @@ bool WorldPersistence::loadWorldCompressed(ecs::World* world,
                                            const std::string& filepath) {
     gzFile gz = gzopen(filepath.c_str(), "rb");
     if (!gz) {
-        std::cerr << "[WorldPersistence] Cannot open compressed file for reading: "
-                  << filepath << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Cannot open compressed file for reading: " + filepath);
         return false;
     }
 
@@ -53,7 +50,7 @@ bool WorldPersistence::loadWorldCompressed(ecs::World* world,
     gzclose(gz);
 
     if (json.empty()) {
-        std::cerr << "[WorldPersistence] Decompressed data is empty" << std::endl;
+        atlas::utils::Logger::instance().error("[WorldPersistence] Decompressed data is empty");
         return false;
     }
 

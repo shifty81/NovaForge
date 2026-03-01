@@ -2,9 +2,9 @@
 #include "utils/json_helpers.h"
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <algorithm>
 #include <cctype>
+#include "utils/logger.h"
 
 namespace atlas {
 namespace data {
@@ -28,8 +28,7 @@ int NpcDatabase::loadFromDirectory(const std::string& data_dir) {
         }
     }
 
-    std::cout << "[NpcDatabase] Loaded " << total
-              << " NPC templates from " << npc_dir << std::endl;
+    atlas::utils::Logger::instance().info("[NpcDatabase] Loaded " + std::to_string(total) + " NPC templates from " + npc_dir);
     return total;
 }
 

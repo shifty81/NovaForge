@@ -2,8 +2,8 @@
 #include "utils/json_helpers.h"
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <algorithm>
+#include "utils/logger.h"
 
 namespace atlas {
 namespace data {
@@ -16,9 +16,7 @@ int WormholeDatabase::loadFromDirectory(const std::string& data_dir) {
     int total = 0;
     total += loadClasses(data_dir + "/wormholes/wormhole_classes.json");
     total += loadEffects(data_dir + "/wormholes/wormhole_effects.json");
-    std::cout << "[WormholeDatabase] Loaded " << classes_.size()
-              << " wormhole classes and " << effects_.size()
-              << " effects from " << data_dir << std::endl;
+    atlas::utils::Logger::instance().info("[WormholeDatabase] Loaded " + std::to_string(classes_.size()) + " wormhole classes and " + std::to_string(effects_.size()) + " effects from " + data_dir);
     return total;
 }
 
@@ -205,7 +203,9 @@ int WormholeDatabase::loadEffects(const std::string& filepath) {
                        (mod_block[ve] >= '0' && mod_block[ve] <= '9')))
                     ++ve;
                 if (ve > vp) {
-                    try { val = std::stof(mod_block.substr(vp, ve - vp)); } catch (...) {}
+                    try { val = std::stof(mod_block.substr(vp, ve - vp)); } catch (const std::exception& e) {
+                        atlas::utils::Logger::instance().warn(std::string("[WormholeDatabase] Failed to parse modifier value: ") + e.what());
+                    }
                 }
 
                 if (!mk.empty()) eff.modifiers[mk] = val;

@@ -2,9 +2,9 @@
 #include "utils/json_helpers.h"
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <algorithm>
 #include <cctype>
+#include "utils/logger.h"
 
 namespace atlas {
 namespace data {
@@ -41,8 +41,7 @@ int ShipDatabase::loadFromDirectory(const std::string& data_dir) {
         }
     }
 
-    std::cout << "[ShipDatabase] Loaded " << total
-              << " ship templates from " << ship_dir << std::endl;
+    atlas::utils::Logger::instance().info("[ShipDatabase] Loaded " + std::to_string(total) + " ship templates from " + ship_dir);
     return total;
 }
 

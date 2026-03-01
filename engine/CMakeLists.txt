@@ -29,6 +29,13 @@ add_library(AtlasEngine STATIC
     sim/PirateSecurityCoordinator.cpp
     world/CubeSphereLayout.cpp
     world/VoxelGridLayout.cpp
+    physics/PhysicsWorld.cpp
+    input/InputManager.cpp
+    camera/Camera.cpp
+    audio/AudioEngine.cpp
+    animation/AnimationGraph.cpp
+    animation/AnimationNodes.cpp
+    plugin/PluginSystem.cpp
 )
 
 target_include_directories(AtlasEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
