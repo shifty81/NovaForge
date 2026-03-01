@@ -4215,6 +4215,72 @@ public:
     COMPONENT_TYPE(ShipInteriorLayout)
 };
 
+// ==================== Environmental Hazard ====================
+
+/**
+ * @brief Environmental hazard affecting a room or area within a ship interior
+ *
+ * Hazards have severity levels, spread over time if unrepaired, and
+ * deal damage to FPS characters in affected areas.
+ */
+class EnvironmentalHazard : public ecs::Component {
+public:
+    enum class HazardType {
+        HullBreach = 0,      // Causes depressurization
+        Fire = 1,            // Deals heat damage, spreads to adjacent rooms
+        Radiation = 2,       // Deals radiation damage through walls
+        ElectricalFault = 3, // Disables room systems, shocks nearby characters
+        ToxicLeak = 4        // Poisons characters, requires EVA suit
+    };
+
+    enum class Severity {
+        Minor = 0,           // Slow damage, easily repaired
+        Moderate = 1,        // Moderate damage, requires tools
+        Critical = 2,        // High damage, may spread
+        Catastrophic = 3     // Extreme damage, spreads rapidly
+    };
+
+    std::string hazard_id;
+    std::string room_id;         // The room this hazard affects
+    std::string interior_id;     // Which ship/station interior
+
+    int hazard_type = 0;         // HazardType as int
+    int severity = 0;            // Severity as int
+
+    float damage_per_second = 5.0f;   // DPS to characters in the room
+    float spread_timer = 0.0f;        // Time until hazard spreads to adjacent room
+    float spread_interval = 30.0f;    // Seconds between spread attempts
+    float repair_progress = 0.0f;     // 0.0 = unrepaired, 1.0 = fully repaired
+    float repair_rate = 0.1f;         // Progress per second when being repaired
+
+    bool is_active = true;
+    bool is_spreading = false;
+    bool is_being_repaired = false;
+
+    static std::string hazardTypeName(int type) {
+        switch (static_cast<HazardType>(type)) {
+            case HazardType::HullBreach:      return "HullBreach";
+            case HazardType::Fire:            return "Fire";
+            case HazardType::Radiation:       return "Radiation";
+            case HazardType::ElectricalFault: return "ElectricalFault";
+            case HazardType::ToxicLeak:       return "ToxicLeak";
+            default: return "Unknown";
+        }
+    }
+
+    static std::string severityName(int sev) {
+        switch (static_cast<Severity>(sev)) {
+            case Severity::Minor:        return "Minor";
+            case Severity::Moderate:     return "Moderate";
+            case Severity::Critical:     return "Critical";
+            case Severity::Catastrophic: return "Catastrophic";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(EnvironmentalHazard)
+};
+
 } // namespace components
 } // namespace atlas
 
