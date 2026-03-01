@@ -74,6 +74,15 @@ If it fails any one → it doesn't ship.
 - [x] **Fix: Title screen buttons clickable** (consumeMouse ordering)
 - [x] Warp visual effects (tunnel shader stack)
 - [x] Basic combat loop (lock, fire, damage)
+- [x] Atlas Engine physics module (PhysicsWorld — rigid body dynamics, AABB collision)
+- [x] Atlas Engine input module (InputManager — action binding, device abstraction)
+- [x] Atlas Engine camera module (Camera — FreeLook, Orbital, Strategy, FPS + CameraProjectionPolicy)
+- [x] Atlas Engine audio module (AudioEngine — sound management, 3D positioning)
+- [x] Atlas Engine animation module (AnimationGraph — deterministic graph pipeline, Clip/Blend/Modifier/StateMachine nodes)
+- [x] Atlas Engine plugin module (PluginSystem — validation, versioning, determinism enforcement)
+- [x] TLA+ formal specifications (ECS execution model, replay hash ladder, GUI layout solver)
+- [x] Build presets (CMakePresets.json) and JSON validation schemas
+- [x] Contract scanner tool (tools/contract_scan.py) for determinism enforcement
 
 ### Phase 1: Core Fleet (v0.1–v0.2)
 > Player + small fleet, captain personalities, basic flight & combat.

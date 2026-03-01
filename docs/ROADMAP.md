@@ -226,6 +226,41 @@ Data-driven modding without code injection:
 | WormholeDatabase | ✅ Complete | 6 classes, 6 effects |
 | WorldPersistence | ✅ Complete | Full save/load |
 
+### Atlas Engine Module Status
+
+| Module | Status | Source | Description |
+|--------|--------|--------|-------------|
+| core/ | ✅ Complete | Original | Engine, Logger, EventBus |
+| ecs/ | ✅ Complete | Original | Entity Component System |
+| graphvm/ | ✅ Complete | Original | GraphVM compiler and virtual machine |
+| assets/ | ✅ Complete | Original | Asset registry, binary format, serializer |
+| net/ | ✅ Complete | Original | Networking (delta compression, jitter buffer, lag compensation, interpolation) |
+| sim/ | ✅ Complete | Original | Simulation (AI state machines, tick scheduler, economy, missions) |
+| world/ | ✅ Complete | Original | World layout (cube-sphere, voxel grid) |
+| physics/ | ✅ Complete | Atlas-NovaForge | Rigid body dynamics, AABB collision, force integration |
+| input/ | ✅ Complete | Atlas-NovaForge | Action binding, press/hold/release states, device abstraction |
+| camera/ | ✅ Complete | Atlas-NovaForge | FreeLook, Orbital, Strategy, FPS modes + projection policies |
+| audio/ | ✅ Complete | Atlas-NovaForge | Sound loading, playback, 3D positioning, volume/pitch |
+| animation/ | ✅ Complete | Atlas-NovaForge | Graph-based animation pipeline (Clip, Blend, Modifier, StateMachine nodes) |
+| plugin/ | ✅ Complete | Atlas-NovaForge | Plugin validation, version checking, determinism enforcement |
+
+### Formal Specifications (TLA+)
+
+| Spec | Status | Verified Invariants |
+|------|--------|---------------------|
+| specs/ecs.tla | ✅ Complete | UniqueIDs, DeadClean, FixedOrder, TypeOK |
+| specs/replay.tla | ✅ Complete | ChainIntegrity, NoGaps, MonotonicTicks, Determinism |
+| specs/layout.tla | ✅ Complete | SizePartition, FullCoverage, MinimumSize, TreeConsistent |
+
+### Development Tools & Infrastructure
+
+| Tool/File | Status | Description |
+|-----------|--------|-------------|
+| tools/contract_scan.py | ✅ Complete | Scans simulation code for determinism contract violations |
+| CMakePresets.json | ✅ Complete | Build presets (debug, release, development, CI) |
+| schemas/atlas.project.v1.json | ✅ Complete | JSON schema for Atlas project files |
+| schemas/atlas.build.v1.json | ✅ Complete | JSON schema for build manifests |
+
 ### Systems Still Needed (from Baseline)
 
 | System | Priority | Description |
@@ -274,7 +309,7 @@ All baseline systems are now implemented.
 ### 🎯 Active R&D and Development
 
 **Overall Progress**: Core features implemented, actively testing and expanding  
-**Status**: All ship model integration complete (58+ ships). Tech II ships, capitals, mining barges, and exhumers implemented with 3D models. Mission system expansion complete with missions across 5 levels. Game systems being structured around the EVE Online manual.
+**Status**: All ship model integration complete (58+ ships). Tech II ships, capitals, mining barges, and exhumers implemented with 3D models. Mission system expansion complete with missions across 5 levels. Game systems being structured around the EVE Online manual. Atlas Engine expanded with 6 new modules merged from Atlas-NovaForge (physics, input, camera, audio, animation, plugin). Formal TLA+ specifications added for ECS, replay, and layout subsystems. Build infrastructure enhanced with CMakePresets.json and JSON validation schemas. Data layer logging standardized on Logger singleton across all data loaders. **915 Atlas engine + 3812 server test assertions total**.
 
 ---
 
@@ -1465,6 +1500,13 @@ Player undocks → Scans anomaly → Fights pirates → Ship explodes → Wreck 
   - More ships, modules, skills
   - More missions and content
   - Advanced NPC behaviors
+
+- **Q1 2026**: Atlas Engine expansion ✅
+  - 6 new engine modules merged from Atlas-NovaForge (physics, input, camera, audio, animation, plugin)
+  - TLA+ formal specifications (ECS, replay, layout)
+  - Build infrastructure (CMakePresets.json, JSON schemas)
+  - Contract scanner tool for determinism enforcement
+  - Data layer logging standardized on Logger singleton
   
 - **Q4 2026+**: Phase 7 (Future)
   - Advanced gameplay systems
@@ -1508,6 +1550,10 @@ Player undocks → Scans anomaly → Fights pirates → Ship explodes → Wreck 
 
 ### Current Achievement
 - ✅ **95+ test functions** - All passing (521 assertions across test suites)
+- ✅ **915 Atlas Engine test assertions** - All passing (engine, editor, PCG, UI, animation, physics)
+- ✅ **3812 server test assertions** - All systems verified
+- ✅ **13 Atlas Engine modules** - core, ecs, graphvm, assets, net, sim, world, physics, input, camera, audio, animation, plugin
+- ✅ **3 TLA+ formal specifications** - ECS, replay, layout invariants verified
 - ✅ **49 ships** - Tech I, Tech II, and Mining Barges across all classes
 - ✅ **70 modules** - Full fitting options
 - ✅ **47 skills** - Complete skill tree
@@ -1608,7 +1654,23 @@ Have questions about the roadmap? Want to suggest features?
 
 ## Changelog
 
-### R&D - Manual-Aligned Systems (Current)
+### R&D - Atlas-NovaForge Feature Merge (Current)
+- Merged 6 engine modules from Atlas-NovaForge: physics, input, camera, audio, animation, plugin
+- PhysicsWorld: rigid body dynamics, AABB collision detection, gravity, force integration
+- InputManager: action binding with keyboard/mouse/gamepad, press/hold/release states, callbacks
+- Camera: FreeLook, Orbital, Strategy, FPS modes with CameraProjectionPolicy for 2D/2.5D/isometric
+- AudioEngine: sound loading/unloading, play/pause/stop, 3D positioning, volume/pitch, master volume
+- AnimationGraph + AnimationNodes: deterministic graph-based animation with topological compilation, cycle detection, Clip/Blend/Modifier/StateMachine nodes
+- PluginSystem: plugin validation, version compatibility checking, determinism enforcement, registry
+- Added TLA+ formal specifications: ecs.tla, replay.tla, layout.tla
+- Added CMakePresets.json with debug/release/development/CI build presets
+- Added JSON validation schemas: atlas.project.v1.json, atlas.build.v1.json
+- Added contract_scan.py for determinism contract violation detection
+- Replaced all std::cout/std::cerr in cpp_server/src/data/ with Logger singleton (6 files)
+- Fixed bare catch(...) in wormhole_database.cpp with typed exception + logging
+- 915 Atlas engine tests passing, 3812 server tests total
+
+### R&D - Manual-Aligned Systems (Previous)
 - Character creation system with 4 races, bloodlines, and attributes
 - Clone system with medical clones and relay clones
 - Implant system for attribute enhancement (5 slots, 4 grades)
