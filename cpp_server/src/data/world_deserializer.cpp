@@ -58,10 +58,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string pos_json = extractObject(json, "position");
     if (!pos_json.empty()) {
         auto pos = std::make_unique<components::Position>();
-        pos->x = extractFloat(pos_json, "\"x\":");
-        pos->y = extractFloat(pos_json, "\"y\":");
-        pos->z = extractFloat(pos_json, "\"z\":");
-        pos->rotation = extractFloat(pos_json, "\"rotation\":");
+        pos->x = extractFloat(pos_json, "x");
+        pos->y = extractFloat(pos_json, "y");
+        pos->z = extractFloat(pos_json, "z");
+        pos->rotation = extractFloat(pos_json, "rotation");
         entity->addComponent(std::move(pos));
     }
 
@@ -69,11 +69,11 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string vel_json = extractObject(json, "velocity");
     if (!vel_json.empty()) {
         auto vel = std::make_unique<components::Velocity>();
-        vel->vx = extractFloat(vel_json, "\"vx\":");
-        vel->vy = extractFloat(vel_json, "\"vy\":");
-        vel->vz = extractFloat(vel_json, "\"vz\":");
-        vel->angular_velocity = extractFloat(vel_json, "\"angular_velocity\":");
-        vel->max_speed = extractFloat(vel_json, "\"max_speed\":", 100.0f);
+        vel->vx = extractFloat(vel_json, "vx");
+        vel->vy = extractFloat(vel_json, "vy");
+        vel->vz = extractFloat(vel_json, "vz");
+        vel->angular_velocity = extractFloat(vel_json, "angular_velocity");
+        vel->max_speed = extractFloat(vel_json, "max_speed", 100.0f);
         entity->addComponent(std::move(vel));
     }
 
@@ -81,25 +81,25 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string hp_json = extractObject(json, "health");
     if (!hp_json.empty()) {
         auto hp = std::make_unique<components::Health>();
-        hp->hull_hp   = extractFloat(hp_json, "\"hull_hp\":", 100.0f);
-        hp->hull_max  = extractFloat(hp_json, "\"hull_max\":", 100.0f);
-        hp->armor_hp  = extractFloat(hp_json, "\"armor_hp\":", 100.0f);
-        hp->armor_max = extractFloat(hp_json, "\"armor_max\":", 100.0f);
-        hp->shield_hp  = extractFloat(hp_json, "\"shield_hp\":", 100.0f);
-        hp->shield_max = extractFloat(hp_json, "\"shield_max\":", 100.0f);
-        hp->shield_recharge_rate = extractFloat(hp_json, "\"shield_recharge_rate\":", 1.0f);
-        hp->hull_em_resist        = extractFloat(hp_json, "\"hull_em_resist\":");
-        hp->hull_thermal_resist   = extractFloat(hp_json, "\"hull_thermal_resist\":");
-        hp->hull_kinetic_resist   = extractFloat(hp_json, "\"hull_kinetic_resist\":");
-        hp->hull_explosive_resist = extractFloat(hp_json, "\"hull_explosive_resist\":");
-        hp->armor_em_resist        = extractFloat(hp_json, "\"armor_em_resist\":");
-        hp->armor_thermal_resist   = extractFloat(hp_json, "\"armor_thermal_resist\":");
-        hp->armor_kinetic_resist   = extractFloat(hp_json, "\"armor_kinetic_resist\":");
-        hp->armor_explosive_resist = extractFloat(hp_json, "\"armor_explosive_resist\":");
-        hp->shield_em_resist        = extractFloat(hp_json, "\"shield_em_resist\":");
-        hp->shield_thermal_resist   = extractFloat(hp_json, "\"shield_thermal_resist\":");
-        hp->shield_kinetic_resist   = extractFloat(hp_json, "\"shield_kinetic_resist\":");
-        hp->shield_explosive_resist = extractFloat(hp_json, "\"shield_explosive_resist\":");
+        hp->hull_hp   = extractFloat(hp_json, "hull_hp", 100.0f);
+        hp->hull_max  = extractFloat(hp_json, "hull_max", 100.0f);
+        hp->armor_hp  = extractFloat(hp_json, "armor_hp", 100.0f);
+        hp->armor_max = extractFloat(hp_json, "armor_max", 100.0f);
+        hp->shield_hp  = extractFloat(hp_json, "shield_hp", 100.0f);
+        hp->shield_max = extractFloat(hp_json, "shield_max", 100.0f);
+        hp->shield_recharge_rate = extractFloat(hp_json, "shield_recharge_rate", 1.0f);
+        hp->hull_em_resist        = extractFloat(hp_json, "hull_em_resist");
+        hp->hull_thermal_resist   = extractFloat(hp_json, "hull_thermal_resist");
+        hp->hull_kinetic_resist   = extractFloat(hp_json, "hull_kinetic_resist");
+        hp->hull_explosive_resist = extractFloat(hp_json, "hull_explosive_resist");
+        hp->armor_em_resist        = extractFloat(hp_json, "armor_em_resist");
+        hp->armor_thermal_resist   = extractFloat(hp_json, "armor_thermal_resist");
+        hp->armor_kinetic_resist   = extractFloat(hp_json, "armor_kinetic_resist");
+        hp->armor_explosive_resist = extractFloat(hp_json, "armor_explosive_resist");
+        hp->shield_em_resist        = extractFloat(hp_json, "shield_em_resist");
+        hp->shield_thermal_resist   = extractFloat(hp_json, "shield_thermal_resist");
+        hp->shield_kinetic_resist   = extractFloat(hp_json, "shield_kinetic_resist");
+        hp->shield_explosive_resist = extractFloat(hp_json, "shield_explosive_resist");
         entity->addComponent(std::move(hp));
     }
 
@@ -107,9 +107,9 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string cap_json = extractObject(json, "capacitor");
     if (!cap_json.empty()) {
         auto cap = std::make_unique<components::Capacitor>();
-        cap->capacitor     = extractFloat(cap_json, "\"capacitor\":", 100.0f);
-        cap->capacitor_max = extractFloat(cap_json, "\"capacitor_max\":", 100.0f);
-        cap->recharge_rate = extractFloat(cap_json, "\"recharge_rate\":", 2.0f);
+        cap->capacitor     = extractFloat(cap_json, "capacitor", 100.0f);
+        cap->capacitor_max = extractFloat(cap_json, "capacitor_max", 100.0f);
+        cap->recharge_rate = extractFloat(cap_json, "recharge_rate", 2.0f);
         entity->addComponent(std::move(cap));
     }
 
@@ -121,14 +121,14 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         ship->ship_class = extractString(ship_json, "ship_class");
         ship->ship_name  = extractString(ship_json, "ship_name");
         ship->race       = extractString(ship_json, "race");
-        ship->cpu        = extractFloat(ship_json, "\"cpu\":");
-        ship->cpu_max    = extractFloat(ship_json, "\"cpu_max\":", 100.0f);
-        ship->powergrid     = extractFloat(ship_json, "\"powergrid\":");
-        ship->powergrid_max = extractFloat(ship_json, "\"powergrid_max\":", 50.0f);
-        ship->signature_radius    = extractFloat(ship_json, "\"signature_radius\":", 35.0f);
-        ship->scan_resolution     = extractFloat(ship_json, "\"scan_resolution\":", 400.0f);
-        ship->max_locked_targets  = extractInt(ship_json, "\"max_locked_targets\":", 3);
-        ship->max_targeting_range = extractFloat(ship_json, "\"max_targeting_range\":", 20000.0f);
+        ship->cpu        = extractFloat(ship_json, "cpu");
+        ship->cpu_max    = extractFloat(ship_json, "cpu_max", 100.0f);
+        ship->powergrid     = extractFloat(ship_json, "powergrid");
+        ship->powergrid_max = extractFloat(ship_json, "powergrid_max", 50.0f);
+        ship->signature_radius    = extractFloat(ship_json, "signature_radius", 35.0f);
+        ship->scan_resolution     = extractFloat(ship_json, "scan_resolution", 400.0f);
+        ship->max_locked_targets  = extractInt(ship_json, "max_locked_targets", 3);
+        ship->max_targeting_range = extractFloat(ship_json, "max_targeting_range", 20000.0f);
         entity->addComponent(std::move(ship));
     }
 
@@ -267,12 +267,12 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     if (!ai_json.empty()) {
         auto ai = std::make_unique<components::AI>();
         ai->behavior = static_cast<components::AI::Behavior>(
-            extractInt(ai_json, "\"behavior\":"));
+            extractInt(ai_json, "behavior"));
         ai->state = static_cast<components::AI::State>(
-            extractInt(ai_json, "\"state\":"));
+            extractInt(ai_json, "state"));
         ai->target_entity_id = extractString(ai_json, "target_entity_id");
-        ai->orbit_distance   = extractFloat(ai_json, "\"orbit_distance\":", 1000.0f);
-        ai->awareness_range  = extractFloat(ai_json, "\"awareness_range\":", 50000.0f);
+        ai->orbit_distance   = extractFloat(ai_json, "orbit_distance", 1000.0f);
+        ai->awareness_range  = extractFloat(ai_json, "awareness_range", 50000.0f);
         entity->addComponent(std::move(ai));
     }
 
@@ -282,14 +282,14 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         auto weapon = std::make_unique<components::Weapon>();
         weapon->weapon_type    = extractString(wep_json, "weapon_type");
         weapon->damage_type    = extractString(wep_json, "damage_type");
-        weapon->damage         = extractFloat(wep_json, "\"damage\":", 10.0f);
-        weapon->optimal_range  = extractFloat(wep_json, "\"optimal_range\":", 5000.0f);
-        weapon->falloff_range  = extractFloat(wep_json, "\"falloff_range\":", 2500.0f);
-        weapon->tracking_speed = extractFloat(wep_json, "\"tracking_speed\":", 0.5f);
-        weapon->rate_of_fire   = extractFloat(wep_json, "\"rate_of_fire\":", 3.0f);
-        weapon->capacitor_cost = extractFloat(wep_json, "\"capacitor_cost\":", 5.0f);
+        weapon->damage         = extractFloat(wep_json, "damage", 10.0f);
+        weapon->optimal_range  = extractFloat(wep_json, "optimal_range", 5000.0f);
+        weapon->falloff_range  = extractFloat(wep_json, "falloff_range", 2500.0f);
+        weapon->tracking_speed = extractFloat(wep_json, "tracking_speed", 0.5f);
+        weapon->rate_of_fire   = extractFloat(wep_json, "rate_of_fire", 3.0f);
+        weapon->capacitor_cost = extractFloat(wep_json, "capacitor_cost", 5.0f);
         weapon->ammo_type      = extractString(wep_json, "ammo_type");
-        weapon->ammo_count     = extractInt(wep_json, "\"ammo_count\":", 100);
+        weapon->ammo_count     = extractInt(wep_json, "ammo_count", 100);
         entity->addComponent(std::move(weapon));
     }
 
@@ -299,7 +299,7 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         auto player = std::make_unique<components::Player>();
         player->player_id      = extractString(player_json, "player_id");
         player->character_name = extractString(player_json, "character_name");
-        player->credits            = extractDouble(player_json, "\"credits\":", 1000000.0);
+        player->credits            = extractDouble(player_json, "credits", 1000000.0);
         player->corporation    = extractString(player_json, "corporation");
         entity->addComponent(std::move(player));
     }
@@ -311,12 +311,12 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         wh->wormhole_id         = extractString(wh_json, "wormhole_id");
         wh->source_system       = extractString(wh_json, "source_system");
         wh->destination_system  = extractString(wh_json, "destination_system");
-        wh->max_mass            = extractDouble(wh_json, "\"max_mass\":", 500000000.0);
-        wh->remaining_mass      = extractDouble(wh_json, "\"remaining_mass\":", 500000000.0);
-        wh->max_jump_mass       = extractDouble(wh_json, "\"max_jump_mass\":", 20000000.0);
-        wh->max_lifetime_hours  = extractFloat(wh_json, "\"max_lifetime_hours\":", 24.0f);
-        wh->elapsed_hours       = extractFloat(wh_json, "\"elapsed_hours\":");
-        wh->collapsed           = extractBool(wh_json, "\"collapsed\":");
+        wh->max_mass            = extractDouble(wh_json, "max_mass", 500000000.0);
+        wh->remaining_mass      = extractDouble(wh_json, "remaining_mass", 500000000.0);
+        wh->max_jump_mass       = extractDouble(wh_json, "max_jump_mass", 20000000.0);
+        wh->max_lifetime_hours  = extractFloat(wh_json, "max_lifetime_hours", 24.0f);
+        wh->elapsed_hours       = extractFloat(wh_json, "elapsed_hours");
+        wh->collapsed           = extractBool(wh_json, "collapsed");
         entity->addComponent(std::move(wh));
     }
 
@@ -326,9 +326,9 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         auto ss = std::make_unique<components::SolarSystem>();
         ss->system_id       = extractString(ss_json, "system_id");
         ss->system_name     = extractString(ss_json, "system_name");
-        ss->wormhole_class  = extractInt(ss_json, "\"wormhole_class\":");
+        ss->wormhole_class  = extractInt(ss_json, "wormhole_class");
         ss->effect_name     = extractString(ss_json, "effect_name");
-        ss->dormants_spawned = extractBool(ss_json, "\"dormants_spawned\":");
+        ss->dormants_spawned = extractBool(ss_json, "dormants_spawned");
         entity->addComponent(std::move(ss));
     }
 
@@ -347,7 +347,7 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string inv_json = extractObject(json, "inventory");
     if (!inv_json.empty()) {
         auto inv = std::make_unique<components::Inventory>();
-        inv->max_capacity = extractFloat(inv_json, "\"max_capacity\":", 400.0f);
+        inv->max_capacity = extractFloat(inv_json, "max_capacity", 400.0f);
 
         // Parse items array
         size_t arr_start = inv_json.find("[");
@@ -368,8 +368,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                         item.item_id  = extractString(item_json, "item_id");
                         item.name     = extractString(item_json, "name");
                         item.type     = extractString(item_json, "type");
-                        item.quantity = extractInt(item_json, "\"quantity\":");
-                        item.volume   = extractFloat(item_json, "\"volume\":", 1.0f);
+                        item.quantity = extractInt(item_json, "quantity");
+                        item.volume   = extractFloat(item_json, "volume", 1.0f);
                         inv->items.push_back(item);
                         obj_start = std::string::npos;
                     }
@@ -383,7 +383,7 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string lt_json = extractObject(json, "loot_table");
     if (!lt_json.empty()) {
         auto lt = std::make_unique<components::LootTable>();
-        lt->isk_drop = extractDouble(lt_json, "\"isk_drop\":");
+        lt->isk_drop = extractDouble(lt_json, "isk_drop");
 
         // Parse entries array
         size_t arr_start = lt_json.find("[");
@@ -404,10 +404,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                         entry.item_id      = extractString(entry_json, "item_id");
                         entry.name         = extractString(entry_json, "name");
                         entry.type         = extractString(entry_json, "type");
-                        entry.drop_chance  = extractFloat(entry_json, "\"drop_chance\":", 1.0f);
-                        entry.min_quantity = extractInt(entry_json, "\"min_quantity\":", 1);
-                        entry.max_quantity = extractInt(entry_json, "\"max_quantity\":", 1);
-                        entry.volume       = extractFloat(entry_json, "\"volume\":", 1.0f);
+                        entry.drop_chance  = extractFloat(entry_json, "drop_chance", 1.0f);
+                        entry.min_quantity = extractInt(entry_json, "min_quantity", 1);
+                        entry.max_quantity = extractInt(entry_json, "max_quantity", 1);
+                        entry.volume       = extractFloat(entry_json, "volume", 1.0f);
                         lt->entries.push_back(entry);
                         obj_start = std::string::npos;
                     }
@@ -425,8 +425,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         corp->corp_name  = extractString(corp_json, "corp_name");
         corp->ticker     = extractString(corp_json, "ticker");
         corp->ceo_id     = extractString(corp_json, "ceo_id");
-        corp->tax_rate   = extractFloat(corp_json, "\"tax_rate\":", 0.05f);
-        corp->corp_wallet = extractDouble(corp_json, "\"corp_wallet\":", 0.0);
+        corp->tax_rate   = extractFloat(corp_json, "tax_rate", 0.05f);
+        corp->corp_wallet = extractDouble(corp_json, "corp_wallet", 0.0);
 
         // Parse member_ids string array
         std::string mid_key = "\"member_ids\"";
@@ -475,8 +475,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 item.item_id  = extractString(ij, "item_id");
                                 item.name     = extractString(ij, "name");
                                 item.type     = extractString(ij, "type");
-                                item.quantity = extractInt(ij, "\"quantity\":");
-                                item.volume   = extractFloat(ij, "\"volume\":", 1.0f);
+                                item.quantity = extractInt(ij, "quantity");
+                                item.volume   = extractFloat(ij, "volume", 1.0f);
                                 corp->hangar_items.push_back(item);
                                 obj_start = std::string::npos;
                             }
@@ -493,8 +493,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string db_json = extractObject(json, "drone_bay");
     if (!db_json.empty()) {
         auto db = std::make_unique<components::DroneBay>();
-        db->bay_capacity  = extractFloat(db_json, "\"bay_capacity\":", 25.0f);
-        db->max_bandwidth = extractInt(db_json, "\"max_bandwidth\":", 25);
+        db->bay_capacity  = extractFloat(db_json, "bay_capacity", 25.0f);
+        db->max_bandwidth = extractInt(db_json, "max_bandwidth", 25);
 
         // Helper lambda to parse a drone array
         auto parseDrones = [&](const std::string& array_key,
@@ -530,13 +530,13 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                         info.name          = extractString(dj, "name");
                         info.type          = extractString(dj, "type");
                         info.damage_type   = extractString(dj, "damage_type");
-                        info.damage        = extractFloat(dj, "\"damage\":", 0.0f);
-                        info.rate_of_fire  = extractFloat(dj, "\"rate_of_fire\":", 3.0f);
-                        info.optimal_range = extractFloat(dj, "\"optimal_range\":", 5000.0f);
-                        info.hitpoints     = extractFloat(dj, "\"hitpoints\":", 45.0f);
-                        info.current_hp    = extractFloat(dj, "\"current_hp\":", 45.0f);
-                        info.bandwidth_use = extractInt(dj, "\"bandwidth_use\":", 5);
-                        info.volume        = extractFloat(dj, "\"volume\":", 5.0f);
+                        info.damage        = extractFloat(dj, "damage", 0.0f);
+                        info.rate_of_fire  = extractFloat(dj, "rate_of_fire", 3.0f);
+                        info.optimal_range = extractFloat(dj, "optimal_range", 5000.0f);
+                        info.hitpoints     = extractFloat(dj, "hitpoints", 45.0f);
+                        info.current_hp    = extractFloat(dj, "current_hp", 45.0f);
+                        info.bandwidth_use = extractInt(dj, "bandwidth_use", 5);
+                        info.volume        = extractFloat(dj, "volume", 5.0f);
                         out.push_back(info);
                         obj_start = std::string::npos;
                     }
@@ -585,10 +585,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 contract.assignee_id       = extractString(cj, "assignee_id");
                                 contract.type              = extractString(cj, "type");
                                 contract.status            = extractString(cj, "status");
-                                contract.isk_reward        = extractDouble(cj, "\"isk_reward\":", 0.0);
-                                contract.isk_collateral    = extractDouble(cj, "\"isk_collateral\":", 0.0);
-                                contract.duration_remaining = extractFloat(cj, "\"duration_remaining\":", -1.0f);
-                                contract.days_to_complete  = extractFloat(cj, "\"days_to_complete\":", 3.0f);
+                                contract.isk_reward        = extractDouble(cj, "isk_reward", 0.0);
+                                contract.isk_collateral    = extractDouble(cj, "isk_collateral", 0.0);
+                                contract.duration_remaining = extractFloat(cj, "duration_remaining", -1.0f);
+                                contract.days_to_complete  = extractFloat(cj, "days_to_complete", 3.0f);
 
                                 auto parseItems = [&](const std::string& key,
                                                       std::vector<components::ContractBoard::ContractItem>& out) {
@@ -619,8 +619,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                                 components::ContractBoard::ContractItem item;
                                                 item.item_id  = extractString(ij, "item_id");
                                                 item.name     = extractString(ij, "name");
-                                                item.quantity = extractInt(ij, "\"quantity\":");
-                                                item.volume   = extractFloat(ij, "\"volume\":", 1.0f);
+                                                item.quantity = extractInt(ij, "quantity");
+                                                item.volume   = extractFloat(ij, "volume", 1.0f);
                                                 out.push_back(item);
                                                 os2 = std::string::npos;
                                             }
@@ -648,9 +648,9 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     if (!sta_json.empty()) {
         auto sta = std::make_unique<components::Station>();
         sta->station_name      = extractString(sta_json, "station_name");
-        sta->docking_range     = extractFloat(sta_json, "\"docking_range\":", 2500.0f);
-        sta->repair_cost_per_hp = extractFloat(sta_json, "\"repair_cost_per_hp\":", 1.0f);
-        sta->docked_count      = extractInt(sta_json, "\"docked_count\":");
+        sta->docking_range     = extractFloat(sta_json, "docking_range", 2500.0f);
+        sta->repair_cost_per_hp = extractFloat(sta_json, "repair_cost_per_hp", 1.0f);
+        sta->docked_count      = extractInt(sta_json, "docked_count");
         entity->addComponent(std::move(sta));
     }
 
@@ -667,8 +667,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     if (!wrk_json.empty()) {
         auto wrk = std::make_unique<components::Wreck>();
         wrk->source_entity_id   = extractString(wrk_json, "source_entity_id");
-        wrk->lifetime_remaining = extractFloat(wrk_json, "\"lifetime_remaining\":", 1800.0f);
-        wrk->salvaged           = extractBool(wrk_json, "\"salvaged\":", false);
+        wrk->lifetime_remaining = extractFloat(wrk_json, "lifetime_remaining", 1800.0f);
+        wrk->salvaged           = extractBool(wrk_json, "salvaged", false);
         entity->addComponent(std::move(wrk));
     }
 
@@ -676,14 +676,14 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string cp_json = extractObject(json, "captain_personality");
     if (!cp_json.empty()) {
         auto cp = std::make_unique<components::CaptainPersonality>();
-        cp->aggression       = extractFloat(cp_json, "\"aggression\":", 0.5f);
-        cp->sociability      = extractFloat(cp_json, "\"sociability\":", 0.5f);
-        cp->optimism         = extractFloat(cp_json, "\"optimism\":", 0.5f);
-        cp->professionalism  = extractFloat(cp_json, "\"professionalism\":", 0.5f);
-        cp->loyalty          = extractFloat(cp_json, "\"loyalty\":", 0.5f);
-        cp->paranoia         = extractFloat(cp_json, "\"paranoia\":", 0.5f);
-        cp->ambition         = extractFloat(cp_json, "\"ambition\":", 0.5f);
-        cp->adaptability     = extractFloat(cp_json, "\"adaptability\":", 0.5f);
+        cp->aggression       = extractFloat(cp_json, "aggression", 0.5f);
+        cp->sociability      = extractFloat(cp_json, "sociability", 0.5f);
+        cp->optimism         = extractFloat(cp_json, "optimism", 0.5f);
+        cp->professionalism  = extractFloat(cp_json, "professionalism", 0.5f);
+        cp->loyalty          = extractFloat(cp_json, "loyalty", 0.5f);
+        cp->paranoia         = extractFloat(cp_json, "paranoia", 0.5f);
+        cp->ambition         = extractFloat(cp_json, "ambition", 0.5f);
+        cp->adaptability     = extractFloat(cp_json, "adaptability", 0.5f);
         cp->captain_name     = extractString(cp_json, "captain_name");
         cp->faction          = extractString(cp_json, "faction");
         entity->addComponent(std::move(cp));
@@ -693,13 +693,13 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string fmor_json = extractObject(json, "fleet_morale");
     if (!fmor_json.empty()) {
         auto fmor = std::make_unique<components::FleetMorale>();
-        fmor->morale_score          = extractFloat(fmor_json, "\"morale_score\":", 0.0f);
-        fmor->wins                  = extractInt(fmor_json, "\"wins\":");
-        fmor->losses                = extractInt(fmor_json, "\"losses\":");
-        fmor->ships_lost            = extractInt(fmor_json, "\"ships_lost\":");
-        fmor->times_saved_by_player = extractInt(fmor_json, "\"times_saved_by_player\":");
-        fmor->times_player_saved    = extractInt(fmor_json, "\"times_player_saved\":");
-        fmor->missions_together     = extractInt(fmor_json, "\"missions_together\":");
+        fmor->morale_score          = extractFloat(fmor_json, "morale_score", 0.0f);
+        fmor->wins                  = extractInt(fmor_json, "wins");
+        fmor->losses                = extractInt(fmor_json, "losses");
+        fmor->ships_lost            = extractInt(fmor_json, "ships_lost");
+        fmor->times_saved_by_player = extractInt(fmor_json, "times_saved_by_player");
+        fmor->times_player_saved    = extractInt(fmor_json, "times_player_saved");
+        fmor->missions_together     = extractInt(fmor_json, "missions_together");
         fmor->morale_state          = extractString(fmor_json, "morale_state");
         if (fmor->morale_state.empty()) fmor->morale_state = "Steady";
         entity->addComponent(std::move(fmor));
@@ -735,7 +735,7 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 std::string rj = content.substr(obj_start, i - obj_start + 1);
                                 components::CaptainRelationship::Relationship rel;
                                 rel.other_captain_id = extractString(rj, "other_captain_id");
-                                rel.affinity         = extractFloat(rj, "\"affinity\":", 0.0f);
+                                rel.affinity         = extractFloat(rj, "affinity", 0.0f);
                                 cr->relationships.push_back(rel);
                                 obj_start = std::string::npos;
                             }
@@ -751,10 +751,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string es_json = extractObject(json, "emotional_state");
     if (!es_json.empty()) {
         auto es = std::make_unique<components::EmotionalState>();
-        es->confidence      = extractFloat(es_json, "\"confidence\":", 50.0f);
-        es->trust_in_player = extractFloat(es_json, "\"trust_in_player\":", 50.0f);
-        es->fatigue         = extractFloat(es_json, "\"fatigue\":", 0.0f);
-        es->hope            = extractFloat(es_json, "\"hope\":", 50.0f);
+        es->confidence      = extractFloat(es_json, "confidence", 50.0f);
+        es->trust_in_player = extractFloat(es_json, "trust_in_player", 50.0f);
+        es->fatigue         = extractFloat(es_json, "fatigue", 0.0f);
+        es->hope            = extractFloat(es_json, "hope", 50.0f);
         entity->addComponent(std::move(es));
     }
 
@@ -762,7 +762,7 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string cm_json = extractObject(json, "captain_memory");
     if (!cm_json.empty()) {
         auto cm = std::make_unique<components::CaptainMemory>();
-        cm->max_memories = extractInt(cm_json, "\"max_memories\":", 50);
+        cm->max_memories = extractInt(cm_json, "max_memories", 50);
         std::string mem_key = "\"memories\"";
         size_t mem_pos = cm_json.find(mem_key);
         if (mem_pos != std::string::npos) {
@@ -790,8 +790,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 components::CaptainMemory::MemoryEntry entry;
                                 entry.event_type       = extractString(mj, "event_type");
                                 entry.context          = extractString(mj, "context");
-                                entry.timestamp        = extractFloat(mj, "\"timestamp\":", 0.0f);
-                                entry.emotional_weight = extractFloat(mj, "\"emotional_weight\":", 0.0f);
+                                entry.timestamp        = extractFloat(mj, "timestamp", 0.0f);
+                                entry.emotional_weight = extractFloat(mj, "emotional_weight", 0.0f);
                                 cm->memories.push_back(entry);
                                 obj_start = std::string::npos;
                             }
@@ -807,13 +807,13 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string ff_json = extractObject(json, "fleet_formation");
     if (!ff_json.empty()) {
         auto ff = std::make_unique<components::FleetFormation>();
-        int ft = extractInt(ff_json, "\"formation\":");
+        int ft = extractInt(ff_json, "formation");
         ff->formation  = static_cast<components::FleetFormation::FormationType>(ft);
-        ff->slot_index = extractInt(ff_json, "\"slot_index\":");
-        ff->offset_x   = extractFloat(ff_json, "\"offset_x\":", 0.0f);
-        ff->offset_y   = extractFloat(ff_json, "\"offset_y\":", 0.0f);
-        ff->offset_z   = extractFloat(ff_json, "\"offset_z\":", 0.0f);
-        ff->spacing_modifier = extractFloat(ff_json, "\"spacing_modifier\":", 1.0f);
+        ff->slot_index = extractInt(ff_json, "slot_index");
+        ff->offset_x   = extractFloat(ff_json, "offset_x", 0.0f);
+        ff->offset_y   = extractFloat(ff_json, "offset_y", 0.0f);
+        ff->offset_z   = extractFloat(ff_json, "offset_z", 0.0f);
+        ff->spacing_modifier = extractFloat(ff_json, "spacing_modifier", 1.0f);
         entity->addComponent(std::move(ff));
     }
 
@@ -821,8 +821,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string fcp_json = extractObject(json, "fleet_cargo_pool");
     if (!fcp_json.empty()) {
         auto fcp = std::make_unique<components::FleetCargoPool>();
-        fcp->total_capacity = static_cast<uint64_t>(extractDouble(fcp_json, "\"total_capacity\":", 0.0));
-        fcp->used_capacity  = static_cast<uint64_t>(extractDouble(fcp_json, "\"used_capacity\":", 0.0));
+        fcp->total_capacity = static_cast<uint64_t>(extractDouble(fcp_json, "total_capacity", 0.0));
+        fcp->used_capacity  = static_cast<uint64_t>(extractDouble(fcp_json, "used_capacity", 0.0));
 
         std::string pi_json = extractObject(fcp_json, "pooled_items");
         if (!pi_json.empty()) {
@@ -898,9 +898,9 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 components::RumorLog::Rumor rumor;
                                 rumor.rumor_id             = extractString(rj, "rumor_id");
                                 rumor.text                 = extractString(rj, "text");
-                                rumor.belief_strength      = extractFloat(rj, "\"belief_strength\":", 0.5f);
-                                rumor.personally_witnessed = extractBool(rj, "\"personally_witnessed\":", false);
-                                rumor.times_heard          = extractInt(rj, "\"times_heard\":");
+                                rumor.belief_strength      = extractFloat(rj, "belief_strength", 0.5f);
+                                rumor.personally_witnessed = extractBool(rj, "personally_witnessed", false);
+                                rumor.times_heard          = extractInt(rj, "times_heard");
                                 rl->rumors.push_back(rumor);
                                 obj_start = std::string::npos;
                             }
@@ -918,10 +918,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         auto md = std::make_unique<components::MineralDeposit>();
         md->mineral_type       = extractString(md_json, "mineral_type");
         if (md->mineral_type.empty()) md->mineral_type = "Ferrite";
-        md->quantity_remaining = extractFloat(md_json, "\"quantity_remaining\":", 10000.0f);
-        md->max_quantity       = extractFloat(md_json, "\"max_quantity\":", 10000.0f);
-        md->yield_rate         = extractFloat(md_json, "\"yield_rate\":", 1.0f);
-        md->volume_per_unit    = extractFloat(md_json, "\"volume_per_unit\":", 0.1f);
+        md->quantity_remaining = extractFloat(md_json, "quantity_remaining", 10000.0f);
+        md->max_quantity       = extractFloat(md_json, "max_quantity", 10000.0f);
+        md->yield_rate         = extractFloat(md_json, "yield_rate", 1.0f);
+        md->volume_per_unit    = extractFloat(md_json, "volume_per_unit", 0.1f);
         entity->addComponent(std::move(md));
     }
 
@@ -955,8 +955,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 std::string rj = content.substr(obj_start, i - obj_start + 1);
                                 components::SystemResources::ResourceEntry entry;
                                 entry.mineral_type       = extractString(rj, "mineral_type");
-                                entry.total_quantity     = extractFloat(rj, "\"total_quantity\":", 0.0f);
-                                entry.remaining_quantity = extractFloat(rj, "\"remaining_quantity\":", 0.0f);
+                                entry.total_quantity     = extractFloat(rj, "total_quantity", 0.0f);
+                                entry.remaining_quantity = extractFloat(rj, "remaining_quantity", 0.0f);
                                 sr->resources.push_back(entry);
                                 obj_start = std::string::npos;
                             }
@@ -973,8 +973,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     if (!mh_json.empty()) {
         auto mh = std::make_unique<components::MarketHub>();
         mh->station_id     = extractString(mh_json, "station_id");
-        mh->broker_fee_rate = extractDouble(mh_json, "\"broker_fee_rate\":", 0.02);
-        mh->sales_tax_rate  = extractDouble(mh_json, "\"sales_tax_rate\":", 0.04);
+        mh->broker_fee_rate = extractDouble(mh_json, "broker_fee_rate", 0.02);
+        mh->sales_tax_rate  = extractDouble(mh_json, "sales_tax_rate", 0.04);
 
         std::string ord_key = "\"orders\"";
         size_t ord_pos = mh_json.find(ord_key);
@@ -1005,12 +1005,12 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 order.item_id            = extractString(oj, "item_id");
                                 order.item_name          = extractString(oj, "item_name");
                                 order.owner_id           = extractString(oj, "owner_id");
-                                order.is_buy_order       = extractBool(oj, "\"is_buy_order\":", false);
-                                order.price_per_unit     = extractDouble(oj, "\"price_per_unit\":", 0.0);
-                                order.quantity           = extractInt(oj, "\"quantity\":", 1);
-                                order.quantity_remaining = extractInt(oj, "\"quantity_remaining\":", 1);
-                                order.duration_remaining = extractFloat(oj, "\"duration_remaining\":", -1.0f);
-                                order.fulfilled          = extractBool(oj, "\"fulfilled\":", false);
+                                order.is_buy_order       = extractBool(oj, "is_buy_order", false);
+                                order.price_per_unit     = extractDouble(oj, "price_per_unit", 0.0);
+                                order.quantity           = extractInt(oj, "quantity", 1);
+                                order.quantity_remaining = extractInt(oj, "quantity_remaining", 1);
+                                order.duration_remaining = extractFloat(oj, "duration_remaining", -1.0f);
+                                order.fulfilled          = extractBool(oj, "fulfilled", false);
                                 mh->orders.push_back(order);
                                 obj_start = std::string::npos;
                             }
@@ -1029,15 +1029,15 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
         auto avc = std::make_unique<components::AnomalyVisualCue>();
         avc->anomaly_id = extractString(avc_json, "anomaly_id");
         avc->cue_type = static_cast<components::AnomalyVisualCue::CueType>(
-            extractInt(avc_json, "\"cue_type\":", 5));
-        avc->intensity = extractFloat(avc_json, "\"intensity\":");
-        avc->radius = extractFloat(avc_json, "\"radius\":");
-        avc->pulse_frequency = extractFloat(avc_json, "\"pulse_frequency\":");
-        avc->r = extractFloat(avc_json, "\"r\":");
-        avc->g = extractFloat(avc_json, "\"g\":");
-        avc->b = extractFloat(avc_json, "\"b\":");
-        avc->distortion_strength = extractFloat(avc_json, "\"distortion_strength\":");
-        avc->active = extractBool(avc_json, "\"active\":", true);
+            extractInt(avc_json, "cue_type", 5));
+        avc->intensity = extractFloat(avc_json, "intensity");
+        avc->radius = extractFloat(avc_json, "radius");
+        avc->pulse_frequency = extractFloat(avc_json, "pulse_frequency");
+        avc->r = extractFloat(avc_json, "r");
+        avc->g = extractFloat(avc_json, "g");
+        avc->b = extractFloat(avc_json, "b");
+        avc->distortion_strength = extractFloat(avc_json, "distortion_strength");
+        avc->active = extractBool(avc_json, "active", true);
         entity->addComponent(std::move(avc));
     }
 
@@ -1045,9 +1045,9 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string lod_json = extractObject(json, "lod_priority");
     if (!lod_json.empty()) {
         auto lod = std::make_unique<components::LODPriority>();
-        lod->priority = extractFloat(lod_json, "\"priority\":");
-        lod->force_visible = extractBool(lod_json, "\"force_visible\":", false);
-        lod->impostor_distance = extractFloat(lod_json, "\"impostor_distance\":");
+        lod->priority = extractFloat(lod_json, "priority");
+        lod->force_visible = extractBool(lod_json, "force_visible", false);
+        lod->impostor_distance = extractFloat(lod_json, "impostor_distance");
         entity->addComponent(std::move(lod));
     }
 
@@ -1055,10 +1055,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string wp_json = extractObject(json, "warp_profile");
     if (!wp_json.empty()) {
         auto wp = std::make_unique<components::WarpProfile>();
-        wp->warp_speed = extractFloat(wp_json, "\"warp_speed\":");
-        wp->mass_norm = extractFloat(wp_json, "\"mass_norm\":");
-        wp->intensity = extractFloat(wp_json, "\"intensity\":");
-        wp->comfort_scale = extractFloat(wp_json, "\"comfort_scale\":");
+        wp->warp_speed = extractFloat(wp_json, "warp_speed");
+        wp->mass_norm = extractFloat(wp_json, "mass_norm");
+        wp->intensity = extractFloat(wp_json, "intensity");
+        wp->comfort_scale = extractFloat(wp_json, "comfort_scale");
         entity->addComponent(std::move(wp));
     }
 
@@ -1066,11 +1066,11 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string wv_json = extractObject(json, "warp_visual");
     if (!wv_json.empty()) {
         auto wv = std::make_unique<components::WarpVisual>();
-        wv->distortion_strength = extractFloat(wv_json, "\"distortion_strength\":");
-        wv->tunnel_noise_scale = extractFloat(wv_json, "\"tunnel_noise_scale\":");
-        wv->vignette_amount = extractFloat(wv_json, "\"vignette_amount\":");
-        wv->bloom_strength = extractFloat(wv_json, "\"bloom_strength\":");
-        wv->starfield_speed = extractFloat(wv_json, "\"starfield_speed\":");
+        wv->distortion_strength = extractFloat(wv_json, "distortion_strength");
+        wv->tunnel_noise_scale = extractFloat(wv_json, "tunnel_noise_scale");
+        wv->vignette_amount = extractFloat(wv_json, "vignette_amount");
+        wv->bloom_strength = extractFloat(wv_json, "bloom_strength");
+        wv->starfield_speed = extractFloat(wv_json, "starfield_speed");
         entity->addComponent(std::move(wv));
     }
 
@@ -1079,8 +1079,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     if (!we_json.empty()) {
         auto we = std::make_unique<components::WarpEvent>();
         we->current_event = extractString(we_json, "current_event");
-        we->event_timer = extractFloat(we_json, "\"event_timer\":");
-        we->severity = extractInt(we_json, "\"severity\":", 0);
+        we->event_timer = extractFloat(we_json, "event_timer");
+        we->severity = extractInt(we_json, "severity", 0);
         entity->addComponent(std::move(we));
     }
 
@@ -1088,10 +1088,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string tp_json = extractObject(json, "tactical_projection");
     if (!tp_json.empty()) {
         auto tp = std::make_unique<components::TacticalProjection>();
-        tp->projected_x = extractFloat(tp_json, "\"projected_x\":");
-        tp->projected_y = extractFloat(tp_json, "\"projected_y\":");
-        tp->vertical_offset = extractFloat(tp_json, "\"vertical_offset\":");
-        tp->visible = extractBool(tp_json, "\"visible\":", true);
+        tp->projected_x = extractFloat(tp_json, "projected_x");
+        tp->projected_y = extractFloat(tp_json, "projected_y");
+        tp->vertical_offset = extractFloat(tp_json, "vertical_offset");
+        tp->visible = extractBool(tp_json, "visible", true);
         entity->addComponent(std::move(tp));
     }
 
@@ -1099,8 +1099,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string pp_json = extractObject(json, "player_presence");
     if (!pp_json.empty()) {
         auto pp = std::make_unique<components::PlayerPresence>();
-        pp->time_since_last_command = extractFloat(pp_json, "\"time_since_last_command\":");
-        pp->time_since_last_speech = extractFloat(pp_json, "\"time_since_last_speech\":");
+        pp->time_since_last_command = extractFloat(pp_json, "time_since_last_command");
+        pp->time_since_last_speech = extractFloat(pp_json, "time_since_last_speech");
         entity->addComponent(std::move(pp));
     }
 
@@ -1109,10 +1109,10 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     if (!fc_json.empty()) {
         auto fc = std::make_unique<components::FactionCulture>();
         fc->faction = extractString(fc_json, "faction");
-        fc->chatter_frequency_mod = extractFloat(fc_json, "\"chatter_frequency_mod\":");
-        fc->formation_tightness_mod = extractFloat(fc_json, "\"formation_tightness_mod\":");
-        fc->morale_sensitivity = extractFloat(fc_json, "\"morale_sensitivity\":");
-        fc->risk_tolerance = extractFloat(fc_json, "\"risk_tolerance\":");
+        fc->chatter_frequency_mod = extractFloat(fc_json, "chatter_frequency_mod");
+        fc->formation_tightness_mod = extractFloat(fc_json, "formation_tightness_mod");
+        fc->morale_sensitivity = extractFloat(fc_json, "morale_sensitivity");
+        fc->risk_tolerance = extractFloat(fc_json, "risk_tolerance");
         entity->addComponent(std::move(fc));
     }
 

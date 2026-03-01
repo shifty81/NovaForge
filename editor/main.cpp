@@ -16,6 +16,8 @@
 #include "tools/DataBrowserPanel.h"
 #include "tools/ModuleEditorPanel.h"
 #include "tools/NPCEditorPanel.h"
+#include "tools/GalaxyMapPanel.h"
+#include "tools/FleetFormationPanel.h"
 #include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
 #include "ui/KeybindManager.h"
@@ -62,6 +64,8 @@ int main() {
     atlas::editor::DataBrowserPanel dataBrowser;
     atlas::editor::ModuleEditorPanel moduleEditor;
     atlas::editor::NPCEditorPanel npcEditor;
+    atlas::editor::GalaxyMapPanel galaxyMap;
+    atlas::editor::FleetFormationPanel fleetFormation;
 
     // ── Keyboard shortcut manager ────────────────────────────────
     atlas::editor::KeybindManager keybinds;
@@ -220,6 +224,8 @@ int main() {
     layout.RegisterPanel(&dataBrowser);
     layout.RegisterPanel(&moduleEditor);
     layout.RegisterPanel(&npcEditor);
+    layout.RegisterPanel(&galaxyMap);
+    layout.RegisterPanel(&fleetFormation);
 
     // Root: horizontal split — left (viewport area) | right (tool panels)
     auto& root = layout.Root();
@@ -237,7 +243,7 @@ int main() {
     root.a->a->panel = &viewport;
     root.a->b->split = atlas::editor::DockSplit::Tab;
     root.a->b->tabs = {&console, &ecsInspector, &netInspector, &sceneGraph,
-                        &dataBrowser, &moduleEditor, &npcEditor};
+                        &dataBrowser, &moduleEditor, &npcEditor, &fleetFormation};
     root.a->b->activeTab = 0;
 
     // Right side: vertical split — top (PCG preview + tools) | bottom (asset/packager)
@@ -252,7 +258,7 @@ int main() {
     root.b->a->a = std::make_unique<atlas::editor::DockNode>();
     root.b->a->b = std::make_unique<atlas::editor::DockNode>();
     root.b->a->a->split = atlas::editor::DockSplit::Tab;
-    root.b->a->a->tabs = {&pcgPreview, &characterSelect, &missionEditor};
+    root.b->a->a->tabs = {&pcgPreview, &characterSelect, &missionEditor, &galaxyMap};
     root.b->a->a->activeTab = 0;
     root.b->a->b->split = atlas::editor::DockSplit::Vertical;
     root.b->a->b->splitRatio = 0.50f;
@@ -272,10 +278,11 @@ int main() {
     std::cout << "[Editor] Layout built with " << layout.Panels().size()
               << " panels" << std::endl;
     std::cout << "[Editor] Panels: Viewport, PCG Preview, Character Select, "
-              << "Mission Editor, Scene Graph, Generation Style, "
+              << "Mission Editor, Galaxy Map, Scene Graph, Generation Style, "
               << "Asset Style, Ship Archetype, ECS Inspector, Net Inspector, "
               << "Console, Game Packager, Live Scene Manager, "
-              << "Data Browser, Module Editor, NPC Editor" << std::endl;
+              << "Data Browser, Module Editor, NPC Editor, Fleet Formation"
+              << std::endl;
 
     // ── Build editor menu bar ────────────────────────────────────
     layout.MenuBar().Build();
