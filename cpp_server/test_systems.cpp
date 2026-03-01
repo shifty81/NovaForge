@@ -22583,6 +22583,115 @@ void testEnvHazardComponentDefaults() {
     assertTrue(approxEqual(h.spread_interval, 30.0f), "Default spread interval 30");
 }
 
+void testEnvHazardRoomLevelDamage() {
+    std::cout << "\n=== Environmental Hazard Room-Level Damage ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem hazSys(&world);
+    systems::FPSCharacterControllerSystem fpsSys(&world);
+
+    // Create a fire hazard in room_eng
+    hazSys.createHazard("hz_fire", "room_eng", "interior_ship",
+                         components::EnvironmentalHazard::HazardType::Fire,
+                         components::EnvironmentalHazard::Severity::Minor);
+
+    // Spawn two characters in the same interior
+    fpsSys.spawnCharacter("player_in_room", "interior_ship", 0, 0, 0);
+    fpsSys.spawnCharacter("player_other_room", "interior_ship", 0, 0, 0);
+
+    // Set rooms: one in the hazard room, one elsewhere
+    fpsSys.setCurrentRoom("player_in_room", "room_eng");
+    fpsSys.setCurrentRoom("player_other_room", "room_bridge");
+
+    // Give both characters health
+    auto* e1 = world.getEntity("fpschar_player_in_room");
+    auto h1 = std::make_unique<components::FPSHealth>();
+    h1->health = 100.0f; h1->shield = 0.0f;
+    e1->addComponent(std::move(h1));
+
+    auto* e2 = world.getEntity("fpschar_player_other_room");
+    auto h2 = std::make_unique<components::FPSHealth>();
+    h2->health = 100.0f; h2->shield = 0.0f;
+    e2->addComponent(std::move(h2));
+
+    // Update for 1 second (Minor DPS = 2.0)
+    hazSys.update(1.0f);
+
+    auto* hp1 = e1->getComponent<components::FPSHealth>();
+    auto* hp2 = e2->getComponent<components::FPSHealth>();
+    assertTrue(hp1->health < 100.0f, "Player in hazard room takes damage");
+    assertTrue(approxEqual(hp1->health, 98.0f), "Player takes 2.0 damage in 1s");
+    assertTrue(approxEqual(hp2->health, 100.0f), "Player in other room takes no damage");
+}
+
+void testEnvHazardNoRoomNoDamage() {
+    std::cout << "\n=== Environmental Hazard No Room No Damage ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem hazSys(&world);
+    systems::FPSCharacterControllerSystem fpsSys(&world);
+
+    hazSys.createHazard("hz_1", "room_eng", "interior_ship",
+                         components::EnvironmentalHazard::HazardType::Fire,
+                         components::EnvironmentalHazard::Severity::Moderate);
+
+    // Spawn character with empty current_room_id (default)
+    fpsSys.spawnCharacter("player_no_room", "interior_ship", 0, 0, 0);
+
+    auto* entity = world.getEntity("fpschar_player_no_room");
+    auto hp = std::make_unique<components::FPSHealth>();
+    hp->health = 100.0f; hp->shield = 0.0f;
+    entity->addComponent(std::move(hp));
+
+    hazSys.update(1.0f);
+
+    auto* health = entity->getComponent<components::FPSHealth>();
+    assertTrue(approxEqual(health->health, 100.0f), "Character without room takes no damage");
+}
+
+void testEnvHazardRoomDamageShieldCascade() {
+    std::cout << "\n=== Environmental Hazard Room Damage Shield Cascade ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem hazSys(&world);
+    systems::FPSCharacterControllerSystem fpsSys(&world);
+
+    hazSys.createHazard("hz_1", "room_eng", "interior_ship",
+                         components::EnvironmentalHazard::HazardType::Radiation,
+                         components::EnvironmentalHazard::Severity::Catastrophic);
+
+    fpsSys.spawnCharacter("shielded", "interior_ship", 0, 0, 0);
+    fpsSys.setCurrentRoom("shielded", "room_eng");
+
+    auto* entity = world.getEntity("fpschar_shielded");
+    auto hp = std::make_unique<components::FPSHealth>();
+    hp->health = 100.0f; hp->shield = 10.0f;
+    entity->addComponent(std::move(hp));
+
+    // Catastrophic DPS = 25.0, 1 second → 25 damage
+    // Shield absorbs 10, remaining 15 hits health
+    hazSys.update(1.0f);
+
+    auto* health = entity->getComponent<components::FPSHealth>();
+    assertTrue(approxEqual(health->shield, 0.0f), "Shield depleted");
+    assertTrue(approxEqual(health->health, 85.0f), "Health takes overflow damage");
+}
+
+void testFPSCharControllerCurrentRoom() {
+    std::cout << "\n=== FPS Character Controller Current Room ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+
+    sys.spawnCharacter("player1", "interior_ship", 0, 0, 0);
+    assertTrue(sys.getCurrentRoom("player1").empty(), "Default room is empty");
+
+    assertTrue(sys.setCurrentRoom("player1", "room_bridge"), "Set room succeeds");
+    assertTrue(sys.getCurrentRoom("player1") == "room_bridge", "Room is bridge");
+
+    assertTrue(sys.setCurrentRoom("player1", "room_eng"), "Change room succeeds");
+    assertTrue(sys.getCurrentRoom("player1") == "room_eng", "Room is engineering");
+
+    assertTrue(!sys.setCurrentRoom("nonexistent", "room_a"), "Set room fails for missing player");
+    assertTrue(sys.getCurrentRoom("nonexistent").empty(), "Get room empty for missing player");
+}
+
 // ==================== FPSObjectiveSystem Tests ====================
 
 void testFPSObjectiveCreate() {
@@ -24435,6 +24544,10 @@ int main() {
     testEnvHazardActiveList();
     testEnvHazardTypeName();
     testEnvHazardComponentDefaults();
+    testEnvHazardRoomLevelDamage();
+    testEnvHazardNoRoomNoDamage();
+    testEnvHazardRoomDamageShieldCascade();
+    testFPSCharControllerCurrentRoom();
 
     // FPS Objective System tests
     testFPSObjectiveCreate();

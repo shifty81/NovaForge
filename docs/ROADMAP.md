@@ -1237,6 +1237,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 #### Environmental Hazards
 - [x] **Interior hazards** — 5 types (HullBreach, Fire, Radiation, ElectricalFault, ToxicLeak) with 4 severity levels (Minor→Catastrophic), DPS scaling (2-25), spread timers, repair progress tracking — EnvironmentalHazard component + EnvironmentalHazardSystem (12 tests)
+- [x] **Room-level hazard scoping** — Damage now applied only to FPS characters whose current_room_id matches the hazard's room; characters in other rooms or without a room assignment are unaffected — FPSCharacterState.current_room_id + FPSCharacterControllerSystem setCurrentRoom()/getCurrentRoom() (13 tests)
 
 #### FPS Objectives
 - [x] **On-foot mission objectives** — 7 types (EliminateHostiles, RescueVIP, Sabotage, DefendPoint, RetrieveItem, RepairSystem, Escape) with state machine (Inactive→Active→Completed/Failed), time limits, progress tracking, type-specific reporting — FPSObjective component + FPSObjectiveSystem (15 tests)
