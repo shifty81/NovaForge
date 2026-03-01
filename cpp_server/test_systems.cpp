@@ -165,6 +165,9 @@
 #include "systems/fps_interaction_system.h"
 #include "systems/fps_combat_system.h"
 #include "systems/fps_inventory_system.h"
+#include "systems/ship_interior_layout_system.h"
+#include "systems/environmental_hazard_system.h"
+#include "systems/fps_objective_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -22251,6 +22254,572 @@ void testFPSInventoryComponentDefaults() {
     assertTrue(inv.itemCount() == 0, "Default 0 items");
 }
 
+// ==================== ShipInteriorLayoutSystem Tests ====================
+
+void testInteriorLayoutGenerateFrigate() {
+    std::cout << "\n=== Interior Layout Generate Frigate ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    bool ok = sys.generateLayout("ship_1", "frigate");
+    assertTrue(ok, "Generate frigate layout succeeds");
+    assertTrue(sys.getRoomCount("ship_1") == 5, "Frigate has 5 rooms");
+}
+
+void testInteriorLayoutGenerateBattleship() {
+    std::cout << "\n=== Interior Layout Generate Battleship ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    bool ok = sys.generateLayout("ship_bs", "battleship");
+    assertTrue(ok, "Generate battleship layout succeeds");
+    assertTrue(sys.getRoomCount("ship_bs") == 10, "Battleship has 10 rooms");
+}
+
+void testInteriorLayoutGenerateCapital() {
+    std::cout << "\n=== Interior Layout Generate Capital ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    bool ok = sys.generateLayout("ship_cap", "capital");
+    assertTrue(ok, "Generate capital layout succeeds");
+    assertTrue(sys.getRoomCount("ship_cap") == 12, "Capital has 12 rooms");
+}
+
+void testInteriorLayoutDuplicate() {
+    std::cout << "\n=== Interior Layout Duplicate ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    sys.generateLayout("ship_1", "frigate");
+    bool dup = sys.generateLayout("ship_1", "frigate");
+    assertTrue(!dup, "Duplicate generation fails");
+}
+
+void testInteriorLayoutFindBridge() {
+    std::cout << "\n=== Interior Layout Find Bridge ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    sys.generateLayout("ship_1", "cruiser");
+    std::string bridge = sys.findRoomByType("ship_1",
+        components::ShipInteriorLayout::RoomType::Bridge);
+    assertTrue(!bridge.empty(), "Bridge room found");
+}
+
+void testInteriorLayoutFindEngineering() {
+    std::cout << "\n=== Interior Layout Find Engineering ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    sys.generateLayout("ship_1", "cruiser");
+    std::string eng = sys.findRoomByType("ship_1",
+        components::ShipInteriorLayout::RoomType::Engineering);
+    assertTrue(!eng.empty(), "Engineering room found");
+}
+
+void testInteriorLayoutConnections() {
+    std::cout << "\n=== Interior Layout Connections ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    sys.generateLayout("ship_1", "frigate");
+    auto* layout = sys.getLayout("ship_1");
+    assertTrue(layout != nullptr, "Layout exists");
+    assertTrue(layout->connectionCount() > 0, "Has connections");
+
+    // First two rooms should be connected
+    if (layout->rooms.size() >= 2) {
+        assertTrue(layout->areConnected(layout->rooms[0].room_id,
+                                         layout->rooms[1].room_id),
+                   "Adjacent rooms are connected");
+    }
+}
+
+void testInteriorLayoutAdjacentRooms() {
+    std::cout << "\n=== Interior Layout Adjacent Rooms ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    sys.generateLayout("ship_1", "cruiser");
+    auto* layout = sys.getLayout("ship_1");
+    assertTrue(layout != nullptr, "Layout exists");
+
+    if (layout->rooms.size() >= 3) {
+        // Middle room should have at least 2 neighbors
+        auto adj = sys.getAdjacentRooms("ship_1", layout->rooms[1].room_id);
+        assertTrue(adj.size() >= 2, "Middle room has at least 2 adjacent rooms");
+    }
+}
+
+void testInteriorLayoutUnknownShip() {
+    std::cout << "\n=== Interior Layout Unknown Ship ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    assertTrue(sys.getRoomCount("nonexistent") == 0, "No rooms for unknown ship");
+    assertTrue(sys.getLayout("nonexistent") == nullptr, "No layout for unknown ship");
+}
+
+void testInteriorLayoutRoomTypeName() {
+    std::cout << "\n=== Interior Layout Room Type Names ===" << std::endl;
+    assertTrue(systems::ShipInteriorLayoutSystem::roomTypeName(0) == "Bridge", "Bridge name");
+    assertTrue(systems::ShipInteriorLayoutSystem::roomTypeName(1) == "Engineering", "Engineering name");
+    assertTrue(systems::ShipInteriorLayoutSystem::roomTypeName(6) == "Corridor", "Corridor name");
+    assertTrue(systems::ShipInteriorLayoutSystem::roomTypeName(7) == "Airlock", "Airlock name");
+    assertTrue(systems::ShipInteriorLayoutSystem::roomTypeName(99) == "Unknown", "Unknown name");
+}
+
+void testInteriorLayoutAirlockExteriorConnection() {
+    std::cout << "\n=== Interior Layout Airlock Exterior Connection ===" << std::endl;
+    ecs::World world;
+    systems::ShipInteriorLayoutSystem sys(&world);
+
+    sys.generateLayout("ship_1", "frigate");
+    auto* layout = sys.getLayout("ship_1");
+    assertTrue(layout != nullptr, "Layout exists");
+
+    // Should have at least one connection to "exterior"
+    bool hasExterior = false;
+    for (const auto& c : layout->connections) {
+        if (c.to_room_id == "exterior" || c.from_room_id == "exterior") {
+            hasExterior = true;
+            break;
+        }
+    }
+    assertTrue(hasExterior, "Airlock has exterior connection");
+}
+
+void testInteriorLayoutComponentDefaults() {
+    std::cout << "\n=== Interior Layout Component Defaults ===" << std::endl;
+    components::ShipInteriorLayout layout;
+    assertTrue(layout.rooms.empty(), "Default empty rooms");
+    assertTrue(layout.connections.empty(), "Default empty connections");
+    assertTrue(layout.roomCount() == 0, "Default room count 0");
+    assertTrue(layout.connectionCount() == 0, "Default connection count 0");
+    assertTrue(!layout.hasRoom("any"), "Default has no rooms");
+    assertTrue(layout.getRoom("any") == nullptr, "Default getRoom null");
+}
+
+// ==================== EnvironmentalHazardSystem Tests ====================
+
+void testEnvHazardCreate() {
+    std::cout << "\n=== Environmental Hazard Create ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    bool ok = sys.createHazard("hz_1", "room_eng", "interior_1",
+                                components::EnvironmentalHazard::HazardType::Fire,
+                                components::EnvironmentalHazard::Severity::Moderate);
+    assertTrue(ok, "Create hazard succeeds");
+    assertTrue(!sys.createHazard("hz_1", "room_eng", "interior_1",
+                                  components::EnvironmentalHazard::HazardType::Fire,
+                                  components::EnvironmentalHazard::Severity::Moderate),
+               "Duplicate create fails");
+}
+
+void testEnvHazardRoomSafety() {
+    std::cout << "\n=== Environmental Hazard Room Safety ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    assertTrue(sys.isRoomSafe("room_a"), "Empty room is safe");
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::HullBreach,
+                      components::EnvironmentalHazard::Severity::Minor);
+    assertTrue(!sys.isRoomSafe("room_a"), "Room with hazard is unsafe");
+    assertTrue(sys.isRoomSafe("room_b"), "Other room still safe");
+}
+
+void testEnvHazardDPS() {
+    std::cout << "\n=== Environmental Hazard DPS ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Minor);
+    float dps = sys.getRoomDPS("room_a");
+    assertTrue(dps > 0.0f, "Minor hazard has positive DPS");
+    assertTrue(approxEqual(dps, 2.0f), "Minor hazard DPS is 2.0");
+}
+
+void testEnvHazardDPSSeverity() {
+    std::cout << "\n=== Environmental Hazard DPS Severity ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_cat", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Catastrophic);
+    float dps = sys.getRoomDPS("room_a");
+    assertTrue(approxEqual(dps, 25.0f), "Catastrophic hazard DPS is 25.0");
+}
+
+void testEnvHazardMultipleInRoom() {
+    std::cout << "\n=== Environmental Hazard Multiple In Room ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Minor);
+    sys.createHazard("hz_2", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Radiation,
+                      components::EnvironmentalHazard::Severity::Moderate);
+
+    auto hazards = sys.getHazardsInRoom("room_a");
+    assertTrue(hazards.size() == 2, "Two hazards in room");
+    float dps = sys.getRoomDPS("room_a");
+    assertTrue(approxEqual(dps, 7.0f), "Combined DPS is 7.0 (2+5)");
+}
+
+void testEnvHazardRepair() {
+    std::cout << "\n=== Environmental Hazard Repair ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Minor);
+    assertTrue(sys.startRepair("hz_1"), "Start repair succeeds");
+    assertTrue(approxEqual(sys.getRepairProgress("hz_1"), 0.0f), "Initial repair progress 0");
+
+    // Simulate 10 seconds of repair (rate = 0.1/s → 1.0 progress)
+    sys.update(10.0f);
+    assertTrue(approxEqual(sys.getRepairProgress("hz_1"), 1.0f), "Repair complete after 10s");
+    assertTrue(sys.isRoomSafe("room_a"), "Room safe after repair");
+}
+
+void testEnvHazardStopRepair() {
+    std::cout << "\n=== Environmental Hazard Stop Repair ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Minor);
+    sys.startRepair("hz_1");
+    sys.update(3.0f);  // Partial repair
+    sys.stopRepair("hz_1");
+    float prog = sys.getRepairProgress("hz_1");
+    assertTrue(prog > 0.0f && prog < 1.0f, "Partial repair progress");
+
+    sys.update(5.0f);  // No further repair progress
+    assertTrue(approxEqual(sys.getRepairProgress("hz_1"), prog), "No progress after stop");
+}
+
+void testEnvHazardRemove() {
+    std::cout << "\n=== Environmental Hazard Remove ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Minor);
+    assertTrue(!sys.isRoomSafe("room_a"), "Room unsafe with hazard");
+    assertTrue(sys.removeHazard("hz_1"), "Remove hazard succeeds");
+    assertTrue(sys.isRoomSafe("room_a"), "Room safe after removal");
+}
+
+void testEnvHazardSpreadTimer() {
+    std::cout << "\n=== Environmental Hazard Spread Timer ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Catastrophic);
+
+    auto* entity = world.getEntity("hz_1");
+    auto* h = entity->getComponent<components::EnvironmentalHazard>();
+    assertTrue(!h->is_spreading, "Not spreading initially");
+
+    // Catastrophic spread interval = 5.0s
+    sys.update(5.0f);
+    assertTrue(h->is_spreading, "Spreading after interval");
+}
+
+void testEnvHazardActiveList() {
+    std::cout << "\n=== Environmental Hazard Active List ===" << std::endl;
+    ecs::World world;
+    systems::EnvironmentalHazardSystem sys(&world);
+
+    sys.createHazard("hz_1", "room_a", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Fire,
+                      components::EnvironmentalHazard::Severity::Minor);
+    sys.createHazard("hz_2", "room_b", "interior_1",
+                      components::EnvironmentalHazard::HazardType::Radiation,
+                      components::EnvironmentalHazard::Severity::Moderate);
+    sys.createHazard("hz_3", "room_c", "interior_2",
+                      components::EnvironmentalHazard::HazardType::ToxicLeak,
+                      components::EnvironmentalHazard::Severity::Critical);
+
+    auto active1 = sys.getActiveHazards("interior_1");
+    assertTrue(active1.size() == 2, "2 active hazards in interior_1");
+
+    auto active2 = sys.getActiveHazards("interior_2");
+    assertTrue(active2.size() == 1, "1 active hazard in interior_2");
+}
+
+void testEnvHazardTypeName() {
+    std::cout << "\n=== Environmental Hazard Type Names ===" << std::endl;
+    assertTrue(systems::EnvironmentalHazardSystem::hazardTypeName(0) == "HullBreach", "HullBreach name");
+    assertTrue(systems::EnvironmentalHazardSystem::hazardTypeName(1) == "Fire", "Fire name");
+    assertTrue(systems::EnvironmentalHazardSystem::hazardTypeName(2) == "Radiation", "Radiation name");
+    assertTrue(systems::EnvironmentalHazardSystem::severityName(0) == "Minor", "Minor severity");
+    assertTrue(systems::EnvironmentalHazardSystem::severityName(3) == "Catastrophic", "Catastrophic severity");
+}
+
+void testEnvHazardComponentDefaults() {
+    std::cout << "\n=== Environmental Hazard Component Defaults ===" << std::endl;
+    components::EnvironmentalHazard h;
+    assertTrue(h.is_active == true, "Default active");
+    assertTrue(!h.is_spreading, "Default not spreading");
+    assertTrue(!h.is_being_repaired, "Default not being repaired");
+    assertTrue(approxEqual(h.repair_progress, 0.0f), "Default repair 0");
+    assertTrue(approxEqual(h.damage_per_second, 5.0f), "Default DPS 5.0");
+    assertTrue(approxEqual(h.spread_interval, 30.0f), "Default spread interval 30");
+}
+
+// ==================== FPSObjectiveSystem Tests ====================
+
+void testFPSObjectiveCreate() {
+    std::cout << "\n=== FPS Objective Create ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    bool ok = sys.createObjective("obj_1", "interior_1", "room_bridge", "player1",
+                                   components::FPSObjective::ObjectiveType::EliminateHostiles,
+                                   "Clear the bridge of enemies");
+    assertTrue(ok, "Create objective succeeds");
+    assertTrue(!sys.createObjective("obj_1", "interior_1", "room_bridge", "player1",
+                                     components::FPSObjective::ObjectiveType::EliminateHostiles),
+               "Duplicate create fails");
+}
+
+void testFPSObjectiveActivate() {
+    std::cout << "\n=== FPS Objective Activate ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_bridge", "player1",
+                         components::FPSObjective::ObjectiveType::EliminateHostiles);
+    assertTrue(sys.getObjectiveState("obj_1") ==
+               static_cast<int>(components::FPSObjective::ObjectiveState::Inactive),
+               "Starts inactive");
+
+    assertTrue(sys.activateObjective("obj_1"), "Activate succeeds");
+    assertTrue(sys.getObjectiveState("obj_1") ==
+               static_cast<int>(components::FPSObjective::ObjectiveState::Active),
+               "Now active");
+
+    // Can't activate again
+    assertTrue(!sys.activateObjective("obj_1"), "Double activate fails");
+}
+
+void testFPSObjectiveEliminateHostiles() {
+    std::cout << "\n=== FPS Objective Eliminate Hostiles ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_bridge", "player1",
+                         components::FPSObjective::ObjectiveType::EliminateHostiles);
+    sys.setHostileCount("obj_1", 3);
+    sys.activateObjective("obj_1");
+
+    sys.reportHostileKill("obj_1");
+    assertTrue(approxEqual(sys.getProgress("obj_1"), 1.0f / 3.0f), "1/3 progress");
+
+    sys.reportHostileKill("obj_1");
+    assertTrue(approxEqual(sys.getProgress("obj_1"), 2.0f / 3.0f), "2/3 progress");
+
+    sys.reportHostileKill("obj_1");
+    assertTrue(sys.isComplete("obj_1"), "Objective complete after 3 kills");
+    assertTrue(approxEqual(sys.getProgress("obj_1"), 1.0f), "Progress at 1.0");
+}
+
+void testFPSObjectiveRetrieveItem() {
+    std::cout << "\n=== FPS Objective Retrieve Item ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_cargo", "player1",
+                         components::FPSObjective::ObjectiveType::RetrieveItem);
+    sys.setTargetItem("obj_1", "data_core_alpha");
+    sys.activateObjective("obj_1");
+
+    // Wrong item
+    assertTrue(!sys.reportItemCollected("obj_1", "wrong_item"), "Wrong item fails");
+    assertTrue(!sys.isComplete("obj_1"), "Not complete yet");
+
+    // Correct item
+    assertTrue(sys.reportItemCollected("obj_1", "data_core_alpha"), "Correct item succeeds");
+    assertTrue(sys.isComplete("obj_1"), "Objective complete");
+}
+
+void testFPSObjectiveDefendPoint() {
+    std::cout << "\n=== FPS Objective Defend Point ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_eng", "player1",
+                         components::FPSObjective::ObjectiveType::DefendPoint);
+    sys.setDefendDuration("obj_1", 60.0f);
+    sys.activateObjective("obj_1");
+
+    sys.update(30.0f);
+    assertTrue(approxEqual(sys.getProgress("obj_1"), 0.5f), "50% progress at 30s");
+    assertTrue(!sys.isComplete("obj_1"), "Not complete at 30s");
+
+    sys.update(30.0f);
+    assertTrue(sys.isComplete("obj_1"), "Complete after 60s");
+}
+
+void testFPSObjectiveSabotage() {
+    std::cout << "\n=== FPS Objective Sabotage ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_eng", "player1",
+                         components::FPSObjective::ObjectiveType::Sabotage,
+                         "Destroy the reactor core");
+    sys.activateObjective("obj_1");
+
+    assertTrue(sys.reportSabotageComplete("obj_1"), "Sabotage report succeeds");
+    assertTrue(sys.isComplete("obj_1"), "Objective complete");
+}
+
+void testFPSObjectiveEscape() {
+    std::cout << "\n=== FPS Objective Escape ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_airlock", "player1",
+                         components::FPSObjective::ObjectiveType::Escape);
+    sys.activateObjective("obj_1");
+
+    assertTrue(sys.reportExtraction("obj_1"), "Extraction succeeds");
+    assertTrue(sys.isComplete("obj_1"), "Objective complete");
+}
+
+void testFPSObjectiveRescueVIP() {
+    std::cout << "\n=== FPS Objective Rescue VIP ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_quarters", "player1",
+                         components::FPSObjective::ObjectiveType::RescueVIP,
+                         "Rescue the ambassador");
+    sys.activateObjective("obj_1");
+
+    assertTrue(sys.reportVIPRescued("obj_1"), "VIP rescue succeeds");
+    assertTrue(sys.isComplete("obj_1"), "Objective complete");
+}
+
+void testFPSObjectiveRepairSystem() {
+    std::cout << "\n=== FPS Objective Repair System ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_eng", "player1",
+                         components::FPSObjective::ObjectiveType::RepairSystem,
+                         "Fix the reactor coolant system");
+    sys.activateObjective("obj_1");
+
+    assertTrue(sys.reportRepairComplete("obj_1"), "Repair report succeeds");
+    assertTrue(sys.isComplete("obj_1"), "Objective complete");
+}
+
+void testFPSObjectiveTimeLimit() {
+    std::cout << "\n=== FPS Objective Time Limit ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_bridge", "player1",
+                         components::FPSObjective::ObjectiveType::EliminateHostiles,
+                         "Clear the bridge", 10.0f);
+    sys.setHostileCount("obj_1", 5);
+    sys.activateObjective("obj_1");
+
+    sys.update(10.0f);
+    assertTrue(sys.isFailed("obj_1"), "Objective failed due to time limit");
+}
+
+void testFPSObjectiveFailManual() {
+    std::cout << "\n=== FPS Objective Manual Fail ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_bridge", "player1",
+                         components::FPSObjective::ObjectiveType::DefendPoint);
+    sys.activateObjective("obj_1");
+
+    assertTrue(sys.failObjective("obj_1"), "Manual fail succeeds");
+    assertTrue(sys.isFailed("obj_1"), "Objective is failed");
+}
+
+void testFPSObjectivePlayerList() {
+    std::cout << "\n=== FPS Objective Player List ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_a", "player1",
+                         components::FPSObjective::ObjectiveType::EliminateHostiles);
+    sys.createObjective("obj_2", "interior_1", "room_b", "player1",
+                         components::FPSObjective::ObjectiveType::Sabotage);
+    sys.createObjective("obj_3", "interior_1", "room_c", "player2",
+                         components::FPSObjective::ObjectiveType::Escape);
+
+    sys.activateObjective("obj_1");
+    sys.activateObjective("obj_2");
+    sys.activateObjective("obj_3");
+
+    auto p1_objs = sys.getPlayerObjectives("player1");
+    assertTrue(p1_objs.size() == 2, "Player1 has 2 objectives");
+
+    auto p2_objs = sys.getPlayerObjectives("player2");
+    assertTrue(p2_objs.size() == 1, "Player2 has 1 objective");
+}
+
+void testFPSObjectiveWrongType() {
+    std::cout << "\n=== FPS Objective Wrong Type Report ===" << std::endl;
+    ecs::World world;
+    systems::FPSObjectiveSystem sys(&world);
+
+    sys.createObjective("obj_1", "interior_1", "room_a", "player1",
+                         components::FPSObjective::ObjectiveType::EliminateHostiles);
+    sys.activateObjective("obj_1");
+
+    // Can't report sabotage on an eliminate objective
+    assertTrue(!sys.reportSabotageComplete("obj_1"), "Wrong type report fails");
+    assertTrue(!sys.reportExtraction("obj_1"), "Wrong type extraction fails");
+    assertTrue(!sys.isComplete("obj_1"), "Not complete from wrong reports");
+}
+
+void testFPSObjectiveTypeName() {
+    std::cout << "\n=== FPS Objective Type Names ===" << std::endl;
+    assertTrue(systems::FPSObjectiveSystem::objectiveTypeName(0) == "EliminateHostiles", "EliminateHostiles name");
+    assertTrue(systems::FPSObjectiveSystem::objectiveTypeName(1) == "RescueVIP", "RescueVIP name");
+    assertTrue(systems::FPSObjectiveSystem::objectiveTypeName(2) == "Sabotage", "Sabotage name");
+    assertTrue(systems::FPSObjectiveSystem::objectiveTypeName(3) == "DefendPoint", "DefendPoint name");
+    assertTrue(systems::FPSObjectiveSystem::stateName(0) == "Inactive", "Inactive state name");
+    assertTrue(systems::FPSObjectiveSystem::stateName(2) == "Completed", "Completed state name");
+}
+
+void testFPSObjectiveComponentDefaults() {
+    std::cout << "\n=== FPS Objective Component Defaults ===" << std::endl;
+    components::FPSObjective obj;
+    assertTrue(obj.state == 0, "Default state inactive");
+    assertTrue(obj.objective_type == 0, "Default type eliminate");
+    assertTrue(approxEqual(obj.progress, 0.0f), "Default progress 0");
+    assertTrue(approxEqual(obj.time_limit, 0.0f), "Default no time limit");
+    assertTrue(obj.hostiles_required == 0, "Default 0 hostiles required");
+    assertTrue(obj.hostiles_killed == 0, "Default 0 hostiles killed");
+    assertTrue(!obj.item_collected, "Default item not collected");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -22299,7 +22868,8 @@ int main() {
     std::cout << "AncientAIRemnant, CharCreationScreen, ViewModeTransition" << std::endl;
     std::cout << "StationHangar, TetherDocking, FPSSpawn," << std::endl;
     std::cout << "FPSCharacterController, InteriorDoor, EVAAirlock," << std::endl;
-    std::cout << "FPSInteraction, FPSCombat, FPSInventory" << std::endl;
+    std::cout << "FPSInteraction, FPSCombat, FPSInventory," << std::endl;
+    std::cout << "ShipInteriorLayout, EnvironmentalHazard, FPSObjective" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -23837,6 +24407,51 @@ int main() {
     testFPSInventoryUseConsumableFood();
     testFPSInventoryUseConsumableMedkit();
     testFPSInventoryComponentDefaults();
+
+    // Ship Interior Layout System tests
+    testInteriorLayoutGenerateFrigate();
+    testInteriorLayoutGenerateBattleship();
+    testInteriorLayoutGenerateCapital();
+    testInteriorLayoutDuplicate();
+    testInteriorLayoutFindBridge();
+    testInteriorLayoutFindEngineering();
+    testInteriorLayoutConnections();
+    testInteriorLayoutAdjacentRooms();
+    testInteriorLayoutUnknownShip();
+    testInteriorLayoutRoomTypeName();
+    testInteriorLayoutAirlockExteriorConnection();
+    testInteriorLayoutComponentDefaults();
+
+    // Environmental Hazard System tests
+    testEnvHazardCreate();
+    testEnvHazardRoomSafety();
+    testEnvHazardDPS();
+    testEnvHazardDPSSeverity();
+    testEnvHazardMultipleInRoom();
+    testEnvHazardRepair();
+    testEnvHazardStopRepair();
+    testEnvHazardRemove();
+    testEnvHazardSpreadTimer();
+    testEnvHazardActiveList();
+    testEnvHazardTypeName();
+    testEnvHazardComponentDefaults();
+
+    // FPS Objective System tests
+    testFPSObjectiveCreate();
+    testFPSObjectiveActivate();
+    testFPSObjectiveEliminateHostiles();
+    testFPSObjectiveRetrieveItem();
+    testFPSObjectiveDefendPoint();
+    testFPSObjectiveSabotage();
+    testFPSObjectiveEscape();
+    testFPSObjectiveRescueVIP();
+    testFPSObjectiveRepairSystem();
+    testFPSObjectiveTimeLimit();
+    testFPSObjectiveFailManual();
+    testFPSObjectivePlayerList();
+    testFPSObjectiveWrongType();
+    testFPSObjectiveTypeName();
+    testFPSObjectiveComponentDefaults();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

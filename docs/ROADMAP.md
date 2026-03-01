@@ -1232,6 +1232,20 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Hull deformation tracking** — Interior modules affect exterior appearance — InteriorExteriorLink component with per-module deformation and visibility (3 tests)
 - [ ] **Visual coupling** — Solar panels, ore containers, vents visible on exterior based on interior modules
 
+#### Ship Interior Layout
+- [x] **Procedural room layout** — Ship class-based room generation (frigate 5 rooms, cruiser 8, battleship 10, capital 12), 10 room types (Bridge, Engineering, CargoHold, CrewQuarters, MedicalBay, Armory, Corridor, Airlock, HangarBay, ScienceLab), corridor connections, airlock exterior links — ShipInteriorLayout component + ShipInteriorLayoutSystem (12 tests)
+
+#### Environmental Hazards
+- [x] **Interior hazards** — 5 types (HullBreach, Fire, Radiation, ElectricalFault, ToxicLeak) with 4 severity levels (Minor→Catastrophic), DPS scaling (2-25), spread timers, repair progress tracking — EnvironmentalHazard component + EnvironmentalHazardSystem (12 tests)
+
+#### FPS Objectives
+- [x] **On-foot mission objectives** — 7 types (EliminateHostiles, RescueVIP, Sabotage, DefendPoint, RetrieveItem, RepairSystem, Escape) with state machine (Inactive→Active→Completed/Failed), time limits, progress tracking, type-specific reporting — FPSObjective component + FPSObjectiveSystem (15 tests)
+
+#### FPS Interaction, Combat & Inventory
+- [x] **FPS interaction** — Proximity-based interaction bridging FPS characters to interior objects (doors, airlocks, terminals, loot containers, fabricators, medical bays), access control, enable/disable — FPSInteractable component + FPSInteractionSystem (11 tests)
+- [x] **FPS combat** — Personal-scale weapons (Sidearm/Rifle/Shotgun/Tool) with ammo, cooldown, timed reload, shield-recharge-after-delay, damage cascade — FPSWeapon + FPSHealth components + FPSCombatSystem (17 tests)
+- [x] **FPS inventory** — Slotted inventory with stacking and capacity, weapon/tool equipping, consumables (oxygen, food, medkit, stim) — FPSInventoryComponent + FPSInventorySystem (11 tests)
+
 ---
 
 ### 📋 Phase 14: Vehicles & Planetary Systems (In Progress)

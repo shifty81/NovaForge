@@ -4122,6 +4122,242 @@ public:
     COMPONENT_TYPE(FPSInventoryComponent)
 };
 
+// ==================== Ship Interior Layout ====================
+
+/**
+ * @brief Procedural room layout for a ship interior
+ *
+ * Defines rooms, corridors, and connections that make up a ship's
+ * walkable interior.  Room types depend on ship class and size.
+ */
+class ShipInteriorLayout : public ecs::Component {
+public:
+    enum class RoomType {
+        Bridge = 0,
+        Engineering = 1,
+        CargoHold = 2,
+        CrewQuarters = 3,
+        MedicalBay = 4,
+        Armory = 5,
+        Corridor = 6,
+        Airlock = 7,
+        HangarBay = 8,
+        ScienceLab = 9
+    };
+
+    struct Room {
+        std::string room_id;
+        int room_type = 0;                // RoomType as int
+        float size_x = 6.0f;              // metres
+        float size_y = 3.0f;              // ceiling height
+        float size_z = 6.0f;
+        float pos_x = 0.0f;              // position in interior-local coords
+        float pos_y = 0.0f;
+        float pos_z = 0.0f;
+        bool has_gravity = true;
+        bool is_pressurized = true;
+    };
+
+    struct Connection {
+        std::string from_room_id;
+        std::string to_room_id;
+        std::string door_id;              // links to InteriorDoor entity
+    };
+
+    std::string interior_id;
+    std::string ship_id;
+    std::string ship_class;                // "frigate", "cruiser", "battleship", etc.
+    std::vector<Room> rooms;
+    std::vector<Connection> connections;
+
+    int roomCount() const { return static_cast<int>(rooms.size()); }
+    int connectionCount() const { return static_cast<int>(connections.size()); }
+
+    bool hasRoom(const std::string& room_id) const {
+        for (const auto& r : rooms) {
+            if (r.room_id == room_id) return true;
+        }
+        return false;
+    }
+
+    const Room* getRoom(const std::string& room_id) const {
+        for (const auto& r : rooms) {
+            if (r.room_id == room_id) return &r;
+        }
+        return nullptr;
+    }
+
+    bool areConnected(const std::string& a, const std::string& b) const {
+        for (const auto& c : connections) {
+            if ((c.from_room_id == a && c.to_room_id == b) ||
+                (c.from_room_id == b && c.to_room_id == a))
+                return true;
+        }
+        return false;
+    }
+
+    static std::string roomTypeName(int type) {
+        switch (static_cast<RoomType>(type)) {
+            case RoomType::Bridge:       return "Bridge";
+            case RoomType::Engineering:  return "Engineering";
+            case RoomType::CargoHold:    return "CargoHold";
+            case RoomType::CrewQuarters: return "CrewQuarters";
+            case RoomType::MedicalBay:   return "MedicalBay";
+            case RoomType::Armory:       return "Armory";
+            case RoomType::Corridor:     return "Corridor";
+            case RoomType::Airlock:      return "Airlock";
+            case RoomType::HangarBay:    return "HangarBay";
+            case RoomType::ScienceLab:   return "ScienceLab";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(ShipInteriorLayout)
+};
+
+// ==================== Environmental Hazard ====================
+
+/**
+ * @brief Environmental hazard affecting a room or area within a ship interior
+ *
+ * Hazards have severity levels, spread over time if unrepaired, and
+ * deal damage to FPS characters in affected areas.
+ */
+class EnvironmentalHazard : public ecs::Component {
+public:
+    enum class HazardType {
+        HullBreach = 0,      // Causes depressurization
+        Fire = 1,            // Deals heat damage, spreads to adjacent rooms
+        Radiation = 2,       // Deals radiation damage through walls
+        ElectricalFault = 3, // Disables room systems, shocks nearby characters
+        ToxicLeak = 4        // Poisons characters, requires EVA suit
+    };
+
+    enum class Severity {
+        Minor = 0,           // Slow damage, easily repaired
+        Moderate = 1,        // Moderate damage, requires tools
+        Critical = 2,        // High damage, may spread
+        Catastrophic = 3     // Extreme damage, spreads rapidly
+    };
+
+    std::string hazard_id;
+    std::string room_id;         // The room this hazard affects
+    std::string interior_id;     // Which ship/station interior
+
+    int hazard_type = 0;         // HazardType as int
+    int severity = 0;            // Severity as int
+
+    float damage_per_second = 5.0f;   // DPS to characters in the room
+    float spread_timer = 0.0f;        // Time until hazard spreads to adjacent room
+    float spread_interval = 30.0f;    // Seconds between spread attempts
+    float repair_progress = 0.0f;     // 0.0 = unrepaired, 1.0 = fully repaired
+    float repair_rate = 0.1f;         // Progress per second when being repaired
+
+    bool is_active = true;
+    bool is_spreading = false;
+    bool is_being_repaired = false;
+
+    static std::string hazardTypeName(int type) {
+        switch (static_cast<HazardType>(type)) {
+            case HazardType::HullBreach:      return "HullBreach";
+            case HazardType::Fire:            return "Fire";
+            case HazardType::Radiation:       return "Radiation";
+            case HazardType::ElectricalFault: return "ElectricalFault";
+            case HazardType::ToxicLeak:       return "ToxicLeak";
+            default: return "Unknown";
+        }
+    }
+
+    static std::string severityName(int sev) {
+        switch (static_cast<Severity>(sev)) {
+            case Severity::Minor:        return "Minor";
+            case Severity::Moderate:     return "Moderate";
+            case Severity::Critical:     return "Critical";
+            case Severity::Catastrophic: return "Catastrophic";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(EnvironmentalHazard)
+};
+
+// ==================== FPS Objective ====================
+
+/**
+ * @brief On-foot mission objective for FPS gameplay
+ *
+ * Tracks progress on boarding actions, rescue, sabotage, defense,
+ * and other objectives that occur while a player is on foot inside
+ * a ship or station.
+ */
+class FPSObjective : public ecs::Component {
+public:
+    enum class ObjectiveType {
+        EliminateHostiles = 0,   // Kill all enemies in the area
+        RescueVIP = 1,           // Escort/find a VIP NPC
+        Sabotage = 2,            // Destroy or disable a target object
+        DefendPoint = 3,         // Hold a position for a duration
+        RetrieveItem = 4,        // Find and pick up an item
+        RepairSystem = 5,        // Fix a broken system (ties to EnvironmentalHazard)
+        Escape = 6               // Reach an extraction point
+    };
+
+    enum class ObjectiveState {
+        Inactive = 0,
+        Active = 1,
+        Completed = 2,
+        Failed = 3
+    };
+
+    std::string objective_id;
+    std::string interior_id;       // Which ship/station interior
+    std::string room_id;           // Target room (if applicable)
+    std::string assigned_player;   // Player this objective belongs to
+
+    int objective_type = 0;        // ObjectiveType as int
+    int state = 0;                 // ObjectiveState as int
+
+    std::string description;       // Human-readable description
+
+    // Progress tracking
+    float progress = 0.0f;         // 0.0 to 1.0
+    float time_limit = 0.0f;       // Seconds (0 = no time limit)
+    float elapsed_time = 0.0f;
+
+    // Type-specific fields
+    int hostiles_required = 0;     // For EliminateHostiles
+    int hostiles_killed = 0;
+    float defend_duration = 0.0f;  // For DefendPoint
+    float defend_elapsed = 0.0f;
+    std::string target_item_id;    // For RetrieveItem / Sabotage
+    bool item_collected = false;
+
+    static std::string objectiveTypeName(int type) {
+        switch (static_cast<ObjectiveType>(type)) {
+            case ObjectiveType::EliminateHostiles: return "EliminateHostiles";
+            case ObjectiveType::RescueVIP:         return "RescueVIP";
+            case ObjectiveType::Sabotage:          return "Sabotage";
+            case ObjectiveType::DefendPoint:       return "DefendPoint";
+            case ObjectiveType::RetrieveItem:      return "RetrieveItem";
+            case ObjectiveType::RepairSystem:      return "RepairSystem";
+            case ObjectiveType::Escape:            return "Escape";
+            default: return "Unknown";
+        }
+    }
+
+    static std::string stateName(int s) {
+        switch (static_cast<ObjectiveState>(s)) {
+            case ObjectiveState::Inactive:  return "Inactive";
+            case ObjectiveState::Active:    return "Active";
+            case ObjectiveState::Completed: return "Completed";
+            case ObjectiveState::Failed:    return "Failed";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(FPSObjective)
+};
+
 } // namespace components
 } // namespace atlas
 
