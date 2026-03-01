@@ -171,6 +171,7 @@ set(SERVER_SOURCES
     src/systems/environmental_hazard_system.cpp
     src/systems/fps_objective_system.cpp
     src/systems/wing_management_system.cpp
+    src/systems/economic_flow_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -353,6 +354,7 @@ set(SERVER_HEADERS
     include/systems/ship_interior_layout_system.h
     include/systems/environmental_hazard_system.h
     include/systems/fps_objective_system.h
+    include/systems/economic_flow_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -601,6 +603,7 @@ if(BUILD_TESTS)
         src/systems/environmental_hazard_system.cpp
         src/systems/fps_objective_system.cpp
         src/systems/wing_management_system.cpp
+        src/systems/economic_flow_system.cpp
         src/data/world_persistence.cpp
         src/data/world_serializer.cpp
         src/data/world_deserializer.cpp

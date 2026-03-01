@@ -499,6 +499,34 @@ public:
     COMPONENT_TYPE(PriceHistory)
 };
 
+/**
+ * @brief Tracks the economic flow lifecycle for a star system
+ *
+ * Records production, transport, consumption, and destruction of goods
+ * so that the economy operates without fake NPC market orders.
+ * Everything is produced, transported, consumed, or destroyed.
+ */
+class EconomicFlowState : public ecs::Component {
+public:
+    // Per-commodity flow tracking: commodity_id -> amount per tick
+    std::map<std::string, float> production_rate;     // goods produced
+    std::map<std::string, float> consumption_rate;    // goods consumed
+    std::map<std::string, float> transport_in_rate;   // goods arriving
+    std::map<std::string, float> transport_out_rate;  // goods leaving
+    std::map<std::string, float> destruction_rate;    // goods destroyed (combat, decay)
+
+    // Aggregate metrics
+    float total_production = 0.0f;
+    float total_consumption = 0.0f;
+    float economic_health = 1.0f;    // 0.0=collapsed, 1.0=balanced, >1=surplus
+
+    // Regional market delays
+    float market_info_delay = 0.0f;  // seconds of information lag
+    float last_update_time = 0.0f;
+
+    COMPONENT_TYPE(EconomicFlowState)
+};
+
 
 } // namespace components
 } // namespace atlas
