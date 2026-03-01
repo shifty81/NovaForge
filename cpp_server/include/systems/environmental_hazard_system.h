@@ -18,11 +18,10 @@ namespace systems {
  * in the affected room, can spread to adjacent rooms over time, and
  * can be repaired by player interaction.
  *
- * @note Current limitation: damage is applied to all FPS characters
- * sharing the same interior_id, not just those in the affected room,
- * because FPSCharacterState does not yet have room-level spatial
- * tracking.  A room-to-characters index should be added when
- * FPSCharacterState gains a current_room_id field.
+ * Damage is scoped to the room level: only characters whose
+ * current_room_id matches the hazard's room_id take damage.
+ * Characters with an empty current_room_id are treated as not in
+ * any room and will not be affected.
  */
 class EnvironmentalHazardSystem : public ecs::System {
 public:

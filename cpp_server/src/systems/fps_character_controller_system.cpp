@@ -226,5 +226,25 @@ std::string FPSCharacterControllerSystem::stanceName(int stance) {
     }
 }
 
+bool FPSCharacterControllerSystem::setCurrentRoom(const std::string& player_id,
+                                                    const std::string& room_id) {
+    std::string entity_id = std::string(FPS_CHAR_PREFIX) + player_id;
+    auto* entity = world_->getEntity(entity_id);
+    if (!entity) return false;
+    auto* state = entity->getComponent<components::FPSCharacterState>();
+    if (!state) return false;
+    state->current_room_id = room_id;
+    return true;
+}
+
+std::string FPSCharacterControllerSystem::getCurrentRoom(const std::string& player_id) const {
+    std::string entity_id = std::string(FPS_CHAR_PREFIX) + player_id;
+    auto* entity = world_->getEntity(entity_id);
+    if (!entity) return "";
+    auto* state = entity->getComponent<components::FPSCharacterState>();
+    if (!state) return "";
+    return state->current_room_id;
+}
+
 } // namespace systems
 } // namespace atlas

@@ -88,6 +88,16 @@ public:
     int getStance(const std::string& player_id) const;
 
     /**
+     * @brief Set the current room the character is in (for hazard scoping)
+     */
+    bool setCurrentRoom(const std::string& player_id, const std::string& room_id);
+
+    /**
+     * @brief Get the current room the character is in
+     */
+    std::string getCurrentRoom(const std::string& player_id) const;
+
+    /**
      * @brief Get the name of a stance
      */
     static std::string stanceName(int stance);

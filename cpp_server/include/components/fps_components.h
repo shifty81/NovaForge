@@ -63,7 +63,8 @@ public:
     };
 
     std::string player_id;
-    std::string interior_id;  // Which ship/station interior the character is in
+    std::string interior_id;      // Which ship/station interior the character is in
+    std::string current_room_id;  // Which room inside the interior (for hazard scoping)
 
     // Position in interior-local coordinates
     float pos_x = 0.0f;

@@ -32,13 +32,14 @@ void EnvironmentalHazardSystem::update(float delta_time) {
             }
         }
 
-        // Apply damage to FPS characters in the same interior.
-        // NOTE: FPSCharacterState lacks a room_id field, so we match on
-        // interior_id only.  Room-level filtering should be added once
-        // FPSCharacterState gains spatial / room awareness.
+        // Apply damage to FPS characters in the same room.
+        // Characters are matched by interior_id AND current_room_id so
+        // that only those physically present in the hazard's room take
+        // damage.  Characters without a current_room_id are unaffected.
         for (auto* charEntity : world_->getEntities<components::FPSCharacterState>()) {
             auto* cs = charEntity->getComponent<components::FPSCharacterState>();
             if (!cs || cs->interior_id != hazard->interior_id) continue;
+            if (cs->current_room_id.empty() || cs->current_room_id != hazard->room_id) continue;
 
             auto* health = charEntity->getComponent<components::FPSHealth>();
             if (health && health->is_alive) {
