@@ -3843,6 +3843,57 @@ public:
     COMPONENT_TYPE(FPSSpawnPoint)
 };
 
+/**
+ * @brief Runtime state for a player-controlled first-person character
+ *        moving inside a ship or station interior.
+ */
+class FPSCharacterState : public ecs::Component {
+public:
+    enum class Stance {
+        Standing = 0,
+        Crouching = 1,
+        Sprinting = 2
+    };
+
+    std::string player_id;
+    std::string interior_id;  // Which ship/station interior the character is in
+
+    // Position in interior-local coordinates
+    float pos_x = 0.0f;
+    float pos_y = 0.0f;  // vertical (up)
+    float pos_z = 0.0f;
+
+    // Orientation
+    float yaw = 0.0f;     // degrees, horizontal look
+    float pitch = 0.0f;   // degrees, vertical look (clamped ±89)
+
+    // Movement state
+    float move_x = 0.0f;  // Input direction X (-1..1)
+    float move_z = 0.0f;  // Input direction Z (-1..1)
+    float vel_y = 0.0f;   // Vertical velocity (for jump/fall)
+
+    int stance = 0;        // Stance enum as int
+    bool grounded = true;
+    bool jump_requested = false;
+
+    // Movement parameters
+    float walk_speed = 4.0f;       // m/s
+    float sprint_speed = 7.0f;     // m/s
+    float crouch_speed = 2.0f;     // m/s
+    float jump_impulse = 5.0f;     // m/s upward
+    float gravity = 9.81f;         // m/s² (can be 0 for zero-g)
+    float standing_height = 1.8f;  // metres
+    float crouch_height = 1.0f;    // metres
+
+    // Stamina for sprint
+    float stamina = 100.0f;
+    float stamina_max = 100.0f;
+    float stamina_drain = 20.0f;   // per second while sprinting
+    float stamina_regen = 10.0f;   // per second while not sprinting
+
+    COMPONENT_TYPE(FPSCharacterState)
+};
+
 } // namespace components
 } // namespace atlas
 
