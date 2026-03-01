@@ -170,6 +170,7 @@ set(SERVER_SOURCES
     src/systems/ship_interior_layout_system.cpp
     src/systems/environmental_hazard_system.cpp
     src/systems/fps_objective_system.cpp
+    src/systems/wing_management_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -599,6 +600,7 @@ if(BUILD_TESTS)
         src/systems/ship_interior_layout_system.cpp
         src/systems/environmental_hazard_system.cpp
         src/systems/fps_objective_system.cpp
+        src/systems/wing_management_system.cpp
         src/data/world_persistence.cpp
         src/data/world_serializer.cpp
         src/data/world_deserializer.cpp

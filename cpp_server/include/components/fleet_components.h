@@ -512,6 +512,38 @@ public:
 };
 
 
+/**
+ * @brief Wing state tracking for fleet wing management
+ */
+class WingState : public ecs::Component {
+public:
+    struct Wing {
+        std::string wing_id;
+        std::string role;           // "Mining", "Combat", "Logistics", "Salvage", "Construction"
+        std::string commander_id;   // entity id of wing commander
+        std::vector<std::string> members;  // entity ids of wing members
+        float morale = 50.0f;       // wing-level morale (0-100)
+    };
+
+    std::vector<Wing> wings;
+
+    Wing* getWing(const std::string& wing_id) {
+        for (auto& w : wings) {
+            if (w.wing_id == wing_id) return &w;
+        }
+        return nullptr;
+    }
+
+    const Wing* getWing(const std::string& wing_id) const {
+        for (const auto& w : wings) {
+            if (w.wing_id == wing_id) return &w;
+        }
+        return nullptr;
+    }
+
+    COMPONENT_TYPE(WingState)
+};
+
 } // namespace components
 } // namespace atlas
 
