@@ -4122,6 +4122,99 @@ public:
     COMPONENT_TYPE(FPSInventoryComponent)
 };
 
+// ==================== Ship Interior Layout ====================
+
+/**
+ * @brief Procedural room layout for a ship interior
+ *
+ * Defines rooms, corridors, and connections that make up a ship's
+ * walkable interior.  Room types depend on ship class and size.
+ */
+class ShipInteriorLayout : public ecs::Component {
+public:
+    enum class RoomType {
+        Bridge = 0,
+        Engineering = 1,
+        CargoHold = 2,
+        CrewQuarters = 3,
+        MedicalBay = 4,
+        Armory = 5,
+        Corridor = 6,
+        Airlock = 7,
+        HangarBay = 8,
+        ScienceLab = 9
+    };
+
+    struct Room {
+        std::string room_id;
+        int room_type = 0;                // RoomType as int
+        float size_x = 6.0f;              // metres
+        float size_y = 3.0f;              // ceiling height
+        float size_z = 6.0f;
+        float pos_x = 0.0f;              // position in interior-local coords
+        float pos_y = 0.0f;
+        float pos_z = 0.0f;
+        bool has_gravity = true;
+        bool is_pressurized = true;
+    };
+
+    struct Connection {
+        std::string from_room_id;
+        std::string to_room_id;
+        std::string door_id;              // links to InteriorDoor entity
+    };
+
+    std::string interior_id;
+    std::string ship_id;
+    std::string ship_class;                // "frigate", "cruiser", "battleship", etc.
+    std::vector<Room> rooms;
+    std::vector<Connection> connections;
+
+    int roomCount() const { return static_cast<int>(rooms.size()); }
+    int connectionCount() const { return static_cast<int>(connections.size()); }
+
+    bool hasRoom(const std::string& room_id) const {
+        for (const auto& r : rooms) {
+            if (r.room_id == room_id) return true;
+        }
+        return false;
+    }
+
+    const Room* getRoom(const std::string& room_id) const {
+        for (const auto& r : rooms) {
+            if (r.room_id == room_id) return &r;
+        }
+        return nullptr;
+    }
+
+    bool areConnected(const std::string& a, const std::string& b) const {
+        for (const auto& c : connections) {
+            if ((c.from_room_id == a && c.to_room_id == b) ||
+                (c.from_room_id == b && c.to_room_id == a))
+                return true;
+        }
+        return false;
+    }
+
+    static std::string roomTypeName(int type) {
+        switch (static_cast<RoomType>(type)) {
+            case RoomType::Bridge:       return "Bridge";
+            case RoomType::Engineering:  return "Engineering";
+            case RoomType::CargoHold:    return "CargoHold";
+            case RoomType::CrewQuarters: return "CrewQuarters";
+            case RoomType::MedicalBay:   return "MedicalBay";
+            case RoomType::Armory:       return "Armory";
+            case RoomType::Corridor:     return "Corridor";
+            case RoomType::Airlock:      return "Airlock";
+            case RoomType::HangarBay:    return "HangarBay";
+            case RoomType::ScienceLab:   return "ScienceLab";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(ShipInteriorLayout)
+};
+
 } // namespace components
 } // namespace atlas
 
