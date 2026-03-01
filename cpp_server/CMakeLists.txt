@@ -175,6 +175,9 @@ set(SERVER_SOURCES
     src/systems/resource_production_chain_system.cpp
     src/systems/fleet_doctrine_system.cpp
     src/systems/player_progression_system.cpp
+    src/systems/terraforming_system.cpp
+    src/systems/food_processor_system.cpp
+    src/systems/fleet_squad_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -361,6 +364,9 @@ set(SERVER_HEADERS
     include/systems/resource_production_chain_system.h
     include/systems/fleet_doctrine_system.h
     include/systems/player_progression_system.h
+    include/systems/terraforming_system.h
+    include/systems/food_processor_system.h
+    include/systems/fleet_squad_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -618,6 +624,9 @@ if(BUILD_TESTS)
         src/systems/resource_production_chain_system.cpp
         src/systems/fleet_doctrine_system.cpp
         src/systems/player_progression_system.cpp
+        src/systems/terraforming_system.cpp
+        src/systems/food_processor_system.cpp
+        src/systems/fleet_squad_system.cpp
         src/data/world_persistence.cpp
         src/data/world_serializer.cpp
         src/data/world_deserializer.cpp

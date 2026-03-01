@@ -173,6 +173,9 @@
 #include "systems/resource_production_chain_system.h"
 #include "systems/fleet_doctrine_system.h"
 #include "systems/player_progression_system.h"
+#include "systems/terraforming_system.h"
+#include "systems/food_processor_system.h"
+#include "systems/fleet_squad_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -23669,6 +23672,421 @@ void testPlayerProgressionXPCurve() {
     assertTrue(approxEqual(level2, 100.0f * std::pow(2.0f, 1.5f)), "Level 2 XP follows curve");
 }
 
+// ==================== TerraformingSystem Tests ====================
+
+void testTerraformingStart() {
+    std::cout << "\n=== Terraforming: Start ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    assertTrue(sys.startTerraforming("planet1", "kepler-442b"), "Terraforming started");
+    assertTrue(sys.isActive("planet1"), "Terraforming is active");
+    assertTrue(sys.getStage("planet1") == "planning", "Stage is planning");
+    assertTrue(!sys.startTerraforming("planet1", "kepler-442b"), "Duplicate start rejected");
+}
+
+void testTerraformingPause() {
+    std::cout << "\n=== Terraforming: Pause ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    assertTrue(sys.pauseTerraforming("planet1"), "Terraforming paused");
+    assertTrue(!sys.isActive("planet1"), "Terraforming is inactive");
+}
+
+void testTerraformingResume() {
+    std::cout << "\n=== Terraforming: Resume ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    sys.pauseTerraforming("planet1");
+    assertTrue(sys.resumeTerraforming("planet1"), "Terraforming resumed");
+    assertTrue(sys.isActive("planet1"), "Terraforming is active again");
+}
+
+void testTerraformingCancel() {
+    std::cout << "\n=== Terraforming: Cancel ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    assertTrue(sys.cancelTerraforming("planet1"), "Terraforming cancelled");
+    assertTrue(sys.getStage("planet1") == "unknown", "No stage after cancel");
+    assertTrue(!sys.cancelTerraforming("planet1"), "Cancel on missing fails");
+}
+
+void testTerraformingStageAdvance() {
+    std::cout << "\n=== Terraforming: Stage Advance ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    assertTrue(sys.getStage("planet1") == "planning", "Starts at planning");
+    sys.advanceStage("planet1");
+    assertTrue(sys.getStage("planet1") == "infrastructure", "Advanced to infrastructure");
+    sys.advanceStage("planet1");
+    assertTrue(sys.getStage("planet1") == "atmosphere_processing", "Advanced to atmosphere_processing");
+}
+
+void testTerraformingAutoAdvance() {
+    std::cout << "\n=== Terraforming: Auto Advance ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    auto* entity = world.getEntity("planet1");
+    auto* tf = entity->getComponent<components::Terraforming>();
+    tf->time_per_stage = 10.0f; // speed up for test
+
+    sys.update(11.0f); // past one stage
+    assertTrue(sys.getStage("planet1") == "infrastructure", "Auto-advanced to infrastructure");
+}
+
+void testTerraformingSetTargets() {
+    std::cout << "\n=== Terraforming: Set Targets ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    assertTrue(sys.setTargets("planet1", 0.8f, 300.0f, 0.5f), "Targets set");
+    assertTrue(!sys.setTargets("nonexistent", 0.8f, 300.0f, 0.5f), "Missing entity fails");
+}
+
+void testTerraformingProgress() {
+    std::cout << "\n=== Terraforming: Progress ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    auto* entity = world.getEntity("planet1");
+    auto* tf = entity->getComponent<components::Terraforming>();
+    tf->time_per_stage = 100.0f;
+
+    sys.update(50.0f); // 50% through first stage
+    assertTrue(approxEqual(sys.getProgress("planet1"), 0.5f), "Progress is 0.5 in stage");
+    assertTrue(sys.getTotalProgress("planet1") > 0.0f, "Total progress > 0");
+    assertTrue(sys.getTotalCreditsSpent("planet1") > 0.0, "Credits spent > 0");
+}
+
+void testTerraformingComplete() {
+    std::cout << "\n=== Terraforming: Complete ===" << std::endl;
+    ecs::World world;
+    world.createEntity("planet1");
+
+    systems::TerraformingSystem sys(&world);
+    sys.startTerraforming("planet1", "kepler-442b");
+    // Advance through all 5 stages
+    sys.advanceStage("planet1"); // -> infrastructure
+    sys.advanceStage("planet1"); // -> atmosphere_processing
+    sys.advanceStage("planet1"); // -> temperature_regulation
+    sys.advanceStage("planet1"); // -> biome_seeding
+    sys.advanceStage("planet1"); // -> complete
+    assertTrue(sys.getStage("planet1") == "complete", "Stage is complete");
+    assertTrue(approxEqual(sys.getTotalProgress("planet1"), 1.0f), "Total progress is 1.0");
+    assertTrue(!sys.advanceStage("planet1"), "Cannot advance past complete");
+}
+
+void testTerraformingMissing() {
+    std::cout << "\n=== Terraforming: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::TerraformingSystem sys(&world);
+    assertTrue(sys.getStage("nonexistent") == "unknown", "Default stage for missing");
+    assertTrue(approxEqual(sys.getProgress("nonexistent"), 0.0f), "Default progress for missing");
+    assertTrue(approxEqual(sys.getTotalProgress("nonexistent"), 0.0f), "Default total progress for missing");
+    assertTrue(!sys.isActive("nonexistent"), "Default inactive for missing");
+    assertTrue(sys.getTotalCreditsSpent("nonexistent") == 0.0, "Default credits for missing");
+}
+
+// ==================== FoodProcessorSystem Tests ====================
+
+void testFoodProcessorAddRecipe() {
+    std::cout << "\n=== Food Processor: Add Recipe ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    addComp<components::FoodProcessor>(e);
+
+    systems::FoodProcessorSystem sys(&world);
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}, {"water", 1}};
+    assertTrue(sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f), "Recipe added");
+    assertTrue(sys.getRecipeCount("processor1") == 1, "Recipe count is 1");
+}
+
+void testFoodProcessorDuplicateRecipe() {
+    std::cout << "\n=== Food Processor: Duplicate Recipe ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    addComp<components::FoodProcessor>(e);
+
+    systems::FoodProcessorSystem sys(&world);
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}};
+    sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f);
+    assertTrue(!sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f), "Duplicate recipe rejected");
+    assertTrue(sys.getRecipeCount("processor1") == 1, "Still 1 recipe");
+}
+
+void testFoodProcessorStartCrafting() {
+    std::cout << "\n=== Food Processor: Start Crafting ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    addComp<components::FoodProcessor>(e);
+
+    systems::FoodProcessorSystem sys(&world);
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}};
+    sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f);
+    assertTrue(sys.startCrafting("processor1", "bread", "player1"), "Crafting started");
+    assertTrue(sys.getActiveJobCount("processor1") == 1, "1 active job");
+    assertTrue(!sys.startCrafting("processor1", "unknown_recipe", "player1"), "Unknown recipe fails");
+}
+
+void testFoodProcessorMaxJobs() {
+    std::cout << "\n=== Food Processor: Max Jobs ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    auto* fp = addComp<components::FoodProcessor>(e);
+    fp->max_concurrent_jobs = 1;
+
+    systems::FoodProcessorSystem sys(&world);
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}};
+    sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f);
+    sys.startCrafting("processor1", "bread", "player1");
+    assertTrue(!sys.startCrafting("processor1", "bread", "player2"), "Max jobs reached");
+    assertTrue(sys.getActiveJobCount("processor1") == 1, "Still 1 active job");
+}
+
+void testFoodProcessorCraftCompletion() {
+    std::cout << "\n=== Food Processor: Craft Completion ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    addComp<components::FoodProcessor>(e);
+
+    systems::FoodProcessorSystem sys(&world);
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}};
+    sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f);
+    sys.startCrafting("processor1", "bread", "player1");
+    assertTrue(!sys.isJobComplete("processor1", "player1"), "Job not complete yet");
+    sys.update(11.0f); // past craft_time
+    assertTrue(sys.isJobComplete("processor1", "player1"), "Job complete after update");
+    assertTrue(sys.getActiveJobCount("processor1") == 0, "No active jobs after completion");
+}
+
+void testFoodProcessorCancel() {
+    std::cout << "\n=== Food Processor: Cancel ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    addComp<components::FoodProcessor>(e);
+
+    systems::FoodProcessorSystem sys(&world);
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}};
+    sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f);
+    sys.startCrafting("processor1", "bread", "player1");
+    assertTrue(sys.cancelCrafting("processor1", "player1"), "Crafting cancelled");
+    assertTrue(sys.getActiveJobCount("processor1") == 0, "No active jobs after cancel");
+    assertTrue(!sys.cancelCrafting("processor1", "player1"), "Cancel on empty fails");
+}
+
+void testFoodProcessorPowered() {
+    std::cout << "\n=== Food Processor: Powered ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    addComp<components::FoodProcessor>(e);
+
+    systems::FoodProcessorSystem sys(&world);
+    assertTrue(sys.isPowered("processor1"), "Initially powered");
+    sys.setPowered("processor1", false);
+    assertTrue(!sys.isPowered("processor1"), "Unpowered after toggle");
+
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}};
+    sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f);
+    assertTrue(!sys.startCrafting("processor1", "bread", "player1"), "Cannot craft when unpowered");
+}
+
+void testFoodProcessorEfficiency() {
+    std::cout << "\n=== Food Processor: Efficiency ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    addComp<components::FoodProcessor>(e);
+
+    systems::FoodProcessorSystem sys(&world);
+    sys.setEfficiency("processor1", 2.0f);
+    assertTrue(approxEqual(sys.getEfficiency("processor1"), 2.0f), "Efficiency set to 2.0");
+
+    std::vector<std::pair<std::string, int>> ingredients = {{"flour", 2}};
+    sys.addRecipe("processor1", "bread", "bread_loaf", 1, ingredients, 10.0f, 30.0f);
+    sys.startCrafting("processor1", "bread", "player1");
+    sys.update(6.0f); // 6.0 * 2.0 = 12.0 effective, past 10.0
+    assertTrue(sys.isJobComplete("processor1", "player1"), "Job completes faster with efficiency 2.0");
+}
+
+void testFoodProcessorMissingEntity() {
+    std::cout << "\n=== Food Processor: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::FoodProcessorSystem sys(&world);
+    assertTrue(sys.getRecipeCount("nonexistent") == 0, "Default recipe count for missing");
+    assertTrue(sys.getActiveJobCount("nonexistent") == 0, "Default job count for missing");
+    assertTrue(!sys.isPowered("nonexistent"), "Default powered for missing");
+    assertTrue(approxEqual(sys.getEfficiency("nonexistent"), 0.0f), "Default efficiency for missing");
+}
+
+void testFoodProcessorComponentDefaults() {
+    std::cout << "\n=== Food Processor: Component Defaults ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("processor1");
+    auto* fp = addComp<components::FoodProcessor>(e);
+    assertTrue(fp->max_concurrent_jobs == 1, "Default max_concurrent_jobs is 1");
+    assertTrue(approxEqual(fp->efficiency, 1.0f), "Default efficiency is 1.0");
+    assertTrue(fp->powered == true, "Default powered is true");
+    assertTrue(fp->available_recipes.empty(), "Default recipes empty");
+    assertTrue(fp->active_jobs.empty(), "Default jobs empty");
+}
+
+// ==================== FleetSquadSystem Tests ====================
+
+void testFleetSquadCreate() {
+    std::cout << "\n=== Fleet Squad: Create ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    assertTrue(sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault), "Squad created");
+    assertTrue(sys.getMemberCount("squad1") == 1, "Leader is first member");
+    assertTrue(sys.getLeaderId("squad1") == "leader1", "Leader ID correct");
+    assertTrue(sys.getRole("squad1") == "assault", "Role is assault");
+    assertTrue(!sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault), "Duplicate create rejected");
+}
+
+void testFleetSquadDissolve() {
+    std::cout << "\n=== Fleet Squad: Dissolve ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    assertTrue(sys.dissolveSquad("squad1"), "Squad dissolved");
+    assertTrue(sys.getMemberCount("squad1") == 0, "No members after dissolve");
+    assertTrue(!sys.dissolveSquad("squad1"), "Dissolve on missing fails");
+}
+
+void testFleetSquadAddMember() {
+    std::cout << "\n=== Fleet Squad: Add Member ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    assertTrue(sys.addMember("squad1", "member2"), "Member added");
+    assertTrue(sys.getMemberCount("squad1") == 2, "2 members now");
+    assertTrue(!sys.addMember("squad1", "member2"), "Duplicate member rejected");
+}
+
+void testFleetSquadMaxMembers() {
+    std::cout << "\n=== Fleet Squad: Max Members ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    sys.addMember("squad1", "m2");
+    sys.addMember("squad1", "m3");
+    sys.addMember("squad1", "m4");
+    sys.addMember("squad1", "m5");
+    assertTrue(sys.getMemberCount("squad1") == 5, "Squad is full");
+    assertTrue(!sys.addMember("squad1", "m6"), "Cannot exceed max members");
+}
+
+void testFleetSquadRemoveMember() {
+    std::cout << "\n=== Fleet Squad: Remove Member ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    sys.addMember("squad1", "member2");
+    assertTrue(sys.removeMember("squad1", "member2"), "Member removed");
+    assertTrue(sys.getMemberCount("squad1") == 1, "1 member remaining");
+    assertTrue(!sys.removeMember("squad1", "member2"), "Remove missing member fails");
+}
+
+void testFleetSquadRemoveLeader() {
+    std::cout << "\n=== Fleet Squad: Remove Leader ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    sys.addMember("squad1", "member2");
+    sys.addMember("squad1", "member3");
+    assertTrue(sys.removeMember("squad1", "leader1"), "Leader removed");
+    assertTrue(sys.getLeaderId("squad1") == "member2", "First remaining member promoted to leader");
+    assertTrue(sys.getMemberCount("squad1") == 2, "2 members remaining");
+}
+
+void testFleetSquadFormation() {
+    std::cout << "\n=== Fleet Squad: Formation ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    assertTrue(sys.getFormation("squad1") == "line", "Default formation is line");
+    sys.setFormation("squad1", components::FleetSquad::SquadFormation::Wedge);
+    assertTrue(sys.getFormation("squad1") == "wedge", "Formation changed to wedge");
+    sys.setFormation("squad1", components::FleetSquad::SquadFormation::Circle);
+    assertTrue(sys.getFormation("squad1") == "circle", "Formation changed to circle");
+}
+
+void testFleetSquadRole() {
+    std::cout << "\n=== Fleet Squad: Role ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    assertTrue(sys.getRole("squad1") == "assault", "Default role is assault");
+    sys.setRole("squad1", components::FleetSquad::SquadRole::Defense);
+    assertTrue(sys.getRole("squad1") == "defense", "Role changed to defense");
+    sys.setRole("squad1", components::FleetSquad::SquadRole::Scout);
+    assertTrue(sys.getRole("squad1") == "scout", "Role changed to scout");
+}
+
+void testFleetSquadEffectiveness() {
+    std::cout << "\n=== Fleet Squad: Effectiveness ===" << std::endl;
+    ecs::World world;
+    world.createEntity("squad1");
+
+    systems::FleetSquadSystem sys(&world);
+    sys.createSquad("squad1", "alpha", "leader1", components::FleetSquad::SquadRole::Assault);
+    sys.addMember("squad1", "m2");
+    sys.addMember("squad1", "m3");
+    sys.update(0.0f);
+    // 3 members: 1.0 + 0.05 * (3-1) = 1.10
+    assertTrue(approxEqual(sys.getEffectiveness("squad1"), 1.10f), "Effectiveness with 3 members");
+    assertTrue(approxEqual(sys.getCohesion("squad1"), 1.0f), "Cohesion is 1.0 for active squad");
+    assertTrue(sys.isSquadActive("squad1"), "Squad is active");
+}
+
+void testFleetSquadMissing() {
+    std::cout << "\n=== Fleet Squad: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::FleetSquadSystem sys(&world);
+    assertTrue(sys.getMemberCount("nonexistent") == 0, "Default member count for missing");
+    assertTrue(sys.getLeaderId("nonexistent") == "", "Default leader for missing");
+    assertTrue(sys.getRole("nonexistent") == "", "Default role for missing");
+    assertTrue(sys.getFormation("nonexistent") == "", "Default formation for missing");
+    assertTrue(approxEqual(sys.getCohesion("nonexistent"), 0.0f), "Default cohesion for missing");
+    assertTrue(approxEqual(sys.getEffectiveness("nonexistent"), 0.0f), "Default effectiveness for missing");
+    assertTrue(!sys.isSquadActive("nonexistent"), "Default inactive for missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -25366,6 +25784,42 @@ int main() {
     testPlayerProgressionAllCategories();
     testPlayerProgressionMissing();
     testPlayerProgressionXPCurve();
+
+    // Terraforming System tests
+    testTerraformingStart();
+    testTerraformingPause();
+    testTerraformingResume();
+    testTerraformingCancel();
+    testTerraformingStageAdvance();
+    testTerraformingAutoAdvance();
+    testTerraformingSetTargets();
+    testTerraformingProgress();
+    testTerraformingComplete();
+    testTerraformingMissing();
+
+    // Food Processor System tests
+    testFoodProcessorAddRecipe();
+    testFoodProcessorDuplicateRecipe();
+    testFoodProcessorStartCrafting();
+    testFoodProcessorMaxJobs();
+    testFoodProcessorCraftCompletion();
+    testFoodProcessorCancel();
+    testFoodProcessorPowered();
+    testFoodProcessorEfficiency();
+    testFoodProcessorMissingEntity();
+    testFoodProcessorComponentDefaults();
+
+    // Fleet Squad System tests
+    testFleetSquadCreate();
+    testFleetSquadDissolve();
+    testFleetSquadAddMember();
+    testFleetSquadMaxMembers();
+    testFleetSquadRemoveMember();
+    testFleetSquadRemoveLeader();
+    testFleetSquadFormation();
+    testFleetSquadRole();
+    testFleetSquadEffectiveness();
+    testFleetSquadMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

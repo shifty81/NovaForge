@@ -567,6 +567,42 @@ public:
 };
 
 
+// ==================== Food Processor ====================
+
+/**
+ * @brief Survival module food processing component (Phase 13)
+ *
+ * Stores recipes, active crafting jobs, and processor state for
+ * turning raw ingredients into nutrition items.
+ */
+class FoodProcessor : public ecs::Component {
+public:
+    struct Recipe {
+        std::string recipe_id;
+        std::string output_item;
+        int output_quantity = 1;
+        std::vector<std::pair<std::string, int>> ingredients;
+        float craft_time = 10.0f;
+        float nutrition_value = 25.0f;
+    };
+
+    struct CraftJob {
+        std::string recipe_id;
+        float time_remaining = 0.0f;
+        float total_time = 10.0f;
+        bool completed = false;
+        std::string owner_id;
+    };
+
+    std::vector<Recipe> available_recipes;
+    std::vector<CraftJob> active_jobs;
+    int max_concurrent_jobs = 1;
+    float efficiency = 1.0f;
+    bool powered = true;
+
+    COMPONENT_TYPE(FoodProcessor)
+};
+
 } // namespace components
 } // namespace atlas
 

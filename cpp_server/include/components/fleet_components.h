@@ -572,6 +572,54 @@ public:
     COMPONENT_TYPE(WingState)
 };
 
+// ==================== Fleet Squad ====================
+
+/**
+ * @brief Group AI abstraction for fleet squads (Future Considerations)
+ *
+ * Represents a squad within a fleet with members, formation, role,
+ * and computed cohesion/effectiveness metrics.
+ */
+class FleetSquad : public ecs::Component {
+public:
+    enum class SquadRole { Assault, Defense, Support, Scout, Reserve };
+    enum class SquadFormation { Line, Wedge, Circle, Spread, Stack };
+
+    std::string squad_id;
+    std::string squad_leader_id;
+    SquadRole role = SquadRole::Assault;
+    std::vector<std::string> member_ids;
+    int max_members = 5;
+    SquadFormation formation = SquadFormation::Line;
+    float cohesion = 1.0f;
+    float effectiveness = 1.0f;
+    bool is_active = true;
+
+    static std::string roleToString(SquadRole r) {
+        switch (r) {
+            case SquadRole::Assault: return "assault";
+            case SquadRole::Defense: return "defense";
+            case SquadRole::Support: return "support";
+            case SquadRole::Scout: return "scout";
+            case SquadRole::Reserve: return "reserve";
+            default: return "unknown";
+        }
+    }
+
+    static std::string formationToString(SquadFormation f) {
+        switch (f) {
+            case SquadFormation::Line: return "line";
+            case SquadFormation::Wedge: return "wedge";
+            case SquadFormation::Circle: return "circle";
+            case SquadFormation::Spread: return "spread";
+            case SquadFormation::Stack: return "stack";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(FleetSquad)
+};
+
 } // namespace components
 } // namespace atlas
 

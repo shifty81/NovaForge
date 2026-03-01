@@ -271,6 +271,57 @@ public:
 };
 
 
+// ==================== Terraforming ====================
+
+/**
+ * @brief Long-term planet modification data (Phase 14)
+ *
+ * Tracks a multi-stage terraforming project on a planet, progressing through
+ * Planning → Infrastructure → AtmosphereProcessing → TemperatureRegulation →
+ * BiomeSeeding → Complete.
+ */
+class Terraforming : public ecs::Component {
+public:
+    enum class TerraformStage {
+        Planning,
+        Infrastructure,
+        AtmosphereProcessing,
+        TemperatureRegulation,
+        BiomeSeeding,
+        Complete
+    };
+
+    std::string planet_id;
+    TerraformStage stage = TerraformStage::Planning;
+    float progress = 0.0f;           // 0.0 to 1.0 progress in current stage
+    float total_progress = 0.0f;     // overall progress across all stages (0.0 to 1.0)
+    float atmosphere_target = 1.0f;
+    float temperature_target = 293.0f;   // target temperature in Kelvin (20°C)
+    float water_coverage_target = 0.7f;
+    float current_atmosphere = 0.0f;
+    float current_temperature = 200.0f;  // initial cold planet
+    float current_water_coverage = 0.0f;
+    float resource_cost_per_tick = 100.0f;
+    double total_credits_spent = 0.0;
+    bool is_active = false;
+    float time_per_stage = 3600.0f;      // seconds per stage at full rate
+    float elapsed_in_stage = 0.0f;
+
+    static std::string stageToString(TerraformStage s) {
+        switch (s) {
+            case TerraformStage::Planning: return "planning";
+            case TerraformStage::Infrastructure: return "infrastructure";
+            case TerraformStage::AtmosphereProcessing: return "atmosphere_processing";
+            case TerraformStage::TemperatureRegulation: return "temperature_regulation";
+            case TerraformStage::BiomeSeeding: return "biome_seeding";
+            case TerraformStage::Complete: return "complete";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(Terraforming)
+};
+
 } // namespace components
 } // namespace atlas
 
