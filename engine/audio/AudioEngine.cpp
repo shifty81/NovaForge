@@ -131,9 +131,27 @@ float AudioEngine::GetMasterVolume() const {
 }
 
 void AudioEngine::Update(float dt) {
-    (void)dt;
-    // In a full implementation, this would mix audio buffers,
-    // handle 3D spatialization, and manage playback timing
+    if (!m_initialized) return;
+
+    for (auto& [id, source] : m_sounds) {
+        if (source.state != SoundState::Playing) continue;
+
+        // Advance playback position
+        source.playbackTime += dt * source.pitch;
+
+        // Handle non-looping sounds that exceed their duration
+        if (!source.looping && source.duration > 0.0f &&
+            source.playbackTime >= source.duration) {
+            source.state = SoundState::Stopped;
+            source.playbackTime = 0.0f;
+        }
+
+        // Wrap looping sounds
+        if (source.looping && source.duration > 0.0f &&
+            source.playbackTime >= source.duration) {
+            source.playbackTime -= source.duration;
+        }
+    }
 }
 
 }

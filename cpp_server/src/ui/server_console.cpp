@@ -228,7 +228,7 @@ std::string ServerConsole::handleHelpCommand() {
     oss << "  kick <player>   - Kick a player\n";
     oss << "  metrics         - Show detailed performance metrics\n";
     oss << "  save            - Save world state\n";
-    oss << "  load            - Load world state (not yet implemented)\n";
+    oss << "  load            - Load world state\n";
     oss << "  stop            - Gracefully stop the server";
     return oss.str();
 }
@@ -296,9 +296,11 @@ std::string ServerConsole::handleSaveCommand() {
 }
 
 std::string ServerConsole::handleLoadCommand() {
-    // Loading world state at runtime could be dangerous
-    // For now, return not implemented
-    return "Load command not yet implemented (use at server startup only)";
+    if (server_->loadWorld()) {
+        return "World loaded successfully";
+    } else {
+        return "Failed to load world (save file may not exist)";
+    }
 }
 
 } // namespace atlas

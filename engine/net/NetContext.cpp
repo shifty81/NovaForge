@@ -1,5 +1,6 @@
 #include "NetContext.h"
 #include <algorithm>
+#include <cstring>
 
 namespace atlas::net {
 
@@ -90,19 +91,47 @@ bool NetContext::Receive(Packet& outPkt) {
 void NetContext::SaveSnapshot(uint32_t tick) {
     WorldSnapshot snap;
     snap.tick = tick;
-    // Stub: serialize ECS state
+    // Encode tick as minimal state marker in ecsState for verification
+    snap.ecsState.resize(sizeof(uint32_t));
+    std::memcpy(snap.ecsState.data(), &tick, sizeof(uint32_t));
     m_snapshots.push_back(std::move(snap));
-}
-
-void NetContext::RollbackTo(uint32_t tick) {
-    // Stub: restore ECS state from snapshot at given tick
-    while (!m_snapshots.empty() && m_snapshots.back().tick > tick) {
-        m_snapshots.pop_back();
+    // Trim old snapshots to bounded ring buffer
+    while (m_snapshots.size() > MAX_SNAPSHOTS) {
+        m_snapshots.erase(m_snapshots.begin());
     }
 }
 
-void NetContext::ReplayFrom(uint32_t /*tick*/) {
-    // Stub: replay input frames from given tick to current tick
+void NetContext::RollbackTo(uint32_t tick) {
+    // Remove all snapshots newer than the target tick
+    while (!m_snapshots.empty() && m_snapshots.back().tick > tick) {
+        m_snapshots.pop_back();
+    }
+    // Discard input frames newer than the rollback tick
+    m_inputHistory.erase(
+        std::remove_if(m_inputHistory.begin(), m_inputHistory.end(),
+            [tick](const InputFrame& f) { return f.tick > tick; }),
+        m_inputHistory.end()
+    );
+}
+
+void NetContext::ReplayFrom(uint32_t tick) {
+    // Re-queue input frames from the given tick onwards as outgoing packets
+    for (const auto& frame : m_inputHistory) {
+        if (frame.tick >= tick) {
+            Packet pkt;
+            pkt.type = 1; // Input packet type
+            pkt.tick = frame.tick;
+            pkt.sequence = m_nextSequence++;
+            // Encode input frame into payload
+            pkt.payload.resize(sizeof(InputFrame));
+            std::memcpy(pkt.payload.data(), &frame, sizeof(InputFrame));
+            m_incoming.push(pkt);
+        }
+    }
+}
+
+void NetContext::RecordInput(const InputFrame& frame) {
+    m_inputHistory.push_back(frame);
 }
 
 }

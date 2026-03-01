@@ -444,6 +444,11 @@ target_link_libraries(atlas_dedicated_server
     ZLIB::ZLIB
 )
 
+# Link Atlas Engine if available
+if(TARGET AtlasEngine)
+    target_link_libraries(atlas_dedicated_server AtlasEngine)
+endif()
+
 if(USE_STEAM_SDK AND STEAM_LIBRARIES)
     target_link_libraries(atlas_dedicated_server ${STEAM_LIBRARIES})
 endif()

@@ -372,6 +372,11 @@ target_link_libraries(atlas_client
     glm::glm
 )
 
+# Link Atlas Engine if available
+if(TARGET AtlasEngine)
+    target_link_libraries(atlas_client AtlasEngine)
+endif()
+
 # Link nlohmann_json if available
 if(nlohmann_json_FOUND)
     target_link_libraries(atlas_client nlohmann_json::nlohmann_json)
