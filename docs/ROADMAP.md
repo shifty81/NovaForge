@@ -1177,6 +1177,16 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Procedural character generation** — Low-poly mesh assembly with sliders (height, limb length, torso, head, build) — CharacterMeshSystem with deterministic seed + race-based traits (3 tests)
 - [x] **Lore & discovery system** — Ship logs, ruin inscriptions, NPC dialogue collectibles — LoreEntry component with discovery tracking (2 tests)
 
+#### FPS Character Controller
+- [x] **First-person movement** — Walk/sprint/crouch with stance-based speed selection, input normalization, gravity/jump/floor collision — FPSCharacterState component + FPSCharacterControllerSystem (13 tests)
+- [x] **Zero-gravity support** — Configurable gravity per interior (0 for zero-g), persistent velocity in microgravity — setGravity() with per-character gravity override
+- [x] **Stamina system** — Sprint stamina drain/regen with exhaustion auto-fallback to standing stance — configurable drain and regen rates
+
+#### Interior Door System
+- [x] **Door state machine** — Closed→Opening→Open→Closing with animated progress, auto-close timer — InteriorDoor component + InteriorDoorSystem (9 tests)
+- [x] **Airlock pressure seals** — Pressure differential check prevents opening airlocks when unsafe, pressure warning flag — DoorType::Airlock with configurable pressure threshold
+- [x] **Security doors** — Access-level-based restriction, required access string matching — DoorType::Security with required_access field
+
 #### Rig & Equipment System (The Rig)
 - [x] **Modular backpack rack** — 2×2 to 8×2 rack sizes with module slots — RigLoadout component with rack_width/height and installed_module_ids
 - [x] **13 module types** — LifeSupport, PowerCore, JetpackTank, Sensor, Shield, EnvironFilter, ToolMount, WeaponMount, DroneController, ScannerSuite, CargoPod, BatteryPack, SolarPanel — RigModule component with tier and efficiency (5 tests)
@@ -1196,6 +1206,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Docking ports** — Airlock, DockingRing, HangarBay, RoverBay types — DockingPort component with dock/undock, extend/retract (3 tests)
 - [ ] **Docking ring extension** — Visual module that extends airlock for ship-to-ship docking
 - [ ] **EVA airlock** — Exit to space when undocked
+- [x] **EVA airlock system** — Multi-phase depressurization cycle (Idle→EnterChamber→InnerSeal→Depressurize→OuterOpen→EVAActive), suit oxygen check, abort support, reentry sequence (OuterSeal→Repressurize→InnerOpen→Complete) — EVAAirlockState component + EVAAirlockSystem (8 tests)
 - [ ] **Rover bay ramp** — Belly hangar with folding ramp for rover deployment
 
 #### NPC Crew Simulation
