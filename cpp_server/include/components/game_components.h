@@ -3843,6 +3843,156 @@ public:
     COMPONENT_TYPE(FPSSpawnPoint)
 };
 
+/**
+ * @brief Runtime state for a player-controlled first-person character
+ *        moving inside a ship or station interior.
+ */
+class FPSCharacterState : public ecs::Component {
+public:
+    enum class Stance {
+        Standing = 0,
+        Crouching = 1,
+        Sprinting = 2
+    };
+
+    std::string player_id;
+    std::string interior_id;  // Which ship/station interior the character is in
+
+    // Position in interior-local coordinates
+    float pos_x = 0.0f;
+    float pos_y = 0.0f;  // vertical (up)
+    float pos_z = 0.0f;
+
+    // Orientation
+    float yaw = 0.0f;     // degrees, horizontal look
+    float pitch = 0.0f;   // degrees, vertical look (clamped ±89)
+
+    // Movement state
+    float move_x = 0.0f;  // Input direction X (-1..1)
+    float move_z = 0.0f;  // Input direction Z (-1..1)
+    float vel_y = 0.0f;   // Vertical velocity (for jump/fall)
+
+    int stance = 0;        // Stance enum as int
+    bool grounded = true;
+    bool jump_requested = false;
+
+    // Movement parameters
+    float walk_speed = 4.0f;       // m/s
+    float sprint_speed = 7.0f;     // m/s
+    float crouch_speed = 2.0f;     // m/s
+    float jump_impulse = 5.0f;     // m/s upward
+    float gravity = 9.81f;         // m/s² (can be 0 for zero-g)
+    float standing_height = 1.8f;  // metres
+    float crouch_height = 1.0f;    // metres
+
+    // Stamina for sprint
+    float stamina = 100.0f;
+    float stamina_max = 100.0f;
+    float stamina_drain = 20.0f;   // per second while sprinting
+    float stamina_regen = 10.0f;   // per second while not sprinting
+
+    COMPONENT_TYPE(FPSCharacterState)
+};
+
+// ==================== Interior Door ====================
+
+/**
+ * @brief Interior door with state machine, access control, and pressure management
+ *
+ * Doors can be standard, airlock (pressure-sealed), or security (restricted).
+ * They support open/close animations, locking, and pressure-aware operation
+ * (airlocks refuse to open if there is a pressure differential).
+ */
+class InteriorDoor : public ecs::Component {
+public:
+    enum class DoorType {
+        Standard = 0,   // Normal interior door
+        Airlock = 1,    // Pressure-sealed door (between pressurised/vacuum zones)
+        Security = 2    // Access-restricted door (keycard/hack required)
+    };
+
+    enum class DoorState {
+        Closed = 0,
+        Opening = 1,
+        Open = 2,
+        Closing = 3,
+        Locked = 4
+    };
+
+    std::string door_id;
+    std::string interior_id;        // Parent ship/station interior
+    std::string room_a_id;          // Room on side A
+    std::string room_b_id;          // Room on side B
+
+    int door_type = 0;              // DoorType as int
+    int door_state = 0;             // DoorState as int
+
+    float open_progress = 0.0f;     // 0 = closed, 1 = fully open
+    float open_speed = 2.0f;        // Seconds to fully open/close
+
+    bool is_locked = false;
+    std::string required_access;    // Access level required (empty = none)
+    float pressure_a = 1.0f;        // Atmospheric pressure on side A (0=vacuum, 1=normal)
+    float pressure_b = 1.0f;        // Atmospheric pressure on side B
+    float pressure_threshold = 0.5f; // Max pressure differential for airlock operation
+    bool pressure_warning = false;   // True if pressure differential exceeds threshold
+
+    float auto_close_timer = 0.0f;  // Seconds until auto-close (0 = no auto-close)
+    float auto_close_delay = 5.0f;  // How long to stay open before auto-closing
+
+    COMPONENT_TYPE(InteriorDoor)
+};
+
+// ==================== EVA Airlock ====================
+
+/**
+ * @brief EVA airlock state for transitioning between interior and space
+ *
+ * Manages the multi-step EVA exit/entry sequence:
+ *   1. Enter airlock chamber
+ *   2. Inner door seals
+ *   3. Chamber depressurizes
+ *   4. Outer door opens
+ *   5. Player exits into space (EVA mode)
+ *
+ * Re-entry reverses the sequence. The player must have a suit with
+ * sufficient oxygen to perform EVA.
+ */
+class EVAAirlockState : public ecs::Component {
+public:
+    enum class Phase {
+        Idle = 0,              // No EVA in progress
+        EnterChamber = 1,      // Player entering airlock chamber
+        InnerSeal = 2,         // Inner door sealing
+        Depressurize = 3,      // Chamber depressurizing
+        OuterOpen = 4,         // Outer door opening
+        EVAActive = 5,         // Player is in space (EVA)
+        OuterSeal = 6,         // Outer door sealing (re-entry)
+        Repressurize = 7,      // Chamber repressurizing
+        InnerOpen = 8,         // Inner door opening (re-entry)
+        Complete = 9           // Sequence complete
+    };
+
+    std::string airlock_id;
+    std::string ship_id;           // Parent ship/station
+    std::string player_id;         // Player currently using the airlock
+
+    int phase = 0;                 // Phase enum as int
+    float phase_progress = 0.0f;   // 0..1 progress through current phase
+    float phase_duration = 2.0f;   // Seconds per phase step
+
+    float chamber_pressure = 1.0f; // 0=vacuum, 1=normal atmosphere
+    bool inner_door_open = false;
+    bool outer_door_open = false;
+
+    float min_suit_oxygen = 10.0f;  // Minimum oxygen to allow EVA
+    bool suit_check_passed = false;
+
+    bool abort_requested = false;
+
+    COMPONENT_TYPE(EVAAirlockState)
+};
+
 } // namespace components
 } // namespace atlas
 
