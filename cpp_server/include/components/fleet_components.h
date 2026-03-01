@@ -511,6 +511,34 @@ public:
     COMPONENT_TYPE(FleetCivilization)
 };
 
+/**
+ * @brief Fleet doctrine - composition template for organized fleet management
+ *
+ * Defines ship class requirements, role assignments, and minimum fleet
+ * composition for coordinated operations.
+ */
+class FleetDoctrine : public ecs::Component {
+public:
+    struct DoctrineSlot {
+        std::string role;           // "DPS", "Logistics", "Tackle", "EWAR", "Scout", "Command"
+        std::string ship_class;     // "Frigate", "Cruiser", "Battleship", etc.
+        int min_count = 0;
+        int max_count = 1;
+        int current_count = 0;
+        bool required = false;      // must be filled for doctrine to be "ready"
+    };
+
+    std::string doctrine_name;
+    std::string doctrine_id;
+    std::vector<DoctrineSlot> slots;
+    float readiness = 0.0f;         // 0.0-1.0, fraction of required slots filled
+    bool is_locked = false;         // prevent modifications during operation
+    int total_ship_target = 0;      // ideal fleet size
+    int current_ship_count = 0;     // actual ships assigned
+
+    COMPONENT_TYPE(FleetDoctrine)
+};
+
 
 /**
  * @brief Wing state tracking for fleet wing management

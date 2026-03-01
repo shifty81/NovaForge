@@ -215,7 +215,10 @@ Data-driven modding without code injection:
 | UniverseMapSystem | ✅ Complete | 23 assertions |
 | AIProfileLoader | ✅ Complete | 15 assertions |
 | EconomyRulesLoader | ✅ Complete | 17 assertions |
-| **Total** | **47 systems** | **2158 assertions** |
+| ResourceProductionChainSystem | ✅ Complete | 30 assertions |
+| FleetDoctrineSystem | ✅ Complete | 36 assertions |
+| PlayerProgressionSystem | ✅ Complete | 41 assertions |
+| **Total** | **50 systems** | **2265 assertions** |
 
 ### Data Loaders Status
 
@@ -325,7 +328,7 @@ All baseline systems are now implemented.
 ### 🎯 Active R&D and Development
 
 **Overall Progress**: Core features implemented, actively testing and expanding  
-**Status**: All ship model integration complete (58+ ships). Tech II ships, capitals, mining barges, and exhumers implemented with 3D models. Mission system expansion complete with missions across 5 levels. Game systems being structured around the EVE Online manual. Atlas Engine expanded with 6 new modules merged from Atlas-NovaForge (physics, input, camera, audio, animation, plugin). Formal TLA+ specifications added for ECS, replay, and layout subsystems. Build infrastructure enhanced with CMakePresets.json and JSON validation schemas. Data layer logging standardized on Logger singleton across all data loaders. **915 Atlas engine + 3812 server test assertions total**.
+**Status**: All ship model integration complete (58+ ships). Tech II ships, capitals, mining barges, and exhumers implemented with 3D models. Mission system expansion complete with missions across 5 levels. Game systems being structured around the EVE Online manual. Atlas Engine expanded with 6 new modules merged from Atlas-NovaForge (physics, input, camera, audio, animation, plugin). Formal TLA+ specifications added for ECS, replay, and layout subsystems. Build infrastructure enhanced with CMakePresets.json and JSON validation schemas. Data layer logging standardized on Logger singleton across all data loaders. **915 Atlas engine + 3955 server test assertions total**.
 
 ---
 
@@ -1574,7 +1577,7 @@ Player undocks → Scans anomaly → Fights pirates → Ship explodes → Wreck 
 ### Current Achievement
 - ✅ **95+ test functions** - All passing (521 assertions across test suites)
 - ✅ **915 Atlas Engine test assertions** - All passing (engine, editor, PCG, UI, animation, physics)
-- ✅ **3812 server test assertions** - All systems verified
+- ✅ **3955 server test assertions** - All systems verified
 - ✅ **13 Atlas Engine modules** - core, ecs, graphvm, assets, net, sim, world, physics, input, camera, audio, animation, plugin
 - ✅ **3 TLA+ formal specifications** - ECS, replay, layout invariants verified
 - ✅ **49 ships** - Tech I, Tech II, and Mining Barges across all classes
@@ -1698,7 +1701,7 @@ Have questions about the roadmap? Want to suggest features?
 - Added contract_scan.py for determinism contract violation detection
 - Replaced all std::cout/std::cerr in cpp_server/src/data/ with Logger singleton (6 files)
 - Fixed bare catch(...) in wormhole_database.cpp with typed exception + logging
-- 915 Atlas engine tests passing, 3812 server tests total
+- 915 Atlas engine tests passing, 3955 server tests total
 
 ### R&D - Manual-Aligned Systems (Previous)
 - Character creation system with 4 races, bloodlines, and attributes

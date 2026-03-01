@@ -527,6 +527,35 @@ public:
     COMPONENT_TYPE(EconomicFlowState)
 };
 
+/**
+ * @brief Tracks end-to-end production chains (mining → refining → manufacturing → market)
+ *
+ * Enables the economy to function without fake NPC market orders by tracking
+ * each stage of the production pipeline. Everything is produced, transported,
+ * consumed, or destroyed.
+ */
+class ResourceProductionChain : public ecs::Component {
+public:
+    struct ChainStage {
+        std::string stage_name;      // "mining", "refining", "manufacturing", "market"
+        std::string input_resource;   // resource consumed at this stage
+        std::string output_resource;  // resource produced at this stage
+        float conversion_rate = 1.0f; // input -> output ratio
+        float throughput = 0.0f;      // units processed per tick
+        float efficiency = 1.0f;      // 0.0-1.0 efficiency modifier
+        float bottleneck_factor = 1.0f; // 0.0-1.0, reduced when downstream is full
+    };
+
+    std::vector<ChainStage> stages;
+    float overall_efficiency = 1.0f;  // product of all stage efficiencies
+    float total_output = 0.0f;        // final product output per tick
+    bool is_active = true;            // chain enabled/disabled
+    std::string chain_id;             // unique identifier for this chain
+    float uptime = 0.0f;             // seconds chain has been running
+
+    COMPONENT_TYPE(ResourceProductionChain)
+};
+
 
 } // namespace components
 } // namespace atlas

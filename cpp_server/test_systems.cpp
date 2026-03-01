@@ -170,6 +170,9 @@
 #include "systems/fps_objective_system.h"
 #include "systems/wing_management_system.h"
 #include "systems/economic_flow_system.h"
+#include "systems/resource_production_chain_system.h"
+#include "systems/fleet_doctrine_system.h"
+#include "systems/player_progression_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -23194,6 +23197,478 @@ void testEconomicFlowAutoCreateComponent() {
     assertTrue(approxEqual(sys.getProductionRate("system1", "ore"), 50.0f), "Component auto-created and production recorded");
 }
 
+// ==================== ResourceProductionChainSystem Tests ====================
+
+void testProductionChainCreate() {
+    std::cout << "\n=== Production Chain: Create ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    assertTrue(sys.createChain("system1", "ore_to_metal"), "Chain created");
+    assertTrue(!sys.createChain("system1", "another"), "Duplicate chain rejected");
+    assertTrue(!sys.createChain("nonexistent", "chain"), "Missing entity fails");
+}
+
+void testProductionChainAddStage() {
+    std::cout << "\n=== Production Chain: Add Stage ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    sys.createChain("system1", "ore_pipeline");
+    assertTrue(sys.addStage("system1", "mining", "asteroid", "ore", 1.0f), "Mining stage added");
+    assertTrue(sys.addStage("system1", "refining", "ore", "mineral", 0.8f), "Refining stage added");
+    assertTrue(sys.addStage("system1", "manufacturing", "mineral", "product", 0.5f), "Manufacturing stage added");
+    assertTrue(!sys.addStage("system1", "mining", "x", "y", 1.0f), "Duplicate stage rejected");
+    assertTrue(sys.getStageCount("system1") == 3, "Stage count is 3");
+}
+
+void testProductionChainRemoveStage() {
+    std::cout << "\n=== Production Chain: Remove Stage ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    sys.createChain("system1", "chain1");
+    sys.addStage("system1", "mining", "asteroid", "ore", 1.0f);
+    sys.addStage("system1", "refining", "ore", "mineral", 0.8f);
+    assertTrue(sys.removeStage("system1", "mining"), "Stage removed");
+    assertTrue(sys.getStageCount("system1") == 1, "Stage count is 1 after removal");
+    assertTrue(!sys.removeStage("system1", "nonexistent"), "Nonexistent stage removal fails");
+}
+
+void testProductionChainEfficiency() {
+    std::cout << "\n=== Production Chain: Efficiency ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    sys.createChain("system1", "chain1");
+    sys.addStage("system1", "mining", "asteroid", "ore", 1.0f);
+    sys.addStage("system1", "refining", "ore", "mineral", 0.8f);
+    sys.setStageEfficiency("system1", "mining", 0.9f);
+    sys.setStageEfficiency("system1", "refining", 0.7f);
+    sys.update(1.0f);
+    // Overall = 0.9 * 0.7 = 0.63
+    assertTrue(approxEqual(sys.getOverallEfficiency("system1"), 0.63f), "Overall efficiency is 0.63");
+}
+
+void testProductionChainThroughput() {
+    std::cout << "\n=== Production Chain: Throughput ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    sys.createChain("system1", "chain1");
+    sys.addStage("system1", "mining", "asteroid", "ore", 1.0f);
+    sys.addStage("system1", "refining", "ore", "mineral", 0.5f);
+    sys.update(1.0f);
+    // mining: input=1.0, rate=1.0, eff=1.0, bottleneck=0.5 (downstream limited) → 0.5
+    // refining: input=0.5, rate=0.5, eff=1.0, bottleneck=1.0 → 0.25
+    float output = sys.getTotalOutput("system1");
+    assertTrue(output > 0.0f, "Total output is positive");
+    assertTrue(approxEqual(sys.getStageThroughput("system1", "refining"), 0.25f), "Refining throughput is 0.25");
+}
+
+void testProductionChainBottleneck() {
+    std::cout << "\n=== Production Chain: Bottleneck ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    sys.createChain("system1", "chain1");
+    sys.addStage("system1", "mining", "asteroid", "ore", 2.0f);     // high output
+    sys.addStage("system1", "refining", "ore", "mineral", 0.5f);    // low capacity
+    sys.update(1.0f);
+    // mining bottleneck: downstream capacity (0.5*1.0) / upstream output (2.0*1.0) = 0.25
+    float bottleneck = sys.getBottleneckFactor("system1", "mining");
+    assertTrue(bottleneck < 1.0f, "Mining stage has bottleneck");
+    assertTrue(approxEqual(bottleneck, 0.25f), "Bottleneck factor is 0.25");
+}
+
+void testProductionChainActiveToggle() {
+    std::cout << "\n=== Production Chain: Active Toggle ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    sys.createChain("system1", "chain1");
+    assertTrue(sys.isChainActive("system1"), "Chain starts active");
+    sys.setChainActive("system1", false);
+    assertTrue(!sys.isChainActive("system1"), "Chain deactivated");
+    sys.setChainActive("system1", true);
+    assertTrue(sys.isChainActive("system1"), "Chain reactivated");
+}
+
+void testProductionChainUptime() {
+    std::cout << "\n=== Production Chain: Uptime ===" << std::endl;
+    ecs::World world;
+    world.createEntity("system1");
+
+    systems::ResourceProductionChainSystem sys(&world);
+    sys.createChain("system1", "chain1");
+    sys.addStage("system1", "mining", "asteroid", "ore", 1.0f);
+    assertTrue(approxEqual(sys.getUptime("system1"), 0.0f), "Initial uptime is 0");
+    sys.update(5.0f);
+    assertTrue(approxEqual(sys.getUptime("system1"), 5.0f), "Uptime after 5s tick");
+    sys.update(3.0f);
+    assertTrue(approxEqual(sys.getUptime("system1"), 8.0f), "Uptime after 8s total");
+}
+
+void testProductionChainMissing() {
+    std::cout << "\n=== Production Chain: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::ResourceProductionChainSystem sys(&world);
+    assertTrue(sys.getOverallEfficiency("nonexistent") == 0.0f, "Default efficiency for missing");
+    assertTrue(sys.getTotalOutput("nonexistent") == 0.0f, "Default output for missing");
+    assertTrue(sys.getStageCount("nonexistent") == 0, "Default stage count for missing");
+    assertTrue(!sys.isChainActive("nonexistent"), "Default active for missing");
+}
+
+void testProductionChainComponentDefaults() {
+    std::cout << "\n=== Production Chain: Component Defaults ===" << std::endl;
+    components::ResourceProductionChain chain;
+    assertTrue(chain.stages.empty(), "Default stages empty");
+    assertTrue(approxEqual(chain.overall_efficiency, 1.0f), "Default efficiency is 1.0");
+    assertTrue(approxEqual(chain.total_output, 0.0f), "Default output is 0.0");
+    assertTrue(chain.is_active, "Default is active");
+    assertTrue(chain.chain_id.empty(), "Default chain_id empty");
+}
+
+// ==================== FleetDoctrineSystem Tests ====================
+
+void testFleetDoctrineCreate() {
+    std::cout << "\n=== Fleet Doctrine: Create ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    assertTrue(sys.createDoctrine("fleet1", "doctrine1", "Shield Fleet"), "Doctrine created");
+    assertTrue(!sys.createDoctrine("fleet1", "doctrine2", "Another"), "Duplicate doctrine rejected");
+    assertTrue(sys.getDoctrineName("fleet1") == "Shield Fleet", "Doctrine name matches");
+}
+
+void testFleetDoctrineAddSlot() {
+    std::cout << "\n=== Fleet Doctrine: Add Slot ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    sys.createDoctrine("fleet1", "d1", "Armor Fleet");
+    assertTrue(sys.addSlot("fleet1", "DPS", "Battleship", 3, 5, true), "DPS slot added");
+    assertTrue(sys.addSlot("fleet1", "Logistics", "Cruiser", 2, 3, true), "Logi slot added");
+    assertTrue(sys.addSlot("fleet1", "Tackle", "Frigate", 1, 4, false), "Tackle slot added");
+    assertTrue(!sys.addSlot("fleet1", "DPS", "Frigate", 1, 2, false), "Duplicate role rejected");
+    assertTrue(sys.getSlotCount("fleet1") == 3, "Slot count is 3");
+}
+
+void testFleetDoctrineRemoveSlot() {
+    std::cout << "\n=== Fleet Doctrine: Remove Slot ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    sys.createDoctrine("fleet1", "d1", "Test");
+    sys.addSlot("fleet1", "DPS", "Battleship", 3, 5, true);
+    sys.addSlot("fleet1", "Logistics", "Cruiser", 2, 3, true);
+    assertTrue(sys.removeSlot("fleet1", "DPS"), "Slot removed");
+    assertTrue(sys.getSlotCount("fleet1") == 1, "Slot count after removal");
+    assertTrue(!sys.removeSlot("fleet1", "nonexistent"), "Nonexistent slot removal fails");
+}
+
+void testFleetDoctrineAssignShip() {
+    std::cout << "\n=== Fleet Doctrine: Assign Ship ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    sys.createDoctrine("fleet1", "d1", "Test");
+    sys.addSlot("fleet1", "DPS", "Battleship", 2, 3, true);
+    assertTrue(sys.assignShip("fleet1", "DPS"), "Ship assigned to DPS");
+    assertTrue(sys.assignShip("fleet1", "DPS"), "Second ship assigned");
+    assertTrue(sys.assignShip("fleet1", "DPS"), "Third ship assigned (max)");
+    assertTrue(!sys.assignShip("fleet1", "DPS"), "Fourth ship rejected (over max)");
+}
+
+void testFleetDoctrineUnassignShip() {
+    std::cout << "\n=== Fleet Doctrine: Unassign Ship ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    sys.createDoctrine("fleet1", "d1", "Test");
+    sys.addSlot("fleet1", "DPS", "Battleship", 1, 3, true);
+    sys.assignShip("fleet1", "DPS");
+    sys.assignShip("fleet1", "DPS");
+    assertTrue(sys.unassignShip("fleet1", "DPS"), "Ship unassigned");
+    assertTrue(sys.unassignShip("fleet1", "DPS"), "Second ship unassigned");
+    assertTrue(!sys.unassignShip("fleet1", "DPS"), "Unassign from empty fails");
+}
+
+void testFleetDoctrineReadiness() {
+    std::cout << "\n=== Fleet Doctrine: Readiness ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    sys.createDoctrine("fleet1", "d1", "Test");
+    sys.addSlot("fleet1", "DPS", "Battleship", 2, 5, true);
+    sys.addSlot("fleet1", "Logistics", "Cruiser", 1, 3, true);
+    sys.addSlot("fleet1", "Tackle", "Frigate", 0, 4, false);  // optional
+
+    // Initially 0% ready (0 of 2 required slots filled)
+    sys.update(0.0f);
+    assertTrue(approxEqual(sys.getReadiness("fleet1"), 0.0f), "Initially not ready");
+    assertTrue(!sys.isReady("fleet1"), "isReady false initially");
+
+    // Fill DPS (still missing Logistics)
+    sys.assignShip("fleet1", "DPS");
+    sys.assignShip("fleet1", "DPS");
+    sys.update(0.0f);
+    assertTrue(approxEqual(sys.getReadiness("fleet1"), 0.5f), "50% ready with DPS filled");
+
+    // Fill Logistics
+    sys.assignShip("fleet1", "Logistics");
+    sys.update(0.0f);
+    assertTrue(approxEqual(sys.getReadiness("fleet1"), 1.0f), "100% ready");
+    assertTrue(sys.isReady("fleet1"), "isReady true when all required filled");
+}
+
+void testFleetDoctrineLock() {
+    std::cout << "\n=== Fleet Doctrine: Lock ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    sys.createDoctrine("fleet1", "d1", "Test");
+    sys.addSlot("fleet1", "DPS", "Battleship", 2, 5, true);
+
+    sys.lockDoctrine("fleet1", true);
+    assertTrue(sys.isLocked("fleet1"), "Doctrine is locked");
+    assertTrue(!sys.addSlot("fleet1", "Logistics", "Cruiser", 1, 3, true), "Cannot add slot when locked");
+    assertTrue(!sys.removeSlot("fleet1", "DPS"), "Cannot remove slot when locked");
+
+    sys.lockDoctrine("fleet1", false);
+    assertTrue(!sys.isLocked("fleet1"), "Doctrine unlocked");
+    assertTrue(sys.addSlot("fleet1", "Logistics", "Cruiser", 1, 3, true), "Can add slot after unlock");
+}
+
+void testFleetDoctrineShipCounts() {
+    std::cout << "\n=== Fleet Doctrine: Ship Counts ===" << std::endl;
+    ecs::World world;
+    world.createEntity("fleet1");
+
+    systems::FleetDoctrineSystem sys(&world);
+    sys.createDoctrine("fleet1", "d1", "Test");
+    sys.addSlot("fleet1", "DPS", "Battleship", 2, 5, true);
+    sys.addSlot("fleet1", "Logistics", "Cruiser", 1, 3, true);
+    sys.assignShip("fleet1", "DPS");
+    sys.assignShip("fleet1", "DPS");
+    sys.assignShip("fleet1", "Logistics");
+    sys.update(0.0f);
+
+    assertTrue(sys.getTargetShipCount("fleet1") == 8, "Target ship count is max_count sum (5+3)");
+    assertTrue(sys.getCurrentShipCount("fleet1") == 3, "Current ship count is 3");
+}
+
+void testFleetDoctrineMissing() {
+    std::cout << "\n=== Fleet Doctrine: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::FleetDoctrineSystem sys(&world);
+    assertTrue(approxEqual(sys.getReadiness("nonexistent"), 0.0f), "Default readiness for missing");
+    assertTrue(sys.getSlotCount("nonexistent") == 0, "Default slot count for missing");
+    assertTrue(!sys.isReady("nonexistent"), "Default not ready for missing");
+    assertTrue(sys.getDoctrineName("nonexistent").empty(), "Default name empty for missing");
+}
+
+void testFleetDoctrineComponentDefaults() {
+    std::cout << "\n=== Fleet Doctrine: Component Defaults ===" << std::endl;
+    components::FleetDoctrine doctrine;
+    assertTrue(doctrine.slots.empty(), "Default slots empty");
+    assertTrue(approxEqual(doctrine.readiness, 0.0f), "Default readiness is 0.0");
+    assertTrue(!doctrine.is_locked, "Default not locked");
+    assertTrue(doctrine.total_ship_target == 0, "Default target 0");
+    assertTrue(doctrine.current_ship_count == 0, "Default current 0");
+}
+
+// ==================== PlayerProgressionSystem Tests ====================
+
+void testPlayerProgressionInit() {
+    std::cout << "\n=== Player Progression: Init ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    assertTrue(sys.initProgression("player1"), "Progression initialized");
+    assertTrue(!sys.initProgression("player1"), "Duplicate init rejected");
+    assertTrue(!sys.initProgression("nonexistent"), "Missing entity fails");
+    assertTrue(sys.getLevel("player1") == 1, "Initial level is 1");
+    assertTrue(approxEqual(sys.getTotalXP("player1"), 0.0f), "Initial XP is 0");
+}
+
+void testPlayerProgressionAwardXP() {
+    std::cout << "\n=== Player Progression: Award XP ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+    assertTrue(sys.awardXP("player1", "combat", 50.0f), "Combat XP awarded");
+    assertTrue(sys.awardXP("player1", "mining", 30.0f), "Mining XP awarded");
+    sys.update(0.0f);
+    assertTrue(approxEqual(sys.getCategoryXP("player1", "combat"), 50.0f), "Combat XP is 50");
+    assertTrue(approxEqual(sys.getCategoryXP("player1", "mining"), 30.0f), "Mining XP is 30");
+    assertTrue(approxEqual(sys.getTotalXP("player1"), 80.0f), "Total XP is 80");
+}
+
+void testPlayerProgressionInvalidCategory() {
+    std::cout << "\n=== Player Progression: Invalid Category ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+    assertTrue(!sys.awardXP("player1", "invalid_category", 50.0f), "Invalid category rejected");
+    assertTrue(approxEqual(sys.getCategoryXP("player1", "invalid_category"), 0.0f), "Unknown category returns 0");
+}
+
+void testPlayerProgressionLevelUp() {
+    std::cout << "\n=== Player Progression: Level Up ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+    // Level 1 requires 100*1^1.5 = 100 XP
+    sys.awardXP("player1", "combat", 100.0f);
+    sys.update(0.0f);
+    assertTrue(sys.getLevel("player1") == 2, "Level 2 after 100 XP");
+
+    // Level 2 requires 100*2^1.5 ≈ 282.84 XP additional
+    sys.awardXP("player1", "combat", 283.0f);
+    sys.update(0.0f);
+    assertTrue(sys.getLevel("player1") == 3, "Level 3 after ~383 XP total");
+}
+
+void testPlayerProgressionLevelProgress() {
+    std::cout << "\n=== Player Progression: Level Progress ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+    sys.awardXP("player1", "combat", 50.0f);
+    sys.update(0.0f);
+    // 50 XP, need 100 for level 1->2, so progress = 0.5
+    float progress = sys.getLevelProgress("player1");
+    assertTrue(approxEqual(progress, 0.5f), "Level progress is 0.5 at 50/100 XP");
+}
+
+void testPlayerProgressionMilestone() {
+    std::cout << "\n=== Player Progression: Milestone ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+    sys.addMilestone("player1", "First Blood", "combat", 25.0f);
+    sys.addMilestone("player1", "Expert Miner", "mining", 100.0f);
+
+    sys.awardXP("player1", "combat", 30.0f);
+    sys.update(0.0f);
+    assertTrue(sys.getMilestonesAchieved("player1") == 1, "One milestone achieved (First Blood)");
+
+    sys.awardXP("player1", "mining", 110.0f);
+    sys.update(0.0f);
+    assertTrue(sys.getMilestonesAchieved("player1") == 2, "Two milestones achieved");
+}
+
+void testPlayerProgressionPrestige() {
+    std::cout << "\n=== Player Progression: Prestige ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+
+    // Can't prestige below level 50
+    assertTrue(!sys.prestige("player1"), "Cannot prestige at level 1");
+
+    // Award enough XP to reach level 50
+    // Cumulative XP for levels 1-49: ~724,870
+    sys.awardXP("player1", "combat", 730000.0f);
+    sys.update(0.0f);
+    assertTrue(sys.getLevel("player1") >= 50, "Reached level 50+");
+
+    assertTrue(sys.prestige("player1"), "Prestige succeeds");
+    assertTrue(sys.getPrestigeLevel("player1") == 1, "Prestige level is 1");
+    assertTrue(approxEqual(sys.getPrestigeMultiplier("player1"), 1.1f), "Prestige multiplier is 1.1");
+    assertTrue(sys.getLevel("player1") == 1, "Level reset to 1");
+    assertTrue(approxEqual(sys.getTotalXP("player1"), 0.0f), "XP reset to 0");
+}
+
+void testPlayerProgressionPrestigeXPBonus() {
+    std::cout << "\n=== Player Progression: Prestige XP Bonus ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+
+    // Get to prestige first
+    sys.awardXP("player1", "combat", 730000.0f);
+    sys.update(0.0f);
+    sys.prestige("player1");
+
+    // Now award XP with prestige bonus (1.1x)
+    sys.awardXP("player1", "combat", 100.0f);
+    sys.update(0.0f);
+    // Should be 100 * 1.1 = 110 actual XP
+    assertTrue(approxEqual(sys.getCategoryXP("player1", "combat"), 110.0f), "XP scaled by prestige multiplier");
+}
+
+void testPlayerProgressionAllCategories() {
+    std::cout << "\n=== Player Progression: All Categories ===" << std::endl;
+    ecs::World world;
+    world.createEntity("player1");
+
+    systems::PlayerProgressionSystem sys(&world);
+    sys.initProgression("player1");
+    sys.awardXP("player1", "combat", 10.0f);
+    sys.awardXP("player1", "mining", 20.0f);
+    sys.awardXP("player1", "exploration", 30.0f);
+    sys.awardXP("player1", "industry", 40.0f);
+    sys.awardXP("player1", "social", 50.0f);
+    sys.update(0.0f);
+    assertTrue(approxEqual(sys.getTotalXP("player1"), 150.0f), "Total XP is sum of all categories");
+    assertTrue(approxEqual(sys.getCategoryXP("player1", "exploration"), 30.0f), "Exploration XP correct");
+    assertTrue(approxEqual(sys.getCategoryXP("player1", "industry"), 40.0f), "Industry XP correct");
+    assertTrue(approxEqual(sys.getCategoryXP("player1", "social"), 50.0f), "Social XP correct");
+}
+
+void testPlayerProgressionMissing() {
+    std::cout << "\n=== Player Progression: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::PlayerProgressionSystem sys(&world);
+    assertTrue(sys.getLevel("nonexistent") == 0, "Default level for missing");
+    assertTrue(approxEqual(sys.getTotalXP("nonexistent"), 0.0f), "Default XP for missing");
+    assertTrue(sys.getMilestonesAchieved("nonexistent") == 0, "Default milestones for missing");
+    assertTrue(sys.getPrestigeLevel("nonexistent") == 0, "Default prestige for missing");
+}
+
+void testPlayerProgressionXPCurve() {
+    std::cout << "\n=== Player Progression: XP Curve ===" << std::endl;
+    float level1 = systems::PlayerProgressionSystem::xpForLevel(1);
+    float level2 = systems::PlayerProgressionSystem::xpForLevel(2);
+    float level10 = systems::PlayerProgressionSystem::xpForLevel(10);
+    assertTrue(approxEqual(level1, 100.0f), "Level 1 requires 100 XP");
+    assertTrue(level2 > level1, "Level 2 requires more XP than level 1");
+    assertTrue(level10 > level2, "Level 10 requires more XP than level 2");
+    // Level 2: 100*2^1.5 ≈ 282.84
+    assertTrue(approxEqual(level2, 100.0f * std::pow(2.0f, 1.5f)), "Level 2 XP follows curve");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -23244,6 +23719,7 @@ int main() {
     std::cout << "FPSCharacterController, InteriorDoor, EVAAirlock," << std::endl;
     std::cout << "FPSInteraction, FPSCombat, FPSInventory," << std::endl;
     std::cout << "ShipInteriorLayout, EnvironmentalHazard, FPSObjective" << std::endl;
+    std::cout << "ResourceProductionChain, FleetDoctrine, PlayerProgression" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -24853,6 +25329,43 @@ int main() {
     testEconomicFlowHealthUpdate();
     testEconomicFlowMissingEntity();
     testEconomicFlowAutoCreateComponent();
+
+    // Resource Production Chain System tests
+    testProductionChainCreate();
+    testProductionChainAddStage();
+    testProductionChainRemoveStage();
+    testProductionChainEfficiency();
+    testProductionChainThroughput();
+    testProductionChainBottleneck();
+    testProductionChainActiveToggle();
+    testProductionChainUptime();
+    testProductionChainMissing();
+    testProductionChainComponentDefaults();
+
+    // Fleet Doctrine System tests
+    testFleetDoctrineCreate();
+    testFleetDoctrineAddSlot();
+    testFleetDoctrineRemoveSlot();
+    testFleetDoctrineAssignShip();
+    testFleetDoctrineUnassignShip();
+    testFleetDoctrineReadiness();
+    testFleetDoctrineLock();
+    testFleetDoctrineShipCounts();
+    testFleetDoctrineMissing();
+    testFleetDoctrineComponentDefaults();
+
+    // Player Progression System tests
+    testPlayerProgressionInit();
+    testPlayerProgressionAwardXP();
+    testPlayerProgressionInvalidCategory();
+    testPlayerProgressionLevelUp();
+    testPlayerProgressionLevelProgress();
+    testPlayerProgressionMilestone();
+    testPlayerProgressionPrestige();
+    testPlayerProgressionPrestigeXPBonus();
+    testPlayerProgressionAllCategories();
+    testPlayerProgressionMissing();
+    testPlayerProgressionXPCurve();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

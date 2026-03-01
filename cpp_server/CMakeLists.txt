@@ -172,6 +172,9 @@ set(SERVER_SOURCES
     src/systems/fps_objective_system.cpp
     src/systems/wing_management_system.cpp
     src/systems/economic_flow_system.cpp
+    src/systems/resource_production_chain_system.cpp
+    src/systems/fleet_doctrine_system.cpp
+    src/systems/player_progression_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -355,6 +358,9 @@ set(SERVER_HEADERS
     include/systems/environmental_hazard_system.h
     include/systems/fps_objective_system.h
     include/systems/economic_flow_system.h
+    include/systems/resource_production_chain_system.h
+    include/systems/fleet_doctrine_system.h
+    include/systems/player_progression_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -609,6 +615,9 @@ if(BUILD_TESTS)
         src/systems/fps_objective_system.cpp
         src/systems/wing_management_system.cpp
         src/systems/economic_flow_system.cpp
+        src/systems/resource_production_chain_system.cpp
+        src/systems/fleet_doctrine_system.cpp
+        src/systems/player_progression_system.cpp
         src/data/world_persistence.cpp
         src/data/world_serializer.cpp
         src/data/world_deserializer.cpp

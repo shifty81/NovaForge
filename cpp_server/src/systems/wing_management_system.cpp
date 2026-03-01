@@ -179,13 +179,13 @@ std::string WingManagementSystem::getWingCommander(const std::string& fleet_id, 
 
 float WingManagementSystem::getWingMorale(const std::string& fleet_id, const std::string& wing_id) const {
     auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0.0f;
+    if (!entity) return 50.0f;
 
     auto* ws = entity->getComponent<components::WingState>();
-    if (!ws) return 0.0f;
+    if (!ws) return 50.0f;
 
     const auto* wing = ws->getWing(wing_id);
-    return wing ? wing->morale : 0.0f;
+    return wing ? wing->morale : 50.0f;
 }
 
 int WingManagementSystem::getWingCount(const std::string& fleet_id) const {
