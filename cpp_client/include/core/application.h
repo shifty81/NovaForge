@@ -291,8 +291,8 @@ private:
     
     // Astralis-style movement commands
     void commandApproach(const std::string& entityId);
-    void commandOrbit(const std::string& entityId, float distance = 500.0f);
-    void commandKeepAtRange(const std::string& entityId, float distance = 2500.0f);
+    void commandOrbit(const std::string& entityId, float distance = DEFAULT_ORBIT_DISTANCE);
+    void commandKeepAtRange(const std::string& entityId, float distance = DEFAULT_KEEP_AT_RANGE);
     void commandAlignTo(const std::string& entityId);
     void commandWarpTo(const std::string& entityId);
     void commandJump(const std::string& entityId);
@@ -350,11 +350,11 @@ private:
     enum class MoveCommand { None, Approach, Orbit, KeepAtRange, AlignTo, WarpTo };
     MoveCommand m_currentMoveCommand = MoveCommand::None;
     std::string m_moveTargetId;
-    float m_orbitDistance = 500.0f;
-    float m_keepAtRangeDistance = 2500.0f;
+    float m_orbitDistance = DEFAULT_ORBIT_DISTANCE;
+    float m_keepAtRangeDistance = DEFAULT_KEEP_AT_RANGE;
     glm::vec3 m_playerVelocity{0.0f};
     float m_playerSpeed = 0.0f;
-    float m_playerMaxSpeed = 250.0f;
+    float m_playerMaxSpeed = DEFAULT_PLAYER_MAX_SPEED;
     bool m_approachActive = false;
     bool m_orbitActive = false;
     bool m_keepRangeActive = false;
@@ -394,6 +394,22 @@ private:
     // Docking animation timer (seconds remaining)
     float m_dockingTimer = 0.0f;
     static constexpr float DOCKING_ANIM_DURATION = 3.0f;
+
+    // ── Camera defaults ────────────────────────────────────────────
+    static constexpr float DEFAULT_CAMERA_FOV          = 45.0f;    // Degrees
+    static constexpr float DEFAULT_CAMERA_NEAR_PLANE   = 0.1f;     // Meters
+    static constexpr float DEFAULT_CAMERA_FAR_PLANE    = 10000.0f; // Meters
+    static constexpr float DEFAULT_CAMERA_DISTANCE     = 200.0f;   // Initial orbit distance
+    static constexpr float DEFAULT_CAMERA_PITCH        = 45.0f;    // Initial pitch degrees
+
+    // ── Navigation defaults ────────────────────────────────────────
+    static constexpr float DEFAULT_ORBIT_DISTANCE      = 500.0f;   // Meters
+    static constexpr float DEFAULT_KEEP_AT_RANGE       = 2500.0f;  // Meters
+    static constexpr float DEFAULT_PLAYER_MAX_SPEED    = 250.0f;   // m/s
+
+    // ── Input thresholds ───────────────────────────────────────────
+    static constexpr double MAX_DRAG_THRESHOLD_PX      = 10.0;     // Pixels — max mouse drift to still open radial menu
+    static constexpr float  MAX_FPS_INTERACTION_RANGE   = 4.0f;    // Meters — max distance to interact on foot
 };
 
 } // namespace atlas

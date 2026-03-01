@@ -197,6 +197,16 @@ public:
      */
     static constexpr float ANOMALY_VISUAL_RADIUS = 500.0f;
 
+    // ── Test system celestial radii (meters) ───────────────────────
+    static constexpr float TEST_SUN_RADIUS           = 500000.0f;
+    static constexpr float TEST_ROCKY_PLANET_RADIUS   = 6000.0f;
+    static constexpr float TEST_GAS_GIANT_RADIUS      = 40000.0f;
+    static constexpr float TEST_ICE_PLANET_RADIUS     = 8000.0f;
+    static constexpr float TEST_ASTEROID_BELT_RADIUS_L = 50000.0f;
+    static constexpr float TEST_ASTEROID_BELT_RADIUS_S = 30000.0f;
+    static constexpr float TEST_STATION_RADIUS        = 5000.0f;
+    static constexpr float TEST_STARGATE_RADIUS       = 2500.0f;
+
     // Engine trail state for rendering
     struct EngineTrailState {
         bool emitting;

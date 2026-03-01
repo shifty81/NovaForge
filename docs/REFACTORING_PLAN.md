@@ -155,11 +155,17 @@ Hardcoded gameplay values scattered across:
 
 **Fix**: Extract to named `constexpr` constants at file / namespace scope.
 
-**Status**: ✅ `ship_physics.cpp` / `ship_physics.h` completed — extracted
-default frigate stats, navigation tolerances, angular/roll decay rates, warp
-phase timing, and roll normalization angle to named `constexpr` constants.
-Remaining files (`application.cpp`, `station_renderer.cpp`, `radial_menu.cpp`,
-`solar_system_scene.cpp`) deferred to future PRs.
+**Status**: ✅ All files completed.  `ship_physics.cpp` / `ship_physics.h`
+extracted default frigate stats, navigation tolerances, angular/roll decay
+rates, warp phase timing, and roll normalization angle.  `application.h` /
+`application.cpp` extracted camera defaults (FOV, near/far planes, distance,
+pitch) and navigation defaults (orbit distance, keep-at-range, max speed).
+`solar_system_scene.h` / `solar_system_scene.cpp` extracted test system
+celestial radii to named constants.  `station_renderer.cpp` promoted inline
+dimensions to named local constants (Veyren modules/tower, Aurelian sub-sphere
+pods, Keldari beam/habitation dimensions, Astrahus docking arms).
+`radial_menu.h` / `radial_menu.cpp` already used named constants
+(`INNER_RADIUS`, `OUTER_RADIUS`, `MAX_RANGE_RADIUS`, `distanceSteps[]`).
 
 ---
 

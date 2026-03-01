@@ -301,15 +301,26 @@ std::shared_ptr<Mesh> StationRenderer::createVeyrenStation() {
            glm::vec3(0.4f, 0.45f, 0.5f));
     
     // Add smaller connected modules
-    addBox(glm::vec3(500, 200, 0), 400, 300, 400, 
+    const float moduleWidth = 400.0f;
+    const float moduleHeight = 300.0f;
+    const float moduleDepth = 400.0f;
+    const float moduleOffsetY = 200.0f;
+    const float moduleOffsetLateral = 500.0f;
+
+    addBox(glm::vec3(moduleOffsetLateral, moduleOffsetY, 0), moduleWidth, moduleHeight, moduleDepth, 
            glm::vec3(0.5f, 0.55f, 0.6f));
-    addBox(glm::vec3(-500, 200, 0), 400, 300, 400, 
+    addBox(glm::vec3(-moduleOffsetLateral, moduleOffsetY, 0), moduleWidth, moduleHeight, moduleDepth, 
            glm::vec3(0.5f, 0.55f, 0.6f));
-    addBox(glm::vec3(0, 200, 500), 400, 300, 400, 
+    addBox(glm::vec3(0, moduleOffsetY, moduleOffsetLateral), moduleWidth, moduleHeight, moduleDepth, 
            glm::vec3(0.5f, 0.55f, 0.6f));
     
     // Add antenna/tower on top
-    addBox(glm::vec3(0, 500, 0), 100, 400, 100, 
+    const float towerWidth = 100.0f;
+    const float towerHeight = 400.0f;
+    const float towerDepth = 100.0f;
+    const float towerOffsetY = 500.0f;
+
+    addBox(glm::vec3(0, towerOffsetY, 0), towerWidth, towerHeight, towerDepth, 
            glm::vec3(0.2f, 0.4f, 0.6f));
     
     return std::make_shared<Mesh>(vertices, indices);
@@ -361,21 +372,24 @@ std::shared_ptr<Mesh> StationRenderer::createAurelianStation() {
     }
     
     // Add smaller spheres connected (organic design)
+    const float podDistance = 500.0f;
+    const float podRadius = 200.0f;
+    const int podRings = 8;
+    const int podSegments = 12;
+
     for (int i = 0; i < 4; i++) {
         float angle = i * glm::pi<float>() / 2.0f;
-        float distance = 500.0f;
-        glm::vec3 offset(distance * cos(angle), 0.0f, distance * sin(angle));
-        float smallRadius = 200.0f;
+        glm::vec3 offset(podDistance * cos(angle), 0.0f, podDistance * sin(angle));
         
         unsigned int baseIdx = vertices.size();
         
-        for (int ring = 0; ring <= 8; ring++) {
-            float phi = glm::pi<float>() * (float)ring / 8;
-            float y = smallRadius * cos(phi);
-            float ringRadius = smallRadius * sin(phi);
+        for (int ring = 0; ring <= podRings; ring++) {
+            float phi = glm::pi<float>() * (float)ring / podRings;
+            float y = podRadius * cos(phi);
+            float ringRadius = podRadius * sin(phi);
             
-            for (int seg = 0; seg <= 12; seg++) {
-                float theta = 2.0f * glm::pi<float>() * (float)seg / 12;
+            for (int seg = 0; seg <= podSegments; seg++) {
+                float theta = 2.0f * glm::pi<float>() * (float)seg / podSegments;
                 float x = ringRadius * cos(theta);
                 float z = ringRadius * sin(theta);
                 
@@ -387,10 +401,11 @@ std::shared_ptr<Mesh> StationRenderer::createAurelianStation() {
             }
         }
         
-        for (int ring = 0; ring < 8; ring++) {
-            for (int seg = 0; seg < 12; seg++) {
-                int current = baseIdx + ring * 13 + seg;
-                int next = current + 13;
+        for (int ring = 0; ring < podRings; ring++) {
+            const int podStride = podSegments + 1;
+            for (int seg = 0; seg < podSegments; seg++) {
+                int current = baseIdx + ring * podStride + seg;
+                int next = current + podStride;
                 
                 indices.push_back(current);
                 indices.push_back(next);
@@ -461,33 +476,37 @@ std::shared_ptr<Mesh> StationRenderer::createKeldariStation() {
     // Main vertical support beams (irregular)
     glm::vec3 rustyColor(0.4f, 0.3f, 0.25f);
     glm::vec3 metalColor(0.5f, 0.4f, 0.3f);
+    const float beamRadius = 50.0f;
+    const float crossBeamRadius = 30.0f;
     
-    addCylinder(glm::vec3(-300, 0, -300), glm::vec3(-250, 800, -280), 50, rustyColor);
-    addCylinder(glm::vec3(300, 0, -300), glm::vec3(280, 750, -320), 50, rustyColor);
-    addCylinder(glm::vec3(-300, 0, 300), glm::vec3(-320, 780, 300), 50, rustyColor);
-    addCylinder(glm::vec3(300, 0, 300), glm::vec3(290, 820, 280), 50, rustyColor);
+    addCylinder(glm::vec3(-300, 0, -300), glm::vec3(-250, 800, -280), beamRadius, rustyColor);
+    addCylinder(glm::vec3(300, 0, -300), glm::vec3(280, 750, -320), beamRadius, rustyColor);
+    addCylinder(glm::vec3(-300, 0, 300), glm::vec3(-320, 780, 300), beamRadius, rustyColor);
+    addCylinder(glm::vec3(300, 0, 300), glm::vec3(290, 820, 280), beamRadius, rustyColor);
     
     // Horizontal connecting beams
-    addCylinder(glm::vec3(-250, 400, -280), glm::vec3(280, 400, -320), 30, metalColor);
-    addCylinder(glm::vec3(-320, 400, 300), glm::vec3(290, 400, 280), 30, metalColor);
-    addCylinder(glm::vec3(-250, 700, -280), glm::vec3(-320, 700, 300), 30, metalColor);
-    addCylinder(glm::vec3(280, 700, -320), glm::vec3(290, 700, 280), 30, metalColor);
+    addCylinder(glm::vec3(-250, 400, -280), glm::vec3(280, 400, -320), crossBeamRadius, metalColor);
+    addCylinder(glm::vec3(-320, 400, 300), glm::vec3(290, 400, 280), crossBeamRadius, metalColor);
+    addCylinder(glm::vec3(-250, 700, -280), glm::vec3(-320, 700, 300), crossBeamRadius, metalColor);
+    addCylinder(glm::vec3(280, 700, -320), glm::vec3(290, 700, 280), crossBeamRadius, metalColor);
     
     // Central habitation module (box)
     unsigned int baseIdx = vertices.size();
     glm::vec3 center(0, 400, 0);
-    float w = 400, h = 300, d = 400;
+    const float habWidth = 400.0f;
+    const float habHeight = 300.0f;
+    const float habDepth = 400.0f;
     glm::vec3 moduleColor(0.6f, 0.3f, 0.2f);
     
     glm::vec3 corners[8] = {
-        center + glm::vec3(-w/2, -h/2, -d/2),
-        center + glm::vec3( w/2, -h/2, -d/2),
-        center + glm::vec3( w/2,  h/2, -d/2),
-        center + glm::vec3(-w/2,  h/2, -d/2),
-        center + glm::vec3(-w/2, -h/2,  d/2),
-        center + glm::vec3( w/2, -h/2,  d/2),
-        center + glm::vec3( w/2,  h/2,  d/2),
-        center + glm::vec3(-w/2,  h/2,  d/2)
+        center + glm::vec3(-habWidth/2, -habHeight/2, -habDepth/2),
+        center + glm::vec3( habWidth/2, -habHeight/2, -habDepth/2),
+        center + glm::vec3( habWidth/2,  habHeight/2, -habDepth/2),
+        center + glm::vec3(-habWidth/2,  habHeight/2, -habDepth/2),
+        center + glm::vec3(-habWidth/2, -habHeight/2,  habDepth/2),
+        center + glm::vec3( habWidth/2, -habHeight/2,  habDepth/2),
+        center + glm::vec3( habWidth/2,  habHeight/2,  habDepth/2),
+        center + glm::vec3(-habWidth/2,  habHeight/2,  habDepth/2)
     };
     
     // Add box faces with proper vertex data
@@ -567,17 +586,20 @@ std::shared_ptr<Mesh> StationRenderer::createAstrahus() {
     }
     
     // Add 4 docking arms extending from center
+    const float armLength = 500.0f;
+    const float armRadius = 80.0f;
+    const int armSegments = 6;
+
     for (int arm = 0; arm < 4; arm++) {
         float angle = arm * glm::pi<float>() / 2.0f;
         glm::vec3 direction(cos(angle), 0, sin(angle));
         glm::vec3 armStart = direction * coreRadius;
-        glm::vec3 armEnd = direction * (coreRadius + 500.0f);
+        glm::vec3 armEnd = direction * (coreRadius + armLength);
         
         unsigned int baseIdx = vertices.size();
-        const float armRadius = 80.0f;
         
-        for (int i = 0; i <= 6; i++) {
-            float theta = (float)i / 6 * 2.0f * glm::pi<float>();
+        for (int i = 0; i <= armSegments; i++) {
+            float theta = (float)i / armSegments * 2.0f * glm::pi<float>();
             glm::vec3 perp1 = glm::normalize(glm::cross(direction, glm::vec3(0, 1, 0)));
             glm::vec3 perp2 = glm::cross(direction, perp1);
             glm::vec3 offset = (perp1 * cosf(theta) + perp2 * sinf(theta)) * armRadius;
@@ -595,7 +617,7 @@ std::shared_ptr<Mesh> StationRenderer::createAstrahus() {
             vertices.push_back(vEnd);
         }
         
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < armSegments; i++) {
             int base = baseIdx + i * 2;
             indices.push_back(base);
             indices.push_back(base + 2);

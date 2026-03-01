@@ -42,7 +42,7 @@ void SolarSystemScene::loadTestSystem() {
     sun.name = "Asakai - Star";
     sun.type = Celestial::Type::SUN;
     sun.position = glm::vec3(0.0f, 0.0f, 0.0f);
-    sun.radius = 500000.0f;  // 500km radius (500,000 meters)
+    sun.radius = TEST_SUN_RADIUS;  // 500km radius
     sun.distanceFromSun_AU = 0.0f;
     sun.lightColor = glm::vec3(1.0f, 0.95f, 0.85f);  // Warm yellow-white
     sun.lightIntensity = 1.5f;
@@ -54,7 +54,7 @@ void SolarSystemScene::loadTestSystem() {
     planet1.name = "Asakai I";
     planet1.type = Celestial::Type::PLANET;
     planet1.position = glm::vec3(5.2f * AU_IN_METERS, 0.0f, 0.0f);
-    planet1.radius = 6000.0f;
+    planet1.radius = TEST_ROCKY_PLANET_RADIUS;
     planet1.distanceFromSun_AU = 5.2f;
     addCelestial(planet1);
 
@@ -64,7 +64,7 @@ void SolarSystemScene::loadTestSystem() {
     planet2.name = "Asakai II";
     planet2.type = Celestial::Type::PLANET;
     planet2.position = glm::vec3(0.0f, 0.0f, 12.8f * AU_IN_METERS);
-    planet2.radius = 40000.0f;
+    planet2.radius = TEST_GAS_GIANT_RADIUS;
     planet2.distanceFromSun_AU = 12.8f;
     addCelestial(planet2);
 
@@ -74,7 +74,7 @@ void SolarSystemScene::loadTestSystem() {
     planet3.name = "Asakai III";
     planet3.type = Celestial::Type::PLANET;
     planet3.position = glm::vec3(-28.4f * AU_IN_METERS, 0.0f, 5.0f * AU_IN_METERS);
-    planet3.radius = 8000.0f;
+    planet3.radius = TEST_ICE_PLANET_RADIUS;
     planet3.distanceFromSun_AU = 28.4f;
     addCelestial(planet3);
 
@@ -84,7 +84,7 @@ void SolarSystemScene::loadTestSystem() {
     belt1.name = "Asakai - Asteroid Belt I";
     belt1.type = Celestial::Type::ASTEROID_BELT;
     belt1.position = glm::vec3(8.5f * AU_IN_METERS, 0.0f, 2.0f * AU_IN_METERS);
-    belt1.radius = 50000.0f;
+    belt1.radius = TEST_ASTEROID_BELT_RADIUS_L;
     belt1.distanceFromSun_AU = 8.5f;
     addCelestial(belt1);
 
@@ -94,7 +94,7 @@ void SolarSystemScene::loadTestSystem() {
     belt2.name = "Asakai - Asteroid Belt II";
     belt2.type = Celestial::Type::ASTEROID_BELT;
     belt2.position = glm::vec3(-3.0f * AU_IN_METERS, 0.0f, 18.3f * AU_IN_METERS);
-    belt2.radius = 30000.0f;
+    belt2.radius = TEST_ASTEROID_BELT_RADIUS_S;
     belt2.distanceFromSun_AU = 18.3f;
     addCelestial(belt2);
 
@@ -104,7 +104,7 @@ void SolarSystemScene::loadTestSystem() {
     station.name = "Asakai III - Crimson Order Assembly Plant";
     station.type = Celestial::Type::STATION;
     station.position = glm::vec3(-28.0f * AU_IN_METERS, 500.0f, 5.2f * AU_IN_METERS);
-    station.radius = 5000.0f;
+    station.radius = TEST_STATION_RADIUS;
     station.distanceFromSun_AU = 28.0f;
     station.services = {"repair", "fitting", "market"};
     addCelestial(station);
@@ -115,7 +115,7 @@ void SolarSystemScene::loadTestSystem() {
     gate.name = "Stargate (Perimeter)";
     gate.type = Celestial::Type::STARGATE;
     gate.position = glm::vec3(15.0f * AU_IN_METERS, -1000.0f, -32.1f * AU_IN_METERS);
-    gate.radius = 2500.0f;
+    gate.radius = TEST_STARGATE_RADIUS;
     gate.distanceFromSun_AU = 32.1f;
     gate.linkedSystem = "perimeter";
     addCelestial(gate);

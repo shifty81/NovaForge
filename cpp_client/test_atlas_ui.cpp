@@ -2811,6 +2811,170 @@ void testRadialMenuDragToRange() {
     assertTrue(!menu.IsOpen(), "Menu closed");
 }
 
+// ─── FPS Radial Menu tests ───────────────────────────────────────
+// Verifies context-aware FPS radial menu opens with correct actions
+// for each InteractionContext type.
+
+void testFPSRadialMenuContexts() {
+    std::cout << "\n=== FPS Radial Menu Contexts ===" << std::endl;
+
+    UI::RadialMenu menu;
+
+    // ── Door context ───────────────────────────────────────────────
+    menu.OpenFPS(400.0f, 300.0f, "door_01",
+                 UI::RadialMenu::InteractionContext::Door,
+                 "Main Door", false, false);
+    assertTrue(menu.IsOpen(), "FPS menu opens for Door");
+    assertTrue(menu.IsFPSMode(), "Menu is in FPS mode");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::Door,
+               "Context is Door");
+    menu.Close();
+
+    // Door already open → should show Close
+    menu.OpenFPS(400.0f, 300.0f, "door_01",
+                 UI::RadialMenu::InteractionContext::Door,
+                 "Main Door", true, false);
+    assertTrue(menu.IsOpen(), "FPS menu opens for open Door");
+    menu.Close();
+
+    // ── Security Door context (locked) ─────────────────────────────
+    menu.OpenFPS(400.0f, 300.0f, "sec_door_01",
+                 UI::RadialMenu::InteractionContext::SecurityDoor,
+                 "Security Door A", false, true);
+    assertTrue(menu.IsOpen(), "FPS menu opens for locked SecurityDoor");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::SecurityDoor,
+               "Context is SecurityDoor");
+    menu.Close();
+
+    // ── Airlock context ────────────────────────────────────────────
+    menu.OpenFPS(400.0f, 300.0f, "airlock_01",
+                 UI::RadialMenu::InteractionContext::Airlock,
+                 "Airlock B-2");
+    assertTrue(menu.IsOpen(), "FPS menu opens for Airlock");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::Airlock,
+               "Context is Airlock");
+    menu.Close();
+
+    // ── Terminal context ───────────────────────────────────────────
+    menu.OpenFPS(400.0f, 300.0f, "terminal_01",
+                 UI::RadialMenu::InteractionContext::Terminal,
+                 "Nav Computer");
+    assertTrue(menu.IsOpen(), "FPS menu opens for Terminal");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::Terminal,
+               "Context is Terminal");
+    menu.Close();
+
+    // ── Loot Container context ─────────────────────────────────────
+    menu.OpenFPS(400.0f, 300.0f, "loot_01",
+                 UI::RadialMenu::InteractionContext::LootContainer,
+                 "Cargo Crate");
+    assertTrue(menu.IsOpen(), "FPS menu opens for LootContainer");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::LootContainer,
+               "Context is LootContainer");
+    menu.Close();
+
+    // ── Fabricator context ─────────────────────────────────────────
+    menu.OpenFPS(400.0f, 300.0f, "fab_01",
+                 UI::RadialMenu::InteractionContext::Fabricator,
+                 "Fabricator");
+    assertTrue(menu.IsOpen(), "FPS menu opens for Fabricator");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::Fabricator,
+               "Context is Fabricator");
+    menu.Close();
+
+    // ── Medical Bay context ────────────────────────────────────────
+    menu.OpenFPS(400.0f, 300.0f, "med_01",
+                 UI::RadialMenu::InteractionContext::MedicalBay,
+                 "Medical Station");
+    assertTrue(menu.IsOpen(), "FPS menu opens for MedicalBay");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::MedicalBay,
+               "Context is MedicalBay");
+    menu.Close();
+
+    assertTrue(!menu.IsOpen(), "Menu closed after all context tests");
+}
+
+void testFPSRadialMenuSegmentSelection() {
+    std::cout << "\n=== FPS Radial Menu Segment Selection ===" << std::endl;
+
+    UI::RadialMenu menu;
+
+    // Open for a LootContainer (has 4 actions: Open, Loot All, Search, Examine)
+    menu.OpenFPS(400.0f, 300.0f, "loot_01",
+                 UI::RadialMenu::InteractionContext::LootContainer,
+                 "Cargo Crate");
+    assertTrue(menu.IsOpen(), "FPS loot menu opened");
+
+    // Move to dead zone — no action
+    menu.UpdateMousePosition(400.0f, 300.0f);
+    assertTrue(menu.GetHighlightedAction() == UI::RadialMenu::Action::NONE,
+               "Dead zone yields no action");
+
+    // Move far from center — should highlight something
+    menu.UpdateMousePosition(400.0f, 230.0f);  // Upward (top segment)
+    auto action = menu.GetHighlightedAction();
+    assertTrue(action != UI::RadialMenu::Action::NONE,
+               "Moving outside dead zone selects an FPS action");
+
+    // FPS mode should not set range distance
+    assertTrue(menu.GetRangeDistance() == 0, "FPS mode has no range distance");
+
+    // Confirm action
+    auto confirmed = menu.Confirm();
+    assertTrue(confirmed != UI::RadialMenu::Action::NONE,
+               "Confirming FPS action returns non-NONE");
+    assertTrue(!menu.IsOpen(), "Menu closes after confirm");
+}
+
+void testFPSRadialMenuCallback() {
+    std::cout << "\n=== FPS Radial Menu Callback ===" << std::endl;
+
+    UI::RadialMenu menu;
+
+    UI::RadialMenu::Action receivedAction = UI::RadialMenu::Action::NONE;
+    std::string receivedEntity;
+
+    menu.SetActionCallback([&](UI::RadialMenu::Action a, const std::string& id) {
+        receivedAction = a;
+        receivedEntity = id;
+    });
+
+    // Open for a Door (closed) → segments: Open, Examine
+    menu.OpenFPS(400.0f, 300.0f, "door_42",
+                 UI::RadialMenu::InteractionContext::Door,
+                 "Engine Room Door", false, false);
+
+    // Move to top segment (first action = Open)
+    menu.UpdateMousePosition(400.0f, 230.0f);
+    menu.Confirm();
+
+    assertTrue(!receivedEntity.empty(), "Callback received entity ID");
+    assertTrue(receivedEntity == "door_42", "Callback entity matches");
+    assertTrue(receivedAction != UI::RadialMenu::Action::NONE,
+               "Callback received a valid FPS action");
+}
+
+void testFPSRadialMenuCloseResetsFPSState() {
+    std::cout << "\n=== FPS Radial Menu Close Resets State ===" << std::endl;
+
+    UI::RadialMenu menu;
+
+    menu.OpenFPS(400.0f, 300.0f, "terminal_01",
+                 UI::RadialMenu::InteractionContext::Terminal,
+                 "Bridge Console");
+    assertTrue(menu.IsFPSMode(), "FPS mode active");
+
+    menu.Close();
+    assertTrue(!menu.IsFPSMode(), "FPS mode cleared after close");
+    assertTrue(menu.GetInteractionContext() == UI::RadialMenu::InteractionContext::None,
+               "Interaction context cleared after close");
+
+    // Re-open in space mode — should NOT be FPS
+    menu.Open(400.0f, 300.0f, "npc_1");
+    assertTrue(!menu.IsFPSMode(), "Space mode Open is not FPS");
+    menu.Close();
+}
+
 // ─── Panel Deferred Mouse Consumption test ────────────────────────
 // Verifies that panelEnd (not panelBeginStateful) consumes leftover
 // clicks, so content widgets inside the panel still receive clicks.
@@ -3334,6 +3498,10 @@ int main() {
     testOverviewColumnSorting();
     testOverviewCtrlClickCallback();
     testRadialMenuDragToRange();
+    testFPSRadialMenuContexts();
+    testFPSRadialMenuSegmentSelection();
+    testFPSRadialMenuCallback();
+    testFPSRadialMenuCloseResetsFPSState();
     testPanelDeferredMouseConsumption();
     testContextMenuJumpAction();
     testContextMenuAlignToCallback();
