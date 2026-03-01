@@ -1254,7 +1254,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Fabricator** — Crafting station with recipe tracking and craft speed — Fabricator component
 - [ ] **Lavatory interaction** — FPS → 3rd person door transition with audio
 - [x] **Bed & rest** — Fatigue recovery mechanic — RestStation + RestingState components, RestStationSystem with quality-based recovery, auto-stop when rested (8 tests)
-- [ ] **Food processor** — Wall-mounted Subnautica-style module
+- [x] **Food processor** — Wall-mounted food preparation with recipes, concurrent crafting jobs, power toggling, efficiency multiplier — FoodProcessor component + FoodProcessorSystem (10 tests)
 
 #### Docking & Airlock System
 - [x] **Docking ports** — Airlock, DockingRing, HangarBay, RoverBay types — DockingPort component with dock/undock, extend/retract (3 tests)
@@ -1314,7 +1314,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Surface & underground POIs** — Mining outposts, ruins, alien caves — surface_poi_count, underground_poi_count
 - [x] **Planet terrain generation** — Noise-based surface with mineable regions — TerrainGenerator with 8 biomes, heightmap grid, resource deposits, landing zone detection (7 tests)
 - [ ] **Space → planet transition** — Seamless zoom from orbit to surface
-- [ ] **Terraforming** — Long-term planet modification
+- [x] **Terraforming** — Long-term planet modification with 5 stages (Planning→Infrastructure→AtmosphereProcessing→TemperatureRegulation→BiomeSeeding→Complete), target environment parameters, pause/resume/cancel — Terraforming component + TerraformingSystem (10 tests)
 
 #### Rover System
 - [x] **Procedural rovers** — Modular vehicle with cargo, mining laser, scanner, weapons — RoverSystem (existing) with deploy/dock/cargo
@@ -1381,7 +1381,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [ ] Multi-threaded server processing
 - [x] Large-scale fleet battle stress testing (150-300 ships) — 200-ship multi-system tick stress test (LOD + spatial hash + shield + movement)
 - [x] LOD system with impostor billboards for distant ships — LODSystem with 4 distance tiers and force_visible override
-- [ ] Group AI abstraction (FleetController with squad leaders)
+- [x] Group AI abstraction (FleetController with squad leaders) — FleetSquad component + FleetSquadSystem with squad creation, member management, formation types, role assignment, cohesion/effectiveness calculation (10 tests)
 
 #### DevOps & Deployment
 - [x] CI/CD pipeline (GitHub Actions) — Server and Client workflows
