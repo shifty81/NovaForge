@@ -1,6 +1,7 @@
 #include "NetContext.h"
 #include <algorithm>
 #include <cstring>
+#include <type_traits>
 
 namespace atlas::net {
 
@@ -118,6 +119,8 @@ void NetContext::RollbackTo(uint32_t tick) {
 
 void NetContext::ReplayFrom(uint32_t tick) {
     // Re-queue input frames from the given tick onwards as outgoing packets
+    static_assert(std::is_trivially_copyable<InputFrame>::value,
+                  "InputFrame must be trivially copyable for memcpy serialization");
     for (const auto& frame : m_inputHistory) {
         if (frame.tick >= tick) {
             Packet pkt;

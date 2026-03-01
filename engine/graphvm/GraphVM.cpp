@@ -106,7 +106,9 @@ void GraphVM::Execute(const Bytecode& bc, VMContext& ctx) {
 
             case OpCode::EMIT_EVENT: {
                 // inst.a indexes into bc.eventNames for the event type
-                // The top of stack is used as the event's intParam
+                // The top of stack is used as the event's intParam.
+                // If the stack is empty, 0 is used as the default parameter
+                // (supports fire-and-forget events with no explicit param).
                 Value param = m_stack.empty() ? 0 : Pop();
                 if (ctx.eventBus && inst.a < bc.eventNames.size()) {
                     atlas::Event evt;

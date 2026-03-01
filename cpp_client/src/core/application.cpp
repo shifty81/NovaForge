@@ -166,6 +166,8 @@ void Application::initialize() {
         } else {
             auto* networkMgr = m_gameClient->getNetworkManager();
             if (networkMgr && networkMgr->isConnected()) {
+                // Use chat command to request save from remote server
+                // (server console processes /save as admin command)
                 networkMgr->sendChat("/save");
                 std::cout << "[Console] Save request sent to remote server" << std::endl;
             } else {
