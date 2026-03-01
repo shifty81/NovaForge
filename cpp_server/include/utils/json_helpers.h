@@ -234,8 +234,16 @@ inline std::vector<std::string> parseStringArray(const std::string& arr) {
     while (pos < arr.size()) {
         size_t qs = arr.find('\"', pos);
         if (qs == std::string::npos) break;
-        size_t qe = arr.find('\"', qs + 1);
-        if (qe == std::string::npos) break;
+
+        // Find closing quote, skipping escaped quotes
+        size_t qe = qs + 1;
+        while (qe < arr.size()) {
+            if (arr[qe] == '\\') { qe += 2; continue; }
+            if (arr[qe] == '\"') break;
+            ++qe;
+        }
+        if (qe >= arr.size()) break;
+
         result.push_back(arr.substr(qs + 1, qe - qs - 1));
         pos = qe + 1;
     }
