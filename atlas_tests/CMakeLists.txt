@@ -37,6 +37,7 @@ set(ATLAS_TEST_SOURCES
     test_net_interpolation.cpp
     test_delta_compression.cpp
     test_jitter_buffer.cpp
+    test_lag_compensation.cpp
     test_scene_graph.cpp
     test_keybind_manager.cpp
     test_alert_stack.cpp

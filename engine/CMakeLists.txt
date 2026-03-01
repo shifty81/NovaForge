@@ -12,6 +12,7 @@ add_library(AtlasEngine STATIC
     net/NetworkInterpolationBuffer.cpp
     net/DeltaCompression.cpp
     net/JitterBuffer.cpp
+    net/LagCompensation.cpp
     sim/TickScheduler.cpp
     sim/AlertStack.cpp
     sim/AIMinerStateMachine.cpp

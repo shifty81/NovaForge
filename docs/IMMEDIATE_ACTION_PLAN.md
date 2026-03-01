@@ -23,7 +23,7 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 - [x] Velocity-based prediction
 - [x] Delta compression for bandwidth
 - [x] Jitter buffer for packet timing
-- [ ] Lag compensation testing
+- [x] Lag compensation testing
 
 **Success Criteria**:
 - Smooth ship movement at 100ms latency

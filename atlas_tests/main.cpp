@@ -626,6 +626,39 @@ void test_jb_non_adaptive_fixed_delay();
 void test_jb_reset();
 void test_jb_flush_empty();
 
+// Lag Compensation tests
+void test_lc_defaults();
+void test_lc_custom_config();
+void test_lc_zero_history_clamped();
+void test_lc_store_single();
+void test_lc_store_multiple_ticks();
+void test_lc_store_multiple_entities();
+void test_lc_store_prunes_old();
+void test_lc_get_exact_tick();
+void test_lc_get_interpolated();
+void test_lc_get_at_latest_tick();
+void test_lc_get_beyond_latest_returns_latest();
+void test_lc_get_before_earliest_invalid();
+void test_lc_get_unknown_entity();
+void test_lc_interpolation_3d();
+void test_lc_hit_exact_position();
+void test_lc_hit_within_radius();
+void test_lc_miss_outside_radius();
+void test_lc_hit_at_interpolated_position();
+void test_lc_hit_unknown_target();
+void test_lc_hit_3d_distance();
+void test_lc_clamp_rewind_too_far();
+void test_lc_clamp_rewind_within_range();
+void test_lc_clamp_rewind_future();
+void test_lc_remove_entity();
+void test_lc_remove_nonexistent();
+void test_lc_clear();
+void test_lc_realistic_combat_scenario();
+void test_lc_high_latency_scenario();
+void test_lc_boundary_hit_radius();
+void test_lc_snapshot_count_nonexistent();
+void test_lc_zero_max_rewind();
+
 // SceneGraphPanel tests
 void test_sg_defaults();
 void test_sg_add_node();
@@ -1661,6 +1694,40 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_jb_non_adaptive_fixed_delay);
     RUN_TEST(test_jb_reset);
     RUN_TEST(test_jb_flush_empty);
+
+    // Lag Compensation
+    log.BeginSection("Lag Compensation");
+    RUN_TEST(test_lc_defaults);
+    RUN_TEST(test_lc_custom_config);
+    RUN_TEST(test_lc_zero_history_clamped);
+    RUN_TEST(test_lc_store_single);
+    RUN_TEST(test_lc_store_multiple_ticks);
+    RUN_TEST(test_lc_store_multiple_entities);
+    RUN_TEST(test_lc_store_prunes_old);
+    RUN_TEST(test_lc_get_exact_tick);
+    RUN_TEST(test_lc_get_interpolated);
+    RUN_TEST(test_lc_get_at_latest_tick);
+    RUN_TEST(test_lc_get_beyond_latest_returns_latest);
+    RUN_TEST(test_lc_get_before_earliest_invalid);
+    RUN_TEST(test_lc_get_unknown_entity);
+    RUN_TEST(test_lc_interpolation_3d);
+    RUN_TEST(test_lc_hit_exact_position);
+    RUN_TEST(test_lc_hit_within_radius);
+    RUN_TEST(test_lc_miss_outside_radius);
+    RUN_TEST(test_lc_hit_at_interpolated_position);
+    RUN_TEST(test_lc_hit_unknown_target);
+    RUN_TEST(test_lc_hit_3d_distance);
+    RUN_TEST(test_lc_clamp_rewind_too_far);
+    RUN_TEST(test_lc_clamp_rewind_within_range);
+    RUN_TEST(test_lc_clamp_rewind_future);
+    RUN_TEST(test_lc_remove_entity);
+    RUN_TEST(test_lc_remove_nonexistent);
+    RUN_TEST(test_lc_clear);
+    RUN_TEST(test_lc_realistic_combat_scenario);
+    RUN_TEST(test_lc_high_latency_scenario);
+    RUN_TEST(test_lc_boundary_hit_radius);
+    RUN_TEST(test_lc_snapshot_count_nonexistent);
+    RUN_TEST(test_lc_zero_max_rewind);
 
     // Scene Graph Panel
     log.BeginSection("Scene Graph Panel");
