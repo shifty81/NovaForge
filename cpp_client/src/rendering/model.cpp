@@ -4,6 +4,7 @@
 #include "rendering/procedural_ship_generator.h"
 #include "rendering/ship_part_library.h"
 #include "rendering/ship_generation_rules.h"
+#include "core/path_utils.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <algorithm>
@@ -11,19 +12,6 @@
 #include <fstream>
 #include <filesystem>
 #include <functional>
-
-#ifdef _WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#elif defined(__APPLE__)
-#include <mach-o/dyld.h>
-#include <climits>
-#else
-#include <unistd.h>
-#include <climits>
-#endif
 
 // Model loading libraries
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -49,35 +37,6 @@
 #include <tiny_gltf.h>
 
 namespace atlas {
-
-// Returns the directory containing the running executable.
-static std::string getExecutableDir() {
-    std::filesystem::path exePath;
-#ifdef _WIN32
-    char buf[MAX_PATH];
-    DWORD len = GetModuleFileNameA(nullptr, buf, MAX_PATH);
-    if (len > 0 && len < MAX_PATH) {
-        exePath = buf;
-    }
-#elif defined(__APPLE__)
-    char buf[PATH_MAX];
-    uint32_t size = sizeof(buf);
-    if (_NSGetExecutablePath(buf, &size) == 0) {
-        exePath = std::filesystem::canonical(buf);
-    }
-#else
-    char buf[PATH_MAX];
-    ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
-    if (len != -1) {
-        buf[len] = '\0';
-        exePath = buf;
-    }
-#endif
-    if (!exePath.empty()) {
-        return exePath.parent_path().string();
-    }
-    return "";
-}
 
 // Mathematical constants
 constexpr float PI = 3.14159265358979323846f;

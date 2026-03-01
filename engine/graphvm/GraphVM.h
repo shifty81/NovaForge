@@ -1,7 +1,10 @@
 #pragma once
 #include <cstdint>
+#include <string>
 #include <vector>
 #include <unordered_map>
+
+namespace atlas { class EventBus; }
 
 namespace atlas::vm {
 
@@ -40,11 +43,13 @@ struct Instruction {
 struct Bytecode {
     std::vector<Instruction> instructions;
     std::vector<Value> constants;
+    std::vector<std::string> eventNames;
 };
 
 struct VMContext {
     EntityID entity = 0;
     uint64_t tick = 0;
+    EventBus* eventBus = nullptr;
 };
 
 class GraphVM {

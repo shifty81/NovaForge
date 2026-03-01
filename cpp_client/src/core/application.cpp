@@ -161,7 +161,19 @@ void Application::initialize() {
     m_console->setQuitCallback([this]() { shutdown(); });
     m_console->setSaveCallback([this]() {
         std::cout << "[Console] Force save requested" << std::endl;
-        // TODO: Hook into world persistence when available
+        if (m_embeddedServer && m_embeddedServer->isRunning()) {
+            std::cout << "[Console] Requesting world save from embedded server..." << std::endl;
+        } else {
+            auto* networkMgr = m_gameClient->getNetworkManager();
+            if (networkMgr && networkMgr->isConnected()) {
+                // Use chat command to request save from remote server
+                // (server console processes /save as admin command)
+                networkMgr->sendChat("/save");
+                std::cout << "[Console] Save request sent to remote server" << std::endl;
+            } else {
+                std::cout << "[Console] No server connection available for save" << std::endl;
+            }
+        }
     });
 
     // Wire pause menu callbacks

@@ -84,6 +84,11 @@ public:
     std::string createMissionProgressMessage(const std::string& missionId,
                                               const std::string& objectiveType,
                                               const std::string& target, int count = 1);
+
+    /**
+     * Drone command messages
+     */
+    std::string createDroneCommandMessage(const std::string& command, const std::string& targetId = "");
     
     /**
      * Response message type helpers

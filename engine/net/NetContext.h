@@ -71,10 +71,15 @@ public:
     void RollbackTo(uint32_t tick);
     void ReplayFrom(uint32_t tick);
 
+    // Input frame recording for replay
+    void RecordInput(const InputFrame& frame);
+    const std::vector<WorldSnapshot>& Snapshots() const { return m_snapshots; }
+
 private:
     NetMode m_mode = NetMode::Standalone;
     std::vector<NetPeer> m_peers;
     std::vector<WorldSnapshot> m_snapshots;
+    std::vector<InputFrame> m_inputHistory;
     uint32_t m_nextPeerID = 1;
 
     // Local packet queues for testability
@@ -83,6 +88,9 @@ private:
 
     // Sequence numbering for packet loss detection
     uint32_t m_nextSequence = 1;
+
+    // Maximum snapshots to retain (ring buffer)
+    static constexpr size_t MAX_SNAPSHOTS = 128;
 };
 
 }

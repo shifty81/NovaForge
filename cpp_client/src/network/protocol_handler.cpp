@@ -235,6 +235,15 @@ std::string ProtocolHandler::createMissionProgressMessage(const std::string& mis
     return createMessage("mission_progress", data.dump());
 }
 
+std::string ProtocolHandler::createDroneCommandMessage(const std::string& command, const std::string& targetId) {
+    json data;
+    data["command"] = command;
+    if (!targetId.empty()) {
+        data["target_id"] = targetId;
+    }
+    return createMessage("drone_command", data.dump());
+}
+
 // Response message type helpers
 bool ProtocolHandler::isSuccessResponse(const std::string& type) {
     return type.find("_success") != std::string::npos ||

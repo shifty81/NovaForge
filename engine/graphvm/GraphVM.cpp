@@ -1,4 +1,5 @@
 #include "GraphVM.h"
+#include "../core/EventBus.h"
 #include <cassert>
 
 namespace atlas::vm {
@@ -103,9 +104,21 @@ void GraphVM::Execute(const Bytecode& bc, VMContext& ctx) {
                 }
                 break;
 
-            case OpCode::EMIT_EVENT:
-                // Stub: will be routed to ECS / EventBus
+            case OpCode::EMIT_EVENT: {
+                // inst.a indexes into bc.eventNames for the event type
+                // The top of stack is used as the event's intParam.
+                // If the stack is empty, 0 is used as the default parameter
+                // (supports fire-and-forget events with no explicit param).
+                Value param = m_stack.empty() ? 0 : Pop();
+                if (ctx.eventBus && inst.a < bc.eventNames.size()) {
+                    atlas::Event evt;
+                    evt.type = bc.eventNames[inst.a];
+                    evt.senderId = ctx.entity;
+                    evt.intParam = param;
+                    ctx.eventBus->Publish(evt);
+                }
                 break;
+            }
 
             case OpCode::END:
                 return;

@@ -172,6 +172,11 @@ public:
     void sendAbandonMission(const std::string& missionId);
     void sendMissionProgress(const std::string& missionId, const std::string& objectiveType,
                              const std::string& target, int count = 1);
+
+    /**
+     * Drone operations
+     */
+    void sendDroneCommand(const std::string& command, const std::string& targetId = "");
     
     /**
      * Set response callbacks for gameplay operations

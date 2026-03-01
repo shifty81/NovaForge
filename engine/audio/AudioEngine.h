@@ -22,6 +22,8 @@ struct SoundSource {
     bool looping = false;
     SoundState state = SoundState::Stopped;
     float posX = 0.0f, posY = 0.0f, posZ = 0.0f;
+    float playbackTime = 0.0f;
+    float duration = 0.0f;
 };
 
 class AudioEngine {

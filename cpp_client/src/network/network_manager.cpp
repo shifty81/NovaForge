@@ -264,6 +264,13 @@ void NetworkManager::sendMissionProgress(const std::string& missionId, const std
     m_tcpClient->send(msg);
 }
 
+void NetworkManager::sendDroneCommand(const std::string& command, const std::string& targetId) {
+    if (!isConnected()) return;
+
+    std::string msg = m_protocolHandler->createDroneCommandMessage(command, targetId);
+    m_tcpClient->send(msg);
+}
+
 std::string NetworkManager::getConnectionState() const {
     switch (m_state) {
         case State::DISCONNECTED: return "Disconnected";

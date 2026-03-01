@@ -104,7 +104,10 @@ void Application::handleKeyInput(int key, int action, int mods) {
     } else if (key == GLFW_KEY_F) {
         // F = Engage/Recall drones (Astralis standard)
         std::cout << "[Controls] Drone command: engage/recall" << std::endl;
-        // TODO: Send drone engage/recall command to server
+        auto* networkMgr = m_gameClient->getNetworkManager();
+        if (networkMgr && networkMgr->isConnected()) {
+            networkMgr->sendDroneCommand("engage_toggle", m_currentTargetId);
+        }
     } else if (key == GLFW_KEY_V) {
         // V = Toggle view mode (Orbit ↔ Cockpit ↔ FPS depending on game state)
         toggleViewMode();
