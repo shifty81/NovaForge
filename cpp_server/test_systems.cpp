@@ -159,6 +159,9 @@
 #include "systems/station_hangar_system.h"
 #include "systems/tether_docking_system.h"
 #include "systems/fps_spawn_system.h"
+#include "systems/fps_character_controller_system.h"
+#include "systems/interior_door_system.h"
+#include "systems/eva_airlock_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -21135,6 +21138,460 @@ void testFPSSpawnComponentDefaults() {
     assertTrue(approxEqual(sp.yaw, 0.0f), "Default yaw 0");
 }
 
+// ==================== FPS Character Controller System Tests ====================
+
+void testFPSCharControllerSpawn() {
+    std::cout << "\n=== FPS Character Controller Spawn ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+
+    assertTrue(sys.spawnCharacter("player1", "ship_interior_1", 5.0f, 0.0f, 3.0f, 90.0f),
+               "Spawn character");
+    assertTrue(!sys.spawnCharacter("player1", "ship_interior_1", 0, 0, 0),
+               "Duplicate spawn fails");
+
+    auto [x, y, z] = sys.getPosition("player1");
+    assertTrue(approxEqual(x, 5.0f), "Spawn X");
+    assertTrue(approxEqual(y, 0.0f), "Spawn Y");
+    assertTrue(approxEqual(z, 3.0f), "Spawn Z");
+}
+
+void testFPSCharControllerMovement() {
+    std::cout << "\n=== FPS Character Controller Movement ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    // Walk forward (positive Z)
+    sys.setMoveInput("player1", 0.0f, 1.0f);
+    sys.update(1.0f);  // 1 second at walk speed 4 m/s
+
+    auto [x, y, z] = sys.getPosition("player1");
+    assertTrue(approxEqual(z, 4.0f), "Walked forward 4m in 1s");
+    assertTrue(approxEqual(x, 0.0f), "No lateral movement");
+}
+
+void testFPSCharControllerSprint() {
+    std::cout << "\n=== FPS Character Controller Sprint ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    sys.setStance("player1", static_cast<int>(components::FPSCharacterState::Stance::Sprinting));
+    sys.setMoveInput("player1", 0.0f, 1.0f);
+    sys.update(1.0f);  // 1 second at sprint speed 7 m/s
+
+    auto [x, y, z] = sys.getPosition("player1");
+    assertTrue(approxEqual(z, 7.0f), "Sprinted forward 7m in 1s");
+    assertTrue(sys.getStance("player1") ==
+               static_cast<int>(components::FPSCharacterState::Stance::Sprinting),
+               "Still sprinting");
+}
+
+void testFPSCharControllerCrouch() {
+    std::cout << "\n=== FPS Character Controller Crouch ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    sys.setStance("player1", static_cast<int>(components::FPSCharacterState::Stance::Crouching));
+    sys.setMoveInput("player1", 1.0f, 0.0f);
+    sys.update(1.0f);  // 1 second at crouch speed 2 m/s
+
+    auto [x, y, z] = sys.getPosition("player1");
+    assertTrue(approxEqual(x, 2.0f), "Crouch-walked sideways 2m in 1s");
+}
+
+void testFPSCharControllerJump() {
+    std::cout << "\n=== FPS Character Controller Jump ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    assertTrue(sys.isGrounded("player1"), "Starts grounded");
+    sys.requestJump("player1");
+    sys.update(0.1f);  // Short tick
+
+    auto [x, y, z] = sys.getPosition("player1");
+    assertTrue(y > 0.0f, "Character is above ground after jump");
+    assertTrue(!sys.isGrounded("player1"), "Not grounded during jump");
+}
+
+void testFPSCharControllerGravityLanding() {
+    std::cout << "\n=== FPS Character Controller Gravity Landing ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    sys.requestJump("player1");
+    // Simulate enough time for jump arc to complete
+    for (int i = 0; i < 30; ++i) {
+        sys.update(0.1f);
+    }
+
+    auto [x, y, z] = sys.getPosition("player1");
+    assertTrue(approxEqual(y, 0.0f), "Landed back on ground");
+    assertTrue(sys.isGrounded("player1"), "Grounded after landing");
+}
+
+void testFPSCharControllerZeroG() {
+    std::cout << "\n=== FPS Character Controller Zero-G ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 5.0f, 0.0f);
+
+    sys.setGravity("player1", 0.0f);  // Zero gravity
+    sys.update(1.0f);
+
+    auto [x, y, z] = sys.getPosition("player1");
+    assertTrue(approxEqual(y, 5.0f), "No falling in zero-g");
+    assertTrue(!sys.isGrounded("player1"), "Never grounded in zero-g");
+}
+
+void testFPSCharControllerStaminaDrain() {
+    std::cout << "\n=== FPS Character Controller Stamina Drain ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    assertTrue(approxEqual(sys.getStaminaFraction("player1"), 1.0f), "Full stamina initially");
+
+    sys.setStance("player1", static_cast<int>(components::FPSCharacterState::Stance::Sprinting));
+    sys.setMoveInput("player1", 0.0f, 1.0f);
+    sys.update(3.0f);  // 3 seconds of sprinting, drains 60 stamina
+
+    assertTrue(sys.getStaminaFraction("player1") < 1.0f, "Stamina drained by sprinting");
+    assertTrue(sys.getStaminaFraction("player1") > 0.0f, "Stamina not fully depleted");
+}
+
+void testFPSCharControllerStaminaExhaustion() {
+    std::cout << "\n=== FPS Character Controller Stamina Exhaustion ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    sys.setStance("player1", static_cast<int>(components::FPSCharacterState::Stance::Sprinting));
+    sys.setMoveInput("player1", 0.0f, 1.0f);
+    sys.update(6.0f);  // 6 seconds, drains 120 stamina (max 100) → exhausted
+
+    assertTrue(sys.getStance("player1") ==
+               static_cast<int>(components::FPSCharacterState::Stance::Standing),
+               "Reverts to standing when exhausted");
+}
+
+void testFPSCharControllerLookDirection() {
+    std::cout << "\n=== FPS Character Controller Look Direction ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    sys.setLookDirection("player1", 180.0f, 45.0f);
+    auto [yaw, pitch] = sys.getLookDirection("player1");
+    assertTrue(approxEqual(yaw, 180.0f), "Yaw set");
+    assertTrue(approxEqual(pitch, 45.0f), "Pitch set");
+
+    // Pitch clamp
+    sys.setLookDirection("player1", 0.0f, 95.0f);
+    auto [yaw2, pitch2] = sys.getLookDirection("player1");
+    assertTrue(approxEqual(pitch2, 89.0f), "Pitch clamped to 89");
+}
+
+void testFPSCharControllerRemove() {
+    std::cout << "\n=== FPS Character Controller Remove ===" << std::endl;
+    ecs::World world;
+    systems::FPSCharacterControllerSystem sys(&world);
+    sys.spawnCharacter("player1", "interior1", 0.0f, 0.0f, 0.0f);
+
+    assertTrue(sys.removeCharacter("player1"), "Remove succeeds");
+    assertTrue(!sys.removeCharacter("player1"), "Double remove fails");
+    assertTrue(!sys.removeCharacter("nonexistent"), "Remove nonexistent fails");
+}
+
+void testFPSCharControllerStanceNames() {
+    std::cout << "\n=== FPS Character Controller Stance Names ===" << std::endl;
+    assertTrue(systems::FPSCharacterControllerSystem::stanceName(0) == "Standing", "Standing name");
+    assertTrue(systems::FPSCharacterControllerSystem::stanceName(1) == "Crouching", "Crouching name");
+    assertTrue(systems::FPSCharacterControllerSystem::stanceName(2) == "Sprinting", "Sprinting name");
+    assertTrue(systems::FPSCharacterControllerSystem::stanceName(99) == "Unknown", "Unknown stance");
+}
+
+void testFPSCharControllerComponentDefaults() {
+    std::cout << "\n=== FPS Character Controller Component Defaults ===" << std::endl;
+    components::FPSCharacterState state;
+    assertTrue(state.stance == 0, "Default stance standing");
+    assertTrue(state.grounded, "Default grounded");
+    assertTrue(approxEqual(state.walk_speed, 4.0f), "Default walk speed 4");
+    assertTrue(approxEqual(state.sprint_speed, 7.0f), "Default sprint speed 7");
+    assertTrue(approxEqual(state.gravity, 9.81f), "Default gravity 9.81");
+    assertTrue(approxEqual(state.stamina, 100.0f), "Default stamina 100");
+}
+
+// ==================== Interior Door System Tests ====================
+
+void testInteriorDoorCreate() {
+    std::cout << "\n=== Interior Door Create ===" << std::endl;
+    ecs::World world;
+    systems::InteriorDoorSystem sys(&world);
+
+    assertTrue(sys.createDoor("door1", "interior1", "roomA", "roomB",
+               static_cast<int>(components::InteriorDoor::DoorType::Standard)),
+               "Door created");
+    assertTrue(!sys.createDoor("door1", "interior1", "roomA", "roomB"),
+               "Duplicate door fails");
+}
+
+void testInteriorDoorOpenClose() {
+    std::cout << "\n=== Interior Door Open/Close ===" << std::endl;
+    ecs::World world;
+    systems::InteriorDoorSystem sys(&world);
+    sys.createDoor("door1", "interior1", "roomA", "roomB");
+
+    assertTrue(sys.getDoorState("door1") ==
+               static_cast<int>(components::InteriorDoor::DoorState::Closed),
+               "Starts closed");
+    assertTrue(sys.requestOpen("door1"), "Open request succeeds");
+    assertTrue(sys.getDoorState("door1") ==
+               static_cast<int>(components::InteriorDoor::DoorState::Opening),
+               "State is Opening");
+
+    // Simulate until fully open
+    for (int i = 0; i < 30; ++i) sys.update(0.1f);
+
+    assertTrue(sys.getDoorState("door1") ==
+               static_cast<int>(components::InteriorDoor::DoorState::Open),
+               "Door fully open");
+    assertTrue(approxEqual(sys.getOpenProgress("door1"), 1.0f), "Progress is 1.0");
+}
+
+void testInteriorDoorAutoClose() {
+    std::cout << "\n=== Interior Door Auto-Close ===" << std::endl;
+    ecs::World world;
+    systems::InteriorDoorSystem sys(&world);
+    sys.createDoor("door1", "interior1", "roomA", "roomB");
+
+    sys.requestOpen("door1");
+    // Open fully
+    for (int i = 0; i < 30; ++i) sys.update(0.1f);
+
+    // Wait for auto-close (default 5 seconds)
+    for (int i = 0; i < 60; ++i) sys.update(0.1f);
+
+    // Should be closing or closed by now
+    int state = sys.getDoorState("door1");
+    assertTrue(state == static_cast<int>(components::InteriorDoor::DoorState::Closing) ||
+               state == static_cast<int>(components::InteriorDoor::DoorState::Closed),
+               "Door auto-closing after delay");
+}
+
+void testInteriorDoorLock() {
+    std::cout << "\n=== Interior Door Lock ===" << std::endl;
+    ecs::World world;
+    systems::InteriorDoorSystem sys(&world);
+    sys.createDoor("door1", "interior1", "roomA", "roomB");
+
+    assertTrue(sys.lockDoor("door1"), "Lock succeeds when closed");
+    assertTrue(sys.isLocked("door1"), "Door is locked");
+    assertTrue(sys.getDoorState("door1") ==
+               static_cast<int>(components::InteriorDoor::DoorState::Locked),
+               "State is Locked");
+    assertTrue(!sys.requestOpen("door1"), "Can't open locked door");
+
+    assertTrue(sys.unlockDoor("door1"), "Unlock succeeds");
+    assertTrue(!sys.isLocked("door1"), "Door is unlocked");
+    assertTrue(sys.requestOpen("door1"), "Can open after unlock");
+}
+
+void testInteriorDoorAirlockPressure() {
+    std::cout << "\n=== Interior Door Airlock Pressure ===" << std::endl;
+    ecs::World world;
+    systems::InteriorDoorSystem sys(&world);
+    sys.createDoor("airlock1", "interior1", "roomA", "roomB",
+                   static_cast<int>(components::InteriorDoor::DoorType::Airlock));
+
+    // Normal pressure — should open
+    sys.setPressure("airlock1", 1.0f, 1.0f);
+    assertTrue(sys.requestOpen("airlock1"), "Opens with equal pressure");
+
+    // Reset to closed for next test
+    ecs::World world2;
+    systems::InteriorDoorSystem sys2(&world2);
+    sys2.createDoor("airlock2", "interior1", "roomA", "roomB",
+                    static_cast<int>(components::InteriorDoor::DoorType::Airlock));
+
+    // Vacuum on one side — should fail
+    sys2.setPressure("airlock2", 1.0f, 0.0f);
+    assertTrue(!sys2.requestOpen("airlock2"), "Refuses to open with pressure diff");
+    assertTrue(sys2.hasPressureWarning("airlock2") == false,
+               "No warning until update");
+
+    sys2.update(0.0f);  // Trigger pressure warning calculation
+    assertTrue(sys2.hasPressureWarning("airlock2"), "Pressure warning after update");
+}
+
+void testInteriorDoorSecurityAccess() {
+    std::cout << "\n=== Interior Door Security Access ===" << std::endl;
+    ecs::World world;
+    systems::InteriorDoorSystem sys(&world);
+    sys.createDoor("secDoor1", "interior1", "roomA", "roomB",
+                   static_cast<int>(components::InteriorDoor::DoorType::Security));
+
+    // Set access requirement
+    auto* entity = world.getEntity("secDoor1");
+    auto* door = entity->getComponent<components::InteriorDoor>();
+    door->required_access = "engineer";
+
+    assertTrue(!sys.requestOpen("secDoor1", ""), "No access denied");
+    assertTrue(!sys.requestOpen("secDoor1", "civilian"), "Wrong access denied");
+    assertTrue(sys.requestOpen("secDoor1", "engineer"), "Correct access granted");
+}
+
+void testInteriorDoorStateNames() {
+    std::cout << "\n=== Interior Door State Names ===" << std::endl;
+    assertTrue(systems::InteriorDoorSystem::stateName(0) == "Closed", "Closed name");
+    assertTrue(systems::InteriorDoorSystem::stateName(1) == "Opening", "Opening name");
+    assertTrue(systems::InteriorDoorSystem::stateName(2) == "Open", "Open name");
+    assertTrue(systems::InteriorDoorSystem::stateName(3) == "Closing", "Closing name");
+    assertTrue(systems::InteriorDoorSystem::stateName(4) == "Locked", "Locked name");
+}
+
+void testInteriorDoorTypeNames() {
+    std::cout << "\n=== Interior Door Type Names ===" << std::endl;
+    assertTrue(systems::InteriorDoorSystem::typeName(0) == "Standard", "Standard name");
+    assertTrue(systems::InteriorDoorSystem::typeName(1) == "Airlock", "Airlock name");
+    assertTrue(systems::InteriorDoorSystem::typeName(2) == "Security", "Security name");
+    assertTrue(systems::InteriorDoorSystem::typeName(99) == "Unknown", "Unknown type");
+}
+
+void testInteriorDoorComponentDefaults() {
+    std::cout << "\n=== Interior Door Component Defaults ===" << std::endl;
+    components::InteriorDoor d;
+    assertTrue(d.door_type == 0, "Default type Standard");
+    assertTrue(d.door_state == 0, "Default state Closed");
+    assertTrue(approxEqual(d.open_progress, 0.0f), "Default progress 0");
+    assertTrue(approxEqual(d.pressure_a, 1.0f), "Default pressure_a 1.0");
+    assertTrue(approxEqual(d.pressure_b, 1.0f), "Default pressure_b 1.0");
+    assertTrue(!d.is_locked, "Default not locked");
+}
+
+// ==================== EVA Airlock System Tests ====================
+
+void testEVAAirlockCreate() {
+    std::cout << "\n=== EVA Airlock Create ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockSystem sys(&world);
+
+    assertTrue(sys.createAirlock("airlock1", "ship1", 1.0f), "Airlock created");
+    assertTrue(!sys.createAirlock("airlock1", "ship1"), "Duplicate fails");
+    assertTrue(sys.getPhase("airlock1") ==
+               static_cast<int>(components::EVAAirlockState::Phase::Idle),
+               "Starts idle");
+}
+
+void testEVAAirlockBeginEVA() {
+    std::cout << "\n=== EVA Airlock Begin EVA ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockSystem sys(&world);
+    sys.createAirlock("airlock1", "ship1", 0.5f);
+
+    // Insufficient oxygen
+    assertTrue(!sys.beginEVA("airlock1", "player1", 5.0f),
+               "EVA denied with low oxygen");
+
+    // Sufficient oxygen
+    assertTrue(sys.beginEVA("airlock1", "player1", 50.0f),
+               "EVA started with enough oxygen");
+    assertTrue(sys.getPhase("airlock1") ==
+               static_cast<int>(components::EVAAirlockState::Phase::EnterChamber),
+               "Phase is EnterChamber");
+}
+
+void testEVAAirlockFullSequence() {
+    std::cout << "\n=== EVA Airlock Full EVA Sequence ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockSystem sys(&world);
+    sys.createAirlock("airlock1", "ship1", 0.5f);
+
+    sys.beginEVA("airlock1", "player1", 100.0f);
+
+    // Run through all phases: EnterChamber → InnerSeal → Depressurize → OuterOpen → EVAActive
+    for (int i = 0; i < 50; ++i) sys.update(0.1f);
+
+    assertTrue(sys.isInEVA("airlock1"), "Player is in EVA");
+    assertTrue(approxEqual(sys.getChamberPressure("airlock1"), 0.0f),
+               "Chamber depressurized");
+}
+
+void testEVAAirlockReentry() {
+    std::cout << "\n=== EVA Airlock Reentry ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockSystem sys(&world);
+    sys.createAirlock("airlock1", "ship1", 0.5f);
+
+    sys.beginEVA("airlock1", "player1", 100.0f);
+    for (int i = 0; i < 50; ++i) sys.update(0.1f);  // Reach EVA
+
+    assertTrue(sys.beginReentry("airlock1", "player1"), "Reentry started");
+
+    // Run through re-entry: OuterSeal → Repressurize → InnerOpen → Complete
+    for (int i = 0; i < 50; ++i) sys.update(0.1f);
+
+    assertTrue(sys.getPhase("airlock1") ==
+               static_cast<int>(components::EVAAirlockState::Phase::Complete),
+               "Reentry complete");
+    assertTrue(approxEqual(sys.getChamberPressure("airlock1"), 1.0f),
+               "Chamber repressurized");
+}
+
+void testEVAAirlockAbort() {
+    std::cout << "\n=== EVA Airlock Abort ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockSystem sys(&world);
+    sys.createAirlock("airlock1", "ship1", 1.0f);
+
+    sys.beginEVA("airlock1", "player1", 100.0f);
+    sys.update(0.5f);  // Partial progress in EnterChamber
+
+    assertTrue(sys.abortSequence("airlock1"), "Abort succeeds during pre-EVA");
+
+    sys.update(0.01f);  // Process abort
+    assertTrue(sys.getPhase("airlock1") ==
+               static_cast<int>(components::EVAAirlockState::Phase::Idle),
+               "Reverted to Idle after abort");
+}
+
+void testEVAAirlockReentryWrongPlayer() {
+    std::cout << "\n=== EVA Airlock Reentry Wrong Player ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockSystem sys(&world);
+    sys.createAirlock("airlock1", "ship1", 0.5f);
+
+    sys.beginEVA("airlock1", "player1", 100.0f);
+    for (int i = 0; i < 50; ++i) sys.update(0.1f);
+
+    assertTrue(!sys.beginReentry("airlock1", "player2"),
+               "Wrong player can't reenter");
+}
+
+void testEVAAirlockPhaseNames() {
+    std::cout << "\n=== EVA Airlock Phase Names ===" << std::endl;
+    assertTrue(systems::EVAAirlockSystem::phaseName(0) == "Idle", "Idle name");
+    assertTrue(systems::EVAAirlockSystem::phaseName(1) == "EnterChamber", "EnterChamber name");
+    assertTrue(systems::EVAAirlockSystem::phaseName(3) == "Depressurize", "Depressurize name");
+    assertTrue(systems::EVAAirlockSystem::phaseName(5) == "EVAActive", "EVAActive name");
+    assertTrue(systems::EVAAirlockSystem::phaseName(9) == "Complete", "Complete name");
+}
+
+void testEVAAirlockComponentDefaults() {
+    std::cout << "\n=== EVA Airlock Component Defaults ===" << std::endl;
+    components::EVAAirlockState state;
+    assertTrue(state.phase == 0, "Default phase Idle");
+    assertTrue(approxEqual(state.chamber_pressure, 1.0f), "Default chamber pressure 1.0");
+    assertTrue(!state.inner_door_open, "Default inner door closed");
+    assertTrue(!state.outer_door_open, "Default outer door closed");
+    assertTrue(approxEqual(state.min_suit_oxygen, 10.0f), "Default min suit oxygen 10");
+    assertTrue(!state.abort_requested, "Default no abort");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -21181,6 +21638,8 @@ int main() {
     std::cout << "VisualCue," << std::endl;
     std::cout << "ModManifest," << std::endl;
     std::cout << "AncientAIRemnant, CharCreationScreen, ViewModeTransition" << std::endl;
+    std::cout << "StationHangar, TetherDocking, FPSSpawn," << std::endl;
+    std::cout << "FPSCharacterController, InteriorDoor, EVAAirlock" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -22637,6 +23096,42 @@ int main() {
     testFPSSpawnFindForDockedPlayerNoHangar();
     testFPSSpawnContextNames();
     testFPSSpawnComponentDefaults();
+
+    // FPS Character Controller System tests
+    testFPSCharControllerSpawn();
+    testFPSCharControllerMovement();
+    testFPSCharControllerSprint();
+    testFPSCharControllerCrouch();
+    testFPSCharControllerJump();
+    testFPSCharControllerGravityLanding();
+    testFPSCharControllerZeroG();
+    testFPSCharControllerStaminaDrain();
+    testFPSCharControllerStaminaExhaustion();
+    testFPSCharControllerLookDirection();
+    testFPSCharControllerRemove();
+    testFPSCharControllerStanceNames();
+    testFPSCharControllerComponentDefaults();
+
+    // Interior Door System tests
+    testInteriorDoorCreate();
+    testInteriorDoorOpenClose();
+    testInteriorDoorAutoClose();
+    testInteriorDoorLock();
+    testInteriorDoorAirlockPressure();
+    testInteriorDoorSecurityAccess();
+    testInteriorDoorStateNames();
+    testInteriorDoorTypeNames();
+    testInteriorDoorComponentDefaults();
+
+    // EVA Airlock System tests
+    testEVAAirlockCreate();
+    testEVAAirlockBeginEVA();
+    testEVAAirlockFullSequence();
+    testEVAAirlockReentry();
+    testEVAAirlockAbort();
+    testEVAAirlockReentryWrongPlayer();
+    testEVAAirlockPhaseNames();
+    testEVAAirlockComponentDefaults();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
