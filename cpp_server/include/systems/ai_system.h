@@ -65,6 +65,18 @@ public:
     ecs::Entity* findNearestDeposit(ecs::Entity* entity);
 
     /**
+     * Find the most profitable MineralDeposit within awareness range.
+     *
+     * Evaluates deposits by market price of their mineral type divided by
+     * distance, so that closer high-value deposits are preferred.  Falls
+     * back to nearest deposit when no SupplyDemand data is available.
+     *
+     * @param entity  The NPC entity searching for deposits
+     * @return The best profit-per-distance deposit, or nullptr
+     */
+    ecs::Entity* findMostProfitableDeposit(ecs::Entity* entity);
+
+    /**
      * Find an attacker of a friendly entity within awareness range.
      *
      * Scans for entities with positive faction standing (friendlies)
@@ -156,6 +168,18 @@ private:
      * @param entity The NPC entity to update
      */
     void miningBehavior(ecs::Entity* entity);
+
+    /**
+     * Hauling behavior state
+     *
+     * NPC travels to a station to sell mined ore.  When within docking
+     * range of the station, cargo is sold via the SupplyDemand system,
+     * earnings are credited to the NPC wallet, and the NPC returns to
+     * Idle to mine again.
+     *
+     * @param entity The NPC entity to update
+     */
+    void haulingBehavior(ecs::Entity* entity);
 };
 
 } // namespace systems

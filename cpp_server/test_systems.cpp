@@ -8453,6 +8453,385 @@ void testAIFindNearestDeposit() {
     assertTrue(found->getId() == "near_dep", "Found nearest deposit");
 }
 
+// ==================== AI Profit-Based Deposit Selection Tests ====================
+
+void testAIFindMostProfitableDepositWithPrices() {
+    std::cout << "\n=== AI: Find Most Profitable Deposit With Market Prices ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    // Create a SupplyDemand entity with market prices
+    auto* market = world.createEntity("system_market");
+    auto* sd = addComp<components::SupplyDemand>(market);
+    sd->addCommodity("Ferrite", 10.0f, 100.0f, 100.0f);   // cheap
+    sd->addCommodity("Galvite", 500.0f, 100.0f, 100.0f);  // expensive
+
+    // Cheap deposit close by
+    auto* close_dep = world.createEntity("close_dep");
+    auto* cdpos = addComp<components::Position>(close_dep);
+    cdpos->x = 1000.0f; cdpos->y = 0.0f; cdpos->z = 0.0f;
+    auto* cd = addComp<components::MineralDeposit>(close_dep);
+    cd->mineral_type = "Ferrite";
+    cd->quantity_remaining = 5000.0f;
+
+    // Expensive deposit farther away (but high value/distance)
+    auto* far_dep = world.createEntity("far_dep");
+    auto* fdpos = addComp<components::Position>(far_dep);
+    fdpos->x = 10000.0f; fdpos->y = 0.0f; fdpos->z = 0.0f;
+    auto* fd = addComp<components::MineralDeposit>(far_dep);
+    fd->mineral_type = "Galvite";
+    fd->quantity_remaining = 5000.0f;
+
+    // Create NPC at origin
+    auto* npc = world.createEntity("profit_miner");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 0.0f; pos->y = 0.0f; pos->z = 0.0f;
+    auto* vel = addComp<components::Velocity>(npc);
+    vel->max_speed = 100.0f;
+    auto* ai = addComp<components::AI>(npc);
+    ai->awareness_range = 50000.0f;
+
+    // Ferrite: 10/1000 = 0.01 score
+    // Galvite: 500/10000 = 0.05 score — should be selected
+    auto* best = aiSys.findMostProfitableDeposit(npc);
+    assertTrue(best != nullptr, "Found a profitable deposit");
+    assertTrue(best->getId() == "far_dep", "Selected higher-value Galvite deposit");
+}
+
+void testAIFindMostProfitableDepositNoMarket() {
+    std::cout << "\n=== AI: Find Most Profitable Deposit Without Market Data ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    // No SupplyDemand entity — should fall back to nearest
+    auto* far = world.createEntity("far");
+    auto* fpos = addComp<components::Position>(far);
+    fpos->x = 20000.0f;
+    auto* fd = addComp<components::MineralDeposit>(far);
+    fd->quantity_remaining = 5000.0f;
+
+    auto* near = world.createEntity("near");
+    auto* npos = addComp<components::Position>(near);
+    npos->x = 3000.0f;
+    auto* nd = addComp<components::MineralDeposit>(near);
+    nd->quantity_remaining = 5000.0f;
+
+    auto* npc = world.createEntity("miner");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 0.0f; pos->y = 0.0f; pos->z = 0.0f;
+    addComp<components::Velocity>(npc);
+    auto* ai = addComp<components::AI>(npc);
+    ai->awareness_range = 50000.0f;
+
+    auto* best = aiSys.findMostProfitableDeposit(npc);
+    assertTrue(best != nullptr, "Found a deposit (fallback to nearest)");
+    assertTrue(best->getId() == "near", "Falls back to nearest without market data");
+}
+
+void testAIFindMostProfitableDepositPrefersCloseWhenEqual() {
+    std::cout << "\n=== AI: Profitable Deposit Prefers Close When Price Equal ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    auto* market = world.createEntity("sys");
+    auto* sd = addComp<components::SupplyDemand>(market);
+    sd->addCommodity("Ferrite", 100.0f, 100.0f, 100.0f);
+
+    // Two deposits with same mineral at different distances
+    auto* close = world.createEntity("close");
+    auto* cpos = addComp<components::Position>(close);
+    cpos->x = 2000.0f;
+    auto* cd = addComp<components::MineralDeposit>(close);
+    cd->mineral_type = "Ferrite";
+    cd->quantity_remaining = 5000.0f;
+
+    auto* far = world.createEntity("far");
+    auto* fpos = addComp<components::Position>(far);
+    fpos->x = 8000.0f;
+    auto* fd = addComp<components::MineralDeposit>(far);
+    fd->mineral_type = "Ferrite";
+    fd->quantity_remaining = 5000.0f;
+
+    auto* npc = world.createEntity("miner");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 0.0f;
+    addComp<components::Velocity>(npc);
+    auto* ai = addComp<components::AI>(npc);
+    ai->awareness_range = 50000.0f;
+
+    auto* best = aiSys.findMostProfitableDeposit(npc);
+    assertTrue(best != nullptr, "Found deposit");
+    assertTrue(best->getId() == "close", "Prefers closer deposit when price is equal");
+}
+
+// ==================== AI Hauling Behavior Tests ====================
+
+void testAIHaulingState() {
+    std::cout << "\n=== AI: Hauling State ===" << std::endl;
+
+    ecs::World world;
+    auto* npc = world.createEntity("hauler_npc");
+    auto* ai = addComp<components::AI>(npc);
+    ai->state = components::AI::State::Hauling;
+
+    assertTrue(ai->state == components::AI::State::Hauling, "AI state set to Hauling");
+    assertTrue(ai->state != components::AI::State::Mining, "Hauling != Mining");
+    assertTrue(ai->state != components::AI::State::Idle, "Hauling != Idle");
+}
+
+void testAIHaulingMovesToStation() {
+    std::cout << "\n=== AI: Hauling Moves Toward Station ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    // Create a station far away
+    auto* station = world.createEntity("station1");
+    auto* spos = addComp<components::Position>(station);
+    spos->x = 10000.0f; spos->y = 0.0f; spos->z = 0.0f;
+
+    // Create NPC hauling toward station
+    auto* npc = world.createEntity("hauler");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 0.0f; pos->y = 0.0f; pos->z = 0.0f;
+    auto* vel = addComp<components::Velocity>(npc);
+    vel->max_speed = 200.0f;
+    auto* ai = addComp<components::AI>(npc);
+    ai->state = components::AI::State::Hauling;
+    ai->haul_station_id = "station1";
+
+    aiSys.update(1.0f);
+
+    // Should be moving toward station (positive vx)
+    assertTrue(vel->vx > 0.0f, "Hauler moves toward station (vx > 0)");
+    assertTrue(ai->state == components::AI::State::Hauling, "Still hauling while far away");
+}
+
+void testAIHaulingSellsCargoAtStation() {
+    std::cout << "\n=== AI: Hauling Sells Cargo At Station ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    // Create market with prices
+    auto* market = world.createEntity("market_sys");
+    auto* sd = addComp<components::SupplyDemand>(market);
+    sd->addCommodity("Ferrite", 50.0f, 100.0f, 100.0f);
+
+    // Create station within docking range
+    auto* station = world.createEntity("station1");
+    auto* spos = addComp<components::Position>(station);
+    spos->x = 100.0f; spos->y = 0.0f; spos->z = 0.0f;
+
+    // Create NPC near station with cargo
+    auto* npc = world.createEntity("hauler");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 50.0f; pos->y = 0.0f; pos->z = 0.0f;
+    auto* vel = addComp<components::Velocity>(npc);
+    vel->max_speed = 100.0f;
+    auto* ai = addComp<components::AI>(npc);
+    ai->state = components::AI::State::Hauling;
+    ai->haul_station_id = "station1";
+    auto* inv = addComp<components::Inventory>(npc);
+    inv->max_capacity = 1000.0f;
+    // Add 100 units of Ferrite to cargo
+    components::Inventory::Item ore;
+    ore.item_id = "Ferrite";
+    ore.name = "Ferrite";
+    ore.type = "ore";
+    ore.quantity = 100;
+    ore.volume = 0.1f;
+    inv->items.push_back(ore);
+    auto* intent = addComp<components::SimNPCIntent>(npc);
+    intent->wallet = 1000.0;
+
+    aiSys.update(1.0f);
+
+    // Should have sold cargo: 100 * 50 = 5000 Credits earned
+    assertTrue(inv->items.empty(), "Cargo sold (inventory cleared)");
+    assertTrue(intent->wallet == 6000.0, "Wallet increased by 5000 (100 * 50)");
+    assertTrue(ai->state == components::AI::State::Idle, "Returns to Idle after selling");
+}
+
+void testAIHaulingNoStationGoesIdle() {
+    std::cout << "\n=== AI: Hauling Without Station Goes Idle ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    auto* npc = world.createEntity("hauler");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 0.0f;
+    auto* vel = addComp<components::Velocity>(npc);
+    vel->max_speed = 100.0f;
+    auto* ai = addComp<components::AI>(npc);
+    ai->state = components::AI::State::Hauling;
+    ai->haul_station_id = "";  // no station
+
+    aiSys.update(1.0f);
+
+    assertTrue(ai->state == components::AI::State::Idle, "Goes idle without station");
+}
+
+void testAIMiningCargoFullTransitionsToHauling() {
+    std::cout << "\n=== AI: Mining Cargo Full Transitions to Hauling ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    // Create deposit
+    auto* deposit = world.createEntity("deposit1");
+    auto* dpos = addComp<components::Position>(deposit);
+    dpos->x = 100.0f;
+    auto* dep = addComp<components::MineralDeposit>(deposit);
+    dep->mineral_type = "Ferrite";
+    dep->quantity_remaining = 5000.0f;
+
+    // Create miner with full cargo and haul station set
+    auto* npc = world.createEntity("miner");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 50.0f;
+    auto* vel = addComp<components::Velocity>(npc);
+    vel->max_speed = 100.0f;
+    auto* ai = addComp<components::AI>(npc);
+    ai->state = components::AI::State::Mining;
+    ai->target_entity_id = "deposit1";
+    ai->haul_station_id = "station1";
+    auto* laser = addComp<components::MiningLaser>(npc);
+    laser->active = true;
+    auto* inv = addComp<components::Inventory>(npc);
+    inv->max_capacity = 10.0f;  // tiny hold
+    // Fill cargo completely
+    components::Inventory::Item ore;
+    ore.item_id = "Ferrite";
+    ore.name = "Ferrite";
+    ore.type = "ore";
+    ore.quantity = 200;
+    ore.volume = 0.1f;
+    inv->items.push_back(ore);  // 200 * 0.1 = 20.0 > 10.0 max
+
+    aiSys.update(1.0f);
+
+    assertTrue(ai->state == components::AI::State::Hauling, "Cargo full transitions to Hauling");
+    assertTrue(!laser->active, "Mining laser deactivated");
+}
+
+void testAIMiningCargoFullNoStationGoesIdle() {
+    std::cout << "\n=== AI: Mining Cargo Full Without Station Goes Idle ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    auto* deposit = world.createEntity("deposit1");
+    auto* dpos = addComp<components::Position>(deposit);
+    dpos->x = 100.0f;
+    auto* dep = addComp<components::MineralDeposit>(deposit);
+    dep->mineral_type = "Ferrite";
+    dep->quantity_remaining = 5000.0f;
+
+    auto* npc = world.createEntity("miner");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 50.0f;
+    auto* vel = addComp<components::Velocity>(npc);
+    vel->max_speed = 100.0f;
+    auto* ai = addComp<components::AI>(npc);
+    ai->state = components::AI::State::Mining;
+    ai->target_entity_id = "deposit1";
+    ai->haul_station_id = "";  // no station
+    auto* laser = addComp<components::MiningLaser>(npc);
+    laser->active = true;
+    auto* inv = addComp<components::Inventory>(npc);
+    inv->max_capacity = 10.0f;
+    components::Inventory::Item ore;
+    ore.item_id = "Ferrite";
+    ore.name = "Ferrite";
+    ore.type = "ore";
+    ore.quantity = 200;
+    ore.volume = 0.1f;
+    inv->items.push_back(ore);
+
+    aiSys.update(1.0f);
+
+    assertTrue(ai->state == components::AI::State::Idle, "Cargo full goes Idle without station");
+}
+
+// ==================== AI Full Economic Cycle Tests ====================
+
+void testAIFullMineHaulSellCycle() {
+    std::cout << "\n=== AI: Full Mine-Haul-Sell Cycle ===" << std::endl;
+
+    ecs::World world;
+    systems::AISystem aiSys(&world);
+
+    // Market prices
+    auto* market = world.createEntity("market");
+    auto* sd = addComp<components::SupplyDemand>(market);
+    sd->addCommodity("Ferrite", 25.0f, 100.0f, 100.0f);
+
+    // Station for selling
+    auto* station = world.createEntity("sell_station");
+    auto* spos = addComp<components::Position>(station);
+    spos->x = 200.0f;
+
+    // Deposit
+    auto* deposit = world.createEntity("ore_deposit");
+    auto* dpos = addComp<components::Position>(deposit);
+    dpos->x = 100.0f;
+    auto* dep = addComp<components::MineralDeposit>(deposit);
+    dep->mineral_type = "Ferrite";
+    dep->quantity_remaining = 5000.0f;
+
+    // NPC miner starting idle
+    auto* npc = world.createEntity("full_cycle_miner");
+    auto* pos = addComp<components::Position>(npc);
+    pos->x = 0.0f;
+    auto* vel = addComp<components::Velocity>(npc);
+    vel->max_speed = 100.0f;
+    auto* ai = addComp<components::AI>(npc);
+    ai->behavior = components::AI::Behavior::Passive;
+    ai->state = components::AI::State::Idle;
+    ai->awareness_range = 50000.0f;
+    ai->haul_station_id = "sell_station";
+    auto* laser = addComp<components::MiningLaser>(npc);
+    laser->active = false;
+    auto* inv = addComp<components::Inventory>(npc);
+    inv->max_capacity = 10.0f;  // small hold
+    auto* intent = addComp<components::SimNPCIntent>(npc);
+    intent->wallet = 0.0;
+
+    // Step 1: Idle → should find deposit and start approaching
+    aiSys.update(1.0f);
+    assertTrue(ai->state == components::AI::State::Approaching, "Step 1: Idle -> Approaching");
+    assertTrue(ai->target_entity_id == "ore_deposit", "Step 1: Target is deposit");
+
+    // Step 2: Simulate arrival at deposit (move NPC close)
+    pos->x = 100.0f;
+    ai->state = components::AI::State::Mining;
+    aiSys.update(1.0f);
+    assertTrue(laser->active, "Step 2: Laser activated while mining");
+
+    // Step 3: Fill cargo, trigger hauling
+    components::Inventory::Item ore;
+    ore.item_id = "Ferrite";
+    ore.name = "Ferrite";
+    ore.type = "ore";
+    ore.quantity = 200;
+    ore.volume = 0.1f;
+    inv->items.push_back(ore);  // overfill
+    aiSys.update(1.0f);
+    assertTrue(ai->state == components::AI::State::Hauling, "Step 3: Mining -> Hauling (cargo full)");
+
+    // Step 4: Move NPC to station and sell
+    pos->x = 200.0f;
+    aiSys.update(1.0f);
+    assertTrue(inv->items.empty(), "Step 4: Cargo sold");
+    assertTrue(intent->wallet == 5000.0, "Step 4: Earned 200 * 25 = 5000 Credits");
+    assertTrue(ai->state == components::AI::State::Idle, "Step 4: Back to Idle");
+}
+
 // ==================== Refining System Tests ====================
 
 void testRefineOreBasic() {
@@ -20642,6 +21021,22 @@ int main() {
     testAIMiningStopsOnDepletedDeposit();
     testAIMiningStopsOnCargoFull();
     testAIFindNearestDeposit();
+
+    // AI profit-based deposit selection tests
+    testAIFindMostProfitableDepositWithPrices();
+    testAIFindMostProfitableDepositNoMarket();
+    testAIFindMostProfitableDepositPrefersCloseWhenEqual();
+
+    // AI hauling behavior tests
+    testAIHaulingState();
+    testAIHaulingMovesToStation();
+    testAIHaulingSellsCargoAtStation();
+    testAIHaulingNoStationGoesIdle();
+    testAIMiningCargoFullTransitionsToHauling();
+    testAIMiningCargoFullNoStationGoesIdle();
+
+    // AI full economic cycle tests
+    testAIFullMineHaulSellCycle();
 
     // Refining system tests
     testRefineOreBasic();

@@ -69,12 +69,12 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 **Why Third**: Foundation for dynamic economy  
 **Current State**: NPCs exist but don't "live" in the world  
 **Work Required**:
-- [ ] Design AI actor state machine (Idle → Patrol → Mine → Haul → Sell → Repeat)
-- [ ] Implement miner AI (select asteroid, activate lasers, fill cargo)
-- [ ] Implement hauler AI (travel to station, dock, sell ore)
-- [ ] Add AI wallet system (Credits tracking per NPC)
-- [ ] Create AI goals (profit maximization)
-- [ ] Add AI decision-making (choose best ore based on market prices)
+- [x] Design AI actor state machine (Idle → Patrol → Mine → Haul → Sell → Repeat)
+- [x] Implement miner AI (select asteroid, activate lasers, fill cargo)
+- [x] Implement hauler AI (travel to station, dock, sell ore)
+- [x] Add AI wallet system (Credits tracking per NPC)
+- [x] Create AI goals (profit maximization)
+- [x] Add AI decision-making (choose best ore based on market prices)
 
 **Success Criteria**:
 - 10 AI miners autonomously harvest ore

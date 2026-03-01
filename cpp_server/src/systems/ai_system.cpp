@@ -40,6 +40,9 @@ void AISystem::update(float delta_time) {
             case components::AI::State::Mining:
                 miningBehavior(entity);
                 break;
+            case components::AI::State::Hauling:
+                haulingBehavior(entity);
+                break;
         }
     }
 }
@@ -54,7 +57,7 @@ void AISystem::idleBehavior(ecs::Entity* entity) {
     if (ai->behavior == components::AI::Behavior::Passive) {
         auto* laser = entity->getComponent<components::MiningLaser>();
         if (laser) {
-            ecs::Entity* deposit = findNearestDeposit(entity);
+            ecs::Entity* deposit = findMostProfitableDeposit(entity);
             if (deposit) {
                 ai->target_entity_id = deposit->getId();
                 ai->state = components::AI::State::Approaching;
@@ -408,8 +411,16 @@ void AISystem::miningBehavior(ecs::Entity* entity) {
     // Check cargo capacity
     auto* inv = entity->getComponent<components::Inventory>();
     if (inv && inv->freeCapacity() <= 0.0f) {
-        // Cargo full — stop mining
-        ai->state = components::AI::State::Idle;
+        // Cargo full — deactivate laser and transition to hauling if station set
+        auto* ml = entity->getComponent<components::MiningLaser>();
+        if (ml) {
+            ml->active = false;
+        }
+        if (!ai->haul_station_id.empty()) {
+            ai->state = components::AI::State::Hauling;
+        } else {
+            ai->state = components::AI::State::Idle;
+        }
         ai->target_entity_id.clear();
         return;
     }
@@ -454,6 +465,152 @@ ecs::Entity* AISystem::findNearestDeposit(ecs::Entity* entity) {
     }
     
     return nearest;
+}
+
+ecs::Entity* AISystem::findMostProfitableDeposit(ecs::Entity* entity) {
+    auto* ai = entity->getComponent<components::AI>();
+    auto* pos = entity->getComponent<components::Position>();
+    if (!ai || !pos) return nullptr;
+
+    // Look for a SupplyDemand entity to get market prices
+    auto sd_entities = world_->getEntities<components::SupplyDemand>();
+    components::SupplyDemand* sd = nullptr;
+    for (auto* e : sd_entities) {
+        sd = e->getComponent<components::SupplyDemand>();
+        if (sd) break;
+    }
+
+    // If no market data, fall back to nearest deposit
+    if (!sd || sd->commodities.empty()) {
+        return findNearestDeposit(entity);
+    }
+
+    auto all_entities = world_->getEntities<components::Position, components::MineralDeposit>();
+
+    ecs::Entity* best = nullptr;
+    float best_score = -1.0f;
+
+    for (auto* candidate : all_entities) {
+        auto* dep = candidate->getComponent<components::MineralDeposit>();
+        if (!dep || dep->isDepleted()) continue;
+
+        auto* dep_pos = candidate->getComponent<components::Position>();
+        if (!dep_pos) continue;
+
+        float dx = dep_pos->x - pos->x;
+        float dy = dep_pos->y - pos->y;
+        float dz = dep_pos->z - pos->z;
+        float dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+        if (dist > ai->awareness_range) continue;
+        if (dist < 1.0f) dist = 1.0f;  // avoid division by zero
+
+        // Look up market price for this mineral type
+        float price = 0.0f;
+        const auto* commodity = sd->getCommodity(dep->mineral_type);
+        if (commodity) {
+            price = commodity->current_price;
+        }
+
+        // Score = price / distance  (higher is better)
+        float score = price / dist;
+        if (score > best_score) {
+            best_score = score;
+            best = candidate;
+        }
+    }
+
+    // If no scored deposits found (all prices zero), fall back to nearest
+    if (!best) {
+        return findNearestDeposit(entity);
+    }
+
+    return best;
+}
+
+void AISystem::haulingBehavior(ecs::Entity* entity) {
+    auto* ai = entity->getComponent<components::AI>();
+    auto* pos = entity->getComponent<components::Position>();
+
+    if (!ai || !pos) return;
+
+    // Need a station to haul to
+    if (ai->haul_station_id.empty()) {
+        ai->state = components::AI::State::Idle;
+        return;
+    }
+
+    auto* station = world_->getEntity(ai->haul_station_id);
+    if (!station) {
+        ai->state = components::AI::State::Idle;
+        ai->haul_station_id.clear();
+        return;
+    }
+
+    auto* station_pos = station->getComponent<components::Position>();
+    if (!station_pos) {
+        ai->state = components::AI::State::Idle;
+        return;
+    }
+
+    float dx = station_pos->x - pos->x;
+    float dy = station_pos->y - pos->y;
+    float dz = station_pos->z - pos->z;
+    float dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+    const float docking_range = 500.0f;
+
+    if (dist > docking_range) {
+        // Move toward station
+        auto* vel = entity->getComponent<components::Velocity>();
+        if (vel && dist > 0.0f) {
+            float speed = vel->max_speed;
+            vel->vx = (dx / dist) * speed;
+            vel->vy = (dy / dist) * speed;
+            vel->vz = (dz / dist) * speed;
+        }
+        return;
+    }
+
+    // Within docking range — sell cargo
+    auto* inv = entity->getComponent<components::Inventory>();
+    auto* intent = entity->getComponent<components::SimNPCIntent>();
+    if (inv && !inv->items.empty()) {
+        // Look for SupplyDemand to price the ore
+        auto sd_entities = world_->getEntities<components::SupplyDemand>();
+        components::SupplyDemand* sd = nullptr;
+        for (auto* e : sd_entities) {
+            sd = e->getComponent<components::SupplyDemand>();
+            if (sd) break;
+        }
+
+        double total_earnings = 0.0;
+        for (const auto& item : inv->items) {
+            float unit_price = 0.0f;
+            if (sd) {
+                const auto* commodity = sd->getCommodity(item.item_id);
+                if (commodity) {
+                    unit_price = commodity->current_price;
+                }
+            }
+            total_earnings += static_cast<double>(unit_price) * item.quantity;
+        }
+
+        if (intent) {
+            intent->wallet += total_earnings;
+        }
+
+        inv->items.clear();
+    }
+
+    // Stop moving and return to idle to mine again
+    auto* vel = entity->getComponent<components::Velocity>();
+    if (vel) {
+        vel->vx = 0.0f;
+        vel->vy = 0.0f;
+        vel->vz = 0.0f;
+    }
+    ai->state = components::AI::State::Idle;
 }
 
 ecs::Entity* AISystem::findAttackerOfFriendly(ecs::Entity* entity) {

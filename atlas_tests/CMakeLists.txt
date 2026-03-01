@@ -55,6 +55,7 @@ set(ATLAS_TEST_SOURCES
     test_economy_rules.cpp
     test_engine_frame_callback.cpp
     test_editor_menubar.cpp
+    test_data_editors.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
@@ -68,6 +69,9 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/FleetFormationPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/MissionEditorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/SceneGraphPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/DataBrowserPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/ModuleEditorPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/NPCEditorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
     ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp

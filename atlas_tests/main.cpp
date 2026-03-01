@@ -1017,6 +1017,40 @@ void test_menu_bar_state_defaults();
 void test_layout_menubar_panels_registered();
 void test_layout_draw_with_menubar();
 
+// Data Browser / Module Editor / NPC Editor tests
+void test_data_browser_defaults();
+void test_data_browser_load_category();
+void test_data_browser_add_entry();
+void test_data_browser_remove_entry();
+void test_data_browser_update_field();
+void test_data_browser_selection();
+void test_data_browser_filter();
+void test_data_browser_export_import_json();
+void test_data_browser_categories_count();
+void test_module_editor_defaults();
+void test_module_editor_add_module();
+void test_module_editor_remove_module();
+void test_module_editor_update_module();
+void test_module_editor_type_filter();
+void test_module_editor_slot_filter();
+void test_module_editor_validate_valid();
+void test_module_editor_validate_missing_id();
+void test_module_editor_validate_weapon_no_rof();
+void test_module_editor_validate_all();
+void test_module_editor_export_json();
+void test_npc_editor_defaults();
+void test_npc_editor_add_npc();
+void test_npc_editor_remove_npc();
+void test_npc_editor_update_npc();
+void test_npc_editor_faction_filter();
+void test_npc_editor_archetype_filter();
+void test_npc_editor_validate_valid();
+void test_npc_editor_validate_zero_hp();
+void test_npc_editor_validate_miner_needs_wallet();
+void test_npc_editor_validate_all();
+void test_npc_editor_export_json();
+void test_npc_editor_hauler_station();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2125,6 +2159,47 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_menu_bar_state_defaults);
     RUN_TEST(test_layout_menubar_panels_registered);
     RUN_TEST(test_layout_draw_with_menubar);
+
+    // Data Browser Panel
+    log.BeginSection("Data Browser Panel");
+    RUN_TEST(test_data_browser_defaults);
+    RUN_TEST(test_data_browser_load_category);
+    RUN_TEST(test_data_browser_add_entry);
+    RUN_TEST(test_data_browser_remove_entry);
+    RUN_TEST(test_data_browser_update_field);
+    RUN_TEST(test_data_browser_selection);
+    RUN_TEST(test_data_browser_filter);
+    RUN_TEST(test_data_browser_export_import_json);
+    RUN_TEST(test_data_browser_categories_count);
+
+    // Module Editor Panel
+    log.BeginSection("Module Editor Panel");
+    RUN_TEST(test_module_editor_defaults);
+    RUN_TEST(test_module_editor_add_module);
+    RUN_TEST(test_module_editor_remove_module);
+    RUN_TEST(test_module_editor_update_module);
+    RUN_TEST(test_module_editor_type_filter);
+    RUN_TEST(test_module_editor_slot_filter);
+    RUN_TEST(test_module_editor_validate_valid);
+    RUN_TEST(test_module_editor_validate_missing_id);
+    RUN_TEST(test_module_editor_validate_weapon_no_rof);
+    RUN_TEST(test_module_editor_validate_all);
+    RUN_TEST(test_module_editor_export_json);
+
+    // NPC Editor Panel
+    log.BeginSection("NPC Editor Panel");
+    RUN_TEST(test_npc_editor_defaults);
+    RUN_TEST(test_npc_editor_add_npc);
+    RUN_TEST(test_npc_editor_remove_npc);
+    RUN_TEST(test_npc_editor_update_npc);
+    RUN_TEST(test_npc_editor_faction_filter);
+    RUN_TEST(test_npc_editor_archetype_filter);
+    RUN_TEST(test_npc_editor_validate_valid);
+    RUN_TEST(test_npc_editor_validate_zero_hp);
+    RUN_TEST(test_npc_editor_validate_miner_needs_wallet);
+    RUN_TEST(test_npc_editor_validate_all);
+    RUN_TEST(test_npc_editor_export_json);
+    RUN_TEST(test_npc_editor_hauler_station);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);

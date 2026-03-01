@@ -13,6 +13,9 @@
 #include "tools/CharacterSelectPanel.h"
 #include "tools/MissionEditorPanel.h"
 #include "tools/SceneGraphPanel.h"
+#include "tools/DataBrowserPanel.h"
+#include "tools/ModuleEditorPanel.h"
+#include "tools/NPCEditorPanel.h"
 #include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
 #include "ui/KeybindManager.h"
@@ -56,6 +59,9 @@ int main() {
     atlas::editor::CharacterSelectPanel characterSelect;
     atlas::editor::MissionEditorPanel missionEditor;
     atlas::editor::SceneGraphPanel sceneGraph;
+    atlas::editor::DataBrowserPanel dataBrowser;
+    atlas::editor::ModuleEditorPanel moduleEditor;
+    atlas::editor::NPCEditorPanel npcEditor;
 
     // ── Keyboard shortcut manager ────────────────────────────────
     atlas::editor::KeybindManager keybinds;
@@ -211,6 +217,9 @@ int main() {
     layout.RegisterPanel(&missionEditor);
     layout.RegisterPanel(&sceneGraph);
     layout.RegisterPanel(&liveScene);
+    layout.RegisterPanel(&dataBrowser);
+    layout.RegisterPanel(&moduleEditor);
+    layout.RegisterPanel(&npcEditor);
 
     // Root: horizontal split — left (viewport area) | right (tool panels)
     auto& root = layout.Root();
@@ -227,7 +236,8 @@ int main() {
     root.a->b = std::make_unique<atlas::editor::DockNode>();
     root.a->a->panel = &viewport;
     root.a->b->split = atlas::editor::DockSplit::Tab;
-    root.a->b->tabs = {&console, &ecsInspector, &netInspector, &sceneGraph};
+    root.a->b->tabs = {&console, &ecsInspector, &netInspector, &sceneGraph,
+                        &dataBrowser, &moduleEditor, &npcEditor};
     root.a->b->activeTab = 0;
 
     // Right side: vertical split — top (PCG preview + tools) | bottom (asset/packager)
@@ -264,7 +274,8 @@ int main() {
     std::cout << "[Editor] Panels: Viewport, PCG Preview, Character Select, "
               << "Mission Editor, Scene Graph, Generation Style, "
               << "Asset Style, Ship Archetype, ECS Inspector, Net Inspector, "
-              << "Console, Game Packager, Live Scene Manager" << std::endl;
+              << "Console, Game Packager, Live Scene Manager, "
+              << "Data Browser, Module Editor, NPC Editor" << std::endl;
 
     // ── Build editor menu bar ────────────────────────────────────
     layout.MenuBar().Build();

@@ -169,7 +169,8 @@ public:
         Orbiting,
         Fleeing,
         Attacking,
-        Mining
+        Mining,
+        Hauling
     };
     
     /**
@@ -190,6 +191,7 @@ public:
     TargetSelection target_selection = TargetSelection::Closest;  // how to pick targets
     bool use_dynamic_orbit = false;  // if true, orbit_distance set from ship class
     float engagement_range = 0.0f;  // 0 = derive from weapon optimal+falloff
+    std::string haul_station_id;    // destination station for hauling ore
     
     COMPONENT_TYPE(AI)
 };

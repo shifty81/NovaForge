@@ -43,6 +43,9 @@ add_executable(AtlasEditor
     tools/FleetFormationPanel.cpp
     tools/MissionEditorPanel.cpp
     tools/SceneGraphPanel.cpp
+    tools/DataBrowserPanel.cpp
+    tools/ModuleEditorPanel.cpp
+    tools/NPCEditorPanel.cpp
     ai/AIAggregator.cpp
     ai/TemplateAIBackend.cpp
     ui/UndoStack.cpp
