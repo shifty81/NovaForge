@@ -187,6 +187,8 @@ set(SERVER_SOURCES
     src/pcg/terrain_generator.cpp
     src/pcg/turret_placement_system.cpp
     src/pcg/damage_state_generator.cpp
+    src/pcg/procedural_texture_generator.cpp
+    src/pcg/shield_effect_generator.cpp
     src/pcg/economy_driven_generator.cpp
     src/pcg/star_system_generator.cpp
     src/pcg/galaxy_generator.cpp
@@ -355,6 +357,8 @@ set(SERVER_HEADERS
     include/pcg/terrain_generator.h
     include/pcg/turret_placement_system.h
     include/pcg/damage_state_generator.h
+    include/pcg/procedural_texture_generator.h
+    include/pcg/shield_effect_generator.h
     include/pcg/economy_driven_generator.h
     include/pcg/star_system_generator.h
     include/pcg/galaxy_generator.h
@@ -593,6 +597,8 @@ if(BUILD_TESTS)
         src/pcg/terrain_generator.cpp
         src/pcg/turret_placement_system.cpp
         src/pcg/damage_state_generator.cpp
+        src/pcg/procedural_texture_generator.cpp
+        src/pcg/shield_effect_generator.cpp
         src/pcg/economy_driven_generator.cpp
         src/pcg/star_system_generator.cpp
         src/pcg/galaxy_generator.cpp

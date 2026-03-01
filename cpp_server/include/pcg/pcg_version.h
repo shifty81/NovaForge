@@ -32,6 +32,8 @@ struct PCGVersion {
     uint32_t weapon_rules_version    = 1;
     uint32_t spine_hull_rules_version = 1;
     uint32_t terrain_rules_version   = 1;
+    uint32_t texture_rules_version   = 1;
+    uint32_t shield_effect_rules_version = 1;
 
     /** Quick equality check for save-file validation. */
     bool operator==(const PCGVersion& other) const {
@@ -45,7 +47,9 @@ struct PCGVersion {
             && capital_rules_version  == other.capital_rules_version
             && weapon_rules_version   == other.weapon_rules_version
             && spine_hull_rules_version == other.spine_hull_rules_version
-            && terrain_rules_version  == other.terrain_rules_version;
+            && terrain_rules_version  == other.terrain_rules_version
+            && texture_rules_version  == other.texture_rules_version
+            && shield_effect_rules_version == other.shield_effect_rules_version;
     }
 
     bool operator!=(const PCGVersion& other) const {
@@ -65,17 +69,19 @@ struct PCGVersion {
  *   );
  */
 inline constexpr PCGVersion CURRENT_PCG_VERSION = {
-    /* ship       */ 1,
-    /* asteroid   */ 1,
-    /* station    */ 1,
-    /* fleet      */ 1,
-    /* npc        */ 1,
-    /* anomaly    */ 1,
-    /* loot       */ 1,
-    /* capital    */ 1,
-    /* weapon     */ 1,
-    /* spine_hull */ 1,
-    /* terrain    */ 1,
+    /* ship          */ 1,
+    /* asteroid      */ 1,
+    /* station       */ 1,
+    /* fleet         */ 1,
+    /* npc           */ 1,
+    /* anomaly       */ 1,
+    /* loot          */ 1,
+    /* capital       */ 1,
+    /* weapon        */ 1,
+    /* spine_hull    */ 1,
+    /* terrain       */ 1,
+    /* texture       */ 1,
+    /* shield_effect */ 1,
 };
 
 } // namespace pcg

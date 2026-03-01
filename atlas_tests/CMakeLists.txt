@@ -103,6 +103,8 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/economy_driven_generator.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/npc_encounter_generator.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/damage_state_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/procedural_texture_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/shield_effect_generator.cpp
 )
 
 # Camera tests require GLM; include conditionally

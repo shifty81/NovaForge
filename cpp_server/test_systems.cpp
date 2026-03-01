@@ -127,6 +127,8 @@
 #include "pcg/terrain_generator.h"
 #include "pcg/turret_placement_system.h"
 #include "pcg/damage_state_generator.h"
+#include "pcg/procedural_texture_generator.h"
+#include "pcg/shield_effect_generator.h"
 #include "pcg/economy_driven_generator.h"
 #include "pcg/collision_manager.h"
 #include "pcg/asteroid_field_generator.h"
@@ -17935,6 +17937,224 @@ void testDamageStateLevelNames() {
     assertTrue(pcg::DamageStateGenerator::decalTypeName(pcg::DecalType::ScorchMark) == "ScorchMark", "ScorchMark name");
 }
 
+// ==================== Procedural Texture Generator Tests ====================
+
+void testTextureGeneration() {
+    std::cout << "\n=== Procedural Texture Generation ===" << std::endl;
+    pcg::PCGContext ctx{ 42, 1 };
+    auto tex = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Cruiser, "Veyren");
+    assertTrue(tex.valid, "Texture params valid");
+    assertTrue(tex.faction == "Veyren", "Faction stored");
+    assertTrue(tex.hull_class == pcg::HullClass::Cruiser, "Hull class stored");
+    assertTrue(!tex.markings.empty(), "Has hull markings");
+    assertTrue(!tex.window_lights.empty(), "Has window lights");
+    assertTrue(tex.panel_tile_count > 0, "Has panel tiling");
+}
+
+void testTextureDeterminism() {
+    std::cout << "\n=== Procedural Texture Determinism ===" << std::endl;
+    pcg::PCGContext ctx{ 777, 1 };
+    auto t1 = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Battleship, "Solari");
+    auto t2 = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Battleship, "Solari");
+    assertTrue(approxEqual(t1.palette.primary_r, t2.palette.primary_r), "Same seed same palette R");
+    assertTrue(approxEqual(t1.palette.primary_g, t2.palette.primary_g), "Same seed same palette G");
+    assertTrue(approxEqual(t1.material.metalness, t2.material.metalness), "Same seed same metalness");
+    assertTrue(static_cast<int>(t1.markings.size()) == static_cast<int>(t2.markings.size()),
+               "Same seed same marking count");
+    assertTrue(static_cast<int>(t1.window_lights.size()) == static_cast<int>(t2.window_lights.size()),
+               "Same seed same window count");
+}
+
+void testTextureFactionPalettes() {
+    std::cout << "\n=== Texture Faction Palettes ===" << std::endl;
+    auto solari  = pcg::ProceduralTextureGenerator::basePalette("Solari");
+    auto veyren  = pcg::ProceduralTextureGenerator::basePalette("Veyren");
+    auto aurelian = pcg::ProceduralTextureGenerator::basePalette("Aurelian");
+    auto keldari = pcg::ProceduralTextureGenerator::basePalette("Keldari");
+    // Solari is golden (R > G > B).
+    assertTrue(solari.primary_r > solari.primary_b, "Solari primary is warm (R > B)");
+    // Veyren is blue-grey (B > R).
+    assertTrue(veyren.primary_b > veyren.primary_r, "Veyren primary is cool (B > R)");
+    // Aurelian is green-tinted (G > R, G > B).
+    assertTrue(aurelian.primary_g > aurelian.primary_r, "Aurelian primary green (G > R)");
+    // Keldari is brown (R > G > B).
+    assertTrue(keldari.primary_r > keldari.primary_g, "Keldari primary warm (R > G)");
+    assertTrue(keldari.primary_g > keldari.primary_b, "Keldari primary brown (G > B)");
+}
+
+void testTextureMaterialByFaction() {
+    std::cout << "\n=== Texture Material By Faction ===" << std::endl;
+    pcg::PCGContext ctx{ 500, 1 };
+    auto solari  = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Cruiser, "Solari");
+    auto keldari = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Cruiser, "Keldari");
+    // Solari ships are more polished (lower roughness).
+    assertTrue(solari.material.roughness < keldari.material.roughness,
+               "Solari smoother than Keldari");
+}
+
+void testTextureScalesWithClass() {
+    std::cout << "\n=== Texture Scales With Class ===" << std::endl;
+    pcg::PCGContext ctx{ 600, 1 };
+    auto frigate = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Frigate, "Veyren");
+    auto capital = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Capital, "Veyren");
+    assertTrue(static_cast<int>(capital.window_lights.size()) > static_cast<int>(frigate.window_lights.size()),
+               "Capital has more windows than frigate");
+    assertTrue(capital.panel_tile_count > frigate.panel_tile_count,
+               "Capital has more panel tiling than frigate");
+    assertTrue(static_cast<int>(capital.markings.size()) > static_cast<int>(frigate.markings.size()),
+               "Capital has more markings than frigate");
+}
+
+void testTextureEngineGlowFaction() {
+    std::cout << "\n=== Texture Engine Glow By Faction ===" << std::endl;
+    pcg::PCGContext ctx{ 700, 1 };
+    auto veyren = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Frigate, "Veyren");
+    auto keldari = pcg::ProceduralTextureGenerator::generate(ctx, pcg::HullClass::Frigate, "Keldari");
+    // Veyren engine glow is blue (B channel dominant).
+    assertTrue(veyren.engine_glow.color_b > veyren.engine_glow.color_r,
+               "Veyren engine glow is blue");
+    // Keldari engine glow is orange/red (R channel dominant).
+    assertTrue(keldari.engine_glow.color_r > keldari.engine_glow.color_b,
+               "Keldari engine glow is warm");
+    assertTrue(veyren.engine_glow.intensity > 0.0f, "Engine glow intensity positive");
+}
+
+void testTextureMarkingTypeNames() {
+    std::cout << "\n=== Texture Marking Type Names ===" << std::endl;
+    assertTrue(pcg::ProceduralTextureGenerator::markingTypeName(pcg::MarkingType::StripeHorizontal) == "StripeHorizontal",
+               "StripeHorizontal name");
+    assertTrue(pcg::ProceduralTextureGenerator::markingTypeName(pcg::MarkingType::FactionInsignia) == "FactionInsignia",
+               "FactionInsignia name");
+    assertTrue(pcg::ProceduralTextureGenerator::markingTypeName(pcg::MarkingType::WarningHazard) == "WarningHazard",
+               "WarningHazard name");
+}
+
+void testTextureAllClassesValid() {
+    std::cout << "\n=== Texture All Classes Valid ===" << std::endl;
+    std::vector<pcg::HullClass> classes = {
+        pcg::HullClass::Frigate, pcg::HullClass::Destroyer,
+        pcg::HullClass::Cruiser, pcg::HullClass::Battlecruiser,
+        pcg::HullClass::Battleship, pcg::HullClass::Capital
+    };
+    bool allValid = true;
+    for (auto hc : classes) {
+        pcg::PCGContext ctx{ static_cast<uint64_t>(hc) + 1000, 1 };
+        auto tex = pcg::ProceduralTextureGenerator::generate(ctx, hc, "Veyren");
+        if (!tex.valid) { allValid = false; break; }
+    }
+    assertTrue(allValid, "All hull classes produce valid texture params");
+}
+
+// ==================== Shield Effect Generator Tests ====================
+
+void testShieldEffectGeneration() {
+    std::cout << "\n=== Shield Effect Generation ===" << std::endl;
+    pcg::PCGContext ctx{ 42, 1 };
+    auto shield = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Cruiser, "Veyren");
+    assertTrue(shield.valid, "Shield effect is valid");
+    assertTrue(shield.base_opacity > 0.0f, "Base opacity positive");
+    assertTrue(shield.pattern_scale > 0.0f, "Pattern scale positive");
+    assertTrue(shield.shield_radius >= 1.0f, "Shield radius >= 1.0");
+    assertTrue(shield.fresnel_power >= 1.0f, "Fresnel power >= 1.0");
+    assertTrue(static_cast<int>(shield.sample_impacts.size()) == 3, "Has 3 sample impacts");
+}
+
+void testShieldEffectDeterminism() {
+    std::cout << "\n=== Shield Effect Determinism ===" << std::endl;
+    pcg::PCGContext ctx{ 777, 1 };
+    auto s1 = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Battleship, "Solari");
+    auto s2 = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Battleship, "Solari");
+    assertTrue(s1.pattern == s2.pattern, "Same seed same pattern");
+    assertTrue(approxEqual(s1.base_color_r, s2.base_color_r), "Same seed same base color R");
+    assertTrue(approxEqual(s1.base_opacity, s2.base_opacity), "Same seed same opacity");
+    assertTrue(approxEqual(s1.shimmer_speed, s2.shimmer_speed), "Same seed same shimmer speed");
+    assertTrue(static_cast<int>(s1.sample_impacts.size()) == static_cast<int>(s2.sample_impacts.size()),
+               "Same seed same impact count");
+}
+
+void testShieldPatternByFaction() {
+    std::cout << "\n=== Shield Pattern By Faction ===" << std::endl;
+    // Test pattern tendencies (statistical — use fixed seeds that produce expected results).
+    pcg::PCGContext ctx{ 42, 1 };
+    auto veyren  = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Cruiser, "Veyren");
+    auto solari  = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Cruiser, "Solari");
+    // Veyren should be Hexagonal or Lattice.
+    assertTrue(veyren.pattern == pcg::ShieldPattern::Hexagonal
+            || veyren.pattern == pcg::ShieldPattern::Lattice,
+               "Veyren pattern is tech-style");
+    // Solari should be Ornate or Smooth.
+    assertTrue(solari.pattern == pcg::ShieldPattern::Ornate
+            || solari.pattern == pcg::ShieldPattern::Smooth,
+               "Solari pattern is ornate/smooth");
+}
+
+void testShieldScalesWithClass() {
+    std::cout << "\n=== Shield Scales With Class ===" << std::endl;
+    pcg::PCGContext ctx{ 123, 1 };
+    auto frigate = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Frigate, "Veyren");
+    auto capital = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Capital, "Veyren");
+    assertTrue(capital.pattern_scale > frigate.pattern_scale,
+               "Capital pattern scale larger than frigate");
+    assertTrue(capital.shield_radius > frigate.shield_radius,
+               "Capital shield radius larger than frigate");
+}
+
+void testShieldColorByFaction() {
+    std::cout << "\n=== Shield Color By Faction ===" << std::endl;
+    pcg::PCGContext ctx{ 300, 1 };
+    auto veyren  = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Cruiser, "Veyren");
+    auto keldari = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Cruiser, "Keldari");
+    // Veyren shields are blue-dominant.
+    assertTrue(veyren.base_color_b > veyren.base_color_r,
+               "Veyren shield is blue (B > R)");
+    // Keldari shields are warm.
+    assertTrue(keldari.base_color_r > keldari.base_color_b,
+               "Keldari shield is warm (R > B)");
+}
+
+void testShieldImpactRipples() {
+    std::cout << "\n=== Shield Impact Ripples ===" << std::endl;
+    pcg::PCGContext ctx{ 400, 1 };
+    auto shield = pcg::ShieldEffectGenerator::generate(ctx, pcg::HullClass::Cruiser, "Aurelian");
+    for (const auto& imp : shield.sample_impacts) {
+        assertTrue(imp.intensity >= 0.0f && imp.intensity <= 1.0f,
+                   "Impact intensity in [0,1]");
+        assertTrue(imp.radius > 0.0f, "Impact radius positive");
+        assertTrue(imp.decay_rate > 0.0f, "Impact decay rate positive");
+        assertTrue(imp.speed > 0.0f, "Impact speed positive");
+    }
+}
+
+void testShieldPatternNames() {
+    std::cout << "\n=== Shield Pattern Names ===" << std::endl;
+    assertTrue(pcg::ShieldEffectGenerator::patternName(pcg::ShieldPattern::Hexagonal) == "Hexagonal",
+               "Hexagonal name");
+    assertTrue(pcg::ShieldEffectGenerator::patternName(pcg::ShieldPattern::Smooth) == "Smooth",
+               "Smooth name");
+    assertTrue(pcg::ShieldEffectGenerator::patternName(pcg::ShieldPattern::Lattice) == "Lattice",
+               "Lattice name");
+    assertTrue(pcg::ShieldEffectGenerator::patternName(pcg::ShieldPattern::Ornate) == "Ornate",
+               "Ornate name");
+    assertTrue(pcg::ShieldEffectGenerator::patternName(pcg::ShieldPattern::Ripple) == "Ripple",
+               "Ripple name");
+}
+
+void testShieldAllClassesValid() {
+    std::cout << "\n=== Shield All Classes Valid ===" << std::endl;
+    std::vector<pcg::HullClass> classes = {
+        pcg::HullClass::Frigate, pcg::HullClass::Destroyer,
+        pcg::HullClass::Cruiser, pcg::HullClass::Battlecruiser,
+        pcg::HullClass::Battleship, pcg::HullClass::Capital
+    };
+    bool allValid = true;
+    for (auto hc : classes) {
+        pcg::PCGContext ctx{ static_cast<uint64_t>(hc) + 2000, 1 };
+        auto shield = pcg::ShieldEffectGenerator::generate(ctx, hc, "Aurelian");
+        if (!shield.valid) { allValid = false; break; }
+    }
+    assertTrue(allValid, "All hull classes produce valid shield effects");
+}
+
 // ==================== Economy-Driven Generator Tests ====================
 
 void testEconomyFleetGeneration() {
@@ -21711,6 +21931,26 @@ int main() {
     testDamageStateCritical();
     testDamageStateScalesWithClass();
     testDamageStateLevelNames();
+
+    // Procedural Texture Generator tests
+    testTextureGeneration();
+    testTextureDeterminism();
+    testTextureFactionPalettes();
+    testTextureMaterialByFaction();
+    testTextureScalesWithClass();
+    testTextureEngineGlowFaction();
+    testTextureMarkingTypeNames();
+    testTextureAllClassesValid();
+
+    // Shield Effect Generator tests
+    testShieldEffectGeneration();
+    testShieldEffectDeterminism();
+    testShieldPatternByFaction();
+    testShieldScalesWithClass();
+    testShieldColorByFaction();
+    testShieldImpactRipples();
+    testShieldPatternNames();
+    testShieldAllClassesValid();
 
     // Economy-Driven Generator tests
     testEconomyFleetGeneration();

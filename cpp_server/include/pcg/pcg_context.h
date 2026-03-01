@@ -34,6 +34,8 @@ enum class PCGDomain : uint32_t {
     DamageState  = 18,
     EconomyFleet = 19,
     Character    = 20,
+    Texture      = 21,
+    ShieldEffect = 22,
 };
 
 /**
