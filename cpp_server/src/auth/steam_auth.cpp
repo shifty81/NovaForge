@@ -1,5 +1,5 @@
 #include "auth/steam_auth.h"
-#include <iostream>
+#include "utils/logger.h"
 
 namespace atlas {
 namespace auth {
@@ -19,16 +19,16 @@ bool SteamAuth::initialize(uint32_t app_id) {
 #ifdef USE_STEAM
     // Initialize Steam API
     if (!SteamAPI_Init()) {
-        std::cerr << "Failed to initialize Steam API" << std::endl;
-        std::cerr << "Make sure Steam is running" << std::endl;
+        atlas::utils::Logger::instance().error("Failed to initialize Steam API");
+        atlas::utils::Logger::instance().error("Make sure Steam is running");
         return false;
     }
     
     initialized_ = true;
-    std::cout << "[Steam] Steam API initialized successfully" << std::endl;
+    atlas::utils::Logger::instance().info("[Steam] Steam API initialized successfully");
     return true;
 #else
-    std::cout << "[Steam] Server compiled without Steam support" << std::endl;
+    atlas::utils::Logger::instance().info("[Steam] Server compiled without Steam support");
     return false;
 #endif
 }
@@ -43,7 +43,7 @@ void SteamAuth::shutdown() {
 #endif
     
     initialized_ = false;
-    std::cout << "[Steam] Steam API shutdown" << std::endl;
+    atlas::utils::Logger::instance().info("[Steam] Steam API shutdown");
 }
 
 void SteamAuth::update() {
@@ -92,7 +92,7 @@ bool SteamAuth::registerServer(const std::string& server_name, const std::string
     
     // TODO: Register with Steam game server API
     // This would use ISteamGameServer::LogOnAnonymous() and SetServerName()
-    std::cout << "[Steam] Server registered: " << server_name << std::endl;
+    atlas::utils::Logger::instance().info("[Steam] Server registered: " + server_name);
     return true;
 #else
     return false;

@@ -1,8 +1,8 @@
 #include "systems/loot_system.h"
 #include "ecs/world.h"
 #include "components/game_components.h"
+#include "utils/logger.h"
 #include <algorithm>
-#include <iostream>
 
 namespace atlas {
 namespace systems {
@@ -89,10 +89,11 @@ bool LootSystem::collectLoot(const std::string& wreck_id,
         // Check capacity
         float needed = item.volume * item.quantity;
         if (player_inv->freeCapacity() < needed) {
-            std::cout << "[LootSystem] Item " << item.name
-                      << " skipped: insufficient cargo space ("
-                      << needed << " m3 needed, "
-                      << player_inv->freeCapacity() << " m3 free)" << std::endl;
+            atlas::utils::Logger::instance().info(
+                "[LootSystem] Item " + item.name +
+                " skipped: insufficient cargo space (" +
+                std::to_string(needed) + " m3 needed, " +
+                std::to_string(player_inv->freeCapacity()) + " m3 free)");
             continue;
         }
 

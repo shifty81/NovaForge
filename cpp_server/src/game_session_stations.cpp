@@ -2,7 +2,7 @@
 #include "game_session_internal.h"
 #include "components/game_components.h"
 #include "systems/station_system.h"
-#include <iostream>
+#include "utils/logger.h"
 #include <mutex>
 
 namespace atlas {
@@ -35,7 +35,8 @@ void GameSession::handleDockRequest(const network::ClientConnection& client,
     bool success = station_system_->dockAtStation(entity_id, station_id);
     if (success) {
         tcp_server_->sendToClient(client, protocol_.createDockSuccess(station_id));
-        std::cout << "[GameSession] Player " << entity_id << " docked at " << station_id << std::endl;
+        atlas::utils::Logger::instance().info(
+            "[GameSession] Player " + entity_id + " docked at " + station_id);
     } else {
         tcp_server_->sendToClient(client, protocol_.createDockFailed("Out of range or already docked"));
     }
@@ -63,7 +64,8 @@ void GameSession::handleUndockRequest(const network::ClientConnection& client,
     bool success = station_system_->undockFromStation(entity_id);
     if (success) {
         tcp_server_->sendToClient(client, protocol_.createUndockSuccess());
-        std::cout << "[GameSession] Player " << entity_id << " undocked" << std::endl;
+        atlas::utils::Logger::instance().info(
+            "[GameSession] Player " + entity_id + " undocked");
     } else {
         tcp_server_->sendToClient(client, protocol_.createError("Not currently docked"));
     }
@@ -113,7 +115,9 @@ void GameSession::handleRepairRequest(const network::ClientConnection& client,
     tcp_server_->sendToClient(client, 
         protocol_.createRepairResult(static_cast<float>(cost), shield_hp, armor_hp, hull_hp));
     
-    std::cout << "[GameSession] Player " << entity_id << " repaired for " << cost << " Credits" << std::endl;
+    atlas::utils::Logger::instance().info(
+        "[GameSession] Player " + entity_id + " repaired for " +
+        std::to_string(cost) + " Credits");
 }
 
 } // namespace atlas

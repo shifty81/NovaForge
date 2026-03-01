@@ -3,7 +3,7 @@
 #include "components/game_components.h"
 #include "systems/snapshot_replication_system.h"
 #include "systems/interest_management_system.h"
-#include <iostream>
+#include "utils/logger.h"
 #include <sstream>
 #include <mutex>
 
@@ -19,8 +19,8 @@ void GameSession::handleConnect(const network::ClientConnection& client,
     {
         std::lock_guard<std::mutex> lock(players_mutex_);
         if (players_.find(static_cast<int>(client.socket)) != players_.end()) {
-            std::cerr << "[GameSession] Duplicate connect from "
-                      << client.address << ", ignoring" << std::endl;
+            atlas::utils::Logger::instance().warn(
+                "[GameSession] Duplicate connect from " + client.address + ", ignoring");
             return;
         }
     }
@@ -79,8 +79,8 @@ void GameSession::handleConnect(const network::ClientConnection& client,
         tcp_server_->sendToClient(client, spawn_msg);
     }
 
-    std::cout << "[GameSession] Player connected: " << char_name
-              << " (entity " << entity_id << ")" << std::endl;
+    atlas::utils::Logger::instance().info(
+        "[GameSession] Player connected: " + char_name + " (entity " + entity_id + ")");
 
     // Notify other clients about the new player entity
     std::string new_spawn = buildSpawnEntity(entity_id);
@@ -107,8 +107,8 @@ void GameSession::handleDisconnect(const network::ClientConnection& client) {
         auto it = players_.find(fd);
         if (it != players_.end()) {
             entity_id = it->second.entity_id;
-            std::cout << "[GameSession] Player disconnected: "
-                      << it->second.character_name << std::endl;
+            atlas::utils::Logger::instance().info(
+                "[GameSession] Player disconnected: " + it->second.character_name);
             players_.erase(it);
         }
     }

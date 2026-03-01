@@ -1,4 +1,5 @@
 #include "auth/whitelist.h"
+#include "utils/logger.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -68,8 +69,9 @@ bool Whitelist::loadFromFile(const std::string& filepath) {
                         whitelisted_ids_.insert(steam_id);
                     }
                 }
-            } catch (...) {
-                // Skip invalid entries
+            } catch (const std::exception& e) {
+                atlas::utils::Logger::instance().warn(
+                    std::string("Whitelist: skipping invalid steam ID entry: ") + e.what());
             }
         }
     }

@@ -1,5 +1,5 @@
 #include "network/tcp_server.h"
-#include <iostream>
+#include "utils/logger.h"
 #include <cstring>
 
 #ifdef _WIN32
@@ -29,7 +29,7 @@ bool TCPServer::initialize() {
     // Create socket
     server_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (server_socket_ == INVALID_SOCKET) {
-        std::cerr << "Failed to create socket" << std::endl;
+        atlas::utils::Logger::instance().error("Failed to create socket");
         cleanupSockets();
         return false;
     }
@@ -54,7 +54,8 @@ bool TCPServer::initialize() {
     }
     
     if (bind(server_socket_, (sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        std::cerr << "Failed to bind socket to " << host_ << ":" << port_ << std::endl;
+        atlas::utils::Logger::instance().error(
+            "Failed to bind socket to " + host_ + ":" + std::to_string(port_));
         closeSocket(server_socket_);
         cleanupSockets();
         return false;
@@ -62,7 +63,7 @@ bool TCPServer::initialize() {
     
     // Listen
     if (listen(server_socket_, max_connections_) == SOCKET_ERROR) {
-        std::cerr << "Failed to listen on socket" << std::endl;
+        atlas::utils::Logger::instance().error("Failed to listen on socket");
         closeSocket(server_socket_);
         cleanupSockets();
         return false;
@@ -127,7 +128,7 @@ void TCPServer::acceptLoop() {
         
         if (client_socket == INVALID_SOCKET) {
             if (running_) {
-                std::cerr << "Accept failed" << std::endl;
+                atlas::utils::Logger::instance().error("Accept failed");
             }
             break;
         }
@@ -144,7 +145,8 @@ void TCPServer::acceptLoop() {
         client.authenticated = false;
         client.connect_time = std::time(nullptr);
         
-        std::cout << "[TCPServer] New connection from " << client_ip << ":" << client_port << std::endl;
+        atlas::utils::Logger::instance().info(
+            "[TCPServer] New connection from " + std::string(client_ip) + ":" + std::to_string(client_port));
         
         // Add to clients list
         {
@@ -187,7 +189,8 @@ void TCPServer::handleClient(ClientConnection client) {
         );
     }
     
-    std::cout << "[TCPServer] Client disconnected: " << client.address << ":" << client.port << std::endl;
+    atlas::utils::Logger::instance().info(
+        "[TCPServer] Client disconnected: " + client.address + ":" + std::to_string(client.port));
     closeSocket(client.socket);
 }
 
@@ -232,7 +235,8 @@ bool TCPServer::initializeSockets() {
     WSADATA wsa_data;
     int result = WSAStartup(MAKEWORD(2, 2), &wsa_data);
     if (result != 0) {
-        std::cerr << "WSAStartup failed: " << result << std::endl;
+        atlas::utils::Logger::instance().error(
+            "WSAStartup failed: " + std::to_string(result));
         return false;
     }
 #endif

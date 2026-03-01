@@ -1,7 +1,7 @@
 #include "game_session.h"
 #include "game_session_internal.h"
 #include "systems/movement_system.h"
-#include <iostream>
+#include "utils/logger.h"
 #include <mutex>
 
 namespace atlas {
@@ -33,8 +33,10 @@ void GameSession::handleWarpRequest(const network::ClientConnection& client,
     bool success = movement_system_->commandWarp(entity_id, dest_x, dest_y, dest_z);
     if (success) {
         tcp_server_->sendToClient(client, protocol_.createWarpResult(true));
-        std::cout << "[GameSession] Player " << entity_id << " warping to ("
-                  << dest_x << ", " << dest_y << ", " << dest_z << ")" << std::endl;
+        atlas::utils::Logger::instance().info(
+            "[GameSession] Player " + entity_id + " warping to (" +
+            std::to_string(dest_x) + ", " + std::to_string(dest_y) + ", " +
+            std::to_string(dest_z) + ")");
     } else {
         std::string reason = movement_system_->isWarpDisrupted(entity_id)
                                  ? "Warp drive disrupted"

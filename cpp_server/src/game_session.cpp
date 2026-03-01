@@ -1,7 +1,7 @@
 #include "game_session.h"
 #include "game_session_internal.h"
 #include "systems/snapshot_replication_system.h"
-#include <iostream>
+#include "utils/logger.h"
 #include <sstream>
 #include <mutex>
 
@@ -30,10 +30,10 @@ void GameSession::initialize() {
     // Spawn a handful of NPC enemies so the world isn't empty
     spawnInitialNPCs();
 
-    std::cout << "[GameSession] Initialized – "
-              << world_->getEntityCount() << " entities in world"
-              << ", " << ship_db_.getShipCount() << " ship templates loaded"
-              << std::endl;
+    atlas::utils::Logger::instance().info(
+        "[GameSession] Initialized – " + std::to_string(world_->getEntityCount()) +
+        " entities in world, " + std::to_string(ship_db_.getShipCount()) +
+        " ship templates loaded");
 }
 
 // ---------------------------------------------------------------------------
@@ -101,8 +101,8 @@ void GameSession::onClientMessage(const network::ClientConnection& client,
     std::string data;
 
     if (!protocol_.parseMessage(raw, type, data)) {
-        std::cerr << "[GameSession] Unrecognised message from "
-                  << client.address << std::endl;
+        atlas::utils::Logger::instance().warn(
+            "[GameSession] Unrecognised message from " + client.address);
         return;
     }
 

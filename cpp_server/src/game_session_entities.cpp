@@ -7,7 +7,7 @@
 #include "pcg/station_generator.h"
 #include "pcg/salvage_system.h"
 #include "pcg/snappable_grid.h"
-#include <iostream>
+#include "utils/logger.h"
 #include <sstream>
 #include <chrono>
 
@@ -301,9 +301,10 @@ void GameSession::spawnInitialNPCs() {
                 fac->faction_name = "Ancient Fleet";
                 entity->addComponent(std::move(fac));
 
-                std::cout << "[PCG] Spawned capital wreck: " << capShip.decks.size()
-                          << " decks, " << rooms << " rooms, "
-                          << capShip.elevators.size() << " elevators" << std::endl;
+                atlas::utils::Logger::instance().info(
+                    "[PCG] Spawned capital wreck: " + std::to_string(capShip.decks.size()) +
+                    " decks, " + std::to_string(rooms) + " rooms, " +
+                    std::to_string(capShip.elevators.size()) + " elevators");
             }
         }
 
@@ -336,9 +337,10 @@ void GameSession::spawnInitialNPCs() {
                 fac->faction_name = "Independent";
                 entity->addComponent(std::move(fac));
 
-                std::cout << "[PCG] Spawned station: " << station.modules.size()
-                          << " modules, power " << station.totalPowerProduction
-                          << "/" << station.totalPowerConsumption << std::endl;
+                atlas::utils::Logger::instance().info(
+                    "[PCG] Spawned station: " + std::to_string(station.modules.size()) +
+                    " modules, power " + std::to_string(station.totalPowerProduction) +
+                    "/" + std::to_string(station.totalPowerConsumption));
             }
         }
 
@@ -365,9 +367,10 @@ void GameSession::spawnInitialNPCs() {
                 fac->faction_name = "None";
                 entity->addComponent(std::move(fac));
 
-                std::cout << "[PCG] Spawned salvage field: " << field.totalNodes
-                          << " nodes (" << field.hiddenNodes << " hidden), value "
-                          << sf->totalValue << std::endl;
+                atlas::utils::Logger::instance().info(
+                    "[PCG] Spawned salvage field: " + std::to_string(field.totalNodes) +
+                    " nodes (" + std::to_string(field.hiddenNodes) + " hidden), value " +
+                    std::to_string(sf->totalValue));
             }
         }
 
@@ -401,8 +404,9 @@ void GameSession::spawnInitialNPCs() {
                 sg->pcgSeed = ctx.seed;
                 entity->addComponent(std::move(sg));
 
-                std::cout << "[PCG] Spawned asteroid belt: 16x8x16 grid, "
-                          << occupied << " occupied cells" << std::endl;
+                atlas::utils::Logger::instance().info(
+                    "[PCG] Spawned asteroid belt: 16x8x16 grid, " +
+                    std::to_string(occupied) + " occupied cells");
             }
         }
     }
@@ -470,8 +474,8 @@ void GameSession::spawnNPC(const std::string& id, const std::string& name,
     weapon->rate_of_fire  = 4.0f;
     entity->addComponent(std::move(weapon));
 
-    std::cout << "[GameSession] Spawned NPC: " << name
-              << " (" << faction_name << " " << ship_name << ")" << std::endl;
+    atlas::utils::Logger::instance().info(
+        "[GameSession] Spawned NPC: " + name + " (" + faction_name + " " + ship_name + ")");
 }
 
 } // namespace atlas
