@@ -3993,6 +3993,135 @@ public:
     COMPONENT_TYPE(EVAAirlockState)
 };
 
+// ---------------------------------------------------------------------------
+// FPS Interaction
+// ---------------------------------------------------------------------------
+
+class FPSInteractable : public ecs::Component {
+public:
+    enum class InteractionType {
+        Door = 0,
+        Airlock = 1,
+        Terminal = 2,
+        LootContainer = 3,
+        Fabricator = 4,
+        MedicalBay = 5
+    };
+
+    std::string interactable_id;
+    std::string interior_id;          // Which interior this belongs to
+    std::string linked_entity_id;     // Door/airlock/terminal entity this triggers
+
+    int interaction_type = 0;         // InteractionType as int
+    float interact_range = 2.0f;      // Max distance to interact (metres)
+
+    float pos_x = 0.0f;              // Position within the interior
+    float pos_y = 0.0f;
+    float pos_z = 0.0f;
+
+    std::string display_name;         // UI prompt text (e.g. "Open Door", "Use Terminal")
+    std::string required_access;      // Access level required (empty = none)
+    bool is_enabled = true;           // Can be disabled during events
+
+    COMPONENT_TYPE(FPSInteractable)
+};
+
+// ---------------------------------------------------------------------------
+// FPS Personal Weapon (distinct from ship Weapon)
+// ---------------------------------------------------------------------------
+
+class FPSWeapon : public ecs::Component {
+public:
+    enum class WeaponCategory {
+        Sidearm = 0,
+        Rifle = 1,
+        Shotgun = 2,
+        Tool = 3          // Repair tool, mining laser, etc.
+    };
+
+    std::string weapon_id;
+    std::string owner_id;             // Player or NPC who owns this weapon
+
+    int category = 0;                 // WeaponCategory as int
+    std::string damage_type = "kinetic";  // em, thermal, kinetic, explosive
+    float damage = 15.0f;
+    float range = 50.0f;              // Effective range (metres)
+    float fire_rate = 0.5f;           // Seconds between shots
+    float cooldown = 0.0f;            // Current cooldown timer
+    float spread = 1.0f;              // Accuracy cone (degrees, 0 = perfect)
+
+    int ammo = 30;
+    int ammo_max = 30;
+    float reload_time = 2.0f;         // Seconds to reload
+    float reload_progress = 0.0f;     // 0..1 during reload
+    bool is_reloading = false;
+
+    bool is_equipped = false;
+
+    COMPONENT_TYPE(FPSWeapon)
+};
+
+// ---------------------------------------------------------------------------
+// FPS Personal Health (separate from ship Health)
+// ---------------------------------------------------------------------------
+
+class FPSHealth : public ecs::Component {
+public:
+    std::string owner_id;
+
+    float health = 100.0f;
+    float health_max = 100.0f;
+    float shield = 50.0f;
+    float shield_max = 50.0f;
+    float shield_recharge_rate = 5.0f;    // Per second
+    float shield_recharge_delay = 3.0f;   // Seconds after last hit before recharge
+    float time_since_last_hit = 999.0f;   // Tracks delay
+
+    bool is_alive = true;
+
+    float getHealthFraction() const {
+        return (health_max > 0.0f) ? health / health_max : 0.0f;
+    }
+    float getShieldFraction() const {
+        return (shield_max > 0.0f) ? shield / shield_max : 0.0f;
+    }
+
+    COMPONENT_TYPE(FPSHealth)
+};
+
+// ---------------------------------------------------------------------------
+// FPS Inventory (personal items carried on foot)
+// ---------------------------------------------------------------------------
+
+class FPSInventoryComponent : public ecs::Component {
+public:
+    struct InventorySlot {
+        std::string item_id;
+        std::string item_name;
+        int quantity = 1;
+    };
+
+    std::string owner_id;
+    std::vector<InventorySlot> slots;
+    int max_slots = 8;
+
+    std::string equipped_weapon_id;         // Currently equipped FPSWeapon entity
+    std::string equipped_tool_id;           // Currently equipped tool entity
+
+    bool hasItem(const std::string& item_id) const {
+        for (const auto& s : slots) {
+            if (s.item_id == item_id) return true;
+        }
+        return false;
+    }
+
+    int itemCount() const { return static_cast<int>(slots.size()); }
+
+    bool isFull() const { return static_cast<int>(slots.size()) >= max_slots; }
+
+    COMPONENT_TYPE(FPSInventoryComponent)
+};
+
 } // namespace components
 } // namespace atlas
 

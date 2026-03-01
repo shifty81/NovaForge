@@ -162,6 +162,9 @@
 #include "systems/fps_character_controller_system.h"
 #include "systems/interior_door_system.h"
 #include "systems/eva_airlock_system.h"
+#include "systems/fps_interaction_system.h"
+#include "systems/fps_combat_system.h"
+#include "systems/fps_inventory_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -21592,6 +21595,662 @@ void testEVAAirlockComponentDefaults() {
     assertTrue(!state.abort_requested, "Default no abort");
 }
 
+// ==================== FPS Interaction System Tests ====================
+
+void testFPSInteractionCreate() {
+    std::cout << "\n=== FPS Interaction Create ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+
+    bool ok = sys.createInteractable("ia_door1", "interior_1", "door_1",
+                                      components::FPSInteractable::InteractionType::Door,
+                                      5.0f, 0.0f, 3.0f, 2.0f, "Open Door");
+    assertTrue(ok, "Create interactable succeeds");
+    assertTrue(!sys.createInteractable("ia_door1", "interior_1", "door_1",
+                                        components::FPSInteractable::InteractionType::Door,
+                                        5.0f, 0.0f, 3.0f),
+               "Duplicate create fails");
+}
+
+void testFPSInteractionFindNearest() {
+    std::cout << "\n=== FPS Interaction Find Nearest ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 5.0f, 0.0f, 3.0f, 0.0f);
+
+    sys.createInteractable("ia_near", "interior_1", "door_near",
+                            components::FPSInteractable::InteractionType::Door,
+                            5.5f, 0.0f, 3.0f, 2.0f);
+    sys.createInteractable("ia_far", "interior_1", "door_far",
+                            components::FPSInteractable::InteractionType::Door,
+                            50.0f, 0.0f, 3.0f, 2.0f);
+
+    std::string nearest = sys.findNearestInteractable("p1");
+    assertTrue(nearest == "ia_near", "Nearest interactable found");
+}
+
+void testFPSInteractionOutOfRange() {
+    std::cout << "\n=== FPS Interaction Out Of Range ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+
+    sys.createInteractable("ia_far", "interior_1", "door_far",
+                            components::FPSInteractable::InteractionType::Door,
+                            100.0f, 0.0f, 0.0f, 2.0f);
+
+    assertTrue(!sys.isInRange("p1", "ia_far"), "Out of range detected");
+    assertTrue(sys.findNearestInteractable("p1").empty(), "No nearest when all out of range");
+}
+
+void testFPSInteractionDoorToggle() {
+    std::cout << "\n=== FPS Interaction Door Toggle ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+    systems::InteriorDoorSystem doorSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 5.0f, 0.0f, 3.0f, 0.0f);
+    doorSys.createDoor("door_1", "interior_1", "roomA", "roomB",
+                        static_cast<int>(components::InteriorDoor::DoorType::Standard));
+
+    sys.createInteractable("ia_door1", "interior_1", "door_1",
+                            components::FPSInteractable::InteractionType::Door,
+                            5.5f, 0.0f, 3.0f, 2.0f);
+
+    bool ok = sys.interact("p1", "ia_door1");
+    assertTrue(ok, "Door opened via interaction");
+    assertTrue(doorSys.getDoorState("door_1") ==
+               static_cast<int>(components::InteriorDoor::DoorState::Opening),
+               "Door is now Opening");
+
+    // Fully open the door
+    doorSys.update(10.0f);
+    assertTrue(doorSys.getDoorState("door_1") ==
+               static_cast<int>(components::InteriorDoor::DoorState::Open),
+               "Door fully opened");
+
+    // Close via interaction
+    bool ok2 = sys.interact("p1", "ia_door1");
+    assertTrue(ok2, "Door closed via interaction");
+    assertTrue(doorSys.getDoorState("door_1") ==
+               static_cast<int>(components::InteriorDoor::DoorState::Closing),
+               "Door is now Closing");
+}
+
+void testFPSInteractionAirlock() {
+    std::cout << "\n=== FPS Interaction Airlock ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+    systems::EVAAirlockSystem alSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 5.0f, 0.0f, 3.0f, 0.0f);
+    // Add survival needs for oxygen check
+    auto* charEnt = world.getEntity("fpschar_p1");
+    auto needs = std::make_unique<components::SurvivalNeeds>();
+    needs->oxygen = 80.0f;
+    charEnt->addComponent(std::move(needs));
+
+    alSys.createAirlock("airlock_1", "ship_1", 2.0f);
+
+    sys.createInteractable("ia_airlock1", "interior_1", "airlock_1",
+                            components::FPSInteractable::InteractionType::Airlock,
+                            5.5f, 0.0f, 3.0f, 2.0f);
+
+    bool ok = sys.interact("p1", "ia_airlock1");
+    assertTrue(ok, "Airlock EVA initiated via interaction");
+    assertTrue(alSys.getPhase("airlock_1") ==
+               static_cast<int>(components::EVAAirlockState::Phase::EnterChamber),
+               "Airlock in EnterChamber phase");
+}
+
+void testFPSInteractionMedicalBay() {
+    std::cout << "\n=== FPS Interaction Medical Bay ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 5.0f, 0.0f, 3.0f, 0.0f);
+    auto* charEnt = world.getEntity("fpschar_p1");
+    auto needs = std::make_unique<components::SurvivalNeeds>();
+    needs->oxygen = 30.0f;
+    needs->hunger = 80.0f;
+    needs->fatigue = 70.0f;
+    charEnt->addComponent(std::move(needs));
+
+    sys.createInteractable("ia_med1", "interior_1", "",
+                            components::FPSInteractable::InteractionType::MedicalBay,
+                            5.5f, 0.0f, 3.0f, 2.0f);
+
+    bool ok = sys.interact("p1", "ia_med1");
+    assertTrue(ok, "Medical bay used");
+
+    auto* n = charEnt->getComponent<components::SurvivalNeeds>();
+    assertTrue(approxEqual(n->oxygen, 100.0f), "Oxygen refilled");
+    assertTrue(n->hunger < 80.0f, "Hunger reduced");
+    assertTrue(n->fatigue < 70.0f, "Fatigue reduced");
+}
+
+void testFPSInteractionAccessControl() {
+    std::cout << "\n=== FPS Interaction Access Control ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 5.0f, 0.0f, 3.0f, 0.0f);
+
+    sys.createInteractable("ia_sec", "interior_1", "terminal_sec",
+                            components::FPSInteractable::InteractionType::Terminal,
+                            5.5f, 0.0f, 3.0f, 2.0f);
+
+    // Set access requirement
+    auto* iaEnt = world.getEntity("ia_sec");
+    auto* ia = iaEnt->getComponent<components::FPSInteractable>();
+    ia->required_access = "captain";
+
+    assertTrue(!sys.interact("p1", "ia_sec", "crew"), "Wrong access denied");
+    assertTrue(sys.interact("p1", "ia_sec", "captain"), "Correct access granted");
+}
+
+void testFPSInteractionEnable() {
+    std::cout << "\n=== FPS Interaction Enable/Disable ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 5.0f, 0.0f, 3.0f, 0.0f);
+
+    sys.createInteractable("ia_t", "interior_1", "term_1",
+                            components::FPSInteractable::InteractionType::Terminal,
+                            5.5f, 0.0f, 3.0f, 2.0f);
+
+    assertTrue(sys.interact("p1", "ia_t"), "Interact when enabled");
+    sys.setEnabled("ia_t", false);
+    assertTrue(!sys.interact("p1", "ia_t"), "Interact fails when disabled");
+    sys.setEnabled("ia_t", true);
+    assertTrue(sys.interact("p1", "ia_t"), "Interact succeeds after re-enable");
+}
+
+void testFPSInteractionTypeNames() {
+    std::cout << "\n=== FPS Interaction Type Names ===" << std::endl;
+    assertTrue(systems::FPSInteractionSystem::typeName(0) == "Door", "Door name");
+    assertTrue(systems::FPSInteractionSystem::typeName(1) == "Airlock", "Airlock name");
+    assertTrue(systems::FPSInteractionSystem::typeName(2) == "Terminal", "Terminal name");
+    assertTrue(systems::FPSInteractionSystem::typeName(3) == "LootContainer", "LootContainer name");
+    assertTrue(systems::FPSInteractionSystem::typeName(4) == "Fabricator", "Fabricator name");
+    assertTrue(systems::FPSInteractionSystem::typeName(5) == "MedicalBay", "MedicalBay name");
+    assertTrue(systems::FPSInteractionSystem::typeName(99) == "Unknown", "Unknown type");
+}
+
+void testFPSInteractionComponentDefaults() {
+    std::cout << "\n=== FPS Interaction Component Defaults ===" << std::endl;
+    components::FPSInteractable ia;
+    assertTrue(ia.interaction_type == 0, "Default type Door");
+    assertTrue(approxEqual(ia.interact_range, 2.0f), "Default range 2.0");
+    assertTrue(ia.is_enabled, "Default enabled");
+    assertTrue(ia.required_access.empty(), "Default no access required");
+}
+
+void testFPSInteractionDifferentInteriors() {
+    std::cout << "\n=== FPS Interaction Different Interiors ===" << std::endl;
+    ecs::World world;
+    systems::FPSInteractionSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_A", 5.0f, 0.0f, 3.0f, 0.0f);
+
+    sys.createInteractable("ia_other", "interior_B", "door_other",
+                            components::FPSInteractable::InteractionType::Door,
+                            5.5f, 0.0f, 3.0f, 2.0f);
+
+    assertTrue(sys.findNearestInteractable("p1").empty(),
+               "Cannot find interactable in different interior");
+}
+
+// ==================== FPS Combat System Tests ====================
+
+void testFPSCombatCreateWeapon() {
+    std::cout << "\n=== FPS Combat Create Weapon ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    bool ok = sys.createWeapon("wpn_pistol", "p1",
+                                components::FPSWeapon::WeaponCategory::Sidearm,
+                                "kinetic", 15.0f, 50.0f, 0.5f, 12);
+    assertTrue(ok, "Create weapon succeeds");
+    assertTrue(!sys.createWeapon("wpn_pistol", "p1",
+                                  components::FPSWeapon::WeaponCategory::Sidearm,
+                                  "kinetic", 15.0f, 50.0f, 0.5f, 12),
+               "Duplicate weapon fails");
+    assertTrue(sys.getAmmo("wpn_pistol") == 12, "Ammo set correctly");
+}
+
+void testFPSCombatEquipUnequip() {
+    std::cout << "\n=== FPS Combat Equip/Unequip ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    sys.createWeapon("wpn_1", "p1", components::FPSWeapon::WeaponCategory::Rifle,
+                      "kinetic", 25.0f, 80.0f, 0.3f, 30);
+
+    assertTrue(sys.equipWeapon("wpn_1"), "Equip succeeds");
+    auto* e = world.getEntity("wpn_1");
+    auto* w = e->getComponent<components::FPSWeapon>();
+    assertTrue(w->is_equipped, "Weapon is equipped");
+
+    assertTrue(sys.unequipWeapon("wpn_1"), "Unequip succeeds");
+    assertTrue(!w->is_equipped, "Weapon is unequipped");
+}
+
+void testFPSCombatReload() {
+    std::cout << "\n=== FPS Combat Reload ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    sys.createWeapon("wpn_1", "p1", components::FPSWeapon::WeaponCategory::Rifle,
+                      "kinetic", 25.0f, 80.0f, 0.3f, 30, 1.0f, 2.0f);
+
+    auto* e = world.getEntity("wpn_1");
+    auto* w = e->getComponent<components::FPSWeapon>();
+    w->ammo = 5;  // Partially depleted
+
+    assertTrue(sys.startReload("wpn_1"), "Start reload succeeds");
+    assertTrue(sys.isReloading("wpn_1"), "Weapon is reloading");
+    assertTrue(!sys.startReload("wpn_1"), "Can't double-reload");
+
+    // Tick through reload
+    sys.update(2.5f);
+    assertTrue(!sys.isReloading("wpn_1"), "Reload complete");
+    assertTrue(sys.getAmmo("wpn_1") == 30, "Ammo refilled");
+}
+
+void testFPSCombatReloadFullMag() {
+    std::cout << "\n=== FPS Combat Reload Full Magazine ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    sys.createWeapon("wpn_1", "p1", components::FPSWeapon::WeaponCategory::Rifle,
+                      "kinetic", 25.0f, 80.0f, 0.3f, 30);
+
+    assertTrue(!sys.startReload("wpn_1"), "Can't reload full magazine");
+}
+
+void testFPSCombatCreateHealth() {
+    std::cout << "\n=== FPS Combat Create Health ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    auto* entity = world.createEntity("target_npc");
+    assertTrue(sys.createHealth("target_npc", 100.0f, 50.0f, 5.0f), "Create health succeeds");
+    assertTrue(!sys.createHealth("target_npc", 100.0f, 50.0f, 5.0f), "Duplicate health fails");
+    assertTrue(approxEqual(sys.getHealth("target_npc"), 100.0f), "Health set");
+    assertTrue(approxEqual(sys.getShield("target_npc"), 50.0f), "Shield set");
+    assertTrue(sys.isAlive("target_npc"), "Alive");
+}
+
+void testFPSCombatDamageShieldFirst() {
+    std::cout << "\n=== FPS Combat Damage Shield First ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    auto* entity = world.createEntity("target");
+    sys.createHealth("target", 100.0f, 50.0f, 5.0f);
+
+    sys.applyDamage("target", 30.0f, "kinetic");
+    assertTrue(approxEqual(sys.getShield("target"), 20.0f), "Shield absorbed 30 damage");
+    assertTrue(approxEqual(sys.getHealth("target"), 100.0f), "Health untouched");
+}
+
+void testFPSCombatDamageOverflow() {
+    std::cout << "\n=== FPS Combat Damage Shield Overflow ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    auto* entity = world.createEntity("target");
+    sys.createHealth("target", 100.0f, 30.0f, 5.0f);
+
+    sys.applyDamage("target", 50.0f, "kinetic");
+    assertTrue(approxEqual(sys.getShield("target"), 0.0f), "Shield depleted");
+    assertTrue(approxEqual(sys.getHealth("target"), 80.0f), "Health took overflow (20)");
+}
+
+void testFPSCombatDeath() {
+    std::cout << "\n=== FPS Combat Death ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    std::string dead_id;
+    sys.setDeathCallback([&](const std::string& id, float, float, float) {
+        dead_id = id;
+    });
+
+    auto* entity = world.createEntity("victim");
+    sys.createHealth("victim", 50.0f, 0.0f, 0.0f);
+
+    sys.applyDamage("victim", 999.0f, "kinetic");
+    assertTrue(!sys.isAlive("victim"), "Victim is dead");
+    assertTrue(dead_id == "victim", "Death callback fired");
+}
+
+void testFPSCombatShieldRecharge() {
+    std::cout << "\n=== FPS Combat Shield Recharge ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    auto* entity = world.createEntity("target");
+    sys.createHealth("target", 100.0f, 50.0f, 10.0f);
+
+    // Damage shield
+    sys.applyDamage("target", 30.0f, "kinetic");
+    assertTrue(approxEqual(sys.getShield("target"), 20.0f), "Shield after damage");
+
+    // Wait for recharge delay (default 3s)
+    sys.update(4.0f);
+    float shield_after = sys.getShield("target");
+    assertTrue(shield_after > 20.0f, "Shield began recharging after delay");
+}
+
+void testFPSCombatShieldRechargeDelay() {
+    std::cout << "\n=== FPS Combat Shield Recharge Delay ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+
+    auto* entity = world.createEntity("target");
+    sys.createHealth("target", 100.0f, 50.0f, 10.0f);
+
+    sys.applyDamage("target", 30.0f, "kinetic");
+
+    // Update with less than recharge delay — shield should not recharge
+    sys.update(1.0f);
+    assertTrue(approxEqual(sys.getShield("target"), 20.0f),
+               "Shield not recharging during delay");
+}
+
+void testFPSCombatFireWeapon() {
+    std::cout << "\n=== FPS Combat Fire Weapon ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    // Shooter
+    charSys.spawnCharacter("shooter", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+    sys.createWeapon("wpn_s", "shooter", components::FPSWeapon::WeaponCategory::Sidearm,
+                      "kinetic", 15.0f, 50.0f, 0.5f, 12);
+    sys.equipWeapon("wpn_s");
+
+    // Target (FPS character with health)
+    charSys.spawnCharacter("target", "interior_1", 10.0f, 0.0f, 0.0f, 0.0f);
+    auto* targetEnt = world.getEntity("fpschar_target");
+    sys.createHealth("fpschar_target", 100.0f, 0.0f, 0.0f);
+
+    bool ok = sys.fireWeapon("shooter", "fpschar_target");
+    assertTrue(ok, "Fire weapon succeeds");
+    assertTrue(sys.getAmmo("wpn_s") == 11, "Ammo decremented");
+    assertTrue(approxEqual(sys.getHealth("fpschar_target"), 85.0f), "Target took 15 damage");
+}
+
+void testFPSCombatFireOutOfRange() {
+    std::cout << "\n=== FPS Combat Fire Out Of Range ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("shooter", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+    sys.createWeapon("wpn_s", "shooter", components::FPSWeapon::WeaponCategory::Sidearm,
+                      "kinetic", 15.0f, 50.0f, 0.5f, 12);
+    sys.equipWeapon("wpn_s");
+
+    charSys.spawnCharacter("target", "interior_1", 200.0f, 0.0f, 0.0f, 0.0f);
+    sys.createHealth("fpschar_target", 100.0f, 0.0f, 0.0f);
+
+    bool ok = sys.fireWeapon("shooter", "fpschar_target");
+    assertTrue(!ok, "Fire out of range fails");
+    assertTrue(sys.getAmmo("wpn_s") == 12, "Ammo not consumed");
+}
+
+void testFPSCombatFireOnCooldown() {
+    std::cout << "\n=== FPS Combat Fire On Cooldown ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("shooter", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+    sys.createWeapon("wpn_s", "shooter", components::FPSWeapon::WeaponCategory::Sidearm,
+                      "kinetic", 15.0f, 50.0f, 0.5f, 12);
+    sys.equipWeapon("wpn_s");
+
+    charSys.spawnCharacter("target", "interior_1", 10.0f, 0.0f, 0.0f, 0.0f);
+    sys.createHealth("fpschar_target", 100.0f, 0.0f, 0.0f);
+
+    assertTrue(sys.fireWeapon("shooter", "fpschar_target"), "First shot succeeds");
+    assertTrue(!sys.fireWeapon("shooter", "fpschar_target"), "Second shot on cooldown fails");
+
+    sys.update(1.0f);  // Clear cooldown
+    assertTrue(sys.fireWeapon("shooter", "fpschar_target"), "Shot after cooldown succeeds");
+}
+
+void testFPSCombatFireNoAmmo() {
+    std::cout << "\n=== FPS Combat Fire No Ammo ===" << std::endl;
+    ecs::World world;
+    systems::FPSCombatSystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("shooter", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+    sys.createWeapon("wpn_s", "shooter", components::FPSWeapon::WeaponCategory::Sidearm,
+                      "kinetic", 15.0f, 50.0f, 0.5f, 1);
+    sys.equipWeapon("wpn_s");
+
+    charSys.spawnCharacter("target", "interior_1", 10.0f, 0.0f, 0.0f, 0.0f);
+    sys.createHealth("fpschar_target", 100.0f, 0.0f, 0.0f);
+
+    assertTrue(sys.fireWeapon("shooter", "fpschar_target"), "First shot uses last ammo");
+    sys.update(1.0f);
+    assertTrue(!sys.fireWeapon("shooter", "fpschar_target"), "No ammo to fire");
+}
+
+void testFPSCombatCategoryNames() {
+    std::cout << "\n=== FPS Combat Category Names ===" << std::endl;
+    assertTrue(systems::FPSCombatSystem::categoryName(0) == "Sidearm", "Sidearm name");
+    assertTrue(systems::FPSCombatSystem::categoryName(1) == "Rifle", "Rifle name");
+    assertTrue(systems::FPSCombatSystem::categoryName(2) == "Shotgun", "Shotgun name");
+    assertTrue(systems::FPSCombatSystem::categoryName(3) == "Tool", "Tool name");
+    assertTrue(systems::FPSCombatSystem::categoryName(99) == "Unknown", "Unknown category");
+}
+
+void testFPSCombatWeaponDefaults() {
+    std::cout << "\n=== FPS Combat Weapon Defaults ===" << std::endl;
+    components::FPSWeapon w;
+    assertTrue(w.category == 0, "Default category Sidearm");
+    assertTrue(w.damage_type == "kinetic", "Default damage type kinetic");
+    assertTrue(approxEqual(w.damage, 15.0f), "Default damage 15");
+    assertTrue(approxEqual(w.range, 50.0f), "Default range 50");
+    assertTrue(w.ammo == 30, "Default ammo 30");
+    assertTrue(!w.is_reloading, "Default not reloading");
+    assertTrue(!w.is_equipped, "Default not equipped");
+}
+
+void testFPSCombatHealthDefaults() {
+    std::cout << "\n=== FPS Combat Health Defaults ===" << std::endl;
+    components::FPSHealth h;
+    assertTrue(approxEqual(h.health, 100.0f), "Default health 100");
+    assertTrue(approxEqual(h.shield, 50.0f), "Default shield 50");
+    assertTrue(h.is_alive, "Default alive");
+    assertTrue(approxEqual(h.getHealthFraction(), 1.0f), "Health fraction 1.0");
+    assertTrue(approxEqual(h.getShieldFraction(), 1.0f), "Shield fraction 1.0");
+}
+
+// ==================== FPS Inventory System Tests ====================
+
+void testFPSInventoryCreate() {
+    std::cout << "\n=== FPS Inventory Create ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+
+    assertTrue(sys.createInventory("p1", 8), "Create inventory succeeds");
+    assertTrue(!sys.createInventory("p1", 8), "Duplicate create fails");
+    assertTrue(sys.getMaxSlots("p1") == 8, "Max slots correct");
+    assertTrue(sys.getItemCount("p1") == 0, "Starts empty");
+}
+
+void testFPSInventoryAddRemove() {
+    std::cout << "\n=== FPS Inventory Add/Remove ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+
+    sys.createInventory("p1", 4);
+
+    assertTrue(sys.addItem("p1", "item_pistol", "Pistol"), "Add item succeeds");
+    assertTrue(sys.hasItem("p1", "item_pistol"), "Has item");
+    assertTrue(sys.getItemCount("p1") == 1, "1 item");
+
+    assertTrue(sys.removeItem("p1", "item_pistol"), "Remove succeeds");
+    assertTrue(!sys.hasItem("p1", "item_pistol"), "Item removed");
+    assertTrue(sys.getItemCount("p1") == 0, "0 items");
+}
+
+void testFPSInventoryStacking() {
+    std::cout << "\n=== FPS Inventory Stacking ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+
+    sys.createInventory("p1", 4);
+
+    sys.addItem("p1", "ammo_9mm", "9mm Ammo", 10);
+    sys.addItem("p1", "ammo_9mm", "9mm Ammo", 5);
+
+    assertTrue(sys.getItemCount("p1") == 1, "Stacked into one slot");
+    assertTrue(sys.hasItem("p1", "ammo_9mm"), "Has stacked item");
+}
+
+void testFPSInventoryFull() {
+    std::cout << "\n=== FPS Inventory Full ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+
+    sys.createInventory("p1", 2);
+
+    sys.addItem("p1", "item_a", "Item A");
+    sys.addItem("p1", "item_b", "Item B");
+    assertTrue(sys.isInventoryFull("p1"), "Inventory full");
+    assertTrue(!sys.addItem("p1", "item_c", "Item C"), "Can't add when full");
+}
+
+void testFPSInventoryEquipWeapon() {
+    std::cout << "\n=== FPS Inventory Equip Weapon ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+
+    sys.createInventory("p1", 8);
+    sys.addItem("p1", "wpn_pistol", "Pistol");
+
+    assertTrue(sys.equipWeapon("p1", "wpn_pistol"), "Equip weapon succeeds");
+    assertTrue(sys.getEquippedWeapon("p1") == "wpn_pistol", "Weapon equipped");
+
+    assertTrue(sys.unequipWeapon("p1"), "Unequip succeeds");
+    assertTrue(sys.getEquippedWeapon("p1").empty(), "No weapon equipped");
+}
+
+void testFPSInventoryEquipWeaponNotInInventory() {
+    std::cout << "\n=== FPS Inventory Equip Not In Inventory ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+
+    sys.createInventory("p1", 8);
+
+    assertTrue(!sys.equipWeapon("p1", "wpn_ghost"), "Can't equip missing item");
+}
+
+void testFPSInventoryEquipTool() {
+    std::cout << "\n=== FPS Inventory Equip Tool ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+
+    sys.createInventory("p1", 8);
+    sys.addItem("p1", "tool_repair", "Repair Tool");
+
+    assertTrue(sys.equipTool("p1", "tool_repair"), "Equip tool succeeds");
+    assertTrue(sys.getEquippedTool("p1") == "tool_repair", "Tool equipped");
+
+    assertTrue(sys.unequipTool("p1"), "Unequip tool succeeds");
+    assertTrue(sys.getEquippedTool("p1").empty(), "No tool equipped");
+}
+
+void testFPSInventoryUseConsumableOxygen() {
+    std::cout << "\n=== FPS Inventory Use Consumable Oxygen ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+    auto* charEnt = world.getEntity("fpschar_p1");
+    auto needs = std::make_unique<components::SurvivalNeeds>();
+    needs->oxygen = 30.0f;
+    charEnt->addComponent(std::move(needs));
+
+    sys.createInventory("p1", 8);
+    sys.addItem("p1", "oxygen_canister", "Oxygen Canister");
+
+    assertTrue(sys.useConsumable("p1", "oxygen_canister"), "Oxygen consumed");
+    auto* n = charEnt->getComponent<components::SurvivalNeeds>();
+    assertTrue(n->oxygen > 30.0f, "Oxygen increased");
+    assertTrue(!sys.hasItem("p1", "oxygen_canister"), "Item consumed");
+}
+
+void testFPSInventoryUseConsumableFood() {
+    std::cout << "\n=== FPS Inventory Use Consumable Food ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+    auto* charEnt = world.getEntity("fpschar_p1");
+    auto needs = std::make_unique<components::SurvivalNeeds>();
+    needs->hunger = 60.0f;
+    charEnt->addComponent(std::move(needs));
+
+    sys.createInventory("p1", 8);
+    sys.addItem("p1", "food_ration", "Ration");
+
+    assertTrue(sys.useConsumable("p1", "food_ration"), "Food consumed");
+    auto* n = charEnt->getComponent<components::SurvivalNeeds>();
+    assertTrue(n->hunger < 60.0f, "Hunger reduced");
+}
+
+void testFPSInventoryUseConsumableMedkit() {
+    std::cout << "\n=== FPS Inventory Use Consumable Medkit ===" << std::endl;
+    ecs::World world;
+    systems::FPSInventorySystem sys(&world);
+    systems::FPSCharacterControllerSystem charSys(&world);
+    systems::FPSCombatSystem combatSys(&world);
+
+    charSys.spawnCharacter("p1", "interior_1", 0.0f, 0.0f, 0.0f, 0.0f);
+    auto* charEnt = world.getEntity("fpschar_p1");
+    combatSys.createHealth("fpschar_p1", 100.0f, 0.0f, 0.0f);
+    combatSys.applyDamage("fpschar_p1", 60.0f);
+
+    sys.createInventory("p1", 8);
+    sys.addItem("p1", "medkit_basic", "Medkit");
+
+    assertTrue(sys.useConsumable("p1", "medkit_basic"), "Medkit consumed");
+    assertTrue(combatSys.getHealth("fpschar_p1") > 40.0f, "Health restored");
+}
+
+void testFPSInventoryComponentDefaults() {
+    std::cout << "\n=== FPS Inventory Component Defaults ===" << std::endl;
+    components::FPSInventoryComponent inv;
+    assertTrue(inv.max_slots == 8, "Default max slots 8");
+    assertTrue(inv.slots.empty(), "Default empty slots");
+    assertTrue(inv.equipped_weapon_id.empty(), "Default no weapon equipped");
+    assertTrue(inv.equipped_tool_id.empty(), "Default no tool equipped");
+    assertTrue(!inv.isFull(), "Default not full");
+    assertTrue(inv.itemCount() == 0, "Default 0 items");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -21639,7 +22298,8 @@ int main() {
     std::cout << "ModManifest," << std::endl;
     std::cout << "AncientAIRemnant, CharCreationScreen, ViewModeTransition" << std::endl;
     std::cout << "StationHangar, TetherDocking, FPSSpawn," << std::endl;
-    std::cout << "FPSCharacterController, InteriorDoor, EVAAirlock" << std::endl;
+    std::cout << "FPSCharacterController, InteriorDoor, EVAAirlock," << std::endl;
+    std::cout << "FPSInteraction, FPSCombat, FPSInventory" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -23132,6 +23792,51 @@ int main() {
     testEVAAirlockReentryWrongPlayer();
     testEVAAirlockPhaseNames();
     testEVAAirlockComponentDefaults();
+
+    // FPS Interaction System tests
+    testFPSInteractionCreate();
+    testFPSInteractionFindNearest();
+    testFPSInteractionOutOfRange();
+    testFPSInteractionDoorToggle();
+    testFPSInteractionAirlock();
+    testFPSInteractionMedicalBay();
+    testFPSInteractionAccessControl();
+    testFPSInteractionEnable();
+    testFPSInteractionTypeNames();
+    testFPSInteractionComponentDefaults();
+    testFPSInteractionDifferentInteriors();
+
+    // FPS Combat System tests
+    testFPSCombatCreateWeapon();
+    testFPSCombatEquipUnequip();
+    testFPSCombatReload();
+    testFPSCombatReloadFullMag();
+    testFPSCombatCreateHealth();
+    testFPSCombatDamageShieldFirst();
+    testFPSCombatDamageOverflow();
+    testFPSCombatDeath();
+    testFPSCombatShieldRecharge();
+    testFPSCombatShieldRechargeDelay();
+    testFPSCombatFireWeapon();
+    testFPSCombatFireOutOfRange();
+    testFPSCombatFireOnCooldown();
+    testFPSCombatFireNoAmmo();
+    testFPSCombatCategoryNames();
+    testFPSCombatWeaponDefaults();
+    testFPSCombatHealthDefaults();
+
+    // FPS Inventory System tests
+    testFPSInventoryCreate();
+    testFPSInventoryAddRemove();
+    testFPSInventoryStacking();
+    testFPSInventoryFull();
+    testFPSInventoryEquipWeapon();
+    testFPSInventoryEquipWeaponNotInInventory();
+    testFPSInventoryEquipTool();
+    testFPSInventoryUseConsumableOxygen();
+    testFPSInventoryUseConsumableFood();
+    testFPSInventoryUseConsumableMedkit();
+    testFPSInventoryComponentDefaults();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
