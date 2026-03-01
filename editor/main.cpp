@@ -121,15 +121,6 @@ int main() {
         sceneGraph.SetVisible(!sceneGraph.IsVisible());
     });
 
-    // ── Save keybind (Ctrl+S) ────────────────────────────────────
-    keybinds.RegisterCallback("Save", [&layout, &liveScene, &keybinds, &console]() {
-        layout.SaveToFile("data/editor_layout.json");
-        liveScene.CaptureViewportChanges();
-        liveScene.SaveOverrides("data/pcg_overrides.json");
-        keybinds.SaveToFile("data/editor_keybinds.json");
-        console.AddLine("[Editor] Layout, overrides, and keybinds saved");
-    });
-
     // ── Delete keybind ───────────────────────────────────────────
     keybinds.RegisterCallback("Delete", [&viewport, &ecsInspector, &sceneGraph,
                                           &undoStack, &console]() {
@@ -283,6 +274,17 @@ int main() {
               << "Console, Game Packager, Live Scene Manager, "
               << "Data Browser, Module Editor, NPC Editor, Fleet Formation"
               << std::endl;
+
+    // ── Save keybind (Ctrl+S) ────────────────────────────────────
+    // Registered here (after layout & liveScene are constructed) so
+    // the lambda captures are valid.
+    keybinds.RegisterCallback("Save", [&layout, &liveScene, &keybinds, &console]() {
+        layout.SaveToFile("data/editor_layout.json");
+        liveScene.CaptureViewportChanges();
+        liveScene.SaveOverrides("data/pcg_overrides.json");
+        keybinds.SaveToFile("data/editor_keybinds.json");
+        console.AddLine("[Editor] Layout, overrides, and keybinds saved");
+    });
 
     // ── Build editor menu bar ────────────────────────────────────
     layout.MenuBar().Build();

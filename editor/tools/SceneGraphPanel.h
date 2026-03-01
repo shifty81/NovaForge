@@ -80,6 +80,7 @@ public:
 
     // ── Visibility / Lock ────────────────────────────────────────
 
+    using EditorPanel::SetVisible;   // inherit SetVisible(bool) from base
     bool SetVisible(uint32_t id, bool visible);
     bool SetLocked(uint32_t id, bool locked);
 

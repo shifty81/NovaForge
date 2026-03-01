@@ -261,6 +261,22 @@ Data-driven modding without code injection:
 | schemas/atlas.project.v1.json | ✅ Complete | JSON schema for Atlas project files |
 | schemas/atlas.build.v1.json | ✅ Complete | JSON schema for build manifests |
 
+### Build Audit & Quality Safeguards
+
+Findings from the **March 2026 build audit** (`build_all_20260301_144315.log`):
+
+| Issue | Root Cause | Fix Applied | Safeguard |
+|-------|-----------|-------------|-----------|
+| `SceneGraphPanel::SetVisible` hides base class overload | `SetVisible(uint32_t, bool)` shadows `EditorPanel::SetVisible(bool)` | Added `using EditorPanel::SetVisible;` in `SceneGraphPanel.h` | Review all derived `EditorPanel` classes for name-hiding when adding overloads |
+| "Save" keybind captures undeclared variables | Lambda captured `layout` and `liveScene` before their declarations | Moved keybind registration after both variables are constructed | Keybind lambdas must be registered only after all captured objects are in scope |
+| Build log committed to repo | `*.log` in `.gitignore` but file was force-added | Removed tracked log file; `.gitignore` already covers `*.log` | Never `git add -f` log files; CI artifacts belong in workflow uploads |
+
+**Ongoing safeguards to adopt:**
+
+- [ ] Enable compiler warnings-as-errors (`-Werror` / `/WX`) for editor target to catch name-hiding (`-Wshadow`, `-Woverloaded-virtual`) at compile time
+- [ ] Add a CI step that builds **all** targets (engine, editor, client, server, tests) — not just the server — so cross-target regressions are caught before merge
+- [ ] Enforce variable declaration order in `editor/main.cpp` via code review: all objects must be constructed before any keybind lambda that captures them
+
 ### Systems Still Needed (from Baseline)
 
 | System | Priority | Description |
@@ -1501,6 +1517,13 @@ Player undocks → Scans anomaly → Fights pirates → Ship explodes → Wreck 
   - More missions and content
   - Advanced NPC behaviors
 
+- **Q1 2026**: Build Audit & Quality Safeguards ✅
+  - Fixed editor build failures (SceneGraphPanel name hiding, Save keybind capture order)
+  - Added `using` declaration safeguard to prevent base-class method hiding
+  - Removed erroneously tracked build log from repository
+  - Documented audit findings and ongoing safeguards in roadmap
+  - Planned: warnings-as-errors for editor, full-target CI builds
+
 - **Q1 2026**: Atlas Engine expansion ✅
   - 6 new engine modules merged from Atlas-NovaForge (physics, input, camera, audio, animation, plugin)
   - TLA+ formal specifications (ECS, replay, layout)
@@ -1654,7 +1677,14 @@ Have questions about the roadmap? Want to suggest features?
 
 ## Changelog
 
-### R&D - Atlas-NovaForge Feature Merge (Current)
+### Build Audit — March 2026 (Current)
+- Fixed editor build failure: `SceneGraphPanel::SetVisible(uint32_t, bool)` was hiding base class `EditorPanel::SetVisible(bool)` — added `using EditorPanel::SetVisible;` to restore the inherited overload
+- Fixed editor build failure: "Save" keybind lambda captured `layout` and `liveScene` before their declarations — moved registration after both objects are constructed
+- Removed erroneously tracked `build_all_20260301_144315.log` from repository (`.gitignore` already covers `*.log`)
+- Added Build Audit & Quality Safeguards section to roadmap with findings, fixes, and preventive measures
+- Realigned 2026 milestones to include the audit milestone
+
+### R&D - Atlas-NovaForge Feature Merge (Previous)
 - Merged 6 engine modules from Atlas-NovaForge: physics, input, camera, audio, animation, plugin
 - PhysicsWorld: rigid body dynamics, AABB collision detection, gravity, force integration
 - InputManager: action binding with keyboard/mouse/gamepad, press/hold/release states, callbacks
