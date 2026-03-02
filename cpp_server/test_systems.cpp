@@ -204,6 +204,9 @@
 #include "systems/rig_locker_system.h"
 #include "systems/visual_coupling_system.h"
 #include "systems/fps_salvage_path_system.h"
+#include "systems/lavatory_interaction_system.h"
+#include "systems/eva_airlock_exit_system.h"
+#include "systems/ancient_module_discovery_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -28151,6 +28154,399 @@ void testSalvagePathMissing() {
     assertTrue(sys.getEntryState("nonexistent", "e") == "unknown", "Unknown state on missing");
 }
 
+// ==================== LavatoryInteraction Tests ====================
+
+void testLavatoryInit() {
+    std::cout << "\n=== LavatoryInteraction: Init ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    assertTrue(sys.createLavatory("lav_1", "room_bathroom", 5.0f, 15.0f), "Lavatory created");
+    assertTrue(sys.getPhase("lav_1") == 0, "Phase is idle");
+    assertTrue(!sys.isOccupied("lav_1"), "Not occupied");
+    assertTrue(!sys.createLavatory("lav_1", "room_2"), "Duplicate creation fails");
+}
+
+void testLavatoryBeginInteraction() {
+    std::cout << "\n=== LavatoryInteraction: Begin ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    sys.createLavatory("lav_1", "room_bathroom");
+    assertTrue(sys.beginInteraction("lav_1", "player_1"), "Interaction started");
+    assertTrue(sys.isOccupied("lav_1"), "Now occupied");
+    assertTrue(sys.getPhase("lav_1") == 1, "Phase is approaching");
+    assertTrue(!sys.beginInteraction("lav_1", "player_2"), "Can't use occupied lavatory");
+}
+
+void testLavatoryDoorTransition() {
+    std::cout << "\n=== LavatoryInteraction: Door Transition ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    sys.createLavatory("lav_1", "room_bathroom", 5.0f, 15.0f);
+    sys.beginInteraction("lav_1", "player_1");
+    // Advance through Approaching phase (phase_duration = 1.5s)
+    for (int i = 0; i < 3; i++) sys.update(1.0f);
+    assertTrue(sys.isDoorOpen("lav_1"), "Door opened during sequence");
+}
+
+void testLavatoryThirdPerson() {
+    std::cout << "\n=== LavatoryInteraction: Third Person ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    sys.createLavatory("lav_1", "room_bathroom", 5.0f, 15.0f);
+    sys.beginInteraction("lav_1", "player_1");
+    // Advance through Approaching + DoorOpening + into TransitionToThirdPerson
+    for (int i = 0; i < 6; i++) sys.update(1.0f);
+    // Should reach or pass through TransitionToThirdPerson
+    assertTrue(sys.getPhase("lav_1") >= 3, "Advanced past door opening");
+}
+
+void testLavatoryFullCycle() {
+    std::cout << "\n=== LavatoryInteraction: Full Cycle ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    sys.createLavatory("lav_1", "room_bathroom", 2.0f, 15.0f);
+    sys.beginInteraction("lav_1", "player_1");
+    // Run enough ticks to complete the full cycle
+    // 7 phases × 1.5s each (except UsingFacility which is 2.0s) ≈ 12.5s
+    for (int i = 0; i < 30; i++) sys.update(1.0f);
+    assertTrue(sys.getPhase("lav_1") == 7, "Reached complete phase");
+    assertTrue(!sys.isOccupied("lav_1"), "No longer occupied after completion");
+}
+
+void testLavatoryCancel() {
+    std::cout << "\n=== LavatoryInteraction: Cancel ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    sys.createLavatory("lav_1", "room_bathroom");
+    sys.beginInteraction("lav_1", "player_1");
+    sys.update(1.0f);
+    assertTrue(sys.cancelInteraction("lav_1"), "Interaction cancelled");
+    assertTrue(!sys.isOccupied("lav_1"), "Not occupied after cancel");
+    assertTrue(sys.getPhase("lav_1") == 0, "Phase reset to idle");
+    assertTrue(!sys.cancelInteraction("lav_1"), "Can't cancel idle");
+}
+
+void testLavatoryAudio() {
+    std::cout << "\n=== LavatoryInteraction: Audio ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    sys.createLavatory("lav_1", "room_bathroom", 2.0f, 15.0f);
+    sys.beginInteraction("lav_1", "player_1");
+    // Initially no audio
+    assertTrue(!sys.isAudioPlaying("lav_1"), "No audio initially");
+    // Advance past approaching into door opening
+    for (int i = 0; i < 3; i++) sys.update(1.0f);
+    assertTrue(sys.isAudioPlaying("lav_1"), "Audio playing during sequence");
+}
+
+void testLavatoryHygiene() {
+    std::cout << "\n=== LavatoryInteraction: Hygiene Bonus ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    world.createEntity("lav_1");
+    sys.createLavatory("lav_1", "room_bathroom", 5.0f, 20.0f);
+    assertTrue(approxEqual(sys.getHygieneBonus("lav_1"), 20.0f), "Custom hygiene bonus");
+    world.createEntity("lav_2");
+    sys.createLavatory("lav_2", "room_2");
+    assertTrue(approxEqual(sys.getHygieneBonus("lav_2"), 15.0f), "Default hygiene bonus");
+}
+
+void testLavatoryPhaseNames() {
+    std::cout << "\n=== LavatoryInteraction: Phase Names ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    assertTrue(sys.phaseName(0) == "idle", "Phase 0 name");
+    assertTrue(sys.phaseName(1) == "approaching", "Phase 1 name");
+    assertTrue(sys.phaseName(4) == "using_facility", "Phase 4 name");
+    assertTrue(sys.phaseName(7) == "complete", "Phase 7 name");
+}
+
+void testLavatoryMissing() {
+    std::cout << "\n=== LavatoryInteraction: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::LavatoryInteractionSystem sys(&world);
+    assertTrue(!sys.createLavatory("nonexistent", "room"), "Create fails on missing");
+    assertTrue(!sys.beginInteraction("nonexistent", "p"), "Begin fails on missing");
+    assertTrue(sys.getPhase("nonexistent") == 0, "Phase 0 on missing");
+    assertTrue(!sys.isOccupied("nonexistent"), "Not occupied on missing");
+}
+
+// ==================== EVAAirlockExit Tests ====================
+
+void testEVAExitInit() {
+    std::cout << "\n=== EVAAirlockExit: Init ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    assertTrue(sys.createExitPoint("airlock_1", "ship_1", 200.0f), "Exit point created");
+    assertTrue(sys.getState("airlock_1") == 0, "State is inactive");
+    assertTrue(!sys.isInSpace("airlock_1"), "Not in space");
+    assertTrue(!sys.createExitPoint("airlock_1", "ship_1"), "Duplicate creation fails");
+}
+
+void testEVAExitRequest() {
+    std::cout << "\n=== EVAAirlockExit: Request Exit ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    sys.createExitPoint("airlock_1", "ship_1");
+    assertTrue(sys.requestExit("airlock_1", "player_1", 100.0f), "Exit requested");
+    assertTrue(sys.getState("airlock_1") == 1, "State is requesting_exit");
+    assertTrue(!sys.requestExit("airlock_1", "player_2", 100.0f), "Can't request twice");
+}
+
+void testEVAExitDockedBlocked() {
+    std::cout << "\n=== EVAAirlockExit: Docked Blocked ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    sys.createExitPoint("airlock_1", "ship_1");
+    sys.setDockState("airlock_1", true);
+    sys.requestExit("airlock_1", "player_1", 100.0f);
+    // Advance through RequestingExit to CheckingDockState
+    for (int i = 0; i < 5; i++) sys.update(1.0f);
+    assertTrue(sys.isExitBlocked("airlock_1"), "Exit blocked while docked");
+    assertTrue(sys.getState("airlock_1") == 0, "Returned to inactive");
+}
+
+void testEVAExitLowOxygen() {
+    std::cout << "\n=== EVAAirlockExit: Low Oxygen ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    sys.createExitPoint("airlock_1", "ship_1");
+    sys.requestExit("airlock_1", "player_1", 5.0f); // Below min 10.0
+    // Advance through RequestingExit to CheckingDockState
+    for (int i = 0; i < 5; i++) sys.update(1.0f);
+    assertTrue(sys.isExitBlocked("airlock_1"), "Exit blocked with low oxygen");
+}
+
+void testEVAExitFullCycle() {
+    std::cout << "\n=== EVAAirlockExit: Full Cycle ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    sys.createExitPoint("airlock_1", "ship_1");
+    sys.setDockState("airlock_1", false);
+    sys.requestExit("airlock_1", "player_1", 100.0f);
+    // Advance through all phases to InSpace (states 1-5, 2s each = 10s)
+    for (int i = 0; i < 15; i++) sys.update(1.0f);
+    assertTrue(sys.isInSpace("airlock_1"), "Player is in space");
+}
+
+void testEVAExitTether() {
+    std::cout << "\n=== EVAAirlockExit: Tether ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    sys.createExitPoint("airlock_1", "ship_1", 100.0f);
+    sys.setDockState("airlock_1", false);
+    sys.requestExit("airlock_1", "player_1", 100.0f);
+    for (int i = 0; i < 15; i++) sys.update(1.0f);
+    assertTrue(sys.isInSpace("airlock_1"), "In space");
+    sys.moveAway("airlock_1", 50.0f);
+    assertTrue(approxEqual(sys.getDistanceFromShip("airlock_1"), 50.0f), "50m away");
+    sys.moveAway("airlock_1", 200.0f);
+    assertTrue(approxEqual(sys.getDistanceFromShip("airlock_1"), 100.0f), "Clamped to tether range");
+    assertTrue(sys.isTetherActive("airlock_1"), "Tether is active");
+}
+
+void testEVAExitReturn() {
+    std::cout << "\n=== EVAAirlockExit: Return ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    sys.createExitPoint("airlock_1", "ship_1");
+    sys.setDockState("airlock_1", false);
+    sys.requestExit("airlock_1", "player_1", 100.0f);
+    for (int i = 0; i < 15; i++) sys.update(1.0f);
+    assertTrue(sys.beginReturn("airlock_1"), "Return started");
+    // Advance through Returning to Complete
+    for (int i = 0; i < 5; i++) sys.update(1.0f);
+    assertTrue(sys.getState("airlock_1") == 7, "Reached complete state");
+}
+
+void testEVAExitCancel() {
+    std::cout << "\n=== EVAAirlockExit: Cancel ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    world.createEntity("airlock_1");
+    sys.createExitPoint("airlock_1", "ship_1");
+    sys.requestExit("airlock_1", "player_1", 100.0f);
+    assertTrue(sys.cancelExit("airlock_1"), "Exit cancelled");
+    assertTrue(sys.getState("airlock_1") == 0, "State reset to inactive");
+    assertTrue(!sys.cancelExit("airlock_1"), "Can't cancel inactive");
+}
+
+void testEVAExitStateNames() {
+    std::cout << "\n=== EVAAirlockExit: State Names ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    assertTrue(sys.stateName(0) == "inactive", "State 0 name");
+    assertTrue(sys.stateName(1) == "requesting_exit", "State 1 name");
+    assertTrue(sys.stateName(5) == "in_space", "State 5 name");
+    assertTrue(sys.stateName(7) == "complete", "State 7 name");
+}
+
+void testEVAExitMissing() {
+    std::cout << "\n=== EVAAirlockExit: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::EVAAirlockExitSystem sys(&world);
+    assertTrue(!sys.createExitPoint("nonexistent", "ship"), "Create fails on missing");
+    assertTrue(!sys.requestExit("nonexistent", "p", 100.0f), "Request fails on missing");
+    assertTrue(sys.getState("nonexistent") == 0, "State 0 on missing");
+    assertTrue(!sys.isInSpace("nonexistent"), "Not in space on missing");
+}
+
+// ==================== AncientModuleDiscovery Tests ====================
+
+void testAncientDiscoveryInit() {
+    std::cout << "\n=== AncientModuleDiscovery: Init ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    assertTrue(sys.initializeSite("ruin_1", "ancient_site_01", "player_1", 75.0f), "Site initialized");
+    assertTrue(approxEqual(sys.getScanRange("ruin_1"), 75.0f), "Scan range set");
+    assertTrue(sys.getTotalModules("ruin_1") == 0, "No modules initially");
+    assertTrue(!sys.initializeSite("ruin_1", "s", "p"), "Duplicate init fails");
+}
+
+void testAncientDiscoveryAddModule() {
+    std::cout << "\n=== AncientModuleDiscovery: Add Module ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    sys.initializeSite("ruin_1", "site_01", "player_1");
+    assertTrue(sys.addHiddenModule("ruin_1", "mod_1", "shield_gen", 0.7f, 10.0f, 5000.0f), "Module added");
+    assertTrue(sys.getTotalModules("ruin_1") == 1, "1 module total");
+    assertTrue(!sys.addHiddenModule("ruin_1", "mod_1", "shield_gen", 0.5f, 5.0f, 1000.0f), "Duplicate rejected");
+    assertTrue(sys.getModuleState("ruin_1", "mod_1") == 0, "Module is undiscovered");
+}
+
+void testAncientDiscoveryScan() {
+    std::cout << "\n=== AncientModuleDiscovery: Scan ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    sys.initializeSite("ruin_1", "site_01", "player_1");
+    sys.addHiddenModule("ruin_1", "mod_1", "power_core", 0.5f, 8.0f, 3000.0f);
+    assertTrue(sys.beginScan("ruin_1", "mod_1"), "Scan started");
+    assertTrue(sys.getModuleState("ruin_1", "mod_1") == 1, "Module is scanning");
+    assertTrue(!sys.beginScan("ruin_1", "mod_1"), "Can't re-scan");
+    sys.setActive("ruin_1", true);
+    for (int i = 0; i < 3; i++) sys.update(1.0f);
+    assertTrue(sys.getModuleState("ruin_1", "mod_1") == 2, "Module discovered after scan");
+    assertTrue(sys.getDiscoveredCount("ruin_1") == 1, "1 discovered");
+}
+
+void testAncientDiscoveryExtract() {
+    std::cout << "\n=== AncientModuleDiscovery: Extract ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    sys.initializeSite("ruin_1", "site_01", "player_1");
+    sys.addHiddenModule("ruin_1", "mod_1", "weapon_array", 0.8f, 5.0f, 8000.0f);
+    assertTrue(!sys.beginExtraction("ruin_1", "mod_1"), "Can't extract undiscovered");
+    sys.beginScan("ruin_1", "mod_1");
+    sys.setActive("ruin_1", true);
+    for (int i = 0; i < 3; i++) sys.update(1.0f); // Complete scan
+    assertTrue(sys.beginExtraction("ruin_1", "mod_1"), "Extraction started");
+    for (int i = 0; i < 10; i++) sys.update(1.0f); // Complete extraction (5.0s required)
+    assertTrue(sys.getModuleState("ruin_1", "mod_1") == 4, "Module extracted");
+    assertTrue(sys.getExtractedCount("ruin_1") == 1, "1 extracted");
+}
+
+void testAncientDiscoveryAnalyze() {
+    std::cout << "\n=== AncientModuleDiscovery: Analyze ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    sys.initializeSite("ruin_1", "site_01", "player_1");
+    sys.addHiddenModule("ruin_1", "mod_1", "nav_system", 0.3f, 3.0f, 2000.0f);
+    sys.beginScan("ruin_1", "mod_1");
+    sys.setActive("ruin_1", true);
+    for (int i = 0; i < 3; i++) sys.update(1.0f);
+    sys.beginExtraction("ruin_1", "mod_1");
+    for (int i = 0; i < 5; i++) sys.update(1.0f);
+    assertTrue(sys.analyzeModule("ruin_1", "mod_1"), "Module analyzed");
+    assertTrue(sys.getModuleState("ruin_1", "mod_1") == 5, "Module in analyzed state");
+    assertTrue(!sys.analyzeModule("ruin_1", "mod_1"), "Can't re-analyze");
+}
+
+void testAncientDiscoveryMultiple() {
+    std::cout << "\n=== AncientModuleDiscovery: Multiple Modules ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    sys.initializeSite("ruin_1", "site_01", "player_1");
+    sys.addHiddenModule("ruin_1", "mod_1", "shield_gen", 0.5f, 5.0f, 3000.0f);
+    sys.addHiddenModule("ruin_1", "mod_2", "power_core", 0.6f, 8.0f, 5000.0f);
+    sys.addHiddenModule("ruin_1", "mod_3", "nav_comp", 0.4f, 4.0f, 2000.0f);
+    assertTrue(sys.getTotalModules("ruin_1") == 3, "3 modules total");
+    sys.beginScan("ruin_1", "mod_1");
+    sys.beginScan("ruin_1", "mod_2");
+    sys.setActive("ruin_1", true);
+    for (int i = 0; i < 3; i++) sys.update(1.0f);
+    assertTrue(sys.getDiscoveredCount("ruin_1") == 2, "2 discovered");
+}
+
+void testAncientDiscoveryMaxModules() {
+    std::cout << "\n=== AncientModuleDiscovery: Max Modules ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    sys.initializeSite("ruin_1", "site_01", "player_1");
+    for (int i = 0; i < 10; i++) {
+        std::string id = "mod_" + std::to_string(i);
+        assertTrue(sys.addHiddenModule("ruin_1", id, "tech", 0.5f, 5.0f, 1000.0f),
+            ("Module " + std::to_string(i) + " added").c_str());
+    }
+    assertTrue(!sys.addHiddenModule("ruin_1", "mod_extra", "tech", 0.5f, 5.0f, 1000.0f),
+        "11th module rejected (max 10)");
+}
+
+void testAncientDiscoveryActive() {
+    std::cout << "\n=== AncientModuleDiscovery: Active State ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    world.createEntity("ruin_1");
+    sys.initializeSite("ruin_1", "site_01", "player_1");
+    sys.addHiddenModule("ruin_1", "mod_1", "shield_gen", 0.5f, 5.0f, 3000.0f);
+    sys.beginScan("ruin_1", "mod_1");
+    sys.update(2.0f); // Not active, shouldn't advance
+    assertTrue(sys.getModuleState("ruin_1", "mod_1") == 1, "Still scanning when inactive");
+    sys.setActive("ruin_1", true);
+    for (int i = 0; i < 3; i++) sys.update(1.0f);
+    assertTrue(sys.getModuleState("ruin_1", "mod_1") == 2, "Discovered when active");
+}
+
+void testAncientDiscoveryStateNames() {
+    std::cout << "\n=== AncientModuleDiscovery: State Names ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    assertTrue(sys.stateName(0) == "undiscovered", "State 0 name");
+    assertTrue(sys.stateName(1) == "scanning", "State 1 name");
+    assertTrue(sys.stateName(2) == "discovered", "State 2 name");
+    assertTrue(sys.stateName(5) == "analyzed", "State 5 name");
+}
+
+void testAncientDiscoveryMissing() {
+    std::cout << "\n=== AncientModuleDiscovery: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::AncientModuleDiscoverySystem sys(&world);
+    assertTrue(!sys.initializeSite("nonexistent", "s", "p"), "Init fails on missing");
+    assertTrue(!sys.addHiddenModule("nonexistent", "m", "t", 0.5f, 5.0f, 100.0f), "Add fails on missing");
+    assertTrue(sys.getDiscoveredCount("nonexistent") == 0, "0 discovered on missing");
+    assertTrue(sys.getTotalModules("nonexistent") == 0, "0 modules on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -28203,7 +28599,8 @@ int main() {
     std::cout << "ShipInteriorLayout, EnvironmentalHazard, FPSObjective" << std::endl;
     std::cout << "ResourceProductionChain, FleetDoctrine, PlayerProgression" << std::endl;
     std::cout << "CommanderDisagreement, ImperfectInformation, CaptainBackground" << std::endl;
-    std::cout << "RigLocker, VisualCoupling, FPSSalvagePath" << std::endl;
+    std::cout << "RigLocker, VisualCoupling, FPSSalvagePath," << std::endl;
+    std::cout << "LavatoryInteraction, EVAAirlockExit, AncientModuleDiscovery" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -30223,6 +30620,42 @@ int main() {
     testSalvagePathMultipleLoot();
     testSalvagePathActive();
     testSalvagePathMissing();
+
+    // LavatoryInteraction System tests
+    testLavatoryInit();
+    testLavatoryBeginInteraction();
+    testLavatoryDoorTransition();
+    testLavatoryThirdPerson();
+    testLavatoryFullCycle();
+    testLavatoryCancel();
+    testLavatoryAudio();
+    testLavatoryHygiene();
+    testLavatoryPhaseNames();
+    testLavatoryMissing();
+
+    // EVAAirlockExit System tests
+    testEVAExitInit();
+    testEVAExitRequest();
+    testEVAExitDockedBlocked();
+    testEVAExitLowOxygen();
+    testEVAExitFullCycle();
+    testEVAExitTether();
+    testEVAExitReturn();
+    testEVAExitCancel();
+    testEVAExitStateNames();
+    testEVAExitMissing();
+
+    // AncientModuleDiscovery System tests
+    testAncientDiscoveryInit();
+    testAncientDiscoveryAddModule();
+    testAncientDiscoveryScan();
+    testAncientDiscoveryExtract();
+    testAncientDiscoveryAnalyze();
+    testAncientDiscoveryMultiple();
+    testAncientDiscoveryMaxModules();
+    testAncientDiscoveryActive();
+    testAncientDiscoveryStateNames();
+    testAncientDiscoveryMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

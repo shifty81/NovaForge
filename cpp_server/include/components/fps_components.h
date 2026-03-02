@@ -747,6 +747,76 @@ public:
     COMPONENT_TYPE(FPSSalvagePath)
 };
 
+// ==================== Lavatory Interaction ====================
+
+class LavatoryInteraction : public ecs::Component {
+public:
+    enum class InteractionPhase {
+        Idle = 0,
+        Approaching = 1,
+        DoorOpening = 2,
+        TransitionToThirdPerson = 3,
+        UsingFacility = 4,
+        TransitionToFirstPerson = 5,
+        DoorClosing = 6,
+        Complete = 7
+    };
+
+    std::string lavatory_id;
+    std::string room_id;
+    std::string user_id;
+
+    int phase = 0;                    // InteractionPhase as int
+    float phase_progress = 0.0f;      // 0..1 progress through current phase
+    float phase_duration = 1.5f;      // Seconds per phase
+
+    bool door_open = false;
+    bool in_third_person = false;
+    bool audio_playing = false;
+    float use_duration = 5.0f;        // How long the facility is used
+    float use_timer = 0.0f;
+
+    bool occupied = false;
+    float hygiene_bonus = 15.0f;      // Fatigue reduction on use
+
+    COMPONENT_TYPE(LavatoryInteraction)
+};
+
+// ==================== EVA Airlock Exit ====================
+
+class EVAAirlockExit : public ecs::Component {
+public:
+    enum class ExitState {
+        Inactive = 0,
+        RequestingExit = 1,
+        CheckingDockState = 2,
+        PreparingExit = 3,
+        Exiting = 4,
+        InSpace = 5,
+        Returning = 6,
+        Complete = 7
+    };
+
+    std::string airlock_id;
+    std::string ship_id;
+    std::string player_id;
+
+    int state = 0;                     // ExitState as int
+    float state_progress = 0.0f;       // 0..1 progress
+    float state_duration = 2.0f;       // Seconds per state
+
+    bool ship_docked = false;          // Is the ship currently docked?
+    bool exit_blocked = false;         // Exit blocked (e.g., docked)
+    float suit_oxygen = 100.0f;        // Player suit oxygen level
+    float min_oxygen = 10.0f;          // Minimum oxygen to allow exit
+
+    float distance_from_ship = 0.0f;   // Distance after exit
+    float max_tether_range = 200.0f;   // Max distance before tether recall
+    bool tether_active = true;
+
+    COMPONENT_TYPE(EVAAirlockExit)
+};
+
 } // namespace components
 } // namespace atlas
 

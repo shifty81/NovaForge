@@ -757,6 +757,72 @@ public:
     COMPONENT_TYPE(GridConstruction)
 };
 
+// ==================== Ancient Module Discovery ====================
+
+class AncientModuleDiscovery : public ecs::Component {
+public:
+    enum class DiscoveryState {
+        Undiscovered = 0,
+        Scanning = 1,
+        Discovered = 2,
+        Extracting = 3,
+        Extracted = 4,
+        Analyzed = 5
+    };
+
+    struct DiscoveredModule {
+        std::string module_id;
+        std::string tech_type;
+        int state = 0;                // DiscoveryState as int
+        float scan_progress = 0.0f;
+        float extract_progress = 0.0f;
+        float extract_required = 10.0f;
+        float repair_difficulty = 0.5f;   // 0..1 difficulty
+        bool repairable = true;
+        float estimated_value = 0.0f;
+    };
+
+    std::string site_id;
+    std::string explorer_id;
+    std::vector<DiscoveredModule> modules;
+    int max_modules = 10;
+    bool active = false;
+    float scan_range = 50.0f;
+    int total_extractions = 0;
+
+    DiscoveredModule* findModule(const std::string& id) {
+        for (auto& m : modules) {
+            if (m.module_id == id) return &m;
+        }
+        return nullptr;
+    }
+
+    const DiscoveredModule* findModule(const std::string& id) const {
+        for (const auto& m : modules) {
+            if (m.module_id == id) return &m;
+        }
+        return nullptr;
+    }
+
+    int discoveredCount() const {
+        int count = 0;
+        for (const auto& m : modules) {
+            if (m.state >= static_cast<int>(DiscoveryState::Discovered)) count++;
+        }
+        return count;
+    }
+
+    int extractedCount() const {
+        int count = 0;
+        for (const auto& m : modules) {
+            if (m.state >= static_cast<int>(DiscoveryState::Extracted)) count++;
+        }
+        return count;
+    }
+
+    COMPONENT_TYPE(AncientModuleDiscovery)
+};
+
 } // namespace components
 } // namespace atlas
 

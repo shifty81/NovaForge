@@ -1270,14 +1270,14 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Survival Module
 - [x] **Survival needs** — Oxygen drain, hunger, fatigue with configurable rates — SurvivalNeeds component + SurvivalSystem (4 tests)
 - [x] **Fabricator** — Crafting station with recipe tracking and craft speed — Fabricator component
-- [ ] **Lavatory interaction** — FPS → 3rd person door transition with audio
+- [x] **Lavatory interaction** — FPS → 3rd-person door transition with audio, multi-phase interaction (Idle→Approaching→DoorOpening→TransitionToThirdPerson→UsingFacility→TransitionToFirstPerson→DoorClosing→Complete), occupancy tracking, hygiene bonus — LavatoryInteraction component + LavatoryInteractionSystem (10 tests)
 - [x] **Bed & rest** — Fatigue recovery mechanic — RestStation + RestingState components, RestStationSystem with quality-based recovery, auto-stop when rested (8 tests)
 - [x] **Food processor** — Wall-mounted food preparation with recipes, concurrent crafting jobs, power toggling, efficiency multiplier — FoodProcessor component + FoodProcessorSystem (10 tests)
 
 #### Docking & Airlock System
 - [x] **Docking ports** — Airlock, DockingRing, HangarBay, RoverBay types — DockingPort component with dock/undock, extend/retract (3 tests)
 - [x] **Docking ring extension** — Visual module that extends airlock for ship-to-ship docking — DockingRingExtension component + DockingRingExtensionSystem with 4-state extension (Retracted→Extending→Extended→Retracting), alignment tracking, pressure sealing, connection management, integrity degradation (10 tests)
-- [ ] **EVA airlock** — Exit to space when undocked
+- [x] **EVA airlock** — Exit to space when undocked, dock-state gating, suit oxygen validation, tether range enforcement, exit/return lifecycle (Inactive→RequestingExit→CheckingDockState→PreparingExit→Exiting→InSpace→Returning→Complete) — EVAAirlockExit component + EVAAirlockExitSystem (10 tests)
 - [x] **EVA airlock system** — Multi-phase depressurization cycle (Idle→EnterChamber→InnerSeal→Depressurize→OuterOpen→EVAActive), suit oxygen check, abort support, reentry sequence (OuterSeal→Repressurize→InnerOpen→Complete) — EVAAirlockState component + EVAAirlockSystem (8 tests)
 - [x] **Rover bay ramp** — Belly hangar with folding ramp for rover deployment — RoverBayRamp component + RoverBayRampSystem with 4-state ramp (Closed→Opening→Open→Closing), rover store/deploy/retrieve, atmosphere safety interlock, auto-pressurization (10 tests)
 
@@ -1292,7 +1292,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Salvage tools** — Cutter, GravGun, Scanner, RepairTool with tier and efficiency — SalvageTool component
 - [x] **Trinket generation** — Procedural trinkets with rare bobbleheads (1/200 chance) — SalvageExplorationSystem::generateTrinkets()
 - [x] **FPS salvage path** — Entry point cutting with timer-based state machine (Sealed→Cutting→Open), room exploration with progress tracking, loot discovery/collection with rarity tiers (Common/Uncommon/Rare/Epic/Legendary) — FPSSalvagePath component + FPSSalvagePathSystem (10 tests)
-- [ ] **Ancient module discovery** — Find repairable ancient tech in ruins
+- [x] **Ancient module discovery** — Find repairable ancient tech in ruins, scanning/discovery/extraction/analysis lifecycle (Undiscovered→Scanning→Discovered→Extracting→Extracted→Analyzed), max modules limit, active-state gating — AncientModuleDiscovery component + AncientModuleDiscoverySystem (10 tests)
 
 #### Ancient Tech System
 - [x] **Ancient tech modules** — Broken→Repairing→Repaired→Upgraded lifecycle — AncientTechModule component + AncientTechSystem (3 tests)
