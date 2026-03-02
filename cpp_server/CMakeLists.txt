@@ -235,6 +235,9 @@ set(CORE_SOURCES
     src/systems/galactic_response_curve_system.cpp
     src/systems/ship_capability_rating_system.cpp
     src/systems/module_cascading_failure_system.cpp
+    src/systems/navigation_bookmark_system.cpp
+    src/systems/fleet_supply_line_system.cpp
+    src/systems/crew_training_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -528,6 +531,9 @@ set(SERVER_HEADERS
     include/systems/galactic_response_curve_system.h
     include/systems/ship_capability_rating_system.h
     include/systems/module_cascading_failure_system.h
+    include/systems/navigation_bookmark_system.h
+    include/systems/fleet_supply_line_system.h
+    include/systems/crew_training_system.h
 )
 
 # Steam SDK configuration

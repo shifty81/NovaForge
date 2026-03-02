@@ -108,6 +108,9 @@
 #include "systems/galactic_response_curve_system.h"
 #include "systems/ship_capability_rating_system.h"
 #include "systems/module_cascading_failure_system.h"
+#include "systems/navigation_bookmark_system.h"
+#include "systems/fleet_supply_line_system.h"
+#include "systems/crew_training_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -31581,6 +31584,410 @@ void testCascadeMissing() {
     assertTrue(approxEqual(sys.getModuleHP("nonexistent", "mod1"), 0.0f), "HP 0 on missing");
 }
 
+// ==================== NavigationBookmark System Tests ====================
+
+void testNavBookmarkCreate() {
+    std::cout << "\n=== NavBookmark: Create ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    assertTrue(sys.initializeBookmarks("player1"), "Init bookmarks succeeds");
+    assertTrue(sys.getBookmarkCount("player1") == 0, "No bookmarks initially");
+    assertTrue(sys.getFavoriteCount("player1") == 0, "No favorites initially");
+}
+
+void testNavBookmarkAdd() {
+    std::cout << "\n=== NavBookmark: Add ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    assertTrue(sys.addBookmark("player1", "bm1", "Mining Spot", "system_alpha", 100.0f, 200.0f, 300.0f), "Add bookmark succeeds");
+    assertTrue(sys.getBookmarkCount("player1") == 1, "1 bookmark");
+    assertTrue(sys.getLabel("player1", "bm1") == "Mining Spot", "Label is Mining Spot");
+}
+
+void testNavBookmarkDuplicate() {
+    std::cout << "\n=== NavBookmark: Duplicate ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    sys.addBookmark("player1", "bm1", "Spot A", "sys1", 0, 0, 0);
+    assertTrue(!sys.addBookmark("player1", "bm1", "Spot B", "sys2", 1, 1, 1), "Duplicate ID rejected");
+    assertTrue(sys.getBookmarkCount("player1") == 1, "Still 1 bookmark");
+}
+
+void testNavBookmarkRemove() {
+    std::cout << "\n=== NavBookmark: Remove ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    sys.addBookmark("player1", "bm1", "Spot A", "sys1", 0, 0, 0);
+    sys.addBookmark("player1", "bm2", "Spot B", "sys2", 1, 1, 1);
+    assertTrue(sys.removeBookmark("player1", "bm1"), "Remove succeeds");
+    assertTrue(sys.getBookmarkCount("player1") == 1, "1 bookmark remains");
+    assertTrue(!sys.removeBookmark("player1", "bm1"), "Remove nonexistent fails");
+}
+
+void testNavBookmarkCategory() {
+    std::cout << "\n=== NavBookmark: Category ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    sys.addBookmark("player1", "bm1", "Spot A", "sys1", 0, 0, 0);
+    sys.addBookmark("player1", "bm2", "Spot B", "sys2", 1, 1, 1);
+    assertTrue(sys.getCategoryCount("player1", "Personal") == 2, "Both default to Personal");
+    assertTrue(sys.setCategory("player1", "bm1", "Corp"), "Set category succeeds");
+    assertTrue(sys.getCategoryCount("player1", "Corp") == 1, "1 Corp bookmark");
+    assertTrue(sys.getCategoryCount("player1", "Personal") == 1, "1 Personal bookmark");
+}
+
+void testNavBookmarkNotes() {
+    std::cout << "\n=== NavBookmark: Notes ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    sys.addBookmark("player1", "bm1", "Asteroid Belt", "sys1", 0, 0, 0);
+    assertTrue(sys.setNotes("player1", "bm1", "Rich in Ferrite"), "Set notes succeeds");
+    assertTrue(!sys.setNotes("player1", "bm_bad", "test"), "Set notes on nonexistent fails");
+}
+
+void testNavBookmarkFavorite() {
+    std::cout << "\n=== NavBookmark: Favorite ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    sys.addBookmark("player1", "bm1", "Home", "sys1", 0, 0, 0);
+    sys.addBookmark("player1", "bm2", "Mine", "sys2", 1, 1, 1);
+    assertTrue(sys.getFavoriteCount("player1") == 0, "No favorites yet");
+    assertTrue(sys.toggleFavorite("player1", "bm1"), "Toggle favorite succeeds");
+    assertTrue(sys.getFavoriteCount("player1") == 1, "1 favorite");
+    assertTrue(sys.toggleFavorite("player1", "bm1"), "Toggle back succeeds");
+    assertTrue(sys.getFavoriteCount("player1") == 0, "0 favorites after untoggle");
+}
+
+void testNavBookmarkMaxLimit() {
+    std::cout << "\n=== NavBookmark: MaxLimit ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    // Set a low max for testing
+    auto* entity = world.getEntity("player1");
+    entity->getComponent<components::NavigationBookmark>()->max_bookmarks = 3;
+    sys.addBookmark("player1", "bm1", "A", "s1", 0, 0, 0);
+    sys.addBookmark("player1", "bm2", "B", "s2", 0, 0, 0);
+    sys.addBookmark("player1", "bm3", "C", "s3", 0, 0, 0);
+    assertTrue(!sys.addBookmark("player1", "bm4", "D", "s4", 0, 0, 0), "Max limit enforced");
+    assertTrue(sys.getBookmarkCount("player1") == 3, "Still 3 bookmarks");
+}
+
+void testNavBookmarkMultiple() {
+    std::cout << "\n=== NavBookmark: Multiple ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeBookmarks("player1");
+    sys.addBookmark("player1", "bm1", "Station Alpha", "sys1", 10, 20, 30);
+    sys.addBookmark("player1", "bm2", "Asteroid Belt", "sys1", 40, 50, 60);
+    sys.addBookmark("player1", "bm3", "Pirate Zone", "sys2", 70, 80, 90);
+    assertTrue(sys.getBookmarkCount("player1") == 3, "3 bookmarks added");
+    sys.setCategory("player1", "bm3", "Shared");
+    sys.toggleFavorite("player1", "bm1");
+    sys.toggleFavorite("player1", "bm2");
+    assertTrue(sys.getFavoriteCount("player1") == 2, "2 favorites");
+    assertTrue(sys.getCategoryCount("player1", "Shared") == 1, "1 shared");
+}
+
+void testNavBookmarkMissing() {
+    std::cout << "\n=== NavBookmark: Missing ===" << std::endl;
+    ecs::World world;
+    systems::NavigationBookmarkSystem sys(&world);
+    assertTrue(!sys.initializeBookmarks("nonexistent"), "Init fails on missing entity");
+    assertTrue(!sys.addBookmark("nonexistent", "bm1", "A", "s1", 0, 0, 0), "Add fails on missing");
+    assertTrue(!sys.removeBookmark("nonexistent", "bm1"), "Remove fails on missing");
+    assertTrue(!sys.setCategory("nonexistent", "bm1", "Corp"), "SetCategory fails on missing");
+    assertTrue(!sys.toggleFavorite("nonexistent", "bm1"), "Toggle fails on missing");
+    assertTrue(sys.getBookmarkCount("nonexistent") == 0, "0 count on missing");
+    assertTrue(sys.getFavoriteCount("nonexistent") == 0, "0 favorites on missing");
+    assertTrue(sys.getCategoryCount("nonexistent", "Personal") == 0, "0 category on missing");
+    assertTrue(sys.getLabel("nonexistent", "bm1") == "", "Empty label on missing");
+}
+
+// ==================== FleetSupplyLine System Tests ====================
+
+void testSupplyLineCreate() {
+    std::cout << "\n=== SupplyLine: Create ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    assertTrue(sys.initializeSupplyLine("fleet1"), "Init supply line succeeds");
+    assertTrue(sys.getDepotCount("fleet1") == 0, "No depots initially");
+    assertTrue(sys.getTotalResupplies("fleet1") == 0, "No resupplies initially");
+}
+
+void testSupplyLineAddDepot() {
+    std::cout << "\n=== SupplyLine: AddDepot ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    assertTrue(sys.addDepot("fleet1", "depot1", "system_alpha", 100.0f), "Add depot succeeds");
+    assertTrue(sys.getDepotCount("fleet1") == 1, "1 depot");
+    assertTrue(!sys.addDepot("fleet1", "depot1", "system_beta", 50.0f), "Duplicate depot rejected");
+}
+
+void testSupplyLineResupply() {
+    std::cout << "\n=== SupplyLine: Resupply ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    sys.addDepot("fleet1", "depot1", "sys1", 100.0f);
+    assertTrue(sys.resupplyDepot("fleet1", "depot1", 50.0f, 60.0f), "Resupply succeeds");
+    assertTrue(approxEqual(sys.getFuelLevel("fleet1", "depot1"), 50.0f), "Fuel is 50");
+    assertTrue(approxEqual(sys.getAmmoLevel("fleet1", "depot1"), 60.0f), "Ammo is 60");
+    assertTrue(sys.getTotalResupplies("fleet1") == 1, "1 resupply counted");
+}
+
+void testSupplyLineResupplyCap() {
+    std::cout << "\n=== SupplyLine: ResupplyCap ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    sys.addDepot("fleet1", "depot1", "sys1", 100.0f);
+    sys.resupplyDepot("fleet1", "depot1", 80.0f, 80.0f);
+    sys.resupplyDepot("fleet1", "depot1", 50.0f, 50.0f); // should cap at 100
+    assertTrue(approxEqual(sys.getFuelLevel("fleet1", "depot1"), 100.0f), "Fuel capped at 100");
+    assertTrue(approxEqual(sys.getAmmoLevel("fleet1", "depot1"), 100.0f), "Ammo capped at 100");
+}
+
+void testSupplyLineConsume() {
+    std::cout << "\n=== SupplyLine: Consume ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    sys.addDepot("fleet1", "depot1", "sys1", 100.0f);
+    sys.resupplyDepot("fleet1", "depot1", 80.0f, 70.0f);
+    assertTrue(sys.consumeSupplies("fleet1", "depot1", 30.0f, 20.0f), "Consume succeeds");
+    assertTrue(approxEqual(sys.getFuelLevel("fleet1", "depot1"), 50.0f), "Fuel is 50 after consume");
+    assertTrue(approxEqual(sys.getAmmoLevel("fleet1", "depot1"), 50.0f), "Ammo is 50 after consume");
+}
+
+void testSupplyLineConsumeFloor() {
+    std::cout << "\n=== SupplyLine: ConsumeFloor ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    sys.addDepot("fleet1", "depot1", "sys1", 100.0f);
+    sys.resupplyDepot("fleet1", "depot1", 10.0f, 5.0f);
+    sys.consumeSupplies("fleet1", "depot1", 50.0f, 50.0f); // consume more than available
+    assertTrue(approxEqual(sys.getFuelLevel("fleet1", "depot1"), 0.0f), "Fuel floored at 0");
+    assertTrue(approxEqual(sys.getAmmoLevel("fleet1", "depot1"), 0.0f), "Ammo floored at 0");
+}
+
+void testSupplyLineCritical() {
+    std::cout << "\n=== SupplyLine: Critical ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    sys.addDepot("fleet1", "depot1", "sys1", 100.0f);
+    sys.resupplyDepot("fleet1", "depot1", 15.0f, 50.0f); // fuel < 20
+    assertTrue(sys.isDepotCritical("fleet1", "depot1"), "Depot critical (low fuel)");
+    sys.resupplyDepot("fleet1", "depot1", 30.0f, 0.0f); // fuel now 45
+    assertTrue(!sys.isDepotCritical("fleet1", "depot1"), "Depot not critical (both above 20)");
+}
+
+void testSupplyLineUpdate() {
+    std::cout << "\n=== SupplyLine: Update ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    sys.addDepot("fleet1", "depot1", "sys1", 100.0f);
+    sys.resupplyDepot("fleet1", "depot1", 50.0f, 50.0f);
+    sys.update(10.0f); // consumption_rate=1.0, delta=10 → drain 10 each
+    assertTrue(approxEqual(sys.getFuelLevel("fleet1", "depot1"), 40.0f), "Fuel after update is 40");
+    assertTrue(approxEqual(sys.getAmmoLevel("fleet1", "depot1"), 40.0f), "Ammo after update is 40");
+}
+
+void testSupplyLineRemoveDepot() {
+    std::cout << "\n=== SupplyLine: RemoveDepot ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeSupplyLine("fleet1");
+    sys.addDepot("fleet1", "depot1", "sys1", 100.0f);
+    sys.addDepot("fleet1", "depot2", "sys2", 100.0f);
+    assertTrue(sys.removeDepot("fleet1", "depot1"), "Remove depot succeeds");
+    assertTrue(sys.getDepotCount("fleet1") == 1, "1 depot remains");
+    assertTrue(!sys.removeDepot("fleet1", "depot1"), "Remove nonexistent fails");
+}
+
+void testSupplyLineMissing() {
+    std::cout << "\n=== SupplyLine: Missing ===" << std::endl;
+    ecs::World world;
+    systems::FleetSupplyLineSystem sys(&world);
+    assertTrue(!sys.initializeSupplyLine("nonexistent"), "Init fails on missing entity");
+    assertTrue(!sys.addDepot("nonexistent", "d1", "s1", 100), "Add depot fails on missing");
+    assertTrue(!sys.removeDepot("nonexistent", "d1"), "Remove fails on missing");
+    assertTrue(!sys.resupplyDepot("nonexistent", "d1", 10, 10), "Resupply fails on missing");
+    assertTrue(!sys.consumeSupplies("nonexistent", "d1", 10, 10), "Consume fails on missing");
+    assertTrue(sys.getDepotCount("nonexistent") == 0, "0 depots on missing");
+    assertTrue(approxEqual(sys.getFuelLevel("nonexistent", "d1"), 0.0f), "0 fuel on missing");
+    assertTrue(approxEqual(sys.getAmmoLevel("nonexistent", "d1"), 0.0f), "0 ammo on missing");
+    assertTrue(sys.getTotalResupplies("nonexistent") == 0, "0 resupplies on missing");
+    assertTrue(!sys.isDepotCritical("nonexistent", "d1"), "Not critical on missing");
+}
+
+// ==================== CrewTraining System Tests ====================
+
+void testCrewTrainingCreate() {
+    std::cout << "\n=== CrewTraining: Create ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    assertTrue(sys.initializeTraining("ship1"), "Init training succeeds");
+    assertTrue(sys.getTraineeCount("ship1") == 0, "No trainees initially");
+    assertTrue(sys.getTotalCompleted("ship1") == 0, "No completions initially");
+    assertTrue(approxEqual(sys.getXpBonus("ship1"), 1.0f), "Default XP bonus is 1.0");
+}
+
+void testCrewTrainingEnroll() {
+    std::cout << "\n=== CrewTraining: Enroll ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    assertTrue(sys.enrollTrainee("ship1", "crew1", "Navigation"), "Enroll succeeds");
+    assertTrue(sys.getTraineeCount("ship1") == 1, "1 trainee");
+    assertTrue(sys.getSkillName("ship1", "crew1") == "Navigation", "Skill is Navigation");
+    assertTrue(approxEqual(sys.getProgress("ship1", "crew1"), 0.0f), "Initial progress is 0");
+}
+
+void testCrewTrainingDuplicate() {
+    std::cout << "\n=== CrewTraining: Duplicate ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    sys.enrollTrainee("ship1", "crew1", "Navigation");
+    assertTrue(!sys.enrollTrainee("ship1", "crew1", "Weapons"), "Duplicate trainee rejected");
+    assertTrue(sys.getTraineeCount("ship1") == 1, "Still 1 trainee");
+}
+
+void testCrewTrainingProgress() {
+    std::cout << "\n=== CrewTraining: Progress ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    sys.enrollTrainee("ship1", "crew1", "Gunnery");
+    // training_rate=0.01, xp_bonus=1.0, delta=10 → progress = 0.1
+    sys.update(10.0f);
+    assertTrue(approxEqual(sys.getProgress("ship1", "crew1"), 0.1f), "Progress is 0.1 after 10s");
+    assertTrue(!sys.isComplete("ship1", "crew1"), "Not complete yet");
+}
+
+void testCrewTrainingCompletion() {
+    std::cout << "\n=== CrewTraining: Completion ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    sys.enrollTrainee("ship1", "crew1", "Engineering");
+    // training_rate=0.01, xp_bonus=1.0, delta=100 → progress = 1.0
+    sys.update(100.0f);
+    assertTrue(approxEqual(sys.getProgress("ship1", "crew1"), 1.0f), "Progress capped at 1.0");
+    assertTrue(sys.isComplete("ship1", "crew1"), "Training complete");
+    assertTrue(sys.getTotalCompleted("ship1") == 1, "1 completion counted");
+}
+
+void testCrewTrainingXpBonus() {
+    std::cout << "\n=== CrewTraining: XpBonus ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    sys.enrollTrainee("ship1", "crew1", "Shields");
+    assertTrue(sys.setXpBonus("ship1", 2.0f), "Set XP bonus succeeds");
+    assertTrue(approxEqual(sys.getXpBonus("ship1"), 2.0f), "XP bonus is 2.0");
+    // training_rate=0.01, xp_bonus=2.0, delta=10 → progress = 0.2
+    sys.update(10.0f);
+    assertTrue(approxEqual(sys.getProgress("ship1", "crew1"), 0.2f), "Progress 0.2 with 2x bonus");
+}
+
+void testCrewTrainingRemove() {
+    std::cout << "\n=== CrewTraining: Remove ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    sys.enrollTrainee("ship1", "crew1", "Navigation");
+    sys.enrollTrainee("ship1", "crew2", "Weapons");
+    assertTrue(sys.removeTrainee("ship1", "crew1"), "Remove succeeds");
+    assertTrue(sys.getTraineeCount("ship1") == 1, "1 trainee remains");
+    assertTrue(!sys.removeTrainee("ship1", "crew1"), "Remove nonexistent fails");
+}
+
+void testCrewTrainingMaxLimit() {
+    std::cout << "\n=== CrewTraining: MaxLimit ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    // default max_trainees = 5
+    sys.enrollTrainee("ship1", "c1", "Skill1");
+    sys.enrollTrainee("ship1", "c2", "Skill2");
+    sys.enrollTrainee("ship1", "c3", "Skill3");
+    sys.enrollTrainee("ship1", "c4", "Skill4");
+    sys.enrollTrainee("ship1", "c5", "Skill5");
+    assertTrue(!sys.enrollTrainee("ship1", "c6", "Skill6"), "Max limit enforced at 5");
+    assertTrue(sys.getTraineeCount("ship1") == 5, "Still 5 trainees");
+}
+
+void testCrewTrainingMultiComplete() {
+    std::cout << "\n=== CrewTraining: MultiComplete ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeTraining("ship1");
+    sys.enrollTrainee("ship1", "crew1", "Gunnery");
+    sys.enrollTrainee("ship1", "crew2", "Shields");
+    sys.update(100.0f); // both complete
+    assertTrue(sys.getTotalCompleted("ship1") == 2, "2 completions");
+    assertTrue(sys.isComplete("ship1", "crew1"), "crew1 complete");
+    assertTrue(sys.isComplete("ship1", "crew2"), "crew2 complete");
+    // completed training doesn't increment again
+    sys.update(10.0f);
+    assertTrue(sys.getTotalCompleted("ship1") == 2, "Still 2 completions");
+}
+
+void testCrewTrainingMissing() {
+    std::cout << "\n=== CrewTraining: Missing ===" << std::endl;
+    ecs::World world;
+    systems::CrewTrainingSystem sys(&world);
+    assertTrue(!sys.initializeTraining("nonexistent"), "Init fails on missing entity");
+    assertTrue(!sys.enrollTrainee("nonexistent", "c1", "Skill"), "Enroll fails on missing");
+    assertTrue(!sys.removeTrainee("nonexistent", "c1"), "Remove fails on missing");
+    assertTrue(sys.getTraineeCount("nonexistent") == 0, "0 trainees on missing");
+    assertTrue(approxEqual(sys.getProgress("nonexistent", "c1"), 0.0f), "0 progress on missing");
+    assertTrue(!sys.isComplete("nonexistent", "c1"), "Not complete on missing");
+    assertTrue(sys.getTotalCompleted("nonexistent") == 0, "0 completions on missing");
+    assertTrue(!sys.setXpBonus("nonexistent", 2.0f), "Set XP fails on missing");
+    assertTrue(approxEqual(sys.getXpBonus("nonexistent"), 0.0f), "0 XP bonus on missing");
+    assertTrue(sys.getSkillName("nonexistent", "c1") == "", "Empty skill on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -31635,6 +32042,7 @@ int main() {
     std::cout << "CommanderDisagreement, ImperfectInformation, CaptainBackground" << std::endl;
     std::cout << "RigLocker, VisualCoupling, FPSSalvagePath," << std::endl;
     std::cout << "LavatoryInteraction, EVAAirlockExit, AncientModuleDiscovery" << std::endl;
+    std::cout << "NavigationBookmark, FleetSupplyLine, CrewTraining" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -33954,6 +34362,42 @@ int main() {
     testCascadeChain();
     testCascadeOnlineCount();
     testCascadeMissing();
+
+    // NavigationBookmark System tests
+    testNavBookmarkCreate();
+    testNavBookmarkAdd();
+    testNavBookmarkDuplicate();
+    testNavBookmarkRemove();
+    testNavBookmarkCategory();
+    testNavBookmarkNotes();
+    testNavBookmarkFavorite();
+    testNavBookmarkMaxLimit();
+    testNavBookmarkMultiple();
+    testNavBookmarkMissing();
+
+    // FleetSupplyLine System tests
+    testSupplyLineCreate();
+    testSupplyLineAddDepot();
+    testSupplyLineResupply();
+    testSupplyLineResupplyCap();
+    testSupplyLineConsume();
+    testSupplyLineConsumeFloor();
+    testSupplyLineCritical();
+    testSupplyLineUpdate();
+    testSupplyLineRemoveDepot();
+    testSupplyLineMissing();
+
+    // CrewTraining System tests
+    testCrewTrainingCreate();
+    testCrewTrainingEnroll();
+    testCrewTrainingDuplicate();
+    testCrewTrainingProgress();
+    testCrewTrainingCompletion();
+    testCrewTrainingXpBonus();
+    testCrewTrainingRemove();
+    testCrewTrainingMaxLimit();
+    testCrewTrainingMultiComplete();
+    testCrewTrainingMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
