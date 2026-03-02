@@ -212,6 +212,9 @@ set(SERVER_SOURCES
     src/systems/client_prediction_system.cpp
     src/systems/ship_template_mod_system.cpp
     src/systems/database_persistence_system.cpp
+    src/systems/task_scheduler_system.cpp
+    src/systems/mod_manager_system.cpp
+    src/systems/ship_designer_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -430,6 +433,9 @@ set(SERVER_HEADERS
     include/systems/client_prediction_system.h
     include/systems/ship_template_mod_system.h
     include/systems/database_persistence_system.h
+    include/systems/task_scheduler_system.h
+    include/systems/mod_manager_system.h
+    include/systems/ship_designer_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -724,6 +730,9 @@ if(BUILD_TESTS)
         src/systems/client_prediction_system.cpp
         src/systems/ship_template_mod_system.cpp
         src/systems/database_persistence_system.cpp
+        src/systems/task_scheduler_system.cpp
+        src/systems/mod_manager_system.cpp
+        src/systems/ship_designer_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp

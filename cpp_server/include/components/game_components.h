@@ -198,6 +198,93 @@ public:
     COMPONENT_TYPE(DatabasePersistence)
 };
 
+// ==================== Task Scheduler ====================
+
+class TaskScheduler : public ecs::Component {
+public:
+    enum TaskState { Queued = 0, Running = 1, Complete = 2, Failed = 3, Cancelled = 4 };
+    enum Priority { Low = 0, Normal = 1, High = 2, Critical = 3 };
+
+    struct TaskEntry {
+        int id = 0;
+        std::string name;
+        int priority = Normal;
+        int state = Queued;
+        float progress = 0.0f;
+        std::vector<int> dependencies;
+    };
+
+    std::vector<TaskEntry> tasks;
+    int max_concurrent = 4;
+    int total_completed = 0;
+    int total_failed = 0;
+    float throughput = 0.0f;
+    float total_time = 0.0f;
+    int next_task_id = 1;
+    bool active = true;
+
+    COMPONENT_TYPE(TaskScheduler)
+};
+
+// ==================== Mod Manager ====================
+
+class ModManager : public ecs::Component {
+public:
+    struct ModEntry {
+        std::string mod_id;
+        std::string name;
+        std::string version;
+        std::string author;
+        std::vector<std::string> dependencies;
+        bool enabled = false;
+        bool installed = false;
+        int load_order = 0;
+    };
+
+    std::vector<ModEntry> mods;
+    std::vector<std::string> conflicts;
+    int max_mods = 50;
+    int total_installed = 0;
+    int total_enabled = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(ModManager)
+};
+
+// ==================== Ship Designer ====================
+
+class ShipDesigner : public ecs::Component {
+public:
+    struct SlotEntry {
+        std::string module_name;
+        int slot_type = 0;
+        float cpu_cost = 0.0f;
+        float power_cost = 0.0f;
+    };
+
+    std::string blueprint_name;
+    std::string hull_type;
+    std::string faction;
+    std::vector<SlotEntry> fitted_modules;
+    int high_slots = 4;
+    int mid_slots = 4;
+    int low_slots = 3;
+    int rig_slots = 3;
+    float total_cpu = 300.0f;
+    float total_powergrid = 1000.0f;
+    float used_cpu = 0.0f;
+    float used_powergrid = 0.0f;
+    float hull_hp = 1000.0f;
+    float shield_hp = 500.0f;
+    float armor_hp = 500.0f;
+    float max_velocity = 200.0f;
+    int design_count = 0;
+    bool valid = false;
+    bool active = true;
+
+    COMPONENT_TYPE(ShipDesigner)
+};
+
 } // namespace components
 } // namespace atlas
 
