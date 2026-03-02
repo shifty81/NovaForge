@@ -776,6 +776,29 @@ public:
     COMPONENT_TYPE(PositionalAudioSource)
 };
 
+/**
+ * @brief Fleet morale crisis resolution through ideology alignment and fracture mechanics
+ */
+class FleetMoraleResolution : public ecs::Component {
+public:
+    std::string fleet_id;
+    float fleet_morale = 50.0f;
+    float fracture_threshold = 20.0f;
+    float ideology_alignment = 0.5f;
+    // Resolution methods: Compromise, AuthorityOverride, Vote, Mediation
+    std::string current_resolution = "None";
+    bool crisis_active = false;
+    float recovery_rate = 1.0f;
+    int fractures_triggered = 0;
+    int resolutions_applied = 0;
+    int departures = 0;
+    float crisis_duration = 0.0f;
+    float max_crisis_duration = 60.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetMoraleResolution)
+};
+
 } // namespace components
 } // namespace atlas
 

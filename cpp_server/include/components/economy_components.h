@@ -556,6 +556,29 @@ public:
     COMPONENT_TYPE(ResourceProductionChain)
 };
 
+/**
+ * @brief Trade route distortion from titan assembly pressure in the outer rim
+ */
+class OuterRimLogisticsDistortion : public ecs::Component {
+public:
+    std::string region_id;
+    struct RouteDistortion {
+        std::string route_id;
+        float efficiency = 1.0f;
+        float threat_level = 0.0f;
+        float price_impact = 0.0f;
+    };
+    std::vector<RouteDistortion> routes;
+    float global_threat = 0.0f;
+    float distortion_factor = 0.5f;
+    float recovery_rate = 0.05f;
+    int disrupted_route_count = 0;
+    float total_price_impact = 0.0f;
+    int max_routes = 50;
+    bool active = true;
+
+    COMPONENT_TYPE(OuterRimLogisticsDistortion)
+};
 
 } // namespace components
 } // namespace atlas

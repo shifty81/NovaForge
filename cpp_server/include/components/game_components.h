@@ -501,6 +501,32 @@ public:
     COMPONENT_TYPE(DynamicEvent)
 };
 
+/**
+ * @brief Tracks long-term consequences of player actions with magnitude and decay
+ */
+class PersistenceDelta : public ecs::Component {
+public:
+    std::string tracker_id;
+    struct DeltaEntry {
+        std::string action_id;
+        std::string category; // Combat, Trade, Diplomacy, Exploration, Crime
+        float magnitude = 0.0f;
+        float timestamp = 0.0f;
+        float decay_rate = 0.0f;
+        bool permanent = false;
+    };
+    std::vector<DeltaEntry> entries;
+    int max_entries = 100;
+    float total_positive_impact = 0.0f;
+    float total_negative_impact = 0.0f;
+    int actions_recorded = 0;
+    float consequence_threshold = 10.0f;
+    bool consequence_triggered = false;
+    bool active = true;
+
+    COMPONENT_TYPE(PersistenceDelta)
+};
+
 } // namespace components
 } // namespace atlas
 

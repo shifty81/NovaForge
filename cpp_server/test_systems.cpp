@@ -101,6 +101,9 @@
 #include "systems/task_scheduler_system.h"
 #include "systems/mod_manager_system.h"
 #include "systems/ship_designer_system.h"
+#include "systems/fleet_morale_resolution_system.h"
+#include "systems/persistence_delta_system.h"
+#include "systems/outer_rim_logistics_distortion_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -30619,6 +30622,408 @@ void testDynamicEventMissing() {
     assertTrue(!sys.cancelEvent("nonexistent", "x"), "Cancel fails on missing");
 }
 
+// ===== FleetMoraleResolution System Tests =====
+
+void testFleetMoraleResCreate() {
+    std::cout << "\n=== FleetMoraleRes: Create ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    assertTrue(sys.initializeFleet("fleet1"), "Init fleet succeeds");
+    assertTrue(approxEqual(sys.getFleetMorale("fleet1"), 50.0f), "Initial morale is 50");
+    assertTrue(approxEqual(sys.getIdeologyAlignment("fleet1"), 0.5f), "Initial ideology is 0.5");
+    assertTrue(!sys.isCrisisActive("fleet1"), "No crisis initially");
+    assertTrue(sys.getDepartures("fleet1") == 0, "No departures initially");
+    assertTrue(sys.getResolutionCount("fleet1") == 0, "No resolutions initially");
+}
+
+void testFleetMoraleResCrisis() {
+    std::cout << "\n=== FleetMoraleRes: Crisis ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    assertTrue(sys.triggerCrisis("fleet1"), "Trigger crisis succeeds");
+    assertTrue(sys.isCrisisActive("fleet1"), "Crisis is active");
+}
+
+void testFleetMoraleResResolve() {
+    std::cout << "\n=== FleetMoraleRes: Resolve ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    sys.triggerCrisis("fleet1");
+    assertTrue(sys.resolveWithMethod("fleet1", "Compromise"), "Resolve with Compromise");
+    assertTrue(!sys.isCrisisActive("fleet1"), "Crisis resolved");
+    assertTrue(sys.getResolutionCount("fleet1") == 1, "Resolution count is 1");
+    assertTrue(approxEqual(sys.getFleetMorale("fleet1"), 60.0f), "Morale boosted by Compromise (+10)");
+
+    sys.triggerCrisis("fleet1");
+    assertTrue(sys.resolveWithMethod("fleet1", "Mediation"), "Resolve with Mediation");
+    assertTrue(approxEqual(sys.getFleetMorale("fleet1"), 80.0f), "Morale boosted by Mediation (+20)");
+    assertTrue(sys.getResolutionCount("fleet1") == 2, "Resolution count is 2");
+    assertTrue(!sys.resolveWithMethod("fleet1", "InvalidMethod"), "Invalid method fails");
+}
+
+void testFleetMoraleResAdjust() {
+    std::cout << "\n=== FleetMoraleRes: Adjust ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    assertTrue(sys.adjustMorale("fleet1", 30.0f), "Adjust morale up");
+    assertTrue(approxEqual(sys.getFleetMorale("fleet1"), 80.0f), "Morale is 80");
+    assertTrue(sys.adjustMorale("fleet1", 50.0f), "Adjust morale past max");
+    assertTrue(approxEqual(sys.getFleetMorale("fleet1"), 100.0f), "Morale clamped at 100");
+    assertTrue(sys.adjustMorale("fleet1", -150.0f), "Adjust morale below min");
+    assertTrue(approxEqual(sys.getFleetMorale("fleet1"), 0.0f), "Morale clamped at 0");
+}
+
+void testFleetMoraleResIdeology() {
+    std::cout << "\n=== FleetMoraleRes: Ideology ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    assertTrue(sys.setIdeologyAlignment("fleet1", 0.8f), "Set ideology 0.8");
+    assertTrue(approxEqual(sys.getIdeologyAlignment("fleet1"), 0.8f), "Ideology is 0.8");
+    assertTrue(sys.setIdeologyAlignment("fleet1", 2.0f), "Set ideology past max");
+    assertTrue(approxEqual(sys.getIdeologyAlignment("fleet1"), 1.0f), "Ideology clamped at 1.0");
+    assertTrue(sys.setIdeologyAlignment("fleet1", -1.0f), "Set ideology below min");
+    assertTrue(approxEqual(sys.getIdeologyAlignment("fleet1"), 0.0f), "Ideology clamped at 0.0");
+}
+
+void testFleetMoraleResRecovery() {
+    std::cout << "\n=== FleetMoraleRes: Recovery ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    sys.adjustMorale("fleet1", -20.0f); // morale = 30
+    sys.setIdeologyAlignment("fleet1", 1.0f);
+    sys.update(5.0f); // recovery = 1.0 * 5.0 * 1.0 = 5.0
+    assertTrue(approxEqual(sys.getFleetMorale("fleet1"), 35.0f), "Morale recovered to 35");
+}
+
+void testFleetMoraleResAutoFracture() {
+    std::cout << "\n=== FleetMoraleRes: AutoFracture ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    sys.adjustMorale("fleet1", -35.0f); // morale = 15, below threshold of 20
+    sys.update(0.1f); // should auto-trigger crisis
+    assertTrue(sys.isCrisisActive("fleet1"), "Crisis auto-triggered below threshold");
+}
+
+void testFleetMoraleResDeparture() {
+    std::cout << "\n=== FleetMoraleRes: Departure ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    sys.triggerCrisis("fleet1");
+    sys.update(61.0f); // exceeds max_crisis_duration of 60
+    assertTrue(sys.getDepartures("fleet1") == 1, "One departure after timeout");
+    assertTrue(!sys.isCrisisActive("fleet1"), "Crisis deactivated after departure");
+    assertTrue(sys.getFleetMorale("fleet1") < 50.0f, "Morale dropped after departure");
+}
+
+void testFleetMoraleResMultiple() {
+    std::cout << "\n=== FleetMoraleRes: Multiple ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    world.createEntity("fleet1");
+    sys.initializeFleet("fleet1");
+    sys.triggerCrisis("fleet1");
+    sys.resolveWithMethod("fleet1", "Vote"); // +15
+    sys.triggerCrisis("fleet1");
+    sys.resolveWithMethod("fleet1", "AuthorityOverride"); // +5
+    assertTrue(sys.getResolutionCount("fleet1") == 2, "Two resolutions applied");
+    assertTrue(sys.getFleetMorale("fleet1") > 50.0f, "Morale increased from resolutions");
+}
+
+void testFleetMoraleResMissing() {
+    std::cout << "\n=== FleetMoraleRes: Missing ===" << std::endl;
+    ecs::World world;
+    systems::FleetMoraleResolutionSystem sys(&world);
+    assertTrue(!sys.initializeFleet("nonexistent"), "Init fails on missing entity");
+    assertTrue(!sys.triggerCrisis("nonexistent"), "Trigger fails on missing");
+    assertTrue(!sys.resolveWithMethod("nonexistent", "Compromise"), "Resolve fails on missing");
+    assertTrue(!sys.adjustMorale("nonexistent", 10.0f), "Adjust fails on missing");
+    assertTrue(!sys.setIdeologyAlignment("nonexistent", 0.5f), "Set ideology fails on missing");
+    assertTrue(approxEqual(sys.getFleetMorale("nonexistent"), 0.0f), "0 morale on missing");
+    assertTrue(!sys.isCrisisActive("nonexistent"), "No crisis on missing");
+    assertTrue(sys.getDepartures("nonexistent") == 0, "0 departures on missing");
+    assertTrue(sys.getResolutionCount("nonexistent") == 0, "0 resolutions on missing");
+}
+
+// ===== PersistenceDelta System Tests =====
+
+void testPersistenceDeltaCreate() {
+    std::cout << "\n=== PersistenceDelta: Create ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    assertTrue(sys.initializeTracker("player1"), "Init tracker succeeds");
+    assertTrue(sys.getActionCount("player1") == 0, "Initial action count is 0");
+    assertTrue(sys.getEntryCount("player1") == 0, "Initial entry count is 0");
+    assertTrue(approxEqual(sys.getTotalImpact("player1"), 0.0f), "Initial total impact is 0");
+    assertTrue(!sys.isConsequenceTriggered("player1"), "No consequence initially");
+}
+
+void testPersistenceDeltaRecord() {
+    std::cout << "\n=== PersistenceDelta: Record ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    assertTrue(sys.recordAction("player1", "act1", "Combat", 5.0f, 0.1f, false), "Record action");
+    assertTrue(sys.getActionCount("player1") == 1, "Action count is 1");
+    assertTrue(sys.getEntryCount("player1") == 1, "Entry count is 1");
+    assertTrue(approxEqual(sys.getTotalImpact("player1"), 5.0f), "Total impact is 5");
+    assertTrue(approxEqual(sys.getPositiveImpact("player1"), 5.0f), "Positive impact is 5");
+}
+
+void testPersistenceDeltaNegative() {
+    std::cout << "\n=== PersistenceDelta: Negative ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    assertTrue(sys.recordAction("player1", "crime1", "Crime", -8.0f, 0.1f, false), "Record negative");
+    assertTrue(approxEqual(sys.getNegativeImpact("player1"), -8.0f), "Negative impact is -8");
+    assertTrue(approxEqual(sys.getTotalImpact("player1"), -8.0f), "Total impact is -8");
+}
+
+void testPersistenceDeltaCategory() {
+    std::cout << "\n=== PersistenceDelta: Category ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    sys.recordAction("player1", "a1", "Combat", 3.0f, 0.1f, false);
+    sys.recordAction("player1", "a2", "Trade", 7.0f, 0.1f, false);
+    sys.recordAction("player1", "a3", "Combat", 2.0f, 0.1f, false);
+    assertTrue(approxEqual(sys.getCategoryImpact("player1", "Combat"), 5.0f), "Combat impact is 5");
+    assertTrue(approxEqual(sys.getCategoryImpact("player1", "Trade"), 7.0f), "Trade impact is 7");
+    assertTrue(approxEqual(sys.getCategoryImpact("player1", "Diplomacy"), 0.0f), "Diplomacy impact is 0");
+}
+
+void testPersistenceDeltaDecay() {
+    std::cout << "\n=== PersistenceDelta: Decay ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    sys.recordAction("player1", "a1", "Combat", 1.0f, 1.0f, false); // decays at 1.0/s
+    sys.update(0.5f); // magnitude: 1.0 - 0.5 = 0.5
+    assertTrue(approxEqual(sys.getTotalImpact("player1"), 0.5f), "Impact decayed to 0.5");
+    sys.update(0.5f); // magnitude: 0.5 - 0.5 = 0.0 => removed
+    assertTrue(sys.getEntryCount("player1") == 0, "Entry removed after full decay");
+}
+
+void testPersistenceDeltaPermanent() {
+    std::cout << "\n=== PersistenceDelta: Permanent ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    sys.recordAction("player1", "a1", "Diplomacy", 5.0f, 1.0f, true);
+    sys.update(10.0f); // permanent entries don't decay
+    assertTrue(approxEqual(sys.getTotalImpact("player1"), 5.0f), "Permanent entry unchanged");
+    assertTrue(sys.getEntryCount("player1") == 1, "Permanent entry still exists");
+}
+
+void testPersistenceDeltaConsequence() {
+    std::cout << "\n=== PersistenceDelta: Consequence ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    sys.recordAction("player1", "a1", "Crime", -12.0f, 0.0f, true);
+    sys.update(0.0f);
+    assertTrue(sys.isConsequenceTriggered("player1"), "Consequence triggered at -12 (threshold 10)");
+}
+
+void testPersistenceDeltaClear() {
+    std::cout << "\n=== PersistenceDelta: Clear ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    sys.recordAction("player1", "a1", "Combat", 15.0f, 0.0f, true);
+    sys.update(0.0f);
+    assertTrue(sys.isConsequenceTriggered("player1"), "Consequence triggered");
+    assertTrue(sys.clearConsequence("player1"), "Clear consequence succeeds");
+    assertTrue(!sys.isConsequenceTriggered("player1"), "Consequence cleared");
+}
+
+void testPersistenceDeltaMaxEntries() {
+    std::cout << "\n=== PersistenceDelta: MaxEntries ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    world.createEntity("player1");
+    sys.initializeTracker("player1");
+    // Record 105 actions (max is 100)
+    for (int i = 0; i < 105; i++) {
+        sys.recordAction("player1", "a" + std::to_string(i), "Combat", 1.0f, 0.0f, true);
+    }
+    assertTrue(sys.getEntryCount("player1") <= 100, "Entries capped at max_entries");
+    assertTrue(sys.getActionCount("player1") == 105, "Action count tracks all recordings");
+}
+
+void testPersistenceDeltaMissing() {
+    std::cout << "\n=== PersistenceDelta: Missing ===" << std::endl;
+    ecs::World world;
+    systems::PersistenceDeltaSystem sys(&world);
+    assertTrue(!sys.initializeTracker("nonexistent"), "Init fails on missing entity");
+    assertTrue(!sys.recordAction("nonexistent", "a1", "Combat", 1.0f, 0.1f, false), "Record fails on missing");
+    assertTrue(approxEqual(sys.getTotalImpact("nonexistent"), 0.0f), "0 impact on missing");
+    assertTrue(approxEqual(sys.getCategoryImpact("nonexistent", "Combat"), 0.0f), "0 category on missing");
+    assertTrue(sys.getActionCount("nonexistent") == 0, "0 actions on missing");
+    assertTrue(!sys.isConsequenceTriggered("nonexistent"), "No consequence on missing");
+    assertTrue(!sys.clearConsequence("nonexistent"), "Clear fails on missing");
+    assertTrue(sys.getEntryCount("nonexistent") == 0, "0 entries on missing");
+    assertTrue(approxEqual(sys.getPositiveImpact("nonexistent"), 0.0f), "0 positive on missing");
+    assertTrue(approxEqual(sys.getNegativeImpact("nonexistent"), 0.0f), "0 negative on missing");
+}
+
+// ===== OuterRimLogisticsDistortion System Tests =====
+
+void testOuterRimCreate() {
+    std::cout << "\n=== OuterRim: Create ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    assertTrue(sys.initializeRegion("region1", "outer_rim_alpha"), "Init region succeeds");
+    assertTrue(approxEqual(sys.getGlobalThreat("region1"), 0.0f), "Initial threat is 0");
+    assertTrue(sys.getRouteCount("region1") == 0, "No routes initially");
+    assertTrue(sys.getDisruptedRouteCount("region1") == 0, "No disrupted routes");
+    assertTrue(approxEqual(sys.getTotalPriceImpact("region1"), 0.0f), "No price impact");
+}
+
+void testOuterRimAddRoute() {
+    std::cout << "\n=== OuterRim: AddRoute ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    assertTrue(sys.addRoute("region1", "route_a"), "Add route succeeds");
+    assertTrue(sys.getRouteCount("region1") == 1, "Route count is 1");
+    assertTrue(approxEqual(sys.getRouteEfficiency("region1", "route_a"), 1.0f), "Default efficiency is 1.0");
+    assertTrue(!sys.addRoute("region1", "route_a"), "Duplicate route fails");
+}
+
+void testOuterRimGlobalThreat() {
+    std::cout << "\n=== OuterRim: GlobalThreat ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    assertTrue(sys.setGlobalThreat("region1", 0.6f), "Set global threat");
+    assertTrue(approxEqual(sys.getGlobalThreat("region1"), 0.6f), "Threat is 0.6");
+    assertTrue(sys.setGlobalThreat("region1", 2.0f), "Set threat past max");
+    assertTrue(approxEqual(sys.getGlobalThreat("region1"), 1.0f), "Threat clamped at 1.0");
+    assertTrue(sys.setGlobalThreat("region1", -1.0f), "Set threat below min");
+    assertTrue(approxEqual(sys.getGlobalThreat("region1"), 0.0f), "Threat clamped at 0.0");
+}
+
+void testOuterRimRouteThreat() {
+    std::cout << "\n=== OuterRim: RouteThreat ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    sys.addRoute("region1", "route_a");
+    assertTrue(sys.setRouteThreat("region1", "route_a", 0.4f), "Set route threat");
+    assertTrue(!sys.setRouteThreat("region1", "route_missing", 0.5f), "Set threat on missing route fails");
+}
+
+void testOuterRimUpdateDistortion() {
+    std::cout << "\n=== OuterRim: UpdateDistortion ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    sys.addRoute("region1", "route_a");
+    sys.setGlobalThreat("region1", 0.8f);
+    sys.update(1.0f);
+    // target_efficiency = 1.0 - (0.8 * 0.5) = 0.6, distortion is instant downward
+    assertTrue(approxEqual(sys.getRouteEfficiency("region1", "route_a"), 0.6f), "Efficiency dropped to 0.6");
+}
+
+void testOuterRimPriceImpact() {
+    std::cout << "\n=== OuterRim: PriceImpact ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    sys.addRoute("region1", "route_a");
+    sys.setGlobalThreat("region1", 0.8f);
+    sys.update(1.0f);
+    // price_impact = (1.0 - 0.6) * 2.0 = 0.8
+    assertTrue(approxEqual(sys.getRoutePriceImpact("region1", "route_a"), 0.8f), "Price impact is 0.8");
+    assertTrue(approxEqual(sys.getTotalPriceImpact("region1"), 0.8f), "Total price impact is 0.8");
+}
+
+void testOuterRimRecovery() {
+    std::cout << "\n=== OuterRim: Recovery ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    sys.addRoute("region1", "route_a");
+    sys.setGlobalThreat("region1", 0.8f);
+    sys.update(1.0f); // efficiency drops to 0.6
+    sys.setGlobalThreat("region1", 0.0f);
+    sys.update(1.0f); // recovery: 0.6 + 0.05*1.0 = 0.65
+    float eff = sys.getRouteEfficiency("region1", "route_a");
+    assertTrue(approxEqual(eff, 0.65f), "Efficiency recovering toward 1.0");
+}
+
+void testOuterRimDisruptedCount() {
+    std::cout << "\n=== OuterRim: DisruptedCount ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    sys.addRoute("region1", "route_a");
+    sys.addRoute("region1", "route_b");
+    sys.setGlobalThreat("region1", 0.8f);
+    sys.update(1.0f);
+    // Both routes at 0.6 efficiency (< 0.8 threshold)
+    assertTrue(sys.getDisruptedRouteCount("region1") == 2, "2 disrupted routes");
+}
+
+void testOuterRimMaxRoutes() {
+    std::cout << "\n=== OuterRim: MaxRoutes ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    world.createEntity("region1");
+    sys.initializeRegion("region1", "outer_rim_alpha");
+    for (int i = 0; i < 55; i++) {
+        sys.addRoute("region1", "route_" + std::to_string(i));
+    }
+    assertTrue(sys.getRouteCount("region1") == 50, "Routes capped at max_routes");
+}
+
+void testOuterRimMissing() {
+    std::cout << "\n=== OuterRim: Missing ===" << std::endl;
+    ecs::World world;
+    systems::OuterRimLogisticsDistortionSystem sys(&world);
+    assertTrue(!sys.initializeRegion("nonexistent", "r1"), "Init fails on missing entity");
+    assertTrue(!sys.addRoute("nonexistent", "route_a"), "Add route fails on missing");
+    assertTrue(!sys.setGlobalThreat("nonexistent", 0.5f), "Set threat fails on missing");
+    assertTrue(!sys.setRouteThreat("nonexistent", "route_a", 0.5f), "Set route threat fails on missing");
+    assertTrue(approxEqual(sys.getRouteEfficiency("nonexistent", "route_a"), 0.0f), "0 efficiency on missing");
+    assertTrue(approxEqual(sys.getGlobalThreat("nonexistent"), 0.0f), "0 threat on missing");
+    assertTrue(sys.getRouteCount("nonexistent") == 0, "0 routes on missing");
+    assertTrue(sys.getDisruptedRouteCount("nonexistent") == 0, "0 disrupted on missing");
+    assertTrue(approxEqual(sys.getTotalPriceImpact("nonexistent"), 0.0f), "0 price impact on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -32908,6 +33313,42 @@ int main() {
     testDynamicEventCancel();
     testDynamicEventMaxConcurrent();
     testDynamicEventMissing();
+
+    // FleetMoraleResolution System tests
+    testFleetMoraleResCreate();
+    testFleetMoraleResCrisis();
+    testFleetMoraleResResolve();
+    testFleetMoraleResAdjust();
+    testFleetMoraleResIdeology();
+    testFleetMoraleResRecovery();
+    testFleetMoraleResAutoFracture();
+    testFleetMoraleResDeparture();
+    testFleetMoraleResMultiple();
+    testFleetMoraleResMissing();
+
+    // PersistenceDelta System tests
+    testPersistenceDeltaCreate();
+    testPersistenceDeltaRecord();
+    testPersistenceDeltaNegative();
+    testPersistenceDeltaCategory();
+    testPersistenceDeltaDecay();
+    testPersistenceDeltaPermanent();
+    testPersistenceDeltaConsequence();
+    testPersistenceDeltaClear();
+    testPersistenceDeltaMaxEntries();
+    testPersistenceDeltaMissing();
+
+    // OuterRimLogisticsDistortion System tests
+    testOuterRimCreate();
+    testOuterRimAddRoute();
+    testOuterRimGlobalThreat();
+    testOuterRimRouteThreat();
+    testOuterRimUpdateDistortion();
+    testOuterRimPriceImpact();
+    testOuterRimRecovery();
+    testOuterRimDisruptedCount();
+    testOuterRimMaxRoutes();
+    testOuterRimMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
