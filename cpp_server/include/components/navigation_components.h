@@ -315,6 +315,81 @@ public:
     COMPONENT_TYPE(JumpDriveState)
 };
 
+// ==================== Space-Planet Transition System (Phase 14) ====================
+
+/**
+ * @brief Seamless zoom from orbit to surface with multi-phase transition state machine
+ *
+ * Tracks a multi-phase descent/launch sequence between space and a planetary surface,
+ * including atmospheric heating, gravity changes, and autopilot control.
+ */
+class SpacePlanetTransition : public ecs::Component {
+public:
+    enum class TransitionState {
+        InSpace,
+        OrbitEntry,
+        AtmosphereEntry,
+        DescentPhase,
+        LandingApproach,
+        Landed,
+        LaunchSequence,
+        AtmosphereExit,
+        OrbitExit
+    };
+
+    std::string entity_id;
+    std::string planet_id;
+    TransitionState transition_state = TransitionState::InSpace;
+    float progress = 0.0f;              // 0-1 within current phase
+    float altitude = 1000.0f;           // km, starts high
+    float speed = 0.0f;
+    float target_landing_x = 0.0f;
+    float target_landing_y = 0.0f;
+    float current_phase_time = 0.0f;
+    float total_transition_time = 0.0f;
+    bool has_atmosphere = false;
+    float atmosphere_density = 0.0f;    // 0-1
+    float heat_buildup = 0.0f;          // atmospheric entry heating
+    float max_heat_tolerance = 100.0f;
+    float hull_stress = 0.0f;
+    float gravity_factor = 0.0f;
+    bool is_autopilot = false;
+
+    bool isInTransition() const {
+        return transition_state != TransitionState::InSpace &&
+               transition_state != TransitionState::Landed;
+    }
+
+    bool isLanded() const {
+        return transition_state == TransitionState::Landed;
+    }
+
+    bool isInSpace() const {
+        return transition_state == TransitionState::InSpace;
+    }
+
+    static std::string stateToString(TransitionState s) {
+        switch (s) {
+            case TransitionState::InSpace: return "in_space";
+            case TransitionState::OrbitEntry: return "orbit_entry";
+            case TransitionState::AtmosphereEntry: return "atmosphere_entry";
+            case TransitionState::DescentPhase: return "descent_phase";
+            case TransitionState::LandingApproach: return "landing_approach";
+            case TransitionState::Landed: return "landed";
+            case TransitionState::LaunchSequence: return "launch_sequence";
+            case TransitionState::AtmosphereExit: return "atmosphere_exit";
+            case TransitionState::OrbitExit: return "orbit_exit";
+            default: return "unknown";
+        }
+    }
+
+    static float getGravityForAltitude(float alt) {
+        return 1.0f / (1.0f + alt * 0.001f);
+    }
+
+    COMPONENT_TYPE(SpacePlanetTransition)
+};
+
 } // namespace components
 } // namespace atlas
 

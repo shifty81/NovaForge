@@ -193,6 +193,9 @@ set(SERVER_SOURCES
     src/systems/docking_ring_extension_system.cpp
     src/systems/rover_bay_ramp_system.cpp
     src/systems/grid_construction_system.cpp
+    src/systems/space_planet_transition_system.cpp
+    src/systems/fleet_hangar_system.cpp
+    src/systems/hangar_environment_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -392,6 +395,9 @@ set(SERVER_HEADERS
     include/systems/captain_background_system.h
     include/systems/warp_performance_budget_system.h
     include/systems/fleet_positional_audio_system.h
+    include/systems/space_planet_transition_system.h
+    include/systems/fleet_hangar_system.h
+    include/systems/hangar_environment_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -667,6 +673,9 @@ if(BUILD_TESTS)
         src/systems/docking_ring_extension_system.cpp
         src/systems/rover_bay_ramp_system.cpp
         src/systems/grid_construction_system.cpp
+        src/systems/space_planet_transition_system.cpp
+        src/systems/fleet_hangar_system.cpp
+        src/systems/hangar_environment_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp

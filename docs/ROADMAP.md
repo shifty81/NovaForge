@@ -1325,13 +1325,13 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Planet resources** — Procedural resource distribution with scan-to-reveal hidden deposits — PlanetResource with abundance, depth, requires_scan
 - [x] **Surface & underground POIs** — Mining outposts, ruins, alien caves — surface_poi_count, underground_poi_count
 - [x] **Planet terrain generation** — Noise-based surface with mineable regions — TerrainGenerator with 8 biomes, heightmap grid, resource deposits, landing zone detection (7 tests)
-- [ ] **Space → planet transition** — Seamless zoom from orbit to surface
+- [x] **Space → planet transition** — Seamless zoom from orbit to surface — SpacePlanetTransition component + SpacePlanetTransitionSystem with 9-state transition (InSpace→OrbitEntry→AtmosphereEntry→DescentPhase→LandingApproach→Landed→LaunchSequence→AtmosphereExit→OrbitExit), altitude tracking, atmospheric heating, gravity calculation, autopilot, abort support (10 tests)
 - [x] **Terraforming** — Long-term planet modification with 5 stages (Planning→Infrastructure→AtmosphereProcessing→TemperatureRegulation→BiomeSeeding→Complete), target environment parameters, pause/resume/cancel — Terraforming component + TerraformingSystem (10 tests)
 
 #### Rover System
 - [x] **Procedural rovers** — Modular vehicle with cargo, mining laser, scanner, weapons — RoverSystem (existing) with deploy/dock/cargo
 - [x] **Rover interior** — Rig locker, equipment mount, scannable rooms — RoverInterior component + RoverInteriorSystem with multi-room layouts (Cockpit/CargoHold/RigLocker/EquipmentBay/Scanner/Airlock), equipment slots, pressurization, volume calculation (9 tests)
-- [ ] **Environmental hazard** — Open hangar in unsafe environment damages unsuited players
+- [x] **Environmental hazard** — Open hangar in unsafe environment damages unsuited players — HangarEnvironment component + HangarEnvironmentSystem with 5 atmosphere types (None/Breathable/Toxic/Corrosive/Extreme), toxicity/corrosion tracking, occupant damage with suit protection, alarm system, pressure management, recovery when closed (10 tests)
 - [x] **Rover bay ramp** — Belly hangar on ships for rover deployment — RoverBayRamp component + RoverBayRampSystem with 4-state ramp, rover store/deploy/retrieve, atmosphere safety (10 tests)
 
 #### Grav Bike System
@@ -1342,7 +1342,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### Habitat System
 - [x] **Multi-level habitats** — Procedural generation with 12 module types — HabitatGenerator with power balance tracking (3 tests)
 - [x] **Snappable grid construction** — Build mode with module placement — GridConstruction component + GridConstructionSystem with 8 module types, power network propagation, structural integrity calculation, adjacency validation (10 tests)
-- [ ] **Fleet-scale hangars** — Large enough for full fleet once upgraded
+- [x] **Fleet-scale hangars** — Large enough for full fleet once upgraded — FleetHangar component + FleetHangarSystem with 5-tier upgrade system (5/10/20/35/50 ship slots), dock/undock/lock/unlock, ship repair, power management, maintenance cost accrual (10 tests)
 - [x] **Farming & solar decks** — Top floor modules for energy and food production — FarmingDeck + SolarPanel components + FarmingDeckSystem (crop lifecycle, 10 tests) + SolarPanelSystem (day/night cycle energy, 10 tests)
 
 ---

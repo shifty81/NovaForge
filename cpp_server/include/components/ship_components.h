@@ -676,6 +676,120 @@ public:
     COMPONENT_TYPE(RoverBayRamp)
 };
 
+// ==================== Fleet Hangar System (Phase 14) ====================
+
+/**
+ * @brief Fleet-scale hangars large enough for full fleet once upgraded
+ *
+ * Manages tiered hangar bays with ship storage, locking, repair, and
+ * power-dependent maintenance costs.
+ */
+class FleetHangar : public ecs::Component {
+public:
+    struct StoredShip {
+        std::string ship_id;
+        std::string ship_class;
+        float hull_integrity = 100.0f;
+        bool is_locked = false;
+    };
+
+    std::string owner_entity_id;
+    std::string hangar_name;
+    int tier = 1;                           // 1-5
+    int max_ship_slots = 5;                 // depends on tier
+    std::vector<StoredShip> current_ships;
+    double upgrade_cost = 1000.0;           // doubles per tier
+    bool is_powered = true;
+    float power_consumption = 10.0f;
+    float total_cargo_capacity = 1000.0f;
+    float used_cargo = 0.0f;
+    float maintenance_cost_per_tick = 1.0f;
+    double total_maintenance_paid = 0.0;
+    int total_ships_docked = 0;
+
+    static int getMaxSlotsForTier(int t) {
+        switch (t) {
+            case 1: return 5;
+            case 2: return 10;
+            case 3: return 20;
+            case 4: return 35;
+            case 5: return 50;
+            default: return 5;
+        }
+    }
+
+    static double getUpgradeCostForTier(int t) {
+        return 1000.0 * std::pow(2.0, std::max(1, t) - 1);
+    }
+
+    static std::string tierToString(int t) {
+        switch (t) {
+            case 1: return "tier_1";
+            case 2: return "tier_2";
+            case 3: return "tier_3";
+            case 4: return "tier_4";
+            case 5: return "tier_5";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(FleetHangar)
+};
+
+// ==================== Hangar Environment System (Phase 14) ====================
+
+/**
+ * @brief Open hangar in unsafe environment damages unsuited players
+ *
+ * Tracks atmospheric mixing, toxicity, corrosion, and occupant damage
+ * when a hangar is opened in hazardous environments.
+ */
+class HangarEnvironment : public ecs::Component {
+public:
+    enum class AtmosphereType {
+        None,
+        Breathable,
+        Toxic,
+        Corrosive,
+        Extreme
+    };
+
+    struct OccupantInfo {
+        std::string entity_id;
+        bool has_suit = false;
+        float suit_rating = 0.0f;       // 0-1, reduces damage taken
+    };
+
+    std::string hangar_entity_id;
+    bool is_hangar_open = false;
+    AtmosphereType atmosphere_type = AtmosphereType::Breathable;
+    float external_temperature = 22.0f;
+    float external_pressure = 1.0f;
+    float internal_temperature = 22.0f;
+    float internal_pressure = 1.0f;
+    float atmosphere_mix_rate = 0.1f;   // how fast external atmosphere enters when open
+    float current_toxicity = 0.0f;      // 0-1
+    float current_corrosion = 0.0f;     // 0-1
+    float current_heat_damage_rate = 0.0f;
+    float damage_per_tick = 10.0f;
+    std::vector<OccupantInfo> occupants;
+    float total_exposure_time = 0.0f;
+    bool is_alarm_active = false;
+
+    static std::string atmosphereTypeToString(AtmosphereType a) {
+        switch (a) {
+            case AtmosphereType::None: return "none";
+            case AtmosphereType::Breathable: return "breathable";
+            case AtmosphereType::Toxic: return "toxic";
+            case AtmosphereType::Corrosive: return "corrosive";
+            case AtmosphereType::Extreme: return "extreme";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(HangarEnvironment)
+};
+
 } // namespace components
 } // namespace atlas
 
