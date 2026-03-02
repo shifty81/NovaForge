@@ -66,9 +66,9 @@ std::string DatabasePersistenceSystem::read(const std::string& entity_id,
     auto* db = entity->getComponent<components::DatabasePersistence>();
     if (!db) return "";
 
-    db->total_reads++;
     auto it = db->store.find(key);
     if (it != db->store.end()) {
+        db->total_reads++;
         return it->second;
     }
     return "";

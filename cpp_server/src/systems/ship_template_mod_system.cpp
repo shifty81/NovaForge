@@ -3,6 +3,7 @@
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <algorithm>
+#include <unordered_map>
 
 namespace atlas {
 namespace systems {
@@ -13,27 +14,34 @@ ShipTemplateModSystem::ShipTemplateModSystem(ecs::World* world)
 
 void ShipTemplateModSystem::update(float delta_time) {
     auto entities = world_->getEntities<components::ShipTemplateMod>();
+
+    // Build lookup map for base template inheritance (O(n) instead of O(n²))
+    std::unordered_map<std::string, components::ShipTemplateMod*> template_lookup;
+    for (auto* entity : entities) {
+        auto* mod = entity->getComponent<components::ShipTemplateMod>();
+        if (mod && !mod->template_id.empty()) {
+            template_lookup[mod->template_id] = mod;
+        }
+    }
+
     for (auto* entity : entities) {
         auto* mod = entity->getComponent<components::ShipTemplateMod>();
         if (!mod) continue;
 
         // Inherit from base template if needed
         if (!mod->base_template_id.empty() && mod->needs_inheritance) {
-            auto allEntities = world_->getEntities<components::ShipTemplateMod>();
-            for (auto* baseEntity : allEntities) {
-                auto* baseMod = baseEntity->getComponent<components::ShipTemplateMod>();
-                if (baseMod && baseMod->template_id == mod->base_template_id) {
-                    mod->hull_hp = baseMod->hull_hp;
-                    mod->shield_hp = baseMod->shield_hp;
-                    mod->armor_hp = baseMod->armor_hp;
-                    mod->max_velocity = baseMod->max_velocity;
-                    mod->agility = baseMod->agility;
-                    mod->high_slots = baseMod->high_slots;
-                    mod->mid_slots = baseMod->mid_slots;
-                    mod->low_slots = baseMod->low_slots;
-                    mod->needs_inheritance = false;
-                    break;
-                }
+            auto it = template_lookup.find(mod->base_template_id);
+            if (it != template_lookup.end()) {
+                auto* baseMod = it->second;
+                mod->hull_hp = baseMod->hull_hp;
+                mod->shield_hp = baseMod->shield_hp;
+                mod->armor_hp = baseMod->armor_hp;
+                mod->max_velocity = baseMod->max_velocity;
+                mod->agility = baseMod->agility;
+                mod->high_slots = baseMod->high_slots;
+                mod->mid_slots = baseMod->mid_slots;
+                mod->low_slots = baseMod->low_slots;
+                mod->needs_inheritance = false;
             }
         }
 
