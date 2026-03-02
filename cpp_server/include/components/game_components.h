@@ -102,6 +102,44 @@ public:
     COMPONENT_TYPE(ServerPerformanceMetrics)
 };
 
+// ==================== Entity Stress Test ====================
+
+/**
+ * @brief Stress test metrics for 500+ entity performance validation
+ *
+ * Tracks entity creation timing, per-tick performance, query latency,
+ * and whether the system stays within the 20Hz tick budget threshold.
+ */
+class EntityStressTest : public ecs::Component {
+public:
+    enum class StressPhase {
+        Idle,
+        Creating,
+        Running,
+        Complete
+    };
+
+    std::string test_id;
+    std::string server_id;
+    int entity_count = 0;
+    int target_count = 500;
+
+    std::vector<float> tick_times;
+    float avg_tick_ms = 0.0f;
+    float max_tick_ms = 0.0f;
+
+    int queries_per_tick = 0;
+    float avg_query_us = 0.0f;
+
+    float entity_creation_time_ms = 0.0f;
+    bool passed_threshold = false;
+    float threshold_ms = 50.0f;  // 50ms = 20Hz tick budget
+
+    StressPhase stress_phase = StressPhase::Idle;
+
+    COMPONENT_TYPE(EntityStressTest)
+};
+
 } // namespace components
 } // namespace atlas
 

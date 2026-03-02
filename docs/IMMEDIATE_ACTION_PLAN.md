@@ -125,9 +125,9 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 - [x] Design retained-mode window framework
 - [x] Implement DockNode tree (split/leaf nodes)
 - [x] Add window docking/undocking
-- [ ] Port existing panels to Atlas UI (inventory, fitting, market)
-- [ ] Add keyboard-first navigation
-- [ ] Implement data binding (observer pattern)
+- [x] Port existing panels to Atlas UI (inventory, fitting, market)
+- [x] Add keyboard-first navigation
+- [x] Implement data binding (observer pattern)
 
 **Success Criteria**:
 - All game UI uses custom Atlas UI system
@@ -176,7 +176,7 @@ All 27 baseline server systems are complete with 832/832 tests passing. The proj
 - [x] Identify hot paths (likely entity queries)
 - [x] Add spatial partitioning (grid or quadtree)
 - [x] Optimize frequent queries (targeting, nearby entities)
-- [ ] Test with 500+ entities
+- [x] Test with 500+ entities
 
 **Success Criteria**:
 - Server maintains 20 Hz tick rate with 500 entities

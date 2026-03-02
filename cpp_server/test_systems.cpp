@@ -197,6 +197,10 @@
 #include "systems/dock_node_layout_system.h"
 #include "systems/mission_consequence_system.h"
 #include "systems/server_performance_monitor_system.h"
+#include "systems/atlas_ui_panel_system.h"
+#include "systems/keyboard_navigation_system.h"
+#include "systems/data_binding_system.h"
+#include "systems/entity_stress_test_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -27257,6 +27261,491 @@ void testPerfMonitorMissing() {
     assertTrue(sys.getSlowestSystem("nonexistent").empty(), "Empty slowest on missing");
 }
 
+// ==================== AtlasUIPanel Tests ====================
+
+void testUIPanelInit() {
+    std::cout << "\n=== AtlasUIPanel: Init ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    assertTrue(sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Inventory), "Panel initialized");
+    assertTrue(sys.getPanelType("panel_1") == "Inventory", "Panel type is Inventory");
+    assertTrue(!sys.isOpen("panel_1"), "Panel closed by default");
+    assertTrue(!sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Inventory), "Duplicate init fails");
+}
+
+void testUIPanelOpenClose() {
+    std::cout << "\n=== AtlasUIPanel: Open/Close ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Market);
+    assertTrue(sys.openPanel("panel_1"), "Panel opened");
+    assertTrue(sys.isOpen("panel_1"), "Panel is open");
+    assertTrue(sys.closePanel("panel_1"), "Panel closed");
+    assertTrue(!sys.isOpen("panel_1"), "Panel is closed");
+}
+
+void testUIPanelToggle() {
+    std::cout << "\n=== AtlasUIPanel: Toggle ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Fitting);
+    assertTrue(sys.togglePanel("panel_1"), "Toggle succeeds");
+    assertTrue(sys.isOpen("panel_1"), "Panel is open after toggle");
+    assertTrue(sys.togglePanel("panel_1"), "Toggle again succeeds");
+    assertTrue(!sys.isOpen("panel_1"), "Panel is closed after toggle");
+}
+
+void testUIPanelAddItem() {
+    std::cout << "\n=== AtlasUIPanel: Add Item ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Inventory);
+    assertTrue(sys.addItem("panel_1", "item_1", "Tritanium", 100, 5.0f), "Item added");
+    assertTrue(sys.getItemCount("panel_1") == 1, "Item count is 1");
+    assertTrue(!sys.addItem("panel_1", "item_1", "Tritanium", 100, 5.0f), "Duplicate item fails");
+}
+
+void testUIPanelRemoveItem() {
+    std::cout << "\n=== AtlasUIPanel: Remove Item ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Inventory);
+    sys.addItem("panel_1", "item_1", "Pyerite", 50, 10.0f);
+    assertTrue(sys.removeItem("panel_1", "item_1"), "Item removed");
+    assertTrue(sys.getItemCount("panel_1") == 0, "Item count is 0");
+    assertTrue(!sys.removeItem("panel_1", "item_1"), "Double remove fails");
+}
+
+void testUIPanelFilter() {
+    std::cout << "\n=== AtlasUIPanel: Filter ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Market);
+    assertTrue(sys.setFilter("panel_1", "ore"), "Filter set");
+    assertTrue(sys.setFilter("panel_1", ""), "Filter cleared");
+}
+
+void testUIPanelSort() {
+    std::cout << "\n=== AtlasUIPanel: Sort ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Inventory);
+    assertTrue(sys.setSort("panel_1", "name", true), "Sort set ascending");
+    assertTrue(sys.setSort("panel_1", "value", false), "Sort set descending");
+}
+
+void testUIPanelSelect() {
+    std::cout << "\n=== AtlasUIPanel: Select ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    world.createEntity("panel_1");
+    sys.initializePanel("panel_1", "player_1", components::AtlasUIPanel::PanelType::Inventory);
+    sys.addItem("panel_1", "item_1", "Ore", 10, 1.0f);
+    sys.addItem("panel_1", "item_2", "Mineral", 20, 2.0f);
+    assertTrue(sys.selectItem("panel_1", 0), "Selected index 0");
+    assertTrue(sys.selectItem("panel_1", 1), "Selected index 1");
+    assertTrue(!sys.selectItem("panel_1", 5), "Out of range fails");
+}
+
+void testUIPanelTypes() {
+    std::cout << "\n=== AtlasUIPanel: All Types ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    using PT = components::AtlasUIPanel::PanelType;
+    world.createEntity("p1"); sys.initializePanel("p1", "o", PT::Inventory);
+    world.createEntity("p2"); sys.initializePanel("p2", "o", PT::Fitting);
+    world.createEntity("p3"); sys.initializePanel("p3", "o", PT::Market);
+    world.createEntity("p4"); sys.initializePanel("p4", "o", PT::Overview);
+    world.createEntity("p5"); sys.initializePanel("p5", "o", PT::Chat);
+    world.createEntity("p6"); sys.initializePanel("p6", "o", PT::Drone);
+    assertTrue(sys.getPanelType("p1") == "Inventory", "Inventory type");
+    assertTrue(sys.getPanelType("p2") == "Fitting", "Fitting type");
+    assertTrue(sys.getPanelType("p3") == "Market", "Market type");
+    assertTrue(sys.getPanelType("p4") == "Overview", "Overview type");
+    assertTrue(sys.getPanelType("p5") == "Chat", "Chat type");
+    assertTrue(sys.getPanelType("p6") == "Drone", "Drone type");
+}
+
+void testUIPanelMissing() {
+    std::cout << "\n=== AtlasUIPanel: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::AtlasUIPanelSystem sys(&world);
+    assertTrue(!sys.initializePanel("nonexistent", "o", components::AtlasUIPanel::PanelType::Inventory), "Init fails on missing");
+    assertTrue(!sys.isOpen("nonexistent"), "Not open on missing");
+    assertTrue(sys.getItemCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(sys.getPanelType("nonexistent").empty(), "Empty type on missing");
+}
+
+// ==================== KeyboardNavigation Tests ====================
+
+void testKbNavInit() {
+    std::cout << "\n=== KeyboardNavigation: Init ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    assertTrue(sys.initializeNavigation("nav_1", "player_1"), "Navigation initialized");
+    assertTrue(sys.getActivePanel("nav_1").empty(), "No active panel initially");
+    assertTrue(sys.getFocusIndex("nav_1") == 0, "Focus index is 0");
+    assertTrue(!sys.initializeNavigation("nav_1", "player_1"), "Duplicate init fails");
+}
+
+void testKbNavFocus() {
+    std::cout << "\n=== KeyboardNavigation: Focus ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    assertTrue(sys.setFocusPanel("nav_1", "inventory"), "Focus set to inventory");
+    assertTrue(sys.getActivePanel("nav_1") == "inventory", "Active panel is inventory");
+}
+
+void testKbNavMoveFocus() {
+    std::cout << "\n=== KeyboardNavigation: Move Focus ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    auto* entity = world.getEntity("nav_1");
+    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    nav->tab_order = {"inv", "fit", "market"};
+    assertTrue(sys.moveFocus("nav_1", "Down"), "Move down");
+    assertTrue(sys.getFocusIndex("nav_1") == 1, "Focus is 1 after down");
+    assertTrue(sys.moveFocus("nav_1", "Up"), "Move up");
+    assertTrue(sys.getFocusIndex("nav_1") == 0, "Focus is 0 after up");
+}
+
+void testKbNavFocusStack() {
+    std::cout << "\n=== KeyboardNavigation: Focus Stack ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    sys.setFocusPanel("nav_1", "main_menu");
+    assertTrue(sys.pushFocusStack("nav_1", "submenu"), "Push focus stack");
+    assertTrue(sys.getActivePanel("nav_1") == "submenu", "Active is submenu");
+    assertTrue(sys.popFocusStack("nav_1"), "Pop focus stack");
+    assertTrue(sys.getActivePanel("nav_1") == "main_menu", "Active is main_menu again");
+    assertTrue(!sys.popFocusStack("nav_1"), "Pop empty stack fails");
+}
+
+void testKbNavBindKey() {
+    std::cout << "\n=== KeyboardNavigation: Bind Key ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    assertTrue(sys.bindKey("nav_1", "Tab", "next_panel"), "Key bound");
+    assertTrue(sys.bindKey("nav_1", "Escape", "close"), "Escape bound");
+}
+
+void testKbNavModal() {
+    std::cout << "\n=== KeyboardNavigation: Modal ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    assertTrue(!sys.isModal("nav_1"), "Not modal initially");
+    assertTrue(sys.setModal("nav_1", true, "dialog"), "Set modal");
+    assertTrue(sys.isModal("nav_1"), "Is modal after set");
+    assertTrue(sys.setModal("nav_1", false, ""), "Unset modal");
+    assertTrue(!sys.isModal("nav_1"), "Not modal after unset");
+}
+
+void testKbNavKeyInput() {
+    std::cout << "\n=== KeyboardNavigation: Key Input ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    auto* entity = world.getEntity("nav_1");
+    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    nav->tab_order = {"a", "b", "c"};
+    sys.bindKey("nav_1", "j", "move_down");
+    assertTrue(sys.handleKeyInput("nav_1", "j"), "Bound key handled");
+    assertTrue(sys.getFocusIndex("nav_1") == 1, "Focus moved by bound key");
+}
+
+void testKbNavCursorBlink() {
+    std::cout << "\n=== KeyboardNavigation: Cursor Blink ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    auto* entity = world.getEntity("nav_1");
+    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    bool initial = nav->cursor_visible;
+    sys.update(1.0f);
+    assertTrue(nav->cursor_visible != initial, "Cursor toggled after 1s");
+}
+
+void testKbNavInputBuffer() {
+    std::cout << "\n=== KeyboardNavigation: Input Buffer ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    world.createEntity("nav_1");
+    sys.initializeNavigation("nav_1", "player_1");
+    sys.handleKeyInput("nav_1", "a");
+    sys.handleKeyInput("nav_1", "b");
+    auto* entity = world.getEntity("nav_1");
+    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    assertTrue(nav->input_buffer == "ab", "Input buffer has 'ab'");
+}
+
+void testKbNavMissing() {
+    std::cout << "\n=== KeyboardNavigation: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::KeyboardNavigationSystem sys(&world);
+    assertTrue(!sys.initializeNavigation("nonexistent", "o"), "Init fails on missing");
+    assertTrue(sys.getActivePanel("nonexistent").empty(), "Empty panel on missing");
+    assertTrue(sys.getFocusIndex("nonexistent") == 0, "Focus 0 on missing");
+    assertTrue(!sys.isModal("nonexistent"), "Not modal on missing");
+}
+
+// ==================== DataBinding Tests ====================
+
+void testDataBindingInit() {
+    std::cout << "\n=== DataBinding: Init ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    assertTrue(sys.initializeBindings("db_1", "player_1"), "Bindings initialized");
+    assertTrue(sys.getBindingCount("db_1") == 0, "No bindings initially");
+    assertTrue(sys.getObserverCount("db_1") == 0, "No observers initially");
+    assertTrue(!sys.initializeBindings("db_1", "player_1"), "Duplicate init fails");
+}
+
+void testDataBindingAdd() {
+    std::cout << "\n=== DataBinding: Add Binding ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    assertTrue(sys.addBinding("db_1", "b1", "ship.shield", "shield_bar", "percent"), "Binding added");
+    assertTrue(sys.getBindingCount("db_1") == 1, "Binding count is 1");
+    assertTrue(!sys.addBinding("db_1", "b1", "ship.shield", "shield_bar", "percent"), "Duplicate fails");
+}
+
+void testDataBindingRemove() {
+    std::cout << "\n=== DataBinding: Remove Binding ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    sys.addBinding("db_1", "b1", "ship.shield", "shield_bar", "percent");
+    assertTrue(sys.removeBinding("db_1", "b1"), "Binding removed");
+    assertTrue(sys.getBindingCount("db_1") == 0, "Binding count is 0");
+    assertTrue(!sys.removeBinding("db_1", "b1"), "Double remove fails");
+}
+
+void testDataBindingUpdate() {
+    std::cout << "\n=== DataBinding: Update ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    sys.addBinding("db_1", "b1", "ship.hull", "hull_bar", "percent");
+    assertTrue(sys.updateBinding("db_1", "b1", "85"), "Binding updated");
+    assertTrue(sys.getDirtyCount("db_1") == 1, "1 dirty binding");
+}
+
+void testDataBindingObserver() {
+    std::cout << "\n=== DataBinding: Observer ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    assertTrue(sys.addObserver("db_1", "obs_1", "ship.*", "cb_shield"), "Observer added");
+    assertTrue(sys.getObserverCount("db_1") == 1, "Observer count is 1");
+    assertTrue(!sys.addObserver("db_1", "obs_1", "ship.*", "cb_shield"), "Duplicate observer fails");
+}
+
+void testDataBindingRemoveObserver() {
+    std::cout << "\n=== DataBinding: Remove Observer ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    sys.addObserver("db_1", "obs_1", "ship.*", "cb_shield");
+    assertTrue(sys.removeObserver("db_1", "obs_1"), "Observer removed");
+    assertTrue(sys.getObserverCount("db_1") == 0, "Observer count is 0");
+    assertTrue(!sys.removeObserver("db_1", "obs_1"), "Double remove fails");
+}
+
+void testDataBindingNotify() {
+    std::cout << "\n=== DataBinding: Notify ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    sys.addObserver("db_1", "obs_1", "ship.shield", "cb_1");
+    assertTrue(sys.notifyObservers("db_1", "ship.shield"), "Notification queued");
+    assertTrue(sys.processNotifications("db_1"), "Notifications processed");
+}
+
+void testDataBindingDirty() {
+    std::cout << "\n=== DataBinding: Dirty Tracking ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    sys.addBinding("db_1", "b1", "ship.cap", "cap_bar", "percent");
+    assertTrue(sys.getDirtyCount("db_1") == 1, "New binding is dirty");
+    assertTrue(sys.setDirty("db_1", "b1"), "Set dirty succeeds");
+}
+
+void testDataBindingMaxBindings() {
+    std::cout << "\n=== DataBinding: Max Bindings ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    world.createEntity("db_1");
+    sys.initializeBindings("db_1", "player_1");
+    for (int i = 0; i < 50; i++) {
+        sys.addBinding("db_1", "b_" + std::to_string(i), "path", "widget", "func");
+    }
+    assertTrue(sys.getBindingCount("db_1") == 50, "50 bindings added");
+    assertTrue(!sys.addBinding("db_1", "b_overflow", "path", "widget", "func"), "Cannot exceed max bindings");
+}
+
+void testDataBindingMissing() {
+    std::cout << "\n=== DataBinding: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::DataBindingSystem sys(&world);
+    assertTrue(!sys.initializeBindings("nonexistent", "o"), "Init fails on missing");
+    assertTrue(sys.getBindingCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(sys.getObserverCount("nonexistent") == 0, "Observer count 0 on missing");
+    assertTrue(sys.getDirtyCount("nonexistent") == 0, "Dirty 0 on missing");
+}
+
+// ==================== EntityStressTest Tests ====================
+
+void testStressTestInit() {
+    std::cout << "\n=== EntityStressTest: Init ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    assertTrue(sys.initializeStressTest("stress_1", "server_1", 500), "Stress test initialized");
+    assertTrue(sys.getPhase("stress_1") == "Idle", "Phase is Idle");
+    assertTrue(approxEqual(sys.getAverageTickMs("stress_1"), 0.0f), "Avg tick is 0");
+    assertTrue(!sys.initializeStressTest("stress_1", "server_1", 500), "Duplicate init fails");
+}
+
+void testStressTestStart() {
+    std::cout << "\n=== EntityStressTest: Start ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    assertTrue(sys.startTest("stress_1"), "Test started");
+    assertTrue(sys.getPhase("stress_1") == "Creating", "Phase is Creating");
+    assertTrue(!sys.startTest("stress_1"), "Double start fails");
+}
+
+void testStressTestRecordTick() {
+    std::cout << "\n=== EntityStressTest: Record Tick ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    sys.startTest("stress_1");
+    assertTrue(sys.recordTick("stress_1", 10.0f), "Tick recorded");
+    assertTrue(sys.recordTick("stress_1", 20.0f), "Second tick recorded");
+    assertTrue(sys.getAverageTickMs("stress_1") > 0.0f, "Avg tick > 0");
+}
+
+void testStressTestRecordQuery() {
+    std::cout << "\n=== EntityStressTest: Record Query ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    sys.startTest("stress_1");
+    assertTrue(sys.recordQuery("stress_1", 50.0f), "Query recorded");
+    assertTrue(sys.getAverageQueryUs("stress_1") > 0.0f, "Avg query > 0");
+}
+
+void testStressTestEntityCount() {
+    std::cout << "\n=== EntityStressTest: Entity Count ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    sys.startTest("stress_1");
+    assertTrue(sys.setEntityCount("stress_1", 250), "Entity count set to 250");
+    assertTrue(sys.getPhase("stress_1") == "Creating", "Still creating at 250");
+    assertTrue(sys.setEntityCount("stress_1", 500), "Entity count set to 500");
+    assertTrue(sys.getPhase("stress_1") == "Running", "Running at 500");
+}
+
+void testStressTestBudget() {
+    std::cout << "\n=== EntityStressTest: Budget ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    sys.startTest("stress_1");
+    sys.recordTick("stress_1", 10.0f);
+    sys.recordTick("stress_1", 15.0f);
+    sys.recordTick("stress_1", 12.0f);
+    sys.completeTest("stress_1");
+    assertTrue(sys.isWithinBudget("stress_1"), "Within budget at ~12ms avg");
+}
+
+void testStressTestOverBudget() {
+    std::cout << "\n=== EntityStressTest: Over Budget ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    sys.startTest("stress_1");
+    sys.recordTick("stress_1", 60.0f);
+    sys.recordTick("stress_1", 70.0f);
+    sys.completeTest("stress_1");
+    assertTrue(!sys.isWithinBudget("stress_1"), "Over budget at 60-70ms avg");
+}
+
+void testStressTestMaxTick() {
+    std::cout << "\n=== EntityStressTest: Max Tick ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    sys.startTest("stress_1");
+    sys.recordTick("stress_1", 5.0f);
+    sys.recordTick("stress_1", 45.0f);
+    sys.recordTick("stress_1", 10.0f);
+    assertTrue(approxEqual(sys.getMaxTickMs("stress_1"), 45.0f), "Max tick is 45ms");
+}
+
+void testStressTestComplete() {
+    std::cout << "\n=== EntityStressTest: Complete ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    world.createEntity("stress_1");
+    sys.initializeStressTest("stress_1", "server_1", 500);
+    sys.startTest("stress_1");
+    sys.recordTick("stress_1", 20.0f);
+    assertTrue(sys.completeTest("stress_1"), "Test completed");
+    assertTrue(sys.getPhase("stress_1") == "Complete", "Phase is Complete");
+}
+
+void testStressTestMissing() {
+    std::cout << "\n=== EntityStressTest: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::EntityStressTestSystem sys(&world);
+    assertTrue(!sys.initializeStressTest("nonexistent", "s", 500), "Init fails on missing");
+    assertTrue(approxEqual(sys.getAverageTickMs("nonexistent"), 0.0f), "Avg 0 on missing");
+    assertTrue(approxEqual(sys.getMaxTickMs("nonexistent"), 0.0f), "Max 0 on missing");
+    assertTrue(sys.getPhase("nonexistent").empty(), "Empty phase on missing");
+    assertTrue(!sys.isWithinBudget("nonexistent"), "Not within budget on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -29244,6 +29733,54 @@ int main() {
     testPerfMonitorSlowest();
     testPerfMonitorReset();
     testPerfMonitorMissing();
+
+    // AtlasUIPanel System tests
+    testUIPanelInit();
+    testUIPanelOpenClose();
+    testUIPanelToggle();
+    testUIPanelAddItem();
+    testUIPanelRemoveItem();
+    testUIPanelFilter();
+    testUIPanelSort();
+    testUIPanelSelect();
+    testUIPanelTypes();
+    testUIPanelMissing();
+
+    // KeyboardNavigation System tests
+    testKbNavInit();
+    testKbNavFocus();
+    testKbNavMoveFocus();
+    testKbNavFocusStack();
+    testKbNavBindKey();
+    testKbNavModal();
+    testKbNavKeyInput();
+    testKbNavCursorBlink();
+    testKbNavInputBuffer();
+    testKbNavMissing();
+
+    // DataBinding System tests
+    testDataBindingInit();
+    testDataBindingAdd();
+    testDataBindingRemove();
+    testDataBindingUpdate();
+    testDataBindingObserver();
+    testDataBindingRemoveObserver();
+    testDataBindingNotify();
+    testDataBindingDirty();
+    testDataBindingMaxBindings();
+    testDataBindingMissing();
+
+    // EntityStressTest System tests
+    testStressTestInit();
+    testStressTestStart();
+    testStressTestRecordTick();
+    testStressTestRecordQuery();
+    testStressTestEntityCount();
+    testStressTestBudget();
+    testStressTestOverBudget();
+    testStressTestMaxTick();
+    testStressTestComplete();
+    testStressTestMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

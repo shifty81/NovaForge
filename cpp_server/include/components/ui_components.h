@@ -210,6 +210,176 @@ public:
     COMPONENT_TYPE(DockNodeLayout)
 };
 
+// ==================== Atlas UI Panel ====================
+
+/**
+ * @brief UI panel state for inventory, fitting, market, and other panels
+ *
+ * Tracks panel open/close state, position, size, scroll, selection,
+ * filtering, and the items displayed within each panel type.
+ */
+class AtlasUIPanel : public ecs::Component {
+public:
+    enum class PanelType {
+        Inventory,
+        Fitting,
+        Market,
+        Overview,
+        Chat,
+        Drone
+    };
+
+    struct PanelItem {
+        std::string item_id;
+        std::string name;
+        int quantity = 0;
+        float value = 0.0f;
+    };
+
+    std::string panel_id;
+    std::string owner_id;
+    PanelType panel_type = PanelType::Inventory;
+    bool is_open = false;
+    bool is_docked = false;
+
+    float position_x = 0.0f;
+    float position_y = 0.0f;
+    float size_w = 300.0f;
+    float size_h = 400.0f;
+
+    float scroll_offset = 0.0f;
+    int selected_index = -1;
+    std::string filter_text;
+
+    std::vector<PanelItem> items;
+    int max_items = 100;
+
+    std::string sort_field;
+    bool sort_ascending = true;
+
+    PanelItem* findItem(const std::string& item_id) {
+        for (auto& i : items) {
+            if (i.item_id == item_id) return &i;
+        }
+        return nullptr;
+    }
+
+    const PanelItem* findItem(const std::string& item_id) const {
+        for (const auto& i : items) {
+            if (i.item_id == item_id) return &i;
+        }
+        return nullptr;
+    }
+
+    // Returns 1 if this panel is open, 0 otherwise (for aggregation across entities)
+    int countOpenPanels() const {
+        return is_open ? 1 : 0;
+    }
+
+    COMPONENT_TYPE(AtlasUIPanel)
+};
+
+// ==================== Keyboard Navigation ====================
+
+/**
+ * @brief Keyboard-first navigation state for UI panels
+ *
+ * Manages focus tracking, key bindings, tab order, modal state,
+ * and input buffering for keyboard-driven UI navigation.
+ */
+class KeyboardNavigation : public ecs::Component {
+public:
+    std::string nav_id;
+    std::string owner_id;
+    std::string active_panel_id;
+    int focus_index = 0;
+
+    std::vector<std::string> focus_stack;
+    std::map<std::string, std::string> key_bindings;
+    std::vector<std::string> tab_order;
+
+    bool is_modal = false;
+    std::string modal_panel_id;
+    bool cursor_visible = true;
+    float cursor_blink_timer = 0.0f;
+    std::string input_buffer;
+
+    std::string findBinding(const std::string& key) const {
+        auto it = key_bindings.find(key);
+        if (it != key_bindings.end()) return it->second;
+        return "";
+    }
+
+    COMPONENT_TYPE(KeyboardNavigation)
+};
+
+// ==================== Data Binding ====================
+
+/**
+ * @brief Observer-pattern data binding for UI widgets
+ *
+ * Maintains bindings between data sources and UI widgets with
+ * dirty tracking, observer notifications, and transform functions.
+ */
+class DataBinding : public ecs::Component {
+public:
+    struct Binding {
+        std::string binding_id;
+        std::string source_path;
+        std::string target_widget;
+        std::string transform_func;
+        std::string last_value;
+        bool dirty = false;
+    };
+
+    struct Observer {
+        std::string observer_id;
+        std::string pattern;
+        std::string callback_id;
+        bool active = true;
+    };
+
+    std::string binding_id;
+    std::string owner_id;
+
+    std::vector<Binding> bindings;
+    std::vector<Observer> observers;
+    std::vector<std::string> pending_notifications;
+
+    int max_bindings = 50;
+    int total_updates = 0;
+    int total_notifications = 0;
+
+    Binding* findBinding(const std::string& bid) {
+        for (auto& b : bindings) {
+            if (b.binding_id == bid) return &b;
+        }
+        return nullptr;
+    }
+
+    const Binding* findBinding(const std::string& bid) const {
+        for (const auto& b : bindings) {
+            if (b.binding_id == bid) return &b;
+        }
+        return nullptr;
+    }
+
+    Observer* findObserver(const std::string& oid) {
+        for (auto& o : observers) {
+            if (o.observer_id == oid) return &o;
+        }
+        return nullptr;
+    }
+
+    const Observer* findObserver(const std::string& oid) const {
+        for (const auto& o : observers) {
+            if (o.observer_id == oid) return &o;
+        }
+        return nullptr;
+    }
+
+    COMPONENT_TYPE(DataBinding)
+};
 
 } // namespace components
 } // namespace atlas
