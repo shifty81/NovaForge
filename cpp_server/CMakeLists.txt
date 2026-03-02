@@ -203,6 +203,9 @@ set(SERVER_SOURCES
     src/systems/keyboard_navigation_system.cpp
     src/systems/data_binding_system.cpp
     src/systems/entity_stress_test_system.cpp
+    src/systems/rig_locker_system.cpp
+    src/systems/visual_coupling_system.cpp
+    src/systems/fps_salvage_path_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -412,6 +415,9 @@ set(SERVER_HEADERS
     include/systems/keyboard_navigation_system.h
     include/systems/data_binding_system.h
     include/systems/entity_stress_test_system.h
+    include/systems/rig_locker_system.h
+    include/systems/visual_coupling_system.h
+    include/systems/fps_salvage_path_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -697,6 +703,9 @@ if(BUILD_TESTS)
         src/systems/keyboard_navigation_system.cpp
         src/systems/data_binding_system.cpp
         src/systems/entity_stress_test_system.cpp
+        src/systems/rig_locker_system.cpp
+        src/systems/visual_coupling_system.cpp
+        src/systems/fps_salvage_path_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp

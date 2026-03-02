@@ -1265,7 +1265,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Derived stat calculation** — Oxygen, power, cargo, shield, jetpack fuel computed from installed modules — RigSystem with per-module-type stat formulas
 - [x] **Visual rig generation** — PCG shape changes with installed modules, thrusters at bottom — VisualRigState component + VisualRigSystem with thruster config, cargo size, feature detection, weapon/tool mounts, bulk/glow, color customization, trinket attachment (11 tests)
 - [x] **Trinket hooks** — Stickers, bobbleheads, mugs attached to rig — VisualRigSystem trinket attachment with max_trinkets limit
-- [ ] **Rig Locker UI** — Dressing-room 3rd person view, save/load suit presets
+- [x] **Rig Locker UI** — Suit preset management with save/load/equip/rename/favorite, max presets limit, mass calculation — RigLockerPreset component + RigLockerSystem (10 tests)
 
 #### Survival Module
 - [x] **Survival needs** — Oxygen drain, hunger, fatigue with configurable rates — SurvivalNeeds component + SurvivalSystem (4 tests)
@@ -1291,7 +1291,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Salvage sites** — ShipWreck, DerelictStation, Ruins, DebrisField, AncientSite types — SalvageSite component with loot node discovery/looting (5 tests)
 - [x] **Salvage tools** — Cutter, GravGun, Scanner, RepairTool with tier and efficiency — SalvageTool component
 - [x] **Trinket generation** — Procedural trinkets with rare bobbleheads (1/200 chance) — SalvageExplorationSystem::generateTrinkets()
-- [ ] **FPS salvage path** — Cut entry points, EVA exploration, Tarkov-style loot UI
+- [x] **FPS salvage path** — Entry point cutting with timer-based state machine (Sealed→Cutting→Open), room exploration with progress tracking, loot discovery/collection with rarity tiers (Common/Uncommon/Rare/Epic/Legendary) — FPSSalvagePath component + FPSSalvagePathSystem (10 tests)
 - [ ] **Ancient module discovery** — Find repairable ancient tech in ruins
 
 #### Ancient Tech System
@@ -1302,7 +1302,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 #### Interior-Exterior Coupling
 - [x] **Hull deformation tracking** — Interior modules affect exterior appearance — InteriorExteriorLink component with per-module deformation and visibility (3 tests)
-- [ ] **Visual coupling** — Solar panels, ore containers, vents visible on exterior based on interior modules
+- [x] **Visual coupling** — Interior module to exterior feature mapping with 8 feature types (SolarPanel/OreContainer/Vent/Antenna/WeaponMount/ShieldEmitter/EngineBooster/CargoRack), per-entry visibility toggle, offset positioning, auto-update tick, max entries limit — VisualCoupling component + VisualCouplingSystem (10 tests)
 
 #### Ship Interior Layout
 - [x] **Procedural room layout** — Ship class-based room generation (frigate 5 rooms, cruiser 8, battleship 10, capital 12), 10 room types (Bridge, Engineering, CargoHold, CrewQuarters, MedicalBay, Armory, Corridor, Airlock, HangarBay, ScienceLab), corridor connections, airlock exterior links — ShipInteriorLayout component + ShipInteriorLayoutSystem (12 tests)

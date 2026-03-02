@@ -790,6 +790,77 @@ public:
     COMPONENT_TYPE(HangarEnvironment)
 };
 
+// ==================== Visual Coupling ====================
+
+/**
+ * @brief Interior-exterior visual coupling component (Phase 13)
+ *
+ * Maps interior module types to exterior visual markers on the ship hull.
+ * When interior modules are installed, corresponding exterior features
+ * become visible (solar panels, ore containers, vents, antennas, etc).
+ */
+class VisualCoupling : public ecs::Component {
+public:
+    enum class ExteriorFeature {
+        SolarPanel,
+        OreContainer,
+        Vent,
+        Antenna,
+        WeaponMount,
+        ShieldEmitter,
+        EngineBooster,
+        CargoRack
+    };
+
+    struct CouplingEntry {
+        std::string module_id;
+        ExteriorFeature feature;
+        float scale = 1.0f;
+        bool visible = true;
+        float x_offset = 0.0f;
+        float y_offset = 0.0f;
+        float z_offset = 0.0f;
+    };
+
+    std::string ship_id;
+    std::vector<CouplingEntry> entries;
+    int max_entries = 32;
+    bool auto_update = true;
+    int total_updates = 0;
+
+    const CouplingEntry* findEntry(const std::string& module_id) const {
+        for (const auto& e : entries) {
+            if (e.module_id == module_id) return &e;
+        }
+        return nullptr;
+    }
+
+    CouplingEntry* findEntry(const std::string& module_id) {
+        for (auto& e : entries) {
+            if (e.module_id == module_id) return &e;
+        }
+        return nullptr;
+    }
+
+    int visibleCount() const {
+        int count = 0;
+        for (const auto& e : entries) {
+            if (e.visible) count++;
+        }
+        return count;
+    }
+
+    int countByFeature(ExteriorFeature feat) const {
+        int count = 0;
+        for (const auto& e : entries) {
+            if (e.feature == feat) count++;
+        }
+        return count;
+    }
+
+    COMPONENT_TYPE(VisualCoupling)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -201,6 +201,9 @@
 #include "systems/keyboard_navigation_system.h"
 #include "systems/data_binding_system.h"
 #include "systems/entity_stress_test_system.h"
+#include "systems/rig_locker_system.h"
+#include "systems/visual_coupling_system.h"
+#include "systems/fps_salvage_path_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -27746,6 +27749,408 @@ void testStressTestMissing() {
     assertTrue(!sys.isWithinBudget("nonexistent"), "Not within budget on missing");
 }
 
+// ==================== RigLocker Tests ====================
+
+void testRigLockerInit() {
+    std::cout << "\n=== RigLocker: Init ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    assertTrue(sys.initializeLocker("locker_1", "player_1"), "Locker initialized");
+    assertTrue(sys.getPresetCount("locker_1") == 0, "No presets initially");
+    assertTrue(!sys.initializeLocker("locker_1", "player_1"), "Duplicate init fails");
+}
+
+void testRigLockerSave() {
+    std::cout << "\n=== RigLocker: Save Preset ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    std::vector<std::string> modules = {"LifeSupport", "PowerCore", "JetpackTank"};
+    assertTrue(sys.savePreset("locker_1", "Combat Suit", modules), "Preset saved");
+    assertTrue(sys.getPresetCount("locker_1") == 1, "1 preset after save");
+}
+
+void testRigLockerDelete() {
+    std::cout << "\n=== RigLocker: Delete Preset ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    sys.savePreset("locker_1", "Mining Suit", {"Sensor", "CargoPod"});
+    assertTrue(sys.getPresetCount("locker_1") == 1, "1 preset before delete");
+    assertTrue(sys.deletePreset("locker_1", "preset_0"), "Preset deleted");
+    assertTrue(sys.getPresetCount("locker_1") == 0, "0 presets after delete");
+    assertTrue(!sys.deletePreset("locker_1", "preset_0"), "Double delete fails");
+}
+
+void testRigLockerRename() {
+    std::cout << "\n=== RigLocker: Rename Preset ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    sys.savePreset("locker_1", "Old Name", {"PowerCore"});
+    assertTrue(sys.renamePreset("locker_1", "preset_0", "New Name"), "Renamed");
+    assertTrue(!sys.renamePreset("locker_1", "nonexistent", "X"), "Rename nonexistent fails");
+}
+
+void testRigLockerEquip() {
+    std::cout << "\n=== RigLocker: Equip Preset ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    sys.savePreset("locker_1", "EVA Suit", {"LifeSupport", "JetpackTank"});
+    assertTrue(sys.equipPreset("locker_1", "preset_0"), "Preset equipped");
+    assertTrue(sys.getActivePreset("locker_1") == "preset_0", "Active preset matches");
+    assertTrue(!sys.equipPreset("locker_1", "nonexistent"), "Equip nonexistent fails");
+}
+
+void testRigLockerFavorite() {
+    std::cout << "\n=== RigLocker: Favorite ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    sys.savePreset("locker_1", "Suit A", {"PowerCore"});
+    sys.savePreset("locker_1", "Suit B", {"Shield"});
+    assertTrue(sys.toggleFavorite("locker_1", "preset_0"), "Toggled favorite on");
+    assertTrue(sys.getFavoriteCount("locker_1") == 1, "1 favorite");
+    assertTrue(sys.toggleFavorite("locker_1", "preset_0"), "Toggled favorite off");
+    assertTrue(sys.getFavoriteCount("locker_1") == 0, "0 favorites after toggle off");
+}
+
+void testRigLockerMass() {
+    std::cout << "\n=== RigLocker: Mass Calculation ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    sys.savePreset("locker_1", "Heavy Suit", {"A", "B", "C", "D"});
+    float mass = sys.getPresetMass("locker_1", "preset_0");
+    assertTrue(mass > 0.0f, "Mass is positive");
+    assertTrue(approxEqual(mass, 6.0f), "4 modules × 1.5kg = 6kg");
+}
+
+void testRigLockerMaxPresets() {
+    std::cout << "\n=== RigLocker: Max Presets ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    for (int i = 0; i < 10; i++) {
+        assertTrue(sys.savePreset("locker_1", "Preset " + std::to_string(i), {"mod"}),
+                   "Save preset " + std::to_string(i));
+    }
+    assertTrue(sys.getPresetCount("locker_1") == 10, "10 presets at max");
+    assertTrue(!sys.savePreset("locker_1", "Overflow", {"mod"}), "11th preset rejected");
+}
+
+void testRigLockerEquipTracking() {
+    std::cout << "\n=== RigLocker: Equip Tracking ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    world.createEntity("locker_1");
+    sys.initializeLocker("locker_1", "player_1");
+    sys.savePreset("locker_1", "A", {"mod_a"});
+    sys.savePreset("locker_1", "B", {"mod_b"});
+    sys.equipPreset("locker_1", "preset_0");
+    sys.equipPreset("locker_1", "preset_1");
+    assertTrue(sys.getActivePreset("locker_1") == "preset_1", "Active is last equipped");
+    sys.deletePreset("locker_1", "preset_1");
+    assertTrue(sys.getActivePreset("locker_1").empty(), "Active cleared after delete");
+}
+
+void testRigLockerMissing() {
+    std::cout << "\n=== RigLocker: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::RigLockerSystem sys(&world);
+    assertTrue(!sys.initializeLocker("nonexistent", "p"), "Init fails on missing");
+    assertTrue(!sys.savePreset("nonexistent", "x", {}), "Save fails on missing");
+    assertTrue(sys.getPresetCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(sys.getActivePreset("nonexistent").empty(), "Empty active on missing");
+    assertTrue(approxEqual(sys.getPresetMass("nonexistent", "x"), 0.0f), "0 mass on missing");
+}
+
+// ==================== VisualCoupling Tests ====================
+
+void testVisualCouplingInit() {
+    std::cout << "\n=== VisualCoupling: Init ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    assertTrue(sys.initializeCoupling("ship_1", "frigate_01"), "Coupling initialized");
+    assertTrue(sys.getCouplingCount("ship_1") == 0, "No couplings initially");
+    assertTrue(!sys.initializeCoupling("ship_1", "frigate_01"), "Duplicate init fails");
+}
+
+void testVisualCouplingAdd() {
+    std::cout << "\n=== VisualCoupling: Add ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    sys.initializeCoupling("ship_1", "frigate_01");
+    assertTrue(sys.addCoupling("ship_1", "solar_1",
+        components::VisualCoupling::ExteriorFeature::SolarPanel, 1.0f), "Solar panel added");
+    assertTrue(sys.getCouplingCount("ship_1") == 1, "1 coupling");
+    assertTrue(!sys.addCoupling("ship_1", "solar_1",
+        components::VisualCoupling::ExteriorFeature::SolarPanel, 1.0f), "Duplicate rejected");
+}
+
+void testVisualCouplingRemove() {
+    std::cout << "\n=== VisualCoupling: Remove ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    sys.initializeCoupling("ship_1", "frigate_01");
+    sys.addCoupling("ship_1", "vent_1",
+        components::VisualCoupling::ExteriorFeature::Vent, 0.5f);
+    assertTrue(sys.getCouplingCount("ship_1") == 1, "1 before remove");
+    assertTrue(sys.removeCoupling("ship_1", "vent_1"), "Removed");
+    assertTrue(sys.getCouplingCount("ship_1") == 0, "0 after remove");
+    assertTrue(!sys.removeCoupling("ship_1", "vent_1"), "Double remove fails");
+}
+
+void testVisualCouplingVisibility() {
+    std::cout << "\n=== VisualCoupling: Visibility ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    sys.initializeCoupling("ship_1", "frigate_01");
+    sys.addCoupling("ship_1", "ore_1",
+        components::VisualCoupling::ExteriorFeature::OreContainer, 1.5f);
+    assertTrue(sys.getVisibleCount("ship_1") == 1, "1 visible initially");
+    assertTrue(sys.setVisibility("ship_1", "ore_1", false), "Set invisible");
+    assertTrue(sys.getVisibleCount("ship_1") == 0, "0 visible after hide");
+    assertTrue(sys.setVisibility("ship_1", "ore_1", true), "Set visible again");
+    assertTrue(sys.getVisibleCount("ship_1") == 1, "1 visible after show");
+}
+
+void testVisualCouplingOffset() {
+    std::cout << "\n=== VisualCoupling: Offset ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    sys.initializeCoupling("ship_1", "cruiser_01");
+    sys.addCoupling("ship_1", "antenna_1",
+        components::VisualCoupling::ExteriorFeature::Antenna, 0.8f);
+    assertTrue(sys.setOffset("ship_1", "antenna_1", 1.0f, 2.0f, 3.0f), "Offset set");
+    assertTrue(!sys.setOffset("ship_1", "nonexistent", 0, 0, 0), "Offset fails for missing");
+}
+
+void testVisualCouplingFeatureCount() {
+    std::cout << "\n=== VisualCoupling: Feature Count ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    sys.initializeCoupling("ship_1", "battleship_01");
+    sys.addCoupling("ship_1", "solar_1",
+        components::VisualCoupling::ExteriorFeature::SolarPanel, 1.0f);
+    sys.addCoupling("ship_1", "solar_2",
+        components::VisualCoupling::ExteriorFeature::SolarPanel, 1.0f);
+    sys.addCoupling("ship_1", "weapon_1",
+        components::VisualCoupling::ExteriorFeature::WeaponMount, 1.0f);
+    assertTrue(sys.getFeatureCount("ship_1",
+        components::VisualCoupling::ExteriorFeature::SolarPanel) == 2, "2 solar panels");
+    assertTrue(sys.getFeatureCount("ship_1",
+        components::VisualCoupling::ExteriorFeature::WeaponMount) == 1, "1 weapon mount");
+    assertTrue(sys.getFeatureCount("ship_1",
+        components::VisualCoupling::ExteriorFeature::Vent) == 0, "0 vents");
+}
+
+void testVisualCouplingFeatureNames() {
+    std::cout << "\n=== VisualCoupling: Feature Names ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    assertTrue(sys.getFeatureName(components::VisualCoupling::ExteriorFeature::SolarPanel) == "SolarPanel", "SolarPanel name");
+    assertTrue(sys.getFeatureName(components::VisualCoupling::ExteriorFeature::OreContainer) == "OreContainer", "OreContainer name");
+    assertTrue(sys.getFeatureName(components::VisualCoupling::ExteriorFeature::CargoRack) == "CargoRack", "CargoRack name");
+}
+
+void testVisualCouplingUpdate() {
+    std::cout << "\n=== VisualCoupling: Update ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    sys.initializeCoupling("ship_1", "frigate_01");
+    sys.addCoupling("ship_1", "mod_1",
+        components::VisualCoupling::ExteriorFeature::EngineBooster, 1.0f);
+    sys.update(0.016f);
+    sys.update(0.016f);
+    auto* entity = world.getEntity("ship_1");
+    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    assertTrue(coupling->total_updates == 2, "Update counter incremented");
+}
+
+void testVisualCouplingMaxEntries() {
+    std::cout << "\n=== VisualCoupling: Max Entries ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    world.createEntity("ship_1");
+    sys.initializeCoupling("ship_1", "titan_01");
+    auto* entity = world.getEntity("ship_1");
+    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    coupling->max_entries = 3;
+    sys.addCoupling("ship_1", "a", components::VisualCoupling::ExteriorFeature::Vent, 1.0f);
+    sys.addCoupling("ship_1", "b", components::VisualCoupling::ExteriorFeature::Vent, 1.0f);
+    sys.addCoupling("ship_1", "c", components::VisualCoupling::ExteriorFeature::Vent, 1.0f);
+    assertTrue(sys.getCouplingCount("ship_1") == 3, "3 at max");
+    assertTrue(!sys.addCoupling("ship_1", "d",
+        components::VisualCoupling::ExteriorFeature::Vent, 1.0f), "4th rejected");
+}
+
+void testVisualCouplingMissing() {
+    std::cout << "\n=== VisualCoupling: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::VisualCouplingSystem sys(&world);
+    assertTrue(!sys.initializeCoupling("nonexistent", "s"), "Init fails on missing");
+    assertTrue(!sys.addCoupling("nonexistent", "m",
+        components::VisualCoupling::ExteriorFeature::Vent, 1.0f), "Add fails on missing");
+    assertTrue(sys.getCouplingCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(sys.getVisibleCount("nonexistent") == 0, "Visible 0 on missing");
+}
+
+// ==================== FPSSalvagePath Tests ====================
+
+void testSalvagePathInit() {
+    std::cout << "\n=== FPSSalvagePath: Init ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    assertTrue(sys.initializePath("site_1", "wreck_01", "player_1", 5), "Path initialized");
+    assertTrue(approxEqual(sys.getExplorationProgress("site_1"), 0.0f), "0% explored initially");
+    assertTrue(!sys.initializePath("site_1", "wreck_01", "player_1", 5), "Duplicate init fails");
+}
+
+void testSalvagePathEntry() {
+    std::cout << "\n=== FPSSalvagePath: Entry Points ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 5);
+    assertTrue(sys.addEntryPoint("site_1", "hatch_1", 10.0f, "cutter"), "Entry added");
+    assertTrue(sys.getEntryState("site_1", "hatch_1") == "sealed", "Entry is sealed");
+    assertTrue(!sys.addEntryPoint("site_1", "hatch_1", 5.0f, "cutter"), "Duplicate entry rejected");
+}
+
+void testSalvagePathCutting() {
+    std::cout << "\n=== FPSSalvagePath: Cutting ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 3);
+    sys.addEntryPoint("site_1", "hatch_1", 5.0f, "cutter");
+    assertTrue(sys.startCutting("site_1", "hatch_1"), "Cutting started");
+    assertTrue(sys.getEntryState("site_1", "hatch_1") == "cutting", "State is cutting");
+    assertTrue(!sys.startCutting("site_1", "hatch_1"), "Can't restart cutting");
+    sys.setActive("site_1", true);
+    for (int i = 0; i < 10; i++) sys.update(1.0f);
+    assertTrue(sys.getEntryState("site_1", "hatch_1") == "open", "Entry is open after cutting");
+}
+
+void testSalvagePathExploration() {
+    std::cout << "\n=== FPSSalvagePath: Exploration ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 4);
+    assertTrue(sys.exploreRoom("site_1"), "Room 1 explored");
+    assertTrue(sys.exploreRoom("site_1"), "Room 2 explored");
+    assertTrue(approxEqual(sys.getExplorationProgress("site_1"), 0.5f), "50% explored");
+    sys.exploreRoom("site_1");
+    sys.exploreRoom("site_1");
+    assertTrue(approxEqual(sys.getExplorationProgress("site_1"), 1.0f), "100% explored");
+    assertTrue(!sys.exploreRoom("site_1"), "Can't explore beyond total");
+}
+
+void testSalvagePathLoot() {
+    std::cout << "\n=== FPSSalvagePath: Loot Nodes ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 3);
+    assertTrue(sys.addLootNode("site_1", "loot_1", "Tritanium Plate",
+        components::FPSSalvagePath::LootRarity::Common, 100.0f), "Loot added");
+    assertTrue(!sys.addLootNode("site_1", "loot_1", "Dup",
+        components::FPSSalvagePath::LootRarity::Common, 50.0f), "Duplicate loot rejected");
+    assertTrue(sys.getDiscoveredLootCount("site_1") == 0, "0 discovered initially");
+}
+
+void testSalvagePathDiscover() {
+    std::cout << "\n=== FPSSalvagePath: Discover Loot ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 3);
+    sys.addLootNode("site_1", "loot_1", "Armor Plate",
+        components::FPSSalvagePath::LootRarity::Rare, 500.0f);
+    assertTrue(sys.discoverLoot("site_1", "loot_1"), "Loot discovered");
+    assertTrue(sys.getDiscoveredLootCount("site_1") == 1, "1 discovered");
+    assertTrue(!sys.discoverLoot("site_1", "loot_1"), "Can't re-discover");
+}
+
+void testSalvagePathCollect() {
+    std::cout << "\n=== FPSSalvagePath: Collect Loot ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 3);
+    sys.addLootNode("site_1", "loot_1", "Power Core",
+        components::FPSSalvagePath::LootRarity::Epic, 2000.0f);
+    assertTrue(!sys.collectLoot("site_1", "loot_1"), "Can't collect undiscovered");
+    sys.discoverLoot("site_1", "loot_1");
+    assertTrue(sys.collectLoot("site_1", "loot_1"), "Collected discovered loot");
+    assertTrue(sys.getCollectedLootCount("site_1") == 1, "1 collected");
+    assertTrue(!sys.collectLoot("site_1", "loot_1"), "Can't re-collect");
+}
+
+void testSalvagePathMultipleLoot() {
+    std::cout << "\n=== FPSSalvagePath: Multiple Loot ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 5);
+    sys.addLootNode("site_1", "loot_1", "Scrap Metal",
+        components::FPSSalvagePath::LootRarity::Common, 50.0f);
+    sys.addLootNode("site_1", "loot_2", "Ancient Relic",
+        components::FPSSalvagePath::LootRarity::Legendary, 10000.0f);
+    sys.addLootNode("site_1", "loot_3", "Circuit Board",
+        components::FPSSalvagePath::LootRarity::Uncommon, 200.0f);
+    sys.discoverLoot("site_1", "loot_1");
+    sys.discoverLoot("site_1", "loot_2");
+    assertTrue(sys.getDiscoveredLootCount("site_1") == 2, "2 discovered");
+    sys.collectLoot("site_1", "loot_1");
+    assertTrue(sys.getCollectedLootCount("site_1") == 1, "1 collected");
+}
+
+void testSalvagePathActive() {
+    std::cout << "\n=== FPSSalvagePath: Active State ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    world.createEntity("site_1");
+    sys.initializePath("site_1", "wreck_01", "player_1", 3);
+    sys.addEntryPoint("site_1", "hatch_1", 3.0f, "cutter");
+    sys.startCutting("site_1", "hatch_1");
+    sys.update(1.0f);
+    assertTrue(sys.getEntryState("site_1", "hatch_1") == "cutting", "Still cutting when inactive");
+    sys.setActive("site_1", true);
+    for (int i = 0; i < 5; i++) sys.update(1.0f);
+    assertTrue(sys.getEntryState("site_1", "hatch_1") == "open", "Opens when active");
+}
+
+void testSalvagePathMissing() {
+    std::cout << "\n=== FPSSalvagePath: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::FPSSalvagePathSystem sys(&world);
+    assertTrue(!sys.initializePath("nonexistent", "s", "p", 5), "Init fails on missing");
+    assertTrue(!sys.addEntryPoint("nonexistent", "e", 5.0f, "c"), "Entry fails on missing");
+    assertTrue(approxEqual(sys.getExplorationProgress("nonexistent"), 0.0f), "0% on missing");
+    assertTrue(sys.getDiscoveredLootCount("nonexistent") == 0, "0 discovered on missing");
+    assertTrue(sys.getEntryState("nonexistent", "e") == "unknown", "Unknown state on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -27798,6 +28203,7 @@ int main() {
     std::cout << "ShipInteriorLayout, EnvironmentalHazard, FPSObjective" << std::endl;
     std::cout << "ResourceProductionChain, FleetDoctrine, PlayerProgression" << std::endl;
     std::cout << "CommanderDisagreement, ImperfectInformation, CaptainBackground" << std::endl;
+    std::cout << "RigLocker, VisualCoupling, FPSSalvagePath" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -29781,6 +30187,42 @@ int main() {
     testStressTestMaxTick();
     testStressTestComplete();
     testStressTestMissing();
+
+    // RigLocker System tests
+    testRigLockerInit();
+    testRigLockerSave();
+    testRigLockerDelete();
+    testRigLockerRename();
+    testRigLockerEquip();
+    testRigLockerFavorite();
+    testRigLockerMass();
+    testRigLockerMaxPresets();
+    testRigLockerEquipTracking();
+    testRigLockerMissing();
+
+    // VisualCoupling System tests
+    testVisualCouplingInit();
+    testVisualCouplingAdd();
+    testVisualCouplingRemove();
+    testVisualCouplingVisibility();
+    testVisualCouplingOffset();
+    testVisualCouplingFeatureCount();
+    testVisualCouplingFeatureNames();
+    testVisualCouplingUpdate();
+    testVisualCouplingMaxEntries();
+    testVisualCouplingMissing();
+
+    // FPSSalvagePath System tests
+    testSalvagePathInit();
+    testSalvagePathEntry();
+    testSalvagePathCutting();
+    testSalvagePathExploration();
+    testSalvagePathLoot();
+    testSalvagePathDiscover();
+    testSalvagePathCollect();
+    testSalvagePathMultipleLoot();
+    testSalvagePathActive();
+    testSalvagePathMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

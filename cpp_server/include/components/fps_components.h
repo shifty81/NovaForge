@@ -603,6 +603,150 @@ public:
     COMPONENT_TYPE(FoodProcessor)
 };
 
+
+// ==================== Rig Locker Preset ====================
+
+/**
+ * @brief Rig locker preset management component (Phase 13)
+ *
+ * Stores saved suit/rig presets for quick equipping in the rig locker.
+ * Each preset stores a named module loadout that can be saved, loaded,
+ * renamed, favorited, and equipped.
+ */
+class RigLockerPreset : public ecs::Component {
+public:
+    struct Preset {
+        std::string preset_id;
+        std::string name;
+        std::vector<std::string> module_ids;  // equipped module IDs
+        bool is_favorite = false;
+        float total_mass = 0.0f;
+        int slot_count = 0;
+    };
+
+    std::string owner_id;
+    std::vector<Preset> presets;
+    std::string active_preset_id;
+    int max_presets = 10;
+    int total_equips = 0;
+    int next_preset_seq = 0;
+
+    const Preset* findPreset(const std::string& id) const {
+        for (const auto& p : presets) {
+            if (p.preset_id == id) return &p;
+        }
+        return nullptr;
+    }
+
+    Preset* findPreset(const std::string& id) {
+        for (auto& p : presets) {
+            if (p.preset_id == id) return &p;
+        }
+        return nullptr;
+    }
+
+    int favoriteCount() const {
+        int count = 0;
+        for (const auto& p : presets) {
+            if (p.is_favorite) count++;
+        }
+        return count;
+    }
+
+    COMPONENT_TYPE(RigLockerPreset)
+};
+
+// ==================== FPS Salvage Path ====================
+
+/**
+ * @brief FPS salvage path component (Phase 13)
+ *
+ * Tracks FPS-mode salvage exploration state including entry point cutting,
+ * room-by-room exploration progress, and loot discovery.
+ */
+class FPSSalvagePath : public ecs::Component {
+public:
+    enum class EntryState {
+        Sealed,
+        Cutting,
+        Open
+    };
+
+    enum class LootRarity {
+        Common,
+        Uncommon,
+        Rare,
+        Epic,
+        Legendary
+    };
+
+    struct EntryPoint {
+        std::string entry_id;
+        EntryState state = EntryState::Sealed;
+        float cut_progress = 0.0f;
+        float cut_required = 10.0f;  // seconds to cut through
+        std::string tool_required;
+    };
+
+    struct LootNode {
+        std::string loot_id;
+        std::string item_name;
+        LootRarity rarity = LootRarity::Common;
+        bool discovered = false;
+        bool collected = false;
+        float value = 0.0f;
+    };
+
+    std::string site_id;
+    std::string explorer_id;
+    std::vector<EntryPoint> entry_points;
+    std::vector<LootNode> loot_nodes;
+    float exploration_progress = 0.0f;  // 0.0 to 1.0
+    int rooms_explored = 0;
+    int total_rooms = 0;
+    bool active = false;
+    int total_collections = 0;
+
+    EntryPoint* findEntry(const std::string& id) {
+        for (auto& e : entry_points) {
+            if (e.entry_id == id) return &e;
+        }
+        return nullptr;
+    }
+
+    const EntryPoint* findEntry(const std::string& id) const {
+        for (const auto& e : entry_points) {
+            if (e.entry_id == id) return &e;
+        }
+        return nullptr;
+    }
+
+    LootNode* findLoot(const std::string& id) {
+        for (auto& l : loot_nodes) {
+            if (l.loot_id == id) return &l;
+        }
+        return nullptr;
+    }
+
+    int discoveredCount() const {
+        int count = 0;
+        for (const auto& l : loot_nodes) {
+            if (l.discovered) count++;
+        }
+        return count;
+    }
+
+    int collectedCount() const {
+        int count = 0;
+        for (const auto& l : loot_nodes) {
+            if (l.collected) count++;
+        }
+        return count;
+    }
+
+    COMPONENT_TYPE(FPSSalvagePath)
+};
+
 } // namespace components
 } // namespace atlas
 
