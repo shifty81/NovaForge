@@ -32,9 +32,8 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/external
 )
 
-# Source files
-set(SERVER_SOURCES
-    src/main.cpp
+# Core source files shared between server and test binaries
+set(CORE_SOURCES
     src/server.cpp
     src/game_session.cpp
     src/game_session_network.cpp
@@ -144,6 +143,9 @@ set(SERVER_SOURCES
     src/systems/alliance_system.cpp
     src/systems/sovereignty_system.cpp
     src/systems/war_declaration_system.cpp
+    src/systems/convoy_ambush_system.cpp
+    src/systems/npc_dialogue_system.cpp
+    src/systems/station_monument_system.cpp
     src/systems/information_propagation_system.cpp
     src/systems/crew_activity_system.cpp
     src/systems/visual_cue_system.cpp
@@ -217,6 +219,9 @@ set(SERVER_SOURCES
     src/systems/ship_designer_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
+    src/systems/mission_editor_system.cpp
+    src/systems/content_validation_system.cpp
+    src/systems/cloud_deployment_config_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -266,6 +271,12 @@ set(SERVER_SOURCES
     src/pcg/generation_style.cpp
     src/pcg/pcg_asset_style.cpp
     src/pcg/ship_archetype.cpp
+)
+
+# Server binary: main.cpp + all core sources
+set(SERVER_SOURCES
+    src/main.cpp
+    ${CORE_SOURCES}
 )
 
 set(SERVER_HEADERS
@@ -485,6 +496,12 @@ set(SERVER_HEADERS
     include/pcg/generation_style.h
     include/pcg/pcg_asset_style.h
     include/pcg/ship_archetype.h
+    include/systems/mission_editor_system.h
+    include/systems/content_validation_system.h
+    include/systems/cloud_deployment_config_system.h
+    include/systems/convoy_ambush_system.h
+    include/systems/npc_dialogue_system.h
+    include/systems/station_monument_system.h
 )
 
 # Steam SDK configuration
@@ -564,248 +581,9 @@ message(STATUS "")
 
 # Test executable
 if(BUILD_TESTS)
-    # Sources needed by test_systems (exclude main.cpp, server.cpp, game_session.cpp)
-    set(TEST_SUPPORT_SOURCES
-        src/ecs/entity.cpp
-        src/ecs/world.cpp
-        src/systems/capacitor_system.cpp
-        src/systems/shield_recharge_system.cpp
-        src/systems/weapon_system.cpp
-        src/systems/combat_system.cpp
-        src/systems/targeting_system.cpp
-        src/systems/movement_system.cpp
-        src/systems/ai_system.cpp
-        src/data/ship_database.cpp
-        src/data/wormhole_database.cpp
-        src/data/npc_database.cpp
-        src/systems/wormhole_system.cpp
-        src/systems/fleet_system.cpp
-        src/systems/mission_system.cpp
-        src/systems/skill_system.cpp
-        src/systems/module_system.cpp
-        src/systems/inventory_system.cpp
-        src/systems/loot_system.cpp
-        src/systems/insurance_system.cpp
-        src/systems/captain_personality_system.cpp
-        src/systems/corporation_system.cpp
-        src/systems/bounty_system.cpp
-        src/systems/market_system.cpp
-        src/systems/drone_system.cpp
-        src/systems/contract_system.cpp
-        src/systems/pi_system.cpp
-        src/systems/manufacturing_system.cpp
-        src/systems/research_system.cpp
-        src/systems/chat_system.cpp
-        src/systems/character_creation_system.cpp
-        src/systems/tournament_system.cpp
-        src/systems/leaderboard_system.cpp
-        src/systems/station_system.cpp
-        src/systems/wreck_salvage_system.cpp
-        src/systems/fleet_morale_system.cpp
-        src/systems/fleet_chatter_system.cpp
-        src/systems/warp_anomaly_system.cpp
-        src/systems/captain_relationship_system.cpp
-        src/systems/emotional_arc_system.cpp
-        src/systems/fleet_cargo_system.cpp
-        src/systems/tactical_overlay_system.cpp
-        src/systems/mining_system.cpp
-        src/systems/fleet_formation_system.cpp
-        src/systems/captain_memory_system.cpp
-        src/systems/ship_fitting_system.cpp
-        src/systems/warp_cinematic_system.cpp
-        src/systems/warp_hud_travel_mode_system.cpp
-        src/systems/warp_auto_comfort_system.cpp
-        src/systems/refining_system.cpp
-        src/systems/anomaly_system.cpp
-        src/systems/reputation_system.cpp
-        src/systems/scanner_system.cpp
-        src/systems/difficulty_scaling_system.cpp
-        src/systems/mission_template_system.cpp
-        src/systems/mission_generator_system.cpp
-        src/systems/lod_system.cpp
-        src/systems/spatial_hash_system.cpp
-        src/systems/background_simulation_system.cpp
-        src/systems/npc_intent_system.cpp
-        src/systems/npc_behavior_tree_system.cpp
-        src/systems/combat_threat_system.cpp
-        src/systems/security_response_system.cpp
-        src/systems/ambient_traffic_system.cpp
-        src/systems/snapshot_replication_system.cpp
-        src/systems/interest_management_system.cpp
-        src/systems/fleet_progression_system.cpp
-        src/systems/station_deployment_system.cpp
-        src/systems/fleet_warp_formation_system.cpp
-        src/systems/warp_meditation_system.cpp
-        src/systems/rumor_questline_system.cpp
-        src/systems/captain_departure_system.cpp
-        src/systems/captain_transfer_system.cpp
-        src/systems/npc_rerouting_system.cpp
-        src/systems/local_reputation_system.cpp
-        src/systems/station_news_system.cpp
-        src/systems/wreck_persistence_system.cpp
-        src/systems/fleet_history_system.cpp
-        src/systems/rig_system.cpp
-        src/systems/legend_system.cpp
-        src/systems/ancient_tech_system.cpp
-        src/systems/docking_system.cpp
-        src/systems/survival_system.cpp
-        src/systems/menu_system.cpp
-        src/systems/crew_system.cpp
-        src/systems/salvage_exploration_system.cpp
-        src/systems/market_order_system.cpp
-        src/systems/ai_economic_actor_system.cpp
-        src/systems/turret_ai_system.cpp
-        src/systems/titan_assembly_system.cpp
-        src/systems/alliance_system.cpp
-        src/systems/sovereignty_system.cpp
-        src/systems/war_declaration_system.cpp
-        src/systems/convoy_ambush_system.cpp
-        src/systems/npc_dialogue_system.cpp
-        src/systems/station_monument_system.cpp
-        src/systems/information_propagation_system.cpp
-        src/systems/crew_activity_system.cpp
-        src/systems/visual_cue_system.cpp
-        src/systems/supply_demand_system.cpp
-        src/systems/black_market_system.cpp
-        src/systems/price_history_system.cpp
-        src/systems/propaganda_system.cpp
-        src/systems/rest_station_system.cpp
-        src/systems/myth_boss_system.cpp
-        src/systems/ancient_tech_upgrade_system.cpp
-        src/systems/mod_manifest_system.cpp
-        src/systems/ancient_ai_remnant_system.cpp
-        src/systems/character_creation_screen_system.cpp
-        src/systems/view_mode_transition_system.cpp
-        src/systems/station_hangar_system.cpp
-        src/systems/tether_docking_system.cpp
-        src/systems/fps_spawn_system.cpp
-        src/systems/interior_door_system.cpp
-        src/systems/fps_character_controller_system.cpp
-        src/systems/eva_airlock_system.cpp
-        src/systems/fps_interaction_system.cpp
-        src/systems/fps_combat_system.cpp
-        src/systems/fps_inventory_system.cpp
-        src/systems/ship_interior_layout_system.cpp
-        src/systems/environmental_hazard_system.cpp
-        src/systems/fps_objective_system.cpp
-        src/systems/wing_management_system.cpp
-        src/systems/economic_flow_system.cpp
-        src/systems/resource_production_chain_system.cpp
-        src/systems/fleet_doctrine_system.cpp
-        src/systems/player_progression_system.cpp
-        src/systems/terraforming_system.cpp
-        src/systems/cloaking_system.cpp
-        src/systems/food_processor_system.cpp
-        src/systems/fleet_squad_system.cpp
-        src/systems/jump_drive_system.cpp
-        src/systems/cargo_scan_system.cpp
-        src/systems/commander_disagreement_system.cpp
-        src/systems/imperfect_information_system.cpp
-        src/systems/captain_background_system.cpp
-        src/systems/rover_interior_system.cpp
-        src/systems/bike_garage_system.cpp
-        src/systems/visual_rig_system.cpp
-        src/systems/planetary_traversal_system.cpp
-        src/systems/solar_panel_system.cpp
-        src/systems/farming_deck_system.cpp
-        src/systems/docking_ring_extension_system.cpp
-        src/systems/rover_bay_ramp_system.cpp
-        src/systems/grid_construction_system.cpp
-        src/systems/space_planet_transition_system.cpp
-        src/systems/fleet_hangar_system.cpp
-        src/systems/hangar_environment_system.cpp
-        src/systems/dock_node_layout_system.cpp
-        src/systems/mission_consequence_system.cpp
-        src/systems/server_performance_monitor_system.cpp
-        src/systems/atlas_ui_panel_system.cpp
-        src/systems/keyboard_navigation_system.cpp
-        src/systems/data_binding_system.cpp
-        src/systems/entity_stress_test_system.cpp
-        src/systems/rig_locker_system.cpp
-        src/systems/visual_coupling_system.cpp
-        src/systems/fps_salvage_path_system.cpp
-        src/systems/lavatory_interaction_system.cpp
-        src/systems/eva_airlock_exit_system.cpp
-        src/systems/ancient_module_discovery_system.cpp
-        src/systems/client_prediction_system.cpp
-        src/systems/ship_template_mod_system.cpp
-        src/systems/database_persistence_system.cpp
-        src/systems/task_scheduler_system.cpp
-        src/systems/mod_manager_system.cpp
-        src/systems/ship_designer_system.cpp
-        src/systems/warp_performance_budget_system.cpp
-        src/systems/fleet_positional_audio_system.cpp
-        src/data/world_persistence.cpp
-        src/data/world_serializer.cpp
-        src/data/world_deserializer.cpp
-        src/data/persistence_json_utils.cpp
-        src/data/world_persistence_compressed.cpp
-        src/utils/logger.cpp
-        src/utils/server_metrics.cpp
-        src/ui/server_console.cpp
-        src/server.cpp
-        src/game_session.cpp
-        src/game_session_network.cpp
-        src/game_session_entities.cpp
-        src/game_session_combat.cpp
-        src/game_session_utils.cpp
-        src/game_session_stations.cpp
-        src/game_session_movement.cpp
-        src/game_session_scanning.cpp
-        src/game_session_missions.cpp
-        src/network/tcp_server.cpp
-        src/network/protocol_handler.cpp
-        src/config/server_config.cpp
-        src/auth/steam_auth.cpp
-        src/auth/whitelist.cpp
-        src/utils/name_generator.cpp
-        src/data/ship_database.cpp
-        src/pcg/pcg_manager.cpp
-        src/pcg/ship_generator.cpp
-        src/pcg/fleet_doctrine.cpp
-        src/pcg/room_graph.cpp
-        src/pcg/deck_graph.cpp
-        src/pcg/elevator_system.cpp
-        src/pcg/hull_mesher.cpp
-        src/pcg/capital_ship_generator.cpp
-        src/pcg/ship_designer.cpp
-        src/pcg/snappable_grid.cpp
-        src/pcg/station_generator.cpp
-        src/pcg/salvage_system.cpp
-        src/pcg/rover_system.cpp
-        src/pcg/collision_manager.cpp
-        src/pcg/asteroid_field_generator.cpp
-        src/pcg/anomaly_generator.cpp
-        src/pcg/npc_encounter_generator.cpp
-        src/pcg/pcg_trace.cpp
-        src/pcg/constraint_solver.cpp
-        src/pcg/weapon_socket.cpp
-        src/pcg/pcg_verify.cpp
-        src/pcg/interior_budget.cpp
-        src/pcg/interior_generator.cpp
-        src/pcg/character_mesh_system.cpp
-        src/pcg/lowpoly_character_generator.cpp
-        src/pcg/turret_generator.cpp
-        src/pcg/planet_generator.cpp
-        src/pcg/habitat_generator.cpp
-        src/pcg/grav_bike_generator.cpp
-        src/pcg/spine_hull_generator.cpp
-        src/pcg/terrain_generator.cpp
-        src/pcg/turret_placement_system.cpp
-        src/pcg/damage_state_generator.cpp
-        src/pcg/procedural_texture_generator.cpp
-        src/pcg/shield_effect_generator.cpp
-        src/pcg/economy_driven_generator.cpp
-        src/pcg/star_system_generator.cpp
-        src/pcg/galaxy_generator.cpp
-        src/pcg/generation_style.cpp
-        src/pcg/pcg_asset_style.cpp
-        src/pcg/ship_archetype.cpp
-    )
-
     add_executable(test_systems
         test_systems.cpp
-        ${TEST_SUPPORT_SOURCES}
+        ${CORE_SOURCES}
     )
     target_link_libraries(test_systems Threads::Threads ZLIB::ZLIB)
     if(WIN32)
