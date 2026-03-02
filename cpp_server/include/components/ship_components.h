@@ -557,6 +557,125 @@ public:
     COMPONENT_TYPE(CargoScanState)
 };
 
+// ==================== Docking Ring Extension System (Phase 13) ====================
+
+/**
+ * @brief Docking ring module for ship-to-ship docking
+ *
+ * Manages extension/retraction of docking rings with alignment tracking,
+ * pressure sealing, and connection management.
+ */
+class DockingRingExtension : public ecs::Component {
+public:
+    enum class RingState {
+        Retracted,
+        Extending,
+        Extended,
+        Retracting
+    };
+
+    enum class ConnectionType {
+        ShipToShip,
+        ShipToStation,
+        Emergency
+    };
+
+    RingState state = RingState::Retracted;
+    float extension_progress = 0.0f;      // 0.0-1.0
+    float extension_speed = 0.5f;          // per second
+    float alignment_angle = 0.0f;          // degrees, 0 = perfect
+    float alignment_threshold = 5.0f;      // degrees
+    bool pressure_sealed = false;
+    std::string connected_entity_id;
+    ConnectionType connection_type = ConnectionType::ShipToShip;
+    bool is_connected = false;
+    bool is_powered = true;
+    float ring_diameter = 10.0f;           // meters
+    float ring_integrity = 1.0f;           // 0.0-1.0
+    int total_dockings = 0;
+
+    static std::string stateToString(RingState s) {
+        switch (s) {
+            case RingState::Retracted: return "retracted";
+            case RingState::Extending: return "extending";
+            case RingState::Extended: return "extended";
+            case RingState::Retracting: return "retracting";
+            default: return "unknown";
+        }
+    }
+
+    static std::string connectionTypeToString(ConnectionType c) {
+        switch (c) {
+            case ConnectionType::ShipToShip: return "ship_to_ship";
+            case ConnectionType::ShipToStation: return "ship_to_station";
+            case ConnectionType::Emergency: return "emergency";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(DockingRingExtension)
+};
+
+// ==================== Rover Bay Ramp System (Phase 13/14) ====================
+
+/**
+ * @brief Belly hangar with folding ramp for rover deployment
+ *
+ * Manages ramp extension, rover storage/deployment, atmosphere safety checks,
+ * and bay pressurization.
+ */
+class RoverBayRamp : public ecs::Component {
+public:
+    enum class RampState {
+        Closed,
+        Opening,
+        Open,
+        Closing
+    };
+
+    enum class AtmosphereType {
+        None,
+        Breathable,
+        Toxic,
+        Corrosive
+    };
+
+    RampState state = RampState::Closed;
+    float ramp_progress = 0.0f;            // 0.0-1.0
+    float ramp_speed = 0.3f;               // per second
+    int max_rovers = 2;
+    std::vector<std::string> stored_rover_ids;
+    std::vector<std::string> deployed_rover_ids;
+    AtmosphereType external_atmosphere = AtmosphereType::None;
+    float external_gravity = 1.0f;         // relative to standard (0.0-2.0)
+    bool is_pressurized = true;
+    bool is_powered = true;
+    int total_deployments = 0;
+    float bay_temperature = 20.0f;         // celsius
+
+    static std::string stateToString(RampState s) {
+        switch (s) {
+            case RampState::Closed: return "closed";
+            case RampState::Opening: return "opening";
+            case RampState::Open: return "open";
+            case RampState::Closing: return "closing";
+            default: return "unknown";
+        }
+    }
+
+    static std::string atmosphereToString(AtmosphereType a) {
+        switch (a) {
+            case AtmosphereType::None: return "none";
+            case AtmosphereType::Breathable: return "breathable";
+            case AtmosphereType::Toxic: return "toxic";
+            case AtmosphereType::Corrosive: return "corrosive";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(RoverBayRamp)
+};
+
 } // namespace components
 } // namespace atlas
 

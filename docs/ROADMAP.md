@@ -1256,8 +1256,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] **Modular backpack rack** — 2×2 to 8×2 rack sizes with module slots — RigLoadout component with rack_width/height and installed_module_ids
 - [x] **13 module types** — LifeSupport, PowerCore, JetpackTank, Sensor, Shield, EnvironFilter, ToolMount, WeaponMount, DroneController, ScannerSuite, CargoPod, BatteryPack, SolarPanel — RigModule component with tier and efficiency (5 tests)
 - [x] **Derived stat calculation** — Oxygen, power, cargo, shield, jetpack fuel computed from installed modules — RigSystem with per-module-type stat formulas
-- [ ] **Visual rig generation** — PCG shape changes with installed modules, thrusters at bottom
-- [ ] **Trinket hooks** — Stickers, bobbleheads, mugs attached to rig
+- [x] **Visual rig generation** — PCG shape changes with installed modules, thrusters at bottom — VisualRigState component + VisualRigSystem with thruster config, cargo size, feature detection, weapon/tool mounts, bulk/glow, color customization, trinket attachment (11 tests)
+- [x] **Trinket hooks** — Stickers, bobbleheads, mugs attached to rig — VisualRigSystem trinket attachment with max_trinkets limit
 - [ ] **Rig Locker UI** — Dressing-room 3rd person view, save/load suit presets
 
 #### Survival Module
@@ -1269,10 +1269,10 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 #### Docking & Airlock System
 - [x] **Docking ports** — Airlock, DockingRing, HangarBay, RoverBay types — DockingPort component with dock/undock, extend/retract (3 tests)
-- [ ] **Docking ring extension** — Visual module that extends airlock for ship-to-ship docking
+- [x] **Docking ring extension** — Visual module that extends airlock for ship-to-ship docking — DockingRingExtension component + DockingRingExtensionSystem with 4-state extension (Retracted→Extending→Extended→Retracting), alignment tracking, pressure sealing, connection management, integrity degradation (10 tests)
 - [ ] **EVA airlock** — Exit to space when undocked
 - [x] **EVA airlock system** — Multi-phase depressurization cycle (Idle→EnterChamber→InnerSeal→Depressurize→OuterOpen→EVAActive), suit oxygen check, abort support, reentry sequence (OuterSeal→Repressurize→InnerOpen→Complete) — EVAAirlockState component + EVAAirlockSystem (8 tests)
-- [ ] **Rover bay ramp** — Belly hangar with folding ramp for rover deployment
+- [x] **Rover bay ramp** — Belly hangar with folding ramp for rover deployment — RoverBayRamp component + RoverBayRampSystem with 4-state ramp (Closed→Opening→Open→Closing), rover store/deploy/retrieve, atmosphere safety interlock, auto-pressurization (10 tests)
 
 #### NPC Crew Simulation
 - [x] **Crew members** — 8 roles (Engineer, Pilot, Gunner, Medic, Scientist, Miner, Cook, Security) — CrewMember component with skill, morale, activity tracking (4 tests)
@@ -1330,20 +1330,20 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 
 #### Rover System
 - [x] **Procedural rovers** — Modular vehicle with cargo, mining laser, scanner, weapons — RoverSystem (existing) with deploy/dock/cargo
-- [ ] **Rover interior** — Rig locker, equipment mount, scannable rooms
+- [x] **Rover interior** — Rig locker, equipment mount, scannable rooms — RoverInterior component + RoverInteriorSystem with multi-room layouts (Cockpit/CargoHold/RigLocker/EquipmentBay/Scanner/Airlock), equipment slots, pressurization, volume calculation (9 tests)
 - [ ] **Environmental hazard** — Open hangar in unsafe environment damages unsuited players
-- [ ] **Rover bay ramp** — Belly hangar on ships for rover deployment
+- [x] **Rover bay ramp** — Belly hangar on ships for rover deployment — RoverBayRamp component + RoverBayRampSystem with 4-state ramp, rover store/deploy/retrieve, atmosphere safety (10 tests)
 
 #### Grav Bike System
 - [x] **Procedural grav bikes** — Seed-based generation with faction styles — GravBikeGenerator with speed, fuel, cargo, weapon mount (2 tests)
-- [ ] **Bike garage** — Stored in rovers or ships
-- [ ] **Planetary traversal** — Fast surface travel for exploration
+- [x] **Bike garage** — Stored in rovers or ships — BikeGarage component + BikeGarageSystem with store/retrieve, lock/unlock, door animation, power requirement (10 tests)
+- [x] **Planetary traversal** — Fast surface travel for exploration — PlanetaryTraversal component + PlanetaryTraversalSystem with 8 terrain types, speed modifiers, vehicle mount/dismount, waypoint navigation (10 tests)
 
 #### Habitat System
 - [x] **Multi-level habitats** — Procedural generation with 12 module types — HabitatGenerator with power balance tracking (3 tests)
-- [ ] **Snappable grid construction** — Build mode with module placement
+- [x] **Snappable grid construction** — Build mode with module placement — GridConstruction component + GridConstructionSystem with 8 module types, power network propagation, structural integrity calculation, adjacency validation (10 tests)
 - [ ] **Fleet-scale hangars** — Large enough for full fleet once upgraded
-- [ ] **Farming & solar decks** — Top floor modules for energy and food production
+- [x] **Farming & solar decks** — Top floor modules for energy and food production — FarmingDeck + SolarPanel components + FarmingDeckSystem (crop lifecycle, 10 tests) + SolarPanelSystem (day/night cycle energy, 10 tests)
 
 ---
 

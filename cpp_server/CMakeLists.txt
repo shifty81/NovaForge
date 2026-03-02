@@ -190,6 +190,9 @@ set(SERVER_SOURCES
     src/systems/planetary_traversal_system.cpp
     src/systems/solar_panel_system.cpp
     src/systems/farming_deck_system.cpp
+    src/systems/docking_ring_extension_system.cpp
+    src/systems/rover_bay_ramp_system.cpp
+    src/systems/grid_construction_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -661,6 +664,9 @@ if(BUILD_TESTS)
         src/systems/planetary_traversal_system.cpp
         src/systems/solar_panel_system.cpp
         src/systems/farming_deck_system.cpp
+        src/systems/docking_ring_extension_system.cpp
+        src/systems/rover_bay_ramp_system.cpp
+        src/systems/grid_construction_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp
