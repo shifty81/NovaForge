@@ -440,6 +440,67 @@ public:
     COMPONENT_TYPE(ModDocGenerator)
 };
 
+class CommunityContentRepo : public ecs::Component {
+public:
+    struct ContentEntry {
+        std::string content_id;
+        std::string type;
+        std::string author;
+        std::string title;
+        std::string description;
+        std::string state = "Draft";
+        float average_rating = 0.0f;
+        int total_rating = 0;
+        int rating_count = 0;
+        int downloads = 0;
+    };
+
+    std::vector<ContentEntry> contents;
+    int max_content = 200;
+    int total_submissions = 0;
+    int total_downloads = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(CommunityContentRepo)
+};
+
+class PvPState : public ecs::Component {
+public:
+    bool pvp_enabled = false;
+    std::string safety_level = "HighSec";
+    float engagement_timer = 300.0f;
+    float aggression_timer = 0.0f;
+    std::string last_target;
+    int kill_count = 0;
+    float bounty = 0.0f;
+    float security_status = 5.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(PvPState)
+};
+
+class DynamicEvent : public ecs::Component {
+public:
+    struct EventEntry {
+        std::string event_id;
+        std::string type;
+        std::string state = "Pending";
+        float duration = 0.0f;
+        float elapsed_time = 0.0f;
+        float intensity = 0.5f;
+        float reward_pool = 0.0f;
+        float start_delay = 5.0f;
+        std::vector<std::string> participants;
+    };
+
+    std::vector<EventEntry> events;
+    int max_concurrent_events = 5;
+    int total_completed = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(DynamicEvent)
+};
+
 } // namespace components
 } // namespace atlas
 
