@@ -18,6 +18,7 @@
 #include "components/narrative_components.h"
 #include "components/npc_components.h"
 #include "components/ui_components.h"
+#include <map>
 
 namespace atlas {
 namespace components {
@@ -138,6 +139,63 @@ public:
     StressPhase stress_phase = StressPhase::Idle;
 
     COMPONENT_TYPE(EntityStressTest)
+};
+
+// ==================== Client Prediction ====================
+
+class ClientPrediction : public ecs::Component {
+public:
+    std::string client_id;
+    float predicted_x = 0.0f, predicted_y = 0.0f, predicted_z = 0.0f;
+    float server_x = 0.0f, server_y = 0.0f, server_z = 0.0f;
+    float velocity_x = 0.0f, velocity_y = 0.0f, velocity_z = 0.0f;
+    float correction_blend = 0.0f;
+    float correction_speed = 5.0f;
+    float prediction_error = 0.0f;
+    float max_prediction_window = 0.2f;
+    int prediction_frame = 0;
+    int last_server_frame = 0;
+    bool active = false;
+
+    COMPONENT_TYPE(ClientPrediction)
+};
+
+// ==================== Ship Template Mod ====================
+
+class ShipTemplateMod : public ecs::Component {
+public:
+    std::string template_id;
+    std::string base_template_id;
+    std::string mod_source;
+    std::string ship_name;
+    std::string ship_class;
+    std::string faction;
+    float hull_hp = 100.0f, shield_hp = 100.0f, armor_hp = 100.0f;
+    float max_velocity = 300.0f, agility = 1.0f;
+    int high_slots = 3, mid_slots = 3, low_slots = 3;
+    int priority = 0;
+    bool validated = false;
+    bool is_override = false;
+    bool needs_inheritance = true;
+
+    COMPONENT_TYPE(ShipTemplateMod)
+};
+
+// ==================== Database Persistence ====================
+
+class DatabasePersistence : public ecs::Component {
+public:
+    std::string db_name;
+    std::map<std::string, std::string> store;
+    float auto_save_interval = 60.0f;
+    float save_timer = 0.0f;
+    int total_writes = 0;
+    int total_reads = 0;
+    int save_count = 0;
+    bool dirty = false;
+    bool auto_save_enabled = true;
+
+    COMPONENT_TYPE(DatabasePersistence)
 };
 
 } // namespace components

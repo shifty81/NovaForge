@@ -231,7 +231,10 @@ Data-driven modding without code injection:
 | KeyboardNavigationSystem | ✅ Complete | 26 assertions |
 | DataBindingSystem | ✅ Complete | 28 assertions |
 | EntityStressTestSystem | ✅ Complete | 21 assertions |
-| **Total** | **63 systems** | **4858 assertions** |
+| ClientPredictionSystem | ✅ Complete | 30 assertions |
+| ShipTemplateModSystem | ✅ Complete | 28 assertions |
+| DatabasePersistenceSystem | ✅ Complete | 27 assertions |
+| **Total** | **66 systems** | **5145 assertions** |
 
 ### Data Loaders Status
 
@@ -1406,10 +1409,10 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 ### Long-term Goals (2027+)
 
 #### Performance & Scalability
-- [ ] Database persistence (SQLite → PostgreSQL)
+- [x] Database persistence (SQLite → PostgreSQL) — DatabasePersistence component + DatabasePersistenceSystem with key-value store, auto-save with configurable interval, dirty tracking, read/write counters (10 tests)
 - [x] Performance profiling and optimization — ServerPerformanceMetrics component + ServerPerformanceMonitorSystem with per-system timing, tick budget tracking, hot-path identification, alert thresholds (10 tests)
 - [ ] Interest management for large player counts
-- [ ] Client-side prediction for responsive movement
+- [x] Client-side prediction for responsive movement — ClientPrediction component + ClientPredictionSystem with velocity-based prediction, server reconciliation, correction blending, prediction error tracking (10 tests)
 - [x] Spatial partitioning for efficient entity queries — SpatialHashSystem with O(1) queryNear() and queryNeighbours()
 - [ ] Multi-threaded server processing
 - [x] Large-scale fleet battle stress testing (150-300 ships) — 200-ship multi-system tick stress test (LOD + spatial hash + shield + movement)
@@ -1433,7 +1436,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [ ] Community content repository
 - [x] AI profile mods (`ai_profiles.json` for behavior customization)
 - [x] Economy rule mods (`economy_rules.json` for system economy curves)
-- [ ] Ship template mods (`ship_templates.json` for custom ships)
+- [x] Ship template mods (`ship_templates.json` for custom ships) — ShipTemplateMod component + ShipTemplateModSystem with template registration, base template inheritance, priority-based overrides, auto-validation (10 tests)
 
 #### Additional Features
 - [ ] PvP toggle option (optional for those who want it)

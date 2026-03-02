@@ -207,6 +207,9 @@
 #include "systems/lavatory_interaction_system.h"
 #include "systems/eva_airlock_exit_system.h"
 #include "systems/ancient_module_discovery_system.h"
+#include "systems/client_prediction_system.h"
+#include "systems/ship_template_mod_system.h"
+#include "systems/database_persistence_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -28547,6 +28550,388 @@ void testAncientDiscoveryMissing() {
     assertTrue(sys.getTotalModules("nonexistent") == 0, "0 modules on missing");
 }
 
+// ==================== ClientPredictionSystem Tests ====================
+
+void testClientPredictionInit() {
+    std::cout << "\n=== ClientPrediction: Init ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    auto* e = world.createEntity("ship1");
+    assertTrue(sys.initPrediction("ship1", "client_abc"), "Init prediction succeeds");
+    auto* cp = e->getComponent<components::ClientPrediction>();
+    assertTrue(cp != nullptr, "Component exists");
+    assertTrue(cp->client_id == "client_abc", "Client ID set");
+    assertTrue(cp->active == true, "Active by default");
+}
+
+void testClientPredictionServerState() {
+    std::cout << "\n=== ClientPrediction: Server State ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    assertTrue(sys.setServerState("ship1", 10.0f, 20.0f, 30.0f, 5), "Set server state");
+    assertTrue(sys.setServerState("nonexistent", 0, 0, 0, 0) == false, "Fails on missing");
+}
+
+void testClientPredictionApplyInput() {
+    std::cout << "\n=== ClientPrediction: Apply Input ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    assertTrue(sys.applyInput("ship1", 1.0f, 0.0f, 0.0f, 10), "Apply input succeeds");
+    assertTrue(sys.getPredictionFrame("ship1") == 10, "Frame set to 10");
+}
+
+void testClientPredictionUpdate() {
+    std::cout << "\n=== ClientPrediction: Update ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    auto* e = world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    sys.applyInput("ship1", 10.0f, 0.0f, 0.0f, 1);
+    sys.update(0.1f);
+    auto* cp = e->getComponent<components::ClientPrediction>();
+    assertTrue(cp->predicted_x > 0.0f, "Predicted X advanced by velocity");
+}
+
+void testClientPredictionError() {
+    std::cout << "\n=== ClientPrediction: Error Calculation ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    auto* e = world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    auto* cp = e->getComponent<components::ClientPrediction>();
+    cp->predicted_x = 10.0f;
+    cp->server_x = 0.0f;
+    sys.update(0.0f);
+    assertTrue(sys.getPredictionError("ship1") > 0.0f, "Error is non-zero");
+}
+
+void testClientPredictionReconciliation() {
+    std::cout << "\n=== ClientPrediction: Reconciliation ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    auto* e = world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    auto* cp = e->getComponent<components::ClientPrediction>();
+    cp->predicted_x = 100.0f;
+    cp->server_x = 0.0f;
+    cp->correction_speed = 5.0f;
+    sys.update(0.1f);
+    assertTrue(sys.isReconciling("ship1"), "Is reconciling after error");
+    assertTrue(sys.getCorrectionBlend("ship1") > 0.0f, "Blend advanced");
+}
+
+void testClientPredictionSnap() {
+    std::cout << "\n=== ClientPrediction: Snap to Server ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    auto* e = world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    auto* cp = e->getComponent<components::ClientPrediction>();
+    cp->predicted_x = 10.0f;
+    cp->server_x = 0.0f;
+    cp->correction_speed = 100.0f;
+    sys.update(1.0f);
+    assertTrue(approxEqual(cp->predicted_x, cp->server_x, 0.1f), "Snapped to server after full blend");
+    assertTrue(approxEqual(cp->correction_blend, 0.0f), "Blend reset after snap");
+}
+
+void testClientPredictionInactive() {
+    std::cout << "\n=== ClientPrediction: Inactive ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    auto* e = world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    auto* cp = e->getComponent<components::ClientPrediction>();
+    cp->active = false;
+    cp->velocity_x = 100.0f;
+    sys.update(1.0f);
+    assertTrue(approxEqual(cp->predicted_x, 0.0f), "Inactive entity not updated");
+}
+
+void testClientPredictionFrame() {
+    std::cout << "\n=== ClientPrediction: Frame Tracking ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initPrediction("ship1", "c1");
+    sys.applyInput("ship1", 0, 0, 0, 42);
+    assertTrue(sys.getPredictionFrame("ship1") == 42, "Prediction frame is 42");
+    sys.setServerState("ship1", 0, 0, 0, 40);
+    assertTrue(sys.getPredictionFrame("ship1") == 42, "Frame unchanged after server state");
+}
+
+void testClientPredictionMissing() {
+    std::cout << "\n=== ClientPrediction: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::ClientPredictionSystem sys(&world);
+    assertTrue(!sys.initPrediction("nonexistent", "c1"), "Init fails on missing");
+    assertTrue(!sys.setServerState("nonexistent", 0, 0, 0, 0), "SetServer fails on missing");
+    assertTrue(!sys.applyInput("nonexistent", 0, 0, 0, 0), "ApplyInput fails on missing");
+    assertTrue(sys.getPredictionError("nonexistent") == 0.0f, "Error 0 on missing");
+    assertTrue(!sys.isReconciling("nonexistent"), "Not reconciling on missing");
+    assertTrue(sys.getCorrectionBlend("nonexistent") == 0.0f, "Blend 0 on missing");
+    assertTrue(sys.getPredictionFrame("nonexistent") == 0, "Frame 0 on missing");
+}
+
+// ==================== ShipTemplateModSystem Tests ====================
+
+void testShipTemplateRegister() {
+    std::cout << "\n=== ShipTemplateMod: Register ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    auto* e = world.createEntity("tmpl1");
+    assertTrue(sys.registerTemplate("tmpl1", "rifter_v2", "Rifter Mk II", "frigate", "minmatar"), "Register succeeds");
+    auto* mod = e->getComponent<components::ShipTemplateMod>();
+    assertTrue(mod != nullptr, "Component exists");
+    assertTrue(mod->template_id == "rifter_v2", "Template ID set");
+    assertTrue(mod->ship_class == "frigate", "Ship class set");
+}
+
+void testShipTemplateValidate() {
+    std::cout << "\n=== ShipTemplateMod: Validate ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    world.createEntity("tmpl1");
+    sys.registerTemplate("tmpl1", "t1", "Ship", "cruiser", "amarr");
+    assertTrue(sys.validateTemplate("tmpl1"), "Validation passes");
+    assertTrue(sys.isValid("tmpl1"), "Is valid after validation");
+}
+
+void testShipTemplateValidateFail() {
+    std::cout << "\n=== ShipTemplateMod: Validate Fail ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    auto* e = world.createEntity("tmpl1");
+    sys.registerTemplate("tmpl1", "t1", "", "cruiser", "amarr");
+    assertTrue(!sys.validateTemplate("tmpl1"), "Validation fails with empty name");
+    assertTrue(!sys.isValid("tmpl1"), "Not valid");
+}
+
+void testShipTemplateModSource() {
+    std::cout << "\n=== ShipTemplateMod: Mod Source ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    auto* e = world.createEntity("tmpl1");
+    sys.registerTemplate("tmpl1", "t1", "Ship", "frigate", "gallente");
+    assertTrue(sys.setModSource("tmpl1", "my_mod", 10), "Set mod source");
+    auto* mod = e->getComponent<components::ShipTemplateMod>();
+    assertTrue(mod->mod_source == "my_mod", "Mod source set");
+    assertTrue(mod->priority == 10, "Priority set");
+}
+
+void testShipTemplateBaseInherit() {
+    std::cout << "\n=== ShipTemplateMod: Base Template Inheritance ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    auto* base = world.createEntity("base1");
+    sys.registerTemplate("base1", "base_frigate", "Base Frigate", "frigate", "minmatar");
+    auto* baseMod = base->getComponent<components::ShipTemplateMod>();
+    baseMod->hull_hp = 500.0f;
+    baseMod->shield_hp = 300.0f;
+    baseMod->high_slots = 4;
+
+    auto* child = world.createEntity("child1");
+    sys.registerTemplate("child1", "child_frigate", "Child Frigate", "frigate", "minmatar");
+    sys.setBaseTemplate("child1", "base_frigate");
+    auto* childMod = child->getComponent<components::ShipTemplateMod>();
+    sys.update(0.0f);
+    assertTrue(approxEqual(childMod->hull_hp, 500.0f), "Hull inherited from base");
+    assertTrue(childMod->high_slots == 4, "High slots inherited");
+}
+
+void testShipTemplateAutoValidate() {
+    std::cout << "\n=== ShipTemplateMod: Auto-Validate on Update ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    world.createEntity("tmpl1");
+    sys.registerTemplate("tmpl1", "t1", "Ship", "cruiser", "caldari");
+    sys.update(0.0f);
+    assertTrue(sys.isValid("tmpl1"), "Auto-validated after update");
+}
+
+void testShipTemplateHighestPriority() {
+    std::cout << "\n=== ShipTemplateMod: Highest Priority ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    world.createEntity("t1");
+    world.createEntity("t2");
+    sys.registerTemplate("t1", "id1", "S1", "frigate", "f1");
+    sys.registerTemplate("t2", "id2", "S2", "cruiser", "f2");
+    sys.setModSource("t1", "base", 5);
+    sys.setModSource("t2", "addon", 15);
+    assertTrue(sys.getHighestPriority() == 15, "Highest priority is 15");
+}
+
+void testShipTemplateCount() {
+    std::cout << "\n=== ShipTemplateMod: Template Count ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    assertTrue(sys.getTemplateCount() == 0, "0 templates initially");
+    world.createEntity("t1");
+    sys.registerTemplate("t1", "id1", "S1", "frigate", "f1");
+    assertTrue(sys.getTemplateCount() == 1, "1 template after register");
+    world.createEntity("t2");
+    sys.registerTemplate("t2", "id2", "S2", "cruiser", "f2");
+    assertTrue(sys.getTemplateCount() == 2, "2 templates after second register");
+}
+
+void testShipTemplateGetters() {
+    std::cout << "\n=== ShipTemplateMod: Getters ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    world.createEntity("t1");
+    sys.registerTemplate("t1", "my_template", "Battleship", "battleship", "amarr");
+    assertTrue(sys.getTemplateId("t1") == "my_template", "Template ID getter");
+    assertTrue(sys.getShipClass("t1") == "battleship", "Ship class getter");
+}
+
+void testShipTemplateMissing() {
+    std::cout << "\n=== ShipTemplateMod: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::ShipTemplateModSystem sys(&world);
+    assertTrue(!sys.registerTemplate("nonexistent", "t", "n", "c", "f"), "Register fails on missing");
+    assertTrue(!sys.setBaseTemplate("nonexistent", "b"), "SetBase fails on missing");
+    assertTrue(!sys.setModSource("nonexistent", "m", 0), "SetModSource fails on missing");
+    assertTrue(!sys.validateTemplate("nonexistent"), "Validate fails on missing");
+    assertTrue(!sys.isValid("nonexistent"), "Not valid on missing");
+    assertTrue(sys.getTemplateId("nonexistent") == "", "Empty template ID on missing");
+    assertTrue(sys.getShipClass("nonexistent") == "", "Empty ship class on missing");
+}
+
+// ==================== DatabasePersistenceSystem Tests ====================
+
+void testDatabaseCreate() {
+    std::cout << "\n=== DatabasePersistence: Create ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    auto* e = world.createEntity("db1");
+    assertTrue(sys.createDatabase("db1", "players", 30.0f), "Create database succeeds");
+    auto* db = e->getComponent<components::DatabasePersistence>();
+    assertTrue(db != nullptr, "Component exists");
+    assertTrue(db->db_name == "players", "DB name set");
+    assertTrue(approxEqual(db->auto_save_interval, 30.0f), "Auto-save interval set");
+}
+
+void testDatabaseWriteRead() {
+    std::cout << "\n=== DatabasePersistence: Write/Read ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    world.createEntity("db1");
+    sys.createDatabase("db1", "store", 60.0f);
+    assertTrue(sys.write("db1", "name", "Alice"), "Write succeeds");
+    assertTrue(sys.read("db1", "name") == "Alice", "Read returns written value");
+    assertTrue(sys.read("db1", "missing") == "", "Read missing key returns empty");
+}
+
+void testDatabaseRemove() {
+    std::cout << "\n=== DatabasePersistence: Remove ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    world.createEntity("db1");
+    sys.createDatabase("db1", "store", 60.0f);
+    sys.write("db1", "key1", "val1");
+    assertTrue(sys.remove("db1", "key1"), "Remove succeeds");
+    assertTrue(sys.read("db1", "key1") == "", "Removed key returns empty");
+    assertTrue(!sys.remove("db1", "key1"), "Remove non-existent fails");
+}
+
+void testDatabaseDirty() {
+    std::cout << "\n=== DatabasePersistence: Dirty Flag ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    world.createEntity("db1");
+    sys.createDatabase("db1", "store", 60.0f);
+    assertTrue(!sys.isDirty("db1"), "Not dirty initially");
+    sys.write("db1", "k", "v");
+    assertTrue(sys.isDirty("db1"), "Dirty after write");
+    sys.save("db1");
+    assertTrue(!sys.isDirty("db1"), "Not dirty after save");
+}
+
+void testDatabaseSave() {
+    std::cout << "\n=== DatabasePersistence: Explicit Save ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    world.createEntity("db1");
+    sys.createDatabase("db1", "store", 60.0f);
+    sys.write("db1", "k", "v");
+    assertTrue(sys.save("db1"), "Save succeeds");
+    assertTrue(sys.getSaveCount("db1") == 1, "Save count is 1");
+    sys.save("db1");
+    assertTrue(sys.getSaveCount("db1") == 2, "Save count is 2");
+}
+
+void testDatabaseAutoSave() {
+    std::cout << "\n=== DatabasePersistence: Auto-Save ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    auto* e = world.createEntity("db1");
+    sys.createDatabase("db1", "store", 1.0f);
+    sys.write("db1", "k", "v");
+    sys.update(0.5f);
+    assertTrue(sys.isDirty("db1"), "Still dirty before interval");
+    sys.update(0.6f);
+    assertTrue(!sys.isDirty("db1"), "Not dirty after auto-save");
+    assertTrue(sys.getSaveCount("db1") == 1, "Auto-save incremented save count");
+}
+
+void testDatabaseEntryCount() {
+    std::cout << "\n=== DatabasePersistence: Entry Count ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    world.createEntity("db1");
+    sys.createDatabase("db1", "store", 60.0f);
+    assertTrue(sys.getEntryCount("db1") == 0, "0 entries initially");
+    sys.write("db1", "a", "1");
+    sys.write("db1", "b", "2");
+    assertTrue(sys.getEntryCount("db1") == 2, "2 entries after writes");
+    sys.remove("db1", "a");
+    assertTrue(sys.getEntryCount("db1") == 1, "1 entry after remove");
+}
+
+void testDatabaseWriteCount() {
+    std::cout << "\n=== DatabasePersistence: Write Count ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    world.createEntity("db1");
+    sys.createDatabase("db1", "store", 60.0f);
+    sys.write("db1", "a", "1");
+    sys.write("db1", "b", "2");
+    sys.write("db1", "a", "3");
+    assertTrue(sys.getTotalWrites("db1") == 3, "3 total writes");
+}
+
+void testDatabaseOverwrite() {
+    std::cout << "\n=== DatabasePersistence: Overwrite ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    world.createEntity("db1");
+    sys.createDatabase("db1", "store", 60.0f);
+    sys.write("db1", "key", "old");
+    sys.write("db1", "key", "new");
+    assertTrue(sys.read("db1", "key") == "new", "Overwritten value returned");
+    assertTrue(sys.getEntryCount("db1") == 1, "Still 1 entry after overwrite");
+}
+
+void testDatabaseMissing() {
+    std::cout << "\n=== DatabasePersistence: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::DatabasePersistenceSystem sys(&world);
+    assertTrue(!sys.createDatabase("nonexistent", "db", 60.0f), "Create fails on missing");
+    assertTrue(!sys.write("nonexistent", "k", "v"), "Write fails on missing");
+    assertTrue(sys.read("nonexistent", "k") == "", "Read returns empty on missing");
+    assertTrue(!sys.remove("nonexistent", "k"), "Remove fails on missing");
+    assertTrue(!sys.save("nonexistent"), "Save fails on missing");
+    assertTrue(sys.getEntryCount("nonexistent") == 0, "0 entries on missing");
+    assertTrue(!sys.isDirty("nonexistent"), "Not dirty on missing");
+    assertTrue(sys.getSaveCount("nonexistent") == 0, "0 saves on missing");
+    assertTrue(sys.getTotalWrites("nonexistent") == 0, "0 writes on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -30656,6 +31041,42 @@ int main() {
     testAncientDiscoveryActive();
     testAncientDiscoveryStateNames();
     testAncientDiscoveryMissing();
+
+    // ClientPrediction System tests
+    testClientPredictionInit();
+    testClientPredictionServerState();
+    testClientPredictionApplyInput();
+    testClientPredictionUpdate();
+    testClientPredictionError();
+    testClientPredictionReconciliation();
+    testClientPredictionSnap();
+    testClientPredictionInactive();
+    testClientPredictionFrame();
+    testClientPredictionMissing();
+
+    // ShipTemplateMod System tests
+    testShipTemplateRegister();
+    testShipTemplateValidate();
+    testShipTemplateValidateFail();
+    testShipTemplateModSource();
+    testShipTemplateBaseInherit();
+    testShipTemplateAutoValidate();
+    testShipTemplateHighestPriority();
+    testShipTemplateCount();
+    testShipTemplateGetters();
+    testShipTemplateMissing();
+
+    // DatabasePersistence System tests
+    testDatabaseCreate();
+    testDatabaseWriteRead();
+    testDatabaseRemove();
+    testDatabaseDirty();
+    testDatabaseSave();
+    testDatabaseAutoSave();
+    testDatabaseEntryCount();
+    testDatabaseWriteCount();
+    testDatabaseOverwrite();
+    testDatabaseMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
