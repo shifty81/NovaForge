@@ -1449,6 +1449,9 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] PvP toggle option (optional for those who want it) — PvPState component + PvPToggleSystem with safety levels (HighSec/LowSec/NullSec/Wormhole), engagement timers, kill/bounty/security tracking, aggression cooldown (10 tests)
 - [x] Tournament system
 - [x] Leaderboards and achievements
+- [x] Asteroid belt management — AsteroidBelt component + AsteroidBeltSystem with per-asteroid ore types (Veldspar/Scordite/Pyroxeres/Kernite/Omber), richness-based yield multiplier, depletion tracking, timer-based respawn (configurable interval), max asteroids limit, mined/respawned counters (10 tests)
+- [x] Scan probe exploration — ScanProbe component + ScanProbeSystem with 3 probe types (Core/Combat/Survey), 4 probe states (Idle/Scanning/Complete/Expired), scan progress with strength multiplier, lifetime-based expiry, result tracking with signature types, max probes limit (10 tests)
+- [x] Autopilot navigation — Autopilot component + AutopilotSystem with waypoint-based routes, engage/disengage control, arrival distance detection, automatic waypoint progression, optional route looping, configurable speed, max waypoints limit, route completion detection (10 tests)
 - [ ] In-game web browser (dotlan-style maps)
 - [ ] Voice chat integration
 - [ ] Mobile companion app

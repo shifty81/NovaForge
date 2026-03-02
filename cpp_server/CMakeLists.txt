@@ -238,6 +238,9 @@ set(CORE_SOURCES
     src/systems/navigation_bookmark_system.cpp
     src/systems/fleet_supply_line_system.cpp
     src/systems/crew_training_system.cpp
+    src/systems/asteroid_belt_system.cpp
+    src/systems/scan_probe_system.cpp
+    src/systems/autopilot_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -534,6 +537,9 @@ set(SERVER_HEADERS
     include/systems/navigation_bookmark_system.h
     include/systems/fleet_supply_line_system.h
     include/systems/crew_training_system.h
+    include/systems/asteroid_belt_system.h
+    include/systems/scan_probe_system.h
+    include/systems/autopilot_system.h
 )
 
 # Steam SDK configuration

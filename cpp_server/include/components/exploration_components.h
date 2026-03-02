@@ -823,6 +823,70 @@ public:
     COMPONENT_TYPE(AncientModuleDiscovery)
 };
 
+// ==================== Asteroid Belt System ====================
+
+class AsteroidBelt : public ecs::Component {
+public:
+    struct Asteroid {
+        std::string asteroid_id;
+        std::string ore_type;     // "Veldspar", "Scordite", "Pyroxeres", "Kernite", "Omber"
+        float quantity = 5000.0f;
+        float max_quantity = 5000.0f;
+        float richness = 1.0f;    // yield multiplier 0.5-2.0
+        bool depleted = false;
+    };
+
+    std::string belt_id;
+    std::string system_id;
+    std::vector<Asteroid> asteroids;
+    int max_asteroids = 20;
+    float respawn_timer = 0.0f;
+    float respawn_interval = 3600.0f;  // seconds
+    int total_mined = 0;
+    int total_respawned = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(AsteroidBelt)
+};
+
+// ==================== Scan Probe System ====================
+
+class ScanProbe : public ecs::Component {
+public:
+    enum class ProbeType { Core, Combat, Survey };
+    enum class ProbeState { Idle, Scanning, Complete, Expired };
+
+    struct Probe {
+        std::string probe_id;
+        ProbeType type = ProbeType::Core;
+        ProbeState state = ProbeState::Idle;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float scan_radius = 4.0f;       // AU
+        float scan_strength = 1.0f;
+        float scan_progress = 0.0f;     // 0-1
+        float scan_time = 10.0f;        // seconds
+        float lifetime = 300.0f;        // seconds before expiry
+    };
+
+    struct ScanResult {
+        std::string result_id;
+        std::string signature_type;    // "Anomaly", "Wormhole", "Data", "Relic", "Gas", "Combat"
+        float signal_strength = 0.0f;  // 0-1
+    };
+
+    std::string owner_id;
+    std::vector<Probe> probes;
+    std::vector<ScanResult> results;
+    int max_probes = 8;
+    int total_scans_completed = 0;
+    int total_sites_found = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(ScanProbe)
+};
+
 } // namespace components
 } // namespace atlas
 

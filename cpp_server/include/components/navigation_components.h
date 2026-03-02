@@ -418,6 +418,35 @@ public:
     COMPONENT_TYPE(NavigationBookmark)
 };
 
+// ==================== Autopilot System ====================
+
+class Autopilot : public ecs::Component {
+public:
+    struct Waypoint {
+        std::string waypoint_id;
+        std::string label;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        bool reached = false;
+    };
+
+    std::string owner_id;
+    std::vector<Waypoint> waypoints;
+    int current_waypoint_index = 0;
+    int max_waypoints = 50;
+    float speed = 100.0f;        // m/s
+    float arrival_distance = 50.0f;  // meters to consider "arrived"
+    float distance_to_next = 0.0f;
+    float total_distance_traveled = 0.0f;
+    int waypoints_reached = 0;
+    bool engaged = false;
+    bool loop = false;           // loop back to first waypoint
+    bool active = true;
+
+    COMPONENT_TYPE(Autopilot)
+};
+
 } // namespace components
 } // namespace atlas
 

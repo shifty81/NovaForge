@@ -111,6 +111,9 @@
 #include "systems/navigation_bookmark_system.h"
 #include "systems/fleet_supply_line_system.h"
 #include "systems/crew_training_system.h"
+#include "systems/asteroid_belt_system.h"
+#include "systems/scan_probe_system.h"
+#include "systems/autopilot_system.h"
 #include "network/protocol_handler.h"
 #include "ui/server_console.h"
 #include "utils/logger.h"
@@ -31988,6 +31991,411 @@ void testCrewTrainingMissing() {
     assertTrue(sys.getSkillName("nonexistent", "c1") == "", "Empty skill on missing");
 }
 
+// ==================== AsteroidBelt System Tests ====================
+
+void testAsteroidBeltCreate() {
+    std::cout << "\n=== AsteroidBelt: Create ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    assertTrue(sys.initializeBelt("belt1", "belt_alpha", "sys1"), "Init belt succeeds");
+    assertTrue(sys.getAsteroidCount("belt1") == 0, "No asteroids initially");
+    assertTrue(sys.getTotalMined("belt1") == 0, "No mined initially");
+    assertTrue(sys.getTotalRespawned("belt1") == 0, "No respawned initially");
+}
+
+void testAsteroidBeltAdd() {
+    std::cout << "\n=== AsteroidBelt: Add ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    assertTrue(sys.addAsteroid("belt1", "ast1", "Veldspar", 5000.0f, 1.0f), "Add asteroid succeeds");
+    assertTrue(sys.getAsteroidCount("belt1") == 1, "1 asteroid");
+    assertTrue(approxEqual(sys.getRemainingOre("belt1", "ast1"), 5000.0f), "5000 ore remaining");
+}
+
+void testAsteroidBeltDuplicate() {
+    std::cout << "\n=== AsteroidBelt: Duplicate ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    sys.addAsteroid("belt1", "ast1", "Veldspar", 5000.0f, 1.0f);
+    assertTrue(!sys.addAsteroid("belt1", "ast1", "Scordite", 3000.0f, 1.5f), "Duplicate rejected");
+    assertTrue(sys.getAsteroidCount("belt1") == 1, "Still 1 asteroid");
+}
+
+void testAsteroidBeltMine() {
+    std::cout << "\n=== AsteroidBelt: Mine ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    sys.addAsteroid("belt1", "ast1", "Veldspar", 5000.0f, 1.0f);
+    float mined = sys.mineAsteroid("belt1", "ast1", 1000.0f);
+    assertTrue(approxEqual(mined, 1000.0f), "Mined 1000 ore");
+    assertTrue(approxEqual(sys.getRemainingOre("belt1", "ast1"), 4000.0f), "4000 remaining");
+    assertTrue(!sys.isAsteroidDepleted("belt1", "ast1"), "Not depleted");
+}
+
+void testAsteroidBeltDeplete() {
+    std::cout << "\n=== AsteroidBelt: Deplete ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    sys.addAsteroid("belt1", "ast1", "Scordite", 1000.0f, 1.0f);
+    sys.mineAsteroid("belt1", "ast1", 1000.0f);
+    assertTrue(sys.isAsteroidDepleted("belt1", "ast1"), "Asteroid depleted");
+    assertTrue(approxEqual(sys.getRemainingOre("belt1", "ast1"), 0.0f), "0 ore remaining");
+    assertTrue(sys.getTotalMined("belt1") == 1, "1 total mined");
+    assertTrue(sys.getDepletedCount("belt1") == 1, "1 depleted");
+}
+
+void testAsteroidBeltRichness() {
+    std::cout << "\n=== AsteroidBelt: Richness ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    sys.addAsteroid("belt1", "ast1", "Kernite", 5000.0f, 2.0f);
+    // Mining 500 with richness 2.0 → actual = 500 * 2.0 = 1000
+    float mined = sys.mineAsteroid("belt1", "ast1", 500.0f);
+    assertTrue(approxEqual(mined, 1000.0f), "Richness doubles yield");
+    assertTrue(approxEqual(sys.getRemainingOre("belt1", "ast1"), 4000.0f), "4000 remaining");
+}
+
+void testAsteroidBeltRespawn() {
+    std::cout << "\n=== AsteroidBelt: Respawn ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    sys.addAsteroid("belt1", "ast1", "Veldspar", 1000.0f, 1.0f);
+    sys.mineAsteroid("belt1", "ast1", 1000.0f); // deplete
+    assertTrue(sys.isAsteroidDepleted("belt1", "ast1"), "Depleted after mining");
+    // Advance past respawn interval (default 3600s)
+    sys.update(3600.0f);
+    assertTrue(!sys.isAsteroidDepleted("belt1", "ast1"), "Respawned after interval");
+    assertTrue(approxEqual(sys.getRemainingOre("belt1", "ast1"), 1000.0f), "Full ore restored");
+    assertTrue(sys.getTotalRespawned("belt1") == 1, "1 respawn counted");
+}
+
+void testAsteroidBeltRemove() {
+    std::cout << "\n=== AsteroidBelt: Remove ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    sys.addAsteroid("belt1", "ast1", "Veldspar", 5000.0f, 1.0f);
+    sys.addAsteroid("belt1", "ast2", "Scordite", 3000.0f, 1.0f);
+    assertTrue(sys.removeAsteroid("belt1", "ast1"), "Remove succeeds");
+    assertTrue(sys.getAsteroidCount("belt1") == 1, "1 asteroid remaining");
+    assertTrue(!sys.removeAsteroid("belt1", "ast1"), "Remove nonexistent fails");
+}
+
+void testAsteroidBeltMaxLimit() {
+    std::cout << "\n=== AsteroidBelt: MaxLimit ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    world.createEntity("belt1");
+    sys.initializeBelt("belt1", "belt_alpha", "sys1");
+    auto* entity = world.getEntity("belt1");
+    auto* belt = entity->getComponent<components::AsteroidBelt>();
+    belt->max_asteroids = 3;
+    sys.addAsteroid("belt1", "a1", "Veldspar", 1000.0f, 1.0f);
+    sys.addAsteroid("belt1", "a2", "Scordite", 1000.0f, 1.0f);
+    sys.addAsteroid("belt1", "a3", "Pyroxeres", 1000.0f, 1.0f);
+    assertTrue(!sys.addAsteroid("belt1", "a4", "Kernite", 1000.0f, 1.0f), "Max limit enforced");
+    assertTrue(sys.getAsteroidCount("belt1") == 3, "Still 3 asteroids");
+}
+
+void testAsteroidBeltMissing() {
+    std::cout << "\n=== AsteroidBelt: Missing ===" << std::endl;
+    ecs::World world;
+    systems::AsteroidBeltSystem sys(&world);
+    assertTrue(!sys.initializeBelt("nonexistent", "b1", "s1"), "Init fails on missing");
+    assertTrue(!sys.addAsteroid("nonexistent", "a1", "Ore", 100.0f, 1.0f), "Add fails on missing");
+    assertTrue(!sys.removeAsteroid("nonexistent", "a1"), "Remove fails on missing");
+    assertTrue(approxEqual(sys.mineAsteroid("nonexistent", "a1", 100.0f), 0.0f), "Mine returns 0 on missing");
+    assertTrue(sys.getAsteroidCount("nonexistent") == 0, "0 count on missing");
+    assertTrue(sys.getDepletedCount("nonexistent") == 0, "0 depleted on missing");
+    assertTrue(approxEqual(sys.getRemainingOre("nonexistent", "a1"), 0.0f), "0 ore on missing");
+    assertTrue(!sys.isAsteroidDepleted("nonexistent", "a1"), "Not depleted on missing");
+    assertTrue(sys.getTotalMined("nonexistent") == 0, "0 mined on missing");
+    assertTrue(sys.getTotalRespawned("nonexistent") == 0, "0 respawned on missing");
+}
+
+// ==================== ScanProbe System Tests ====================
+
+void testScanProbeCreate() {
+    std::cout << "\n=== ScanProbe: Create ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    assertTrue(sys.initializeProbes("ship1", "player1"), "Init probes succeeds");
+    assertTrue(sys.getProbeCount("ship1") == 0, "No probes initially");
+    assertTrue(sys.getTotalScansCompleted("ship1") == 0, "No scans initially");
+    assertTrue(sys.getTotalSitesFound("ship1") == 0, "No sites initially");
+}
+
+void testScanProbeLaunch() {
+    std::cout << "\n=== ScanProbe: Launch ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    assertTrue(sys.launchProbe("ship1", "p1", 0, 10.0f, 20.0f, 30.0f), "Launch probe succeeds");
+    assertTrue(sys.getProbeCount("ship1") == 1, "1 probe launched");
+    assertTrue(approxEqual(sys.getScanProgress("ship1", "p1"), 0.0f), "Initial progress 0");
+}
+
+void testScanProbeDuplicate() {
+    std::cout << "\n=== ScanProbe: Duplicate ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    sys.launchProbe("ship1", "p1", 0, 10.0f, 20.0f, 30.0f);
+    assertTrue(!sys.launchProbe("ship1", "p1", 1, 0.0f, 0.0f, 0.0f), "Duplicate probe rejected");
+    assertTrue(sys.getProbeCount("ship1") == 1, "Still 1 probe");
+}
+
+void testScanProbeScan() {
+    std::cout << "\n=== ScanProbe: Scan ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    sys.launchProbe("ship1", "p1", 0, 10.0f, 20.0f, 30.0f);
+    assertTrue(sys.startScan("ship1", "p1"), "Start scan succeeds");
+    assertTrue(sys.getActiveProbeCount("ship1") == 1, "1 active probe");
+    // scan_time=10, scan_strength=1, delta=5 → progress = 0.5
+    sys.update(5.0f);
+    assertTrue(approxEqual(sys.getScanProgress("ship1", "p1"), 0.5f), "Progress at 0.5");
+}
+
+void testScanProbeComplete() {
+    std::cout << "\n=== ScanProbe: Complete ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    sys.launchProbe("ship1", "p1", 0, 10.0f, 20.0f, 30.0f);
+    sys.startScan("ship1", "p1");
+    sys.update(10.0f); // completes scan
+    assertTrue(approxEqual(sys.getScanProgress("ship1", "p1"), 1.0f), "Scan complete at 1.0");
+    assertTrue(sys.getTotalScansCompleted("ship1") == 1, "1 scan completed");
+    assertTrue(sys.getActiveProbeCount("ship1") == 0, "No active probes after complete");
+}
+
+void testScanProbeExpiry() {
+    std::cout << "\n=== ScanProbe: Expiry ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    sys.launchProbe("ship1", "p1", 0, 10.0f, 20.0f, 30.0f);
+    // Default lifetime = 300s
+    sys.update(300.0f);
+    assertTrue(sys.getProbeCount("ship1") == 0, "Probe expired and removed");
+}
+
+void testScanProbeRecall() {
+    std::cout << "\n=== ScanProbe: Recall ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    sys.launchProbe("ship1", "p1", 0, 10.0f, 20.0f, 30.0f);
+    sys.launchProbe("ship1", "p2", 1, 50.0f, 60.0f, 70.0f);
+    assertTrue(sys.recallProbe("ship1", "p1"), "Recall succeeds");
+    assertTrue(sys.getProbeCount("ship1") == 1, "1 probe remaining");
+    assertTrue(!sys.recallProbe("ship1", "p1"), "Recall nonexistent fails");
+}
+
+void testScanProbeResults() {
+    std::cout << "\n=== ScanProbe: Results ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    assertTrue(sys.addResult("ship1", "sig1", "Anomaly", 0.75f), "Add result succeeds");
+    assertTrue(sys.getResultCount("ship1") == 1, "1 result");
+    assertTrue(sys.getTotalSitesFound("ship1") == 1, "1 site found");
+    assertTrue(!sys.addResult("ship1", "sig1", "Wormhole", 0.5f), "Duplicate result rejected");
+    assertTrue(sys.getResultCount("ship1") == 1, "Still 1 result");
+}
+
+void testScanProbeMaxLimit() {
+    std::cout << "\n=== ScanProbe: MaxLimit ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeProbes("ship1", "player1");
+    // max_probes = 8
+    for (int i = 0; i < 8; i++) {
+        sys.launchProbe("ship1", "p" + std::to_string(i), 0, 0, 0, 0);
+    }
+    assertTrue(!sys.launchProbe("ship1", "p8", 0, 0, 0, 0), "Max probes enforced at 8");
+    assertTrue(sys.getProbeCount("ship1") == 8, "Still 8 probes");
+}
+
+void testScanProbeMissing() {
+    std::cout << "\n=== ScanProbe: Missing ===" << std::endl;
+    ecs::World world;
+    systems::ScanProbeSystem sys(&world);
+    assertTrue(!sys.initializeProbes("nonexistent", "p1"), "Init fails on missing");
+    assertTrue(!sys.launchProbe("nonexistent", "p1", 0, 0, 0, 0), "Launch fails on missing");
+    assertTrue(!sys.recallProbe("nonexistent", "p1"), "Recall fails on missing");
+    assertTrue(!sys.startScan("nonexistent", "p1"), "Start scan fails on missing");
+    assertTrue(sys.getProbeCount("nonexistent") == 0, "0 probes on missing");
+    assertTrue(sys.getActiveProbeCount("nonexistent") == 0, "0 active on missing");
+    assertTrue(approxEqual(sys.getScanProgress("nonexistent", "p1"), 0.0f), "0 progress on missing");
+    assertTrue(!sys.addResult("nonexistent", "r1", "Anomaly", 0.5f), "Add result fails on missing");
+    assertTrue(sys.getResultCount("nonexistent") == 0, "0 results on missing");
+    assertTrue(sys.getTotalScansCompleted("nonexistent") == 0, "0 scans on missing");
+    assertTrue(sys.getTotalSitesFound("nonexistent") == 0, "0 sites on missing");
+}
+
+// ==================== Autopilot System Tests ====================
+
+void testAutopilotCreate() {
+    std::cout << "\n=== Autopilot: Create ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    assertTrue(sys.initializeAutopilot("ship1", "player1"), "Init autopilot succeeds");
+    assertTrue(sys.getWaypointCount("ship1") == 0, "No waypoints initially");
+    assertTrue(!sys.isEngaged("ship1"), "Not engaged initially");
+    assertTrue(sys.getWaypointsReached("ship1") == 0, "No waypoints reached");
+}
+
+void testAutopilotAddWaypoint() {
+    std::cout << "\n=== Autopilot: AddWaypoint ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    assertTrue(sys.addWaypoint("ship1", "wp1", "Station Alpha", 1000.0f, 0.0f, 0.0f), "Add waypoint succeeds");
+    assertTrue(sys.getWaypointCount("ship1") == 1, "1 waypoint");
+    assertTrue(!sys.addWaypoint("ship1", "wp1", "Dup", 0.0f, 0.0f, 0.0f), "Duplicate rejected");
+}
+
+void testAutopilotEngage() {
+    std::cout << "\n=== Autopilot: Engage ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    assertTrue(!sys.engage("ship1"), "Engage fails with no waypoints");
+    sys.addWaypoint("ship1", "wp1", "Gate A", 1000.0f, 0.0f, 0.0f);
+    assertTrue(sys.engage("ship1"), "Engage succeeds with waypoints");
+    assertTrue(sys.isEngaged("ship1"), "Autopilot engaged");
+}
+
+void testAutopilotDisengage() {
+    std::cout << "\n=== Autopilot: Disengage ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    sys.addWaypoint("ship1", "wp1", "Gate A", 1000.0f, 0.0f, 0.0f);
+    sys.engage("ship1");
+    assertTrue(sys.disengage("ship1"), "Disengage succeeds");
+    assertTrue(!sys.isEngaged("ship1"), "No longer engaged");
+}
+
+void testAutopilotNavigation() {
+    std::cout << "\n=== Autopilot: Navigation ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    sys.addWaypoint("ship1", "wp1", "Gate A", 1000.0f, 0.0f, 0.0f);
+    sys.engage("ship1");
+    // speed=100 m/s, distance=1000m, travel for 10s → 1000m traveled
+    // Arrival distance = 50m, so after 10s (1000m traveled), distance_to_next = 1000-1000 = 0 → arrived
+    sys.update(10.0f);
+    assertTrue(sys.getWaypointsReached("ship1") == 1, "Waypoint reached");
+    assertTrue(sys.getCurrentWaypointIndex("ship1") == 1, "Index advanced to 1");
+}
+
+void testAutopilotRouteComplete() {
+    std::cout << "\n=== Autopilot: RouteComplete ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    sys.addWaypoint("ship1", "wp1", "Gate A", 500.0f, 0.0f, 0.0f);
+    sys.engage("ship1");
+    sys.update(5.0f); // 100 m/s * 5s = 500m, arrives at wp1
+    assertTrue(sys.isRouteComplete("ship1"), "Route complete after all waypoints");
+}
+
+void testAutopilotLoop() {
+    std::cout << "\n=== Autopilot: Loop ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    sys.addWaypoint("ship1", "wp1", "Gate A", 500.0f, 0.0f, 0.0f);
+    assertTrue(sys.setLoop("ship1", true), "Set loop succeeds");
+    sys.engage("ship1");
+    sys.update(5.0f); // reach wp1
+    assertTrue(!sys.isRouteComplete("ship1"), "Route not complete in loop mode");
+    assertTrue(sys.getCurrentWaypointIndex("ship1") == 0, "Index reset to 0 for loop");
+}
+
+void testAutopilotRemoveWaypoint() {
+    std::cout << "\n=== Autopilot: RemoveWaypoint ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    sys.addWaypoint("ship1", "wp1", "Gate A", 1000.0f, 0.0f, 0.0f);
+    sys.addWaypoint("ship1", "wp2", "Gate B", 2000.0f, 0.0f, 0.0f);
+    assertTrue(sys.removeWaypoint("ship1", "wp1"), "Remove succeeds");
+    assertTrue(sys.getWaypointCount("ship1") == 1, "1 waypoint remaining");
+    assertTrue(!sys.removeWaypoint("ship1", "wp1"), "Remove nonexistent fails");
+}
+
+void testAutopilotMaxWaypoints() {
+    std::cout << "\n=== Autopilot: MaxWaypoints ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    world.createEntity("ship1");
+    sys.initializeAutopilot("ship1", "player1");
+    auto* entity = world.getEntity("ship1");
+    auto* ap = entity->getComponent<components::Autopilot>();
+    ap->max_waypoints = 3;
+    sys.addWaypoint("ship1", "w1", "A", 100.0f, 0.0f, 0.0f);
+    sys.addWaypoint("ship1", "w2", "B", 200.0f, 0.0f, 0.0f);
+    sys.addWaypoint("ship1", "w3", "C", 300.0f, 0.0f, 0.0f);
+    assertTrue(!sys.addWaypoint("ship1", "w4", "D", 400.0f, 0.0f, 0.0f), "Max waypoints enforced");
+    assertTrue(sys.getWaypointCount("ship1") == 3, "Still 3 waypoints");
+}
+
+void testAutopilotMissing() {
+    std::cout << "\n=== Autopilot: Missing ===" << std::endl;
+    ecs::World world;
+    systems::AutopilotSystem sys(&world);
+    assertTrue(!sys.initializeAutopilot("nonexistent", "p1"), "Init fails on missing");
+    assertTrue(!sys.addWaypoint("nonexistent", "w1", "A", 0, 0, 0), "Add fails on missing");
+    assertTrue(!sys.removeWaypoint("nonexistent", "w1"), "Remove fails on missing");
+    assertTrue(!sys.engage("nonexistent"), "Engage fails on missing");
+    assertTrue(!sys.disengage("nonexistent"), "Disengage fails on missing");
+    assertTrue(!sys.setLoop("nonexistent", true), "Set loop fails on missing");
+    assertTrue(!sys.setSpeed("nonexistent", 200.0f), "Set speed fails on missing");
+    assertTrue(sys.getWaypointCount("nonexistent") == 0, "0 waypoints on missing");
+    assertTrue(sys.getCurrentWaypointIndex("nonexistent") == 0, "0 index on missing");
+    assertTrue(sys.getWaypointsReached("nonexistent") == 0, "0 reached on missing");
+    assertTrue(approxEqual(sys.getTotalDistanceTraveled("nonexistent"), 0.0f), "0 distance on missing");
+    assertTrue(!sys.isEngaged("nonexistent"), "Not engaged on missing");
+    assertTrue(!sys.isRouteComplete("nonexistent"), "Not complete on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -32042,7 +32450,8 @@ int main() {
     std::cout << "CommanderDisagreement, ImperfectInformation, CaptainBackground" << std::endl;
     std::cout << "RigLocker, VisualCoupling, FPSSalvagePath," << std::endl;
     std::cout << "LavatoryInteraction, EVAAirlockExit, AncientModuleDiscovery" << std::endl;
-    std::cout << "NavigationBookmark, FleetSupplyLine, CrewTraining" << std::endl;
+    std::cout << "NavigationBookmark, FleetSupplyLine, CrewTraining," << std::endl;
+    std::cout << "AsteroidBelt, ScanProbe, Autopilot" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -34398,6 +34807,42 @@ int main() {
     testCrewTrainingMaxLimit();
     testCrewTrainingMultiComplete();
     testCrewTrainingMissing();
+
+    // AsteroidBelt System tests
+    testAsteroidBeltCreate();
+    testAsteroidBeltAdd();
+    testAsteroidBeltDuplicate();
+    testAsteroidBeltMine();
+    testAsteroidBeltDeplete();
+    testAsteroidBeltRichness();
+    testAsteroidBeltRespawn();
+    testAsteroidBeltRemove();
+    testAsteroidBeltMaxLimit();
+    testAsteroidBeltMissing();
+
+    // ScanProbe System tests
+    testScanProbeCreate();
+    testScanProbeLaunch();
+    testScanProbeDuplicate();
+    testScanProbeScan();
+    testScanProbeComplete();
+    testScanProbeExpiry();
+    testScanProbeRecall();
+    testScanProbeResults();
+    testScanProbeMaxLimit();
+    testScanProbeMissing();
+
+    // Autopilot System tests
+    testAutopilotCreate();
+    testAutopilotAddWaypoint();
+    testAutopilotEngage();
+    testAutopilotDisengage();
+    testAutopilotNavigation();
+    testAutopilotRouteComplete();
+    testAutopilotLoop();
+    testAutopilotRemoveWaypoint();
+    testAutopilotMaxWaypoints();
+    testAutopilotMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
