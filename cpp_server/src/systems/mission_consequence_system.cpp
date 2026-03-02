@@ -65,6 +65,7 @@ bool MissionConsequenceSystem::triggerConsequence(
     components::MissionConsequence::ConsequenceEntry entry;
     entry.id = "csq_" + std::to_string(mc->times_triggered);
     entry.mission_id = mission_id;
+    entry.target_faction = target_faction;
     entry.type = type;
     entry.magnitude = magnitude;
     entry.remaining_time = duration;

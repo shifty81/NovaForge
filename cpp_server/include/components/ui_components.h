@@ -181,7 +181,7 @@ public:
 
     std::vector<DockNode> nodes;
     std::string root_node_id;
-    int max_windows = 20;
+    int max_windows = 20;  // inclusive limit: up to 20 windows allowed
     int total_docks = 0;
     int total_undocks = 0;
 

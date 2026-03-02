@@ -68,7 +68,7 @@ class ServerPerformanceMetrics : public ecs::Component {
 public:
     std::string monitor_id;
     std::string server_id;
-    float tick_budget_ms = 50.0f;
+    float tick_budget_ms = 50.0f;  // 50ms = 20Hz tick rate
 
     struct SystemTiming {
         std::string system_name;

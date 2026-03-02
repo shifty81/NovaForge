@@ -220,6 +220,7 @@ public:
     struct ConsequenceEntry {
         std::string id;
         std::string mission_id;
+        std::string target_faction;
         ConsequenceType type = ConsequenceType::StandingChange;
         float magnitude = 0.0f;
         float remaining_time = 0.0f;
