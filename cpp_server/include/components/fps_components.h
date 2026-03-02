@@ -656,6 +656,97 @@ public:
     COMPONENT_TYPE(RigLockerPreset)
 };
 
+// ==================== FPS Salvage Path ====================
+
+/**
+ * @brief FPS salvage path component (Phase 13)
+ *
+ * Tracks FPS-mode salvage exploration state including entry point cutting,
+ * room-by-room exploration progress, and loot discovery.
+ */
+class FPSSalvagePath : public ecs::Component {
+public:
+    enum class EntryState {
+        Sealed,
+        Cutting,
+        Open
+    };
+
+    enum class LootRarity {
+        Common,
+        Uncommon,
+        Rare,
+        Epic,
+        Legendary
+    };
+
+    struct EntryPoint {
+        std::string entry_id;
+        EntryState state = EntryState::Sealed;
+        float cut_progress = 0.0f;
+        float cut_required = 10.0f;  // seconds to cut through
+        std::string tool_required;
+    };
+
+    struct LootNode {
+        std::string loot_id;
+        std::string item_name;
+        LootRarity rarity = LootRarity::Common;
+        bool discovered = false;
+        bool collected = false;
+        float value = 0.0f;
+    };
+
+    std::string site_id;
+    std::string explorer_id;
+    std::vector<EntryPoint> entry_points;
+    std::vector<LootNode> loot_nodes;
+    float exploration_progress = 0.0f;  // 0.0 to 1.0
+    int rooms_explored = 0;
+    int total_rooms = 0;
+    bool active = false;
+    int total_collections = 0;
+
+    EntryPoint* findEntry(const std::string& id) {
+        for (auto& e : entry_points) {
+            if (e.entry_id == id) return &e;
+        }
+        return nullptr;
+    }
+
+    const EntryPoint* findEntry(const std::string& id) const {
+        for (const auto& e : entry_points) {
+            if (e.entry_id == id) return &e;
+        }
+        return nullptr;
+    }
+
+    LootNode* findLoot(const std::string& id) {
+        for (auto& l : loot_nodes) {
+            if (l.loot_id == id) return &l;
+        }
+        return nullptr;
+    }
+
+    int discoveredCount() const {
+        int count = 0;
+        for (const auto& l : loot_nodes) {
+            if (l.discovered) count++;
+        }
+        return count;
+    }
+
+    int collectedCount() const {
+        int count = 0;
+        for (const auto& l : loot_nodes) {
+            if (l.collected) count++;
+        }
+        return count;
+    }
+
+    COMPONENT_TYPE(FPSSalvagePath)
+};
+
 } // namespace components
 } // namespace atlas
 
