@@ -111,82 +111,82 @@ If it fails any one → it doesn't ship.
 - [x] `SimStarSystemStateComponent` — per-system state vector (traffic, economy, security, threat, faction influence)
 - [x] `AtlasBackgroundSimulationSystem` — continuous background simulation tick
 - [x] Threshold-based system events (pirate surge, shortages, lockdowns)
-- [ ] Local reputation per system
+- [x] Local reputation per system
 
 #### NPC Life
 - [x] Intent-driven NPC AI (`SimNPCIntentComponent`)
   - Intents: Trade, Patrol, Hunt, Explore, Flee, Escort, Salvage
   - Intent scoring: `NPCIntent ChooseIntent(NPC& npc, StarSystemState& sys)`
 - [x] NPC archetypes: Trader, Pirate, Patrol, Miner, Hauler, Industrialist
-- [ ] NPC behavior trees (per archetype)
-- [ ] NPC rerouting based on system danger
-- [ ] Ambient traffic spawns driven by system state
-- [ ] AI as real economic actors (wallets, ship ownership, permanent death)
+- [x] NPC behavior trees (per archetype)
+- [x] NPC rerouting based on system danger
+- [x] Ambient traffic spawns driven by system state
+- [x] AI as real economic actors (wallets, ship ownership, permanent death)
 
 #### Combat Aftermath
-- [ ] Wreck persistence
-- [ ] Salvage NPCs
-- [ ] Security response delay
-- [ ] System threat adjustment from combat
+- [x] Wreck persistence
+- [x] Salvage NPCs
+- [x] Security response delay
+- [x] System threat adjustment from combat
 
 #### World Feedback
-- [ ] Station news feed
-- [ ] Rumors about player actions (`AtlasInformationPropagationSystem`)
-- [ ] Visual cues (lockdowns, traffic density)
+- [x] Station news feed
+- [x] Rumors about player actions (`AtlasInformationPropagationSystem`)
+- [x] Visual cues (lockdowns, traffic density)
 
 #### Economy Engine
-- [ ] No fake NPC market orders — everything produced, transported, consumed, destroyed
-- [ ] Regional markets with delayed information
-- [ ] Dynamic taxation and broker fees
-- [ ] Supply/demand curves driven by NPC activity
-- [ ] `AtlasEconomicFlowSystem`
+- [x] No fake NPC market orders — everything produced, transported, consumed, destroyed
+- [x] Regional markets with delayed information
+- [x] Dynamic taxation and broker fees
+- [x] Supply/demand curves driven by NPC activity
+- [x] `AtlasEconomicFlowSystem`
 
 ### Phase 3: Wing System & Midgame (v0.3)
 > Expand fleet to 15 ships, wing roles, deeper fleet psychology.
 
-- [ ] Wing system: 3 wings × 5 ships
-- [ ] Wing commanders with decision authority
-- [ ] Wing roles: Mining, Combat, Logistics
-- [ ] Wing-level morale
-- [ ] Wing chatter overrides individual chatter
-- [ ] Commander disagreement system
-- [ ] `AtlasFleetDoctrineSystem`
-- [ ] Tactical Overlay (`AtlasSpatialProjectionSystem`)
+- [x] Wing system: 3 wings × 5 ships
+- [x] Wing commanders with decision authority
+- [x] Wing roles: Mining, Combat, Logistics
+- [x] Wing-level morale
+- [x] Wing chatter overrides individual chatter
+- [x] Commander disagreement system
+- [x] `AtlasFleetDoctrineSystem`
+- [x] Tactical Overlay (`AtlasSpatialProjectionSystem`)
   - Passive 2.5D spatial overlay
   - Truthful distances and positioning
   - Shared filtering with Overview
   - Non-interactive (read-only)
-- [ ] Overview panel with entity filtering
-- [ ] Imperfect information system (scan confidence ranges, intel decay)
-- [ ] Captain backgrounds (former miner, ex-military, etc.)
+- [x] Overview panel with entity filtering
+- [x] Imperfect information system (scan confidence ranges, intel decay)
+- [x] Captain backgrounds (former miner, ex-military, etc.)
 
 ### Phase 4: Full Fleet Doctrine & Endgame (v0.4+)
 > 25 ships, 5 wings, philosophical fractures, civilization-scale gameplay.
 
-- [ ] Full fleet: 5 wings × 5 ships (25 total)
-- [ ] Doctrine slots: Mining/Salvage, Logistics/Repair, Escort, Construction
-- [ ] Fleet ideology system — captains with philosophical alignment
-- [ ] Fleet fracture mechanics (disagreement → potential departure)
-- [ ] `AtlasFleetMoraleResolutionSystem`
-- [ ] Mobile industry and logistics
-- [ ] Fleet cargo pooling (civilization-scale inventory)
-- [ ] `AtlasPersistenceDeltaSystem` — long-term consequence tracking
+- [x] Full fleet: 5 wings × 5 ships (25 total)
+- [x] Doctrine slots: Mining/Salvage, Logistics/Repair, Escort, Construction
+- [x] Fleet ideology system — captains with philosophical alignment
+- [x] Fleet fracture mechanics (disagreement → potential departure)
+- [x] `AtlasFleetMoraleResolutionSystem`
+- [x] Mobile industry and logistics
+- [x] Fleet cargo pooling (civilization-scale inventory)
+- [x] `AtlasPersistenceDeltaSystem` — long-term consequence tracking
 
 ### Phase 5: Titan Systems & Meta-Threat (v0.5+)
 > Galactic-scale emergent threats. Titans are processes, not spawns.
 
-- [ ] `SimTitanAssemblyProgressComponent` — progress, secrecy, resource pressure
-- [ ] `AtlasTitanAssemblyPressureSystem` — pirate resources → assembly progress
-- [ ] `AtlasOuterRimLogisticsDistortionSystem` — trade route distortion
+- [x] `SimTitanAssemblyProgressComponent` — progress, secrecy, resource pressure
+- [x] `AtlasTitanAssemblyPressureSystem` — pirate resources → assembly progress
+- [x] `AtlasOuterRimLogisticsDistortionSystem` — trade route distortion
 - [ ] `AtlasRumorPropagationSystem` — incomplete intel leaks
 - [ ] `AtlasGalacticResponseCurveSystem` — AI faction response escalation
-- [ ] Warp anomalies & rare mid-warp events
+- [x] Warp anomalies & rare mid-warp events
   - Visual-only phenomena (common)
   - Sensory distortions (uncommon)
   - Spacetime shear events (rare, memorable)
   - Legendary warp events (ultra-rare, screenshot-worthy)
-- [ ] Pirate coalition doctrine
-- [ ] Evidence-based player discovery (no UI reveals)
+- [x] Pirate coalition doctrine
+- [x] Evidence-based player discovery (no UI reveals)
 - [ ] Galactic response curves (empire reinforcement, trade rerouting)
 
 ---
