@@ -94,6 +94,49 @@ Blender addon for procedurally generating spaceships, stations, and asteroid bel
 python tools/BlenderSpaceshipGenerator/test_validation.py
 ```
 
+### PCG Pipeline (pcg_pipeline/)
+
+Seed-based procedural content generation pipeline for bulk NovaForge universe
+creation.  Generates galaxies, star systems, planets, stations, ships, and
+characters using deterministic seeds for fully reproducible content.
+
+**Requirements:** Python 3.7+ (no Blender needed for metadata generation)
+
+**Features:**
+- Deterministic galaxy generation — same seed always produces the same universe
+- Realistic astronomical parameters — star types (O–M), orbital mechanics, biomes
+- Planet terrain with foliage layers, liquid bodies, and atmosphere composition
+- Procedural station and ship metadata aligned with NovaForge game data
+- Character generation with race, body type, and cybernetic limb options
+- Headless Blender integration for mesh/texture/LOD export (optional)
+- Single-command batch generation of entire universes
+
+**Usage:**
+```bash
+# Generate universe metadata (no Blender required)
+cd tools/BlenderSpaceshipGenerator
+python -m pcg_pipeline.batch_generate --seed 123456 --systems 10 --output-dir ../../build
+
+# Generate with Blender mesh export (requires Blender)
+python -m pcg_pipeline.batch_generate --seed 123456 --systems 5 --export-meshes
+```
+
+**Validation:**
+```bash
+python tools/BlenderSpaceshipGenerator/pcg_pipeline/test_pcg_pipeline.py
+```
+
+**Pipeline Modules:**
+| Module | Description |
+|---|---|
+| `galaxy_generator.py` | Top-level galaxy with N star systems |
+| `system_generator.py` | Star system with stars, planets, stations, ships |
+| `planet_generator.py` | Planet type, biome, atmosphere, foliage, liquids |
+| `station_generator.py` | Station type, modules, faction |
+| `ship_generator.py` | Ship class, faction, modules, hardpoints |
+| `character_generator.py` | Race, body type, cybernetic limbs |
+| `batch_generate.py` | Single-command batch orchestrator |
+
 ## Future Tools
 
 The following tools are planned for future releases:

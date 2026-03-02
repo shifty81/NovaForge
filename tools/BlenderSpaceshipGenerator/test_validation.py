@@ -578,6 +578,50 @@ def test_pipeline_stages():
     return all_valid
 
 
+def test_pcg_pipeline():
+    """Test that the PCG pipeline module exists and passes its own tests"""
+    print("\nTesting PCG pipeline integration...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    pipeline_path = os.path.join(addon_path, 'pcg_pipeline')
+
+    # Check required files
+    required_files = [
+        '__init__.py',
+        'galaxy_generator.py',
+        'system_generator.py',
+        'planet_generator.py',
+        'station_generator.py',
+        'ship_generator.py',
+        'character_generator.py',
+        'batch_generate.py',
+        'test_pcg_pipeline.py',
+    ]
+
+    all_valid = True
+    for filename in required_files:
+        filepath = os.path.join(pipeline_path, filename)
+        if os.path.exists(filepath):
+            print(f"✓ pcg_pipeline/{filename} exists")
+        else:
+            print(f"✗ pcg_pipeline/{filename} is missing")
+            all_valid = False
+
+    # Check Python syntax of pipeline files
+    for filename in required_files:
+        filepath = os.path.join(pipeline_path, filename)
+        if os.path.exists(filepath):
+            valid, error = test_python_syntax(filepath)
+            if not valid:
+                print(f"✗ pcg_pipeline/{filename} has syntax error: {error}")
+                all_valid = False
+
+    if all_valid:
+        print("✓ All PCG pipeline files present with valid syntax")
+
+    return all_valid
+
+
 def run_tests():
     """Run all validation tests"""
     print("=" * 60)
@@ -599,6 +643,7 @@ def run_tests():
         ("Exterior Influence Definitions", test_exterior_influence_definitions),
         ("Module Room Types", test_module_room_types),
         ("Pipeline Stages", test_pipeline_stages),
+        ("PCG Pipeline", test_pcg_pipeline),
     ]
     
     results = []
