@@ -4,6 +4,13 @@ NovaForge PCG Pipeline — Ship Generator
 Generates ship metadata and provides a helper for headless Blender export
 via the BlenderSpaceshipGenerator addon.  Ship classes and factions align
 with existing NovaForge game data in ``data/ships/``.
+
+LOD (Level of Detail) tiers are embedded in every ship's metadata so that
+the Atlas engine (or any runtime) can request reduced-poly assets:
+
+  - **LOD0** — full detail, used in close-up / hangar view
+  - **LOD1** — half poly-count, used at mid-range
+  - **LOD2** — quarter poly-count, used at long range
 """
 
 import json
@@ -24,6 +31,15 @@ FACTIONS = ["Solari", "Veyren", "Aurelian", "Keldari"]
 MODULE_POOL = ["engine", "weapon", "core", "shield", "sensor", "cargo",
                "hangar", "power"]
 
+# LOD tier definitions — each tier describes the fraction of the full
+# poly-count that should be retained and the maximum view distance (in
+# game-world metres) at which that tier is used.
+LOD_TIERS = [
+    {"tier": 0, "poly_fraction": 1.0,  "max_distance": 500},
+    {"tier": 1, "poly_fraction": 0.5,  "max_distance": 2000},
+    {"tier": 2, "poly_fraction": 0.25, "max_distance": 8000},
+]
+
 
 def generate_ship_metadata(seed, ship_id):
     """Generate ship metadata JSON.
@@ -33,7 +49,7 @@ def generate_ship_metadata(seed, ship_id):
         ship_id: Unique identifier string.
 
     Returns:
-        dict with ship metadata.
+        dict with ship metadata including LOD tiers.
     """
     rng = random.Random(seed)
 
@@ -49,6 +65,7 @@ def generate_ship_metadata(seed, ship_id):
         "faction": faction,
         "modules": modules,
         "hardpoints": hardpoints,
+        "lod_tiers": list(LOD_TIERS),
     }
 
 

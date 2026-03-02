@@ -49,14 +49,43 @@ def load_ship_data(json_path):
 
 def parse_ship_config(ship_data):
     """
-    Convert an EVEOFFLINE ship definition to generator parameters.
+    Convert a ship definition to generator parameters.
+
+    Supports both the EVEOFFLINE ship JSON format (with ``model_data``,
+    ``race``, ``high_slots``, etc.) and the lighter PCG pipeline format
+    (with ``faction``, ``seed``, ``hardpoints``, ``modules``).
 
     Args:
-        ship_data: Single ship dict from EVEOFFLINE JSON
+        ship_data: Single ship dict from EVEOFFLINE JSON or PCG pipeline
 
     Returns:
         Dictionary of parameters for generate_spaceship()
     """
+    # --- PCG pipeline format ---
+    if 'ship_id' in ship_data and 'faction' in ship_data:
+        ship_class_name = ship_data.get('class', 'Frigate')
+        ship_class = EVEOFFLINE_CLASS_MAP.get(ship_class_name, 'FRIGATE')
+        faction = ship_data.get('faction', '')
+        style = FACTION_STYLE_MAP.get(faction, 'MIXED')
+        seed = ship_data.get('seed', 1)
+        hardpoints = ship_data.get('hardpoints', 0)
+        modules = ship_data.get('modules', [])
+
+        return {
+            'ship_class': ship_class,
+            'seed': seed,
+            'generate_interior': True,
+            'module_slots': min(len(modules), 10),
+            'hull_complexity': 1.0,
+            'symmetry': True,
+            'style': style,
+            'ship_name': ship_data.get('ship_id', ''),
+            'weapons_override': 0,
+            'engines_override': 2,
+            'turret_hardpoints': min(hardpoints, 10),
+        }
+
+    # --- EVEOFFLINE JSON format ---
     model = ship_data.get('model_data', {})
     ship_class_name = ship_data.get('class', 'Frigate')
     race = ship_data.get('race', '')

@@ -20,7 +20,28 @@ Usage (Blender headless asset export):
         batch_generate.generate_universe(seed=123456, num_systems=5,
                                          output_dir='build', export_meshes=True)
     "
+
+Usage (CLI):
+    python -m pcg_pipeline --seed 123456 --systems 5 --output-dir build
 """
 
 __version__ = "1.0.0"
 __pipeline_name__ = "NovaForge Generator"
+
+from . import galaxy_generator
+from . import system_generator
+from . import planet_generator
+from . import station_generator
+from . import ship_generator
+from . import character_generator
+from . import batch_generate
+
+__all__ = [
+    "galaxy_generator",
+    "system_generator",
+    "planet_generator",
+    "station_generator",
+    "ship_generator",
+    "character_generator",
+    "batch_generate",
+]

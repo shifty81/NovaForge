@@ -32,6 +32,7 @@ from . import station_generator
 from . import asteroid_generator
 from . import texture_generator
 from . import brick_system
+from . import pcg_panel
 
 
 class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
@@ -524,10 +525,12 @@ def register():
     asteroid_generator.register()
     texture_generator.register()
     brick_system.register()
+    pcg_panel.register()
 
 
 def unregister():
     # Unregister submodules
+    pcg_panel.unregister()
     brick_system.unregister()
     texture_generator.unregister()
     asteroid_generator.unregister()

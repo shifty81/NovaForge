@@ -35,6 +35,7 @@ def test_addon_structure():
         'asteroid_generator.py',
         'texture_generator.py',
         'brick_system.py',
+        'pcg_panel.py',
     ]
     
     all_exist = True
@@ -65,6 +66,7 @@ def test_file_syntax():
         'asteroid_generator.py',
         'texture_generator.py',
         'brick_system.py',
+        'pcg_panel.py',
     ]
     
     all_valid = True
@@ -148,6 +150,7 @@ def test_register_functions():
         'asteroid_generator.py',
         'texture_generator.py',
         'brick_system.py',
+        'pcg_panel.py',
     ]
     
     all_valid = True
@@ -588,6 +591,7 @@ def test_pcg_pipeline():
     # Check required files
     required_files = [
         '__init__.py',
+        '__main__.py',
         'galaxy_generator.py',
         'system_generator.py',
         'planet_generator.py',
@@ -622,6 +626,132 @@ def test_pcg_pipeline():
     return all_valid
 
 
+def test_pcg_panel():
+    """Test that the PCG pipeline Blender panel module exists and is valid"""
+    print("\nTesting PCG pipeline Blender panel...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    panel_path = os.path.join(addon_path, 'pcg_panel.py')
+
+    if not os.path.exists(panel_path):
+        print("✗ pcg_panel.py is missing")
+        return False
+
+    valid, error = test_python_syntax(panel_path)
+    if not valid:
+        print(f"✗ pcg_panel.py has syntax error: {error}")
+        return False
+    print("✓ pcg_panel.py has valid syntax")
+
+    with open(panel_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'class PCGPipelineProperties': 'PCGPipelineProperties class',
+        'class PCG_OT_generate_universe': 'Generate Universe operator',
+        'class PCG_OT_generate_system': 'Generate System operator',
+        'class PCG_OT_materialize_ships': 'Materialize Ships operator',
+        'class PCG_PT_pipeline_panel': 'PCG Pipeline panel',
+        'def register()': 'register function',
+        'def unregister()': 'unregister function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    return all_valid
+
+
+def test_pcg_pipeline_init_exports():
+    """Test that pcg_pipeline __init__.py exports all sub-modules"""
+    print("\nTesting PCG pipeline __init__.py exports...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    init_path = os.path.join(addon_path, 'pcg_pipeline', '__init__.py')
+
+    with open(init_path, 'r') as f:
+        content = f.read()
+
+    expected_imports = [
+        'galaxy_generator',
+        'system_generator',
+        'planet_generator',
+        'station_generator',
+        'ship_generator',
+        'character_generator',
+        'batch_generate',
+    ]
+
+    all_valid = True
+    for mod in expected_imports:
+        if mod in content:
+            print(f"✓ {mod} referenced in __init__.py")
+        else:
+            print(f"✗ {mod} not referenced in __init__.py")
+            all_valid = False
+
+    if '__all__' in content:
+        print("✓ __all__ defined")
+    else:
+        print("✗ __all__ not defined")
+        all_valid = False
+
+    return all_valid
+
+
+def test_lod_tiers():
+    """Test that ship_generator in the PCG pipeline includes LOD tier data"""
+    print("\nTesting LOD tier definitions...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    sg_path = os.path.join(addon_path, 'pcg_pipeline', 'ship_generator.py')
+
+    with open(sg_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'LOD_TIERS': 'LOD_TIERS constant',
+        'lod_tiers': 'lod_tiers in ship metadata',
+        'poly_fraction': 'poly_fraction field',
+        'max_distance': 'max_distance field',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    # Functional check via import
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pcg_ship_gen", sg_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    if hasattr(mod, 'LOD_TIERS') and len(mod.LOD_TIERS) >= 3:
+        print(f"✓ {len(mod.LOD_TIERS)} LOD tiers defined")
+    else:
+        print("✗ LOD_TIERS missing or insufficient")
+        all_valid = False
+
+    # Verify ship metadata includes lod_tiers
+    ship = mod.generate_ship_metadata(1, "test_ship")
+    if 'lod_tiers' in ship and len(ship['lod_tiers']) >= 3:
+        print("✓ Ship metadata includes LOD tiers")
+    else:
+        print("✗ Ship metadata missing LOD tiers")
+        all_valid = False
+
+    return all_valid
+
+
 def run_tests():
     """Run all validation tests"""
     print("=" * 60)
@@ -644,6 +774,9 @@ def run_tests():
         ("Module Room Types", test_module_room_types),
         ("Pipeline Stages", test_pipeline_stages),
         ("PCG Pipeline", test_pcg_pipeline),
+        ("PCG Panel", test_pcg_panel),
+        ("PCG Pipeline Init Exports", test_pcg_pipeline_init_exports),
+        ("LOD Tiers", test_lod_tiers),
     ]
     
     results = []

@@ -217,6 +217,40 @@ def test_batch_determinism():
     return True
 
 
+def test_ship_lod_tiers():
+    """Ship metadata must include LOD tier data."""
+    print("\nTesting ship LOD tiers...")
+    s = ship_generator.generate_ship_metadata(42, "lod_test")
+    _assert("lod_tiers" in s, "Ship metadata missing lod_tiers")
+    _assert(len(s["lod_tiers"]) >= 3, "Need at least 3 LOD tiers")
+    for tier in s["lod_tiers"]:
+        _assert("tier" in tier, "LOD tier missing 'tier' field")
+        _assert("poly_fraction" in tier, "LOD tier missing 'poly_fraction'")
+        _assert("max_distance" in tier, "LOD tier missing 'max_distance'")
+        _assert(0 < tier["poly_fraction"] <= 1.0,
+                f"poly_fraction out of range: {tier['poly_fraction']}")
+    print(f"✓ Ship has {len(s['lod_tiers'])} LOD tiers with valid fields")
+    return True
+
+
+def test_pipeline_package_imports():
+    """pcg_pipeline package should export all sub-modules."""
+    print("\nTesting pipeline package imports...")
+    import pcg_pipeline
+    expected = [
+        "galaxy_generator", "system_generator", "planet_generator",
+        "station_generator", "ship_generator", "character_generator",
+        "batch_generate",
+    ]
+    for name in expected:
+        _assert(hasattr(pcg_pipeline, name),
+                f"pcg_pipeline missing attribute: {name}")
+    _assert(hasattr(pcg_pipeline, "__version__"),
+            "pcg_pipeline missing __version__")
+    print(f"✓ All {len(expected)} sub-modules accessible via pcg_pipeline")
+    return True
+
+
 # ── runner ────────────────────────────────────────────────────────────
 
 def run_tests():
@@ -236,6 +270,8 @@ def run_tests():
         ("Character Generation", test_character_generation),
         ("Batch Generate", test_batch_generate),
         ("Batch Determinism", test_batch_determinism),
+        ("Ship LOD Tiers", test_ship_lod_tiers),
+        ("Pipeline Package Imports", test_pipeline_package_imports),
     ]
 
     results = []
