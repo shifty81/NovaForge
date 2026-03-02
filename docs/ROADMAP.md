@@ -1433,13 +1433,13 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] Mission editor — MissionEditor component + MissionEditorSystem with mission template creation, objective management, reward configuration, level clamping (1-5), validation rules, publish workflow (10 tests)
 - [x] Ship designer — ShipDesigner component + ShipDesignerSystem with blueprint creation, slot management (High/Mid/Low/Rig), CPU/powergrid budget validation, module fitting/removal, design templates (10 tests)
 - [x] Modding documentation and tutorials — ModDocGenerator component + ModDocGeneratorSystem with type registration, category classification (Ship/Module/Mission/Skill), example tracking, validation workflow, document generation with versioning (10 tests)
-- [ ] Community content repository
+- [x] Community content repository — CommunityContentRepo component + CommunityContentRepositorySystem with content submission, publishing, featuring, archiving, rating (1-5 stars), download tracking, type filtering (Ship/Module/Mission/Skin), max content limit (11 tests)
 - [x] AI profile mods (`ai_profiles.json` for behavior customization)
 - [x] Economy rule mods (`economy_rules.json` for system economy curves)
 - [x] Ship template mods (`ship_templates.json` for custom ships) — ShipTemplateMod component + ShipTemplateModSystem with template registration, base template inheritance, priority-based overrides, auto-validation (10 tests)
 
 #### Additional Features
-- [ ] PvP toggle option (optional for those who want it)
+- [x] PvP toggle option (optional for those who want it) — PvPState component + PvPToggleSystem with safety levels (HighSec/LowSec/NullSec/Wormhole), engagement timers, kill/bounty/security tracking, aggression cooldown (10 tests)
 - [x] Tournament system
 - [x] Leaderboards and achievements
 - [ ] In-game web browser (dotlan-style maps)
