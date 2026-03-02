@@ -678,6 +678,85 @@ public:
     COMPONENT_TYPE(FarmingDeck)
 };
 
+// ==================== Grid Construction System (Phase 14) ====================
+
+/**
+ * @brief Snappable grid-based construction for habitats
+ *
+ * Manages a 2D grid of modules with power networking, structural integrity
+ * calculation, and module placement/removal.
+ */
+class GridConstruction : public ecs::Component {
+public:
+    enum class ModuleType {
+        Empty,
+        Foundation,
+        Wall,
+        Floor,
+        PowerNode,
+        HabitatModule,
+        StorageModule,
+        DefenseModule
+    };
+
+    struct GridCell {
+        ModuleType module_type = ModuleType::Empty;
+        std::string module_id;
+        float health = 1.0f;               // 0.0-1.0
+        bool is_powered = false;
+    };
+
+    std::string owner_entity_id;
+    int grid_width = 8;
+    int grid_height = 8;
+    std::vector<std::vector<GridCell>> cells;
+    int powered_cell_count = 0;
+    float total_power_generation = 0.0f;
+    float total_power_consumption = 0.0f;
+    float structural_integrity = 0.0f;     // 0.0-1.0
+    int total_modules_placed = 0;
+    bool is_powered = true;
+
+    void initCells(int w, int h) {
+        grid_width = w;
+        grid_height = h;
+        cells.resize(h);
+        for (int y = 0; y < h; y++) {
+            cells[y].resize(w);
+        }
+    }
+
+    bool inBounds(int x, int y) const {
+        return x >= 0 && x < grid_width && y >= 0 && y < grid_height;
+    }
+
+    int getModuleCount() const {
+        int count = 0;
+        for (int y = 0; y < grid_height; y++) {
+            for (int x = 0; x < grid_width; x++) {
+                if (cells[y][x].module_type != ModuleType::Empty) count++;
+            }
+        }
+        return count;
+    }
+
+    static std::string moduleTypeToString(ModuleType m) {
+        switch (m) {
+            case ModuleType::Empty: return "empty";
+            case ModuleType::Foundation: return "foundation";
+            case ModuleType::Wall: return "wall";
+            case ModuleType::Floor: return "floor";
+            case ModuleType::PowerNode: return "power_node";
+            case ModuleType::HabitatModule: return "habitat_module";
+            case ModuleType::StorageModule: return "storage_module";
+            case ModuleType::DefenseModule: return "defense_module";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(GridConstruction)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -188,6 +188,9 @@
 #include "systems/planetary_traversal_system.h"
 #include "systems/solar_panel_system.h"
 #include "systems/farming_deck_system.h"
+#include "systems/docking_ring_extension_system.h"
+#include "systems/rover_bay_ramp_system.h"
+#include "systems/grid_construction_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -26037,6 +26040,414 @@ void testFarmingDeckMissing() {
     assertTrue(approxEqual(sys.getTotalFoodProduced("nonexistent"), 0.0f), "Food 0 on missing");
 }
 
+// ==================== Docking Ring Extension System Tests ====================
+
+void testDockingRingInit() {
+    std::cout << "\n=== Docking Ring: Init ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    auto* entity = world.createEntity("test_ship");
+    assertTrue(sys.initializeRing("test_ship", 12.0f), "Ring initialized");
+    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    assertTrue(ring != nullptr, "Ring component exists");
+    assertTrue(approxEqual(ring->ring_diameter, 12.0f), "Ring diameter set");
+    assertTrue(ring->state == components::DockingRingExtension::RingState::Retracted, "Initial state retracted");
+    assertTrue(!sys.initializeRing("test_ship", 10.0f), "Duplicate init fails");
+}
+
+void testDockingRingExtend() {
+    std::cout << "\n=== Docking Ring: Extend ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    assertTrue(sys.extendRing("test_ship"), "Extend starts");
+    assertTrue(sys.getState("test_ship") == "extending", "State is extending");
+    sys.update(1.0f);
+    assertTrue(approxEqual(sys.getProgress("test_ship"), 0.5f), "Progress 0.5 after 1s");
+    sys.update(1.0f);
+    assertTrue(sys.getState("test_ship") == "extended", "State extended after 2s");
+    assertTrue(approxEqual(sys.getProgress("test_ship"), 1.0f), "Progress 1.0 when extended");
+}
+
+void testDockingRingRetract() {
+    std::cout << "\n=== Docking Ring: Retract ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    sys.extendRing("test_ship");
+    sys.update(2.0f);
+    assertTrue(sys.retractRing("test_ship"), "Retract starts");
+    assertTrue(sys.getState("test_ship") == "retracting", "State is retracting");
+    sys.update(2.0f);
+    assertTrue(sys.getState("test_ship") == "retracted", "State retracted after 2s");
+}
+
+void testDockingRingConnect() {
+    std::cout << "\n=== Docking Ring: Connect ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    sys.extendRing("test_ship");
+    sys.update(2.0f);
+    sys.setAlignment("test_ship", 3.0f);
+    assertTrue(sys.connectRing("test_ship", "target_ship", components::DockingRingExtension::ConnectionType::ShipToShip), "Connect succeeds");
+    assertTrue(sys.isConnected("test_ship"), "Is connected");
+}
+
+void testDockingRingDisconnect() {
+    std::cout << "\n=== Docking Ring: Disconnect ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    sys.extendRing("test_ship");
+    sys.update(2.0f);
+    sys.setAlignment("test_ship", 2.0f);
+    sys.connectRing("test_ship", "target", components::DockingRingExtension::ConnectionType::ShipToShip);
+    assertTrue(sys.disconnectRing("test_ship"), "Disconnect succeeds");
+    assertTrue(!sys.isConnected("test_ship"), "No longer connected");
+    assertTrue(!sys.disconnectRing("test_ship"), "Double disconnect fails");
+}
+
+void testDockingRingAlignment() {
+    std::cout << "\n=== Docking Ring: Alignment ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    sys.extendRing("test_ship");
+    sys.update(2.0f);
+    sys.setAlignment("test_ship", 10.0f);
+    assertTrue(!sys.connectRing("test_ship", "target", components::DockingRingExtension::ConnectionType::ShipToShip), "Connect fails with bad alignment");
+    sys.setAlignment("test_ship", 4.0f);
+    assertTrue(sys.connectRing("test_ship", "target", components::DockingRingExtension::ConnectionType::ShipToShip), "Connect succeeds with good alignment");
+}
+
+void testDockingRingPressure() {
+    std::cout << "\n=== Docking Ring: Pressure ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    assertTrue(!sys.sealPressure("test_ship"), "Cannot seal when retracted");
+    sys.extendRing("test_ship");
+    sys.update(2.0f);
+    assertTrue(sys.sealPressure("test_ship"), "Seal when extended");
+    assertTrue(!sys.sealPressure("test_ship"), "Cannot double seal");
+    assertTrue(sys.unsealPressure("test_ship"), "Unseal succeeds");
+}
+
+void testDockingRingPower() {
+    std::cout << "\n=== Docking Ring: Power ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    sys.setPowerEnabled("test_ship", false);
+    assertTrue(!sys.extendRing("test_ship"), "Cannot extend without power");
+    sys.setPowerEnabled("test_ship", true);
+    assertTrue(sys.extendRing("test_ship"), "Can extend with power");
+}
+
+void testDockingRingIntegrity() {
+    std::cout << "\n=== Docking Ring: Integrity ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeRing("test_ship", 10.0f);
+    assertTrue(approxEqual(sys.getIntegrity("test_ship"), 1.0f), "Initial integrity 1.0");
+    sys.extendRing("test_ship");
+    sys.update(2.0f);
+    sys.setAlignment("test_ship", 0.0f);
+    sys.connectRing("test_ship", "target", components::DockingRingExtension::ConnectionType::ShipToShip);
+    sys.update(10.0f);
+    assertTrue(sys.getIntegrity("test_ship") < 1.0f, "Integrity degrades when connected");
+    sys.repairRing("test_ship", 1.0f);
+    assertTrue(approxEqual(sys.getIntegrity("test_ship"), 1.0f), "Repair restores integrity");
+}
+
+void testDockingRingMissing() {
+    std::cout << "\n=== Docking Ring: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::DockingRingExtensionSystem sys(&world);
+    assertTrue(!sys.initializeRing("nonexistent", 10.0f), "Init fails on missing");
+    assertTrue(!sys.extendRing("nonexistent"), "Extend fails on missing");
+    assertTrue(sys.getState("nonexistent") == "unknown", "State unknown on missing");
+    assertTrue(approxEqual(sys.getProgress("nonexistent"), 0.0f), "Progress 0 on missing");
+}
+
+// ==================== Rover Bay Ramp System Tests ====================
+
+void testRoverBayInit() {
+    std::cout << "\n=== Rover Bay: Init ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    auto* entity = world.createEntity("test_ship");
+    assertTrue(sys.initializeBay("test_ship", 3), "Bay initialized");
+    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    assertTrue(bay != nullptr, "Bay component exists");
+    assertTrue(bay->max_rovers == 3, "Max rovers set");
+    assertTrue(bay->state == components::RoverBayRamp::RampState::Closed, "Initial state closed");
+    assertTrue(!sys.initializeBay("test_ship", 2), "Duplicate init fails");
+}
+
+void testRoverBayOpen() {
+    std::cout << "\n=== Rover Bay: Open ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    assertTrue(sys.openRamp("test_ship"), "Open starts");
+    assertTrue(sys.getRampState("test_ship") == "opening", "State is opening");
+    sys.update(2.0f);
+    assertTrue(approxEqual(sys.getRampProgress("test_ship"), 0.6f), "Progress 0.6 after 2s");
+    sys.update(2.0f);
+    assertTrue(sys.getRampState("test_ship") == "open", "State open after 4s");
+}
+
+void testRoverBayClose() {
+    std::cout << "\n=== Rover Bay: Close ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    sys.openRamp("test_ship");
+    sys.update(4.0f);
+    assertTrue(sys.closeRamp("test_ship"), "Close starts");
+    assertTrue(sys.getRampState("test_ship") == "closing", "State is closing");
+    sys.update(4.0f);
+    assertTrue(sys.getRampState("test_ship") == "closed", "State closed after 4s");
+}
+
+void testRoverBayStore() {
+    std::cout << "\n=== Rover Bay: Store ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    assertTrue(!sys.storeRover("test_ship", "rover1"), "Cannot store when closed");
+    sys.openRamp("test_ship");
+    sys.update(4.0f);
+    assertTrue(sys.storeRover("test_ship", "rover1"), "Store rover1");
+    assertTrue(sys.storeRover("test_ship", "rover2"), "Store rover2");
+    assertTrue(!sys.storeRover("test_ship", "rover3"), "Cannot exceed capacity");
+    assertTrue(sys.getStoredCount("test_ship") == 2, "Stored count is 2");
+}
+
+void testRoverBayDeploy() {
+    std::cout << "\n=== Rover Bay: Deploy ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    sys.openRamp("test_ship");
+    sys.update(4.0f);
+    sys.storeRover("test_ship", "rover1");
+    assertTrue(sys.deployRover("test_ship", "rover1"), "Deploy rover1");
+    assertTrue(sys.getStoredCount("test_ship") == 0, "Stored count 0 after deploy");
+    assertTrue(sys.getDeployedCount("test_ship") == 1, "Deployed count 1");
+    assertTrue(!sys.deployRover("test_ship", "rover1"), "Cannot deploy already deployed");
+}
+
+void testRoverBayRetrieve() {
+    std::cout << "\n=== Rover Bay: Retrieve ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    sys.openRamp("test_ship");
+    sys.update(4.0f);
+    sys.storeRover("test_ship", "rover1");
+    sys.deployRover("test_ship", "rover1");
+    assertTrue(sys.retrieveRover("test_ship", "rover1"), "Retrieve rover1");
+    assertTrue(sys.getStoredCount("test_ship") == 1, "Stored count 1 after retrieve");
+    assertTrue(sys.getDeployedCount("test_ship") == 0, "Deployed count 0 after retrieve");
+}
+
+void testRoverBaySafety() {
+    std::cout << "\n=== Rover Bay: Safety ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    sys.setExternalAtmosphere("test_ship", components::RoverBayRamp::AtmosphereType::Corrosive);
+    assertTrue(!sys.openRamp("test_ship"), "Cannot open in corrosive atmosphere");
+    sys.setExternalAtmosphere("test_ship", components::RoverBayRamp::AtmosphereType::Toxic);
+    assertTrue(sys.openRamp("test_ship"), "Can open in toxic atmosphere");
+}
+
+void testRoverBayPower() {
+    std::cout << "\n=== Rover Bay: Power ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    sys.setPowerEnabled("test_ship", false);
+    assertTrue(!sys.openRamp("test_ship"), "Cannot open without power");
+    sys.setPowerEnabled("test_ship", true);
+    assertTrue(sys.openRamp("test_ship"), "Can open with power");
+}
+
+void testRoverBayAtmosphere() {
+    std::cout << "\n=== Rover Bay: Atmosphere ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    auto* entity = world.createEntity("test_ship");
+    sys.initializeBay("test_ship", 2);
+    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    assertTrue(bay->is_pressurized, "Initially pressurized");
+    sys.openRamp("test_ship");
+    sys.update(4.0f);
+    assertTrue(!bay->is_pressurized, "Depressurized when open");
+    sys.closeRamp("test_ship");
+    sys.update(4.0f);
+    assertTrue(bay->is_pressurized, "Repressurized when closed");
+}
+
+void testRoverBayMissing() {
+    std::cout << "\n=== Rover Bay: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::RoverBayRampSystem sys(&world);
+    assertTrue(!sys.initializeBay("nonexistent", 2), "Init fails on missing");
+    assertTrue(!sys.openRamp("nonexistent"), "Open fails on missing");
+    assertTrue(sys.getRampState("nonexistent") == "unknown", "State unknown on missing");
+    assertTrue(sys.getStoredCount("nonexistent") == 0, "Stored 0 on missing");
+}
+
+// ==================== Grid Construction System Tests ====================
+
+void testGridInit() {
+    std::cout << "\n=== Grid Construction: Init ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    assertTrue(sys.initializeGrid("test_grid", "player1", 10, 10), "Grid initialized");
+    assertTrue(sys.getGridWidth("test_grid") == 10, "Width is 10");
+    assertTrue(sys.getGridHeight("test_grid") == 10, "Height is 10");
+    assertTrue(!sys.initializeGrid("test_grid", "player1", 8, 8), "Duplicate init fails");
+}
+
+void testGridPlace() {
+    std::cout << "\n=== Grid Construction: Place ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 8, 8);
+    assertTrue(sys.placeModule("test_grid", 0, 0, components::GridConstruction::ModuleType::Foundation), "Place foundation");
+    assertTrue(sys.getModuleAt("test_grid", 0, 0) == "foundation", "Module is foundation");
+    assertTrue(sys.getModuleCount("test_grid") == 1, "Module count is 1");
+    assertTrue(!sys.placeModule("test_grid", 0, 0, components::GridConstruction::ModuleType::Wall), "Cannot place on occupied");
+}
+
+void testGridRemove() {
+    std::cout << "\n=== Grid Construction: Remove ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 8, 8);
+    sys.placeModule("test_grid", 2, 2, components::GridConstruction::ModuleType::Wall);
+    assertTrue(sys.removeModule("test_grid", 2, 2), "Remove module");
+    assertTrue(sys.getModuleAt("test_grid", 2, 2) == "empty", "Cell empty after remove");
+    assertTrue(!sys.removeModule("test_grid", 2, 2), "Cannot remove empty cell");
+}
+
+void testGridAdjacency() {
+    std::cout << "\n=== Grid Construction: Adjacency ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 8, 8);
+    sys.placeModule("test_grid", 1, 1, components::GridConstruction::ModuleType::Foundation);
+    sys.placeModule("test_grid", 0, 1, components::GridConstruction::ModuleType::Wall);
+    sys.placeModule("test_grid", 2, 1, components::GridConstruction::ModuleType::Wall);
+    sys.placeModule("test_grid", 1, 0, components::GridConstruction::ModuleType::Floor);
+    sys.placeModule("test_grid", 1, 2, components::GridConstruction::ModuleType::Floor);
+    float integrity = sys.calculateIntegrity("test_grid");
+    assertTrue(integrity > 0.0f, "Integrity > 0 with modules");
+}
+
+void testGridPower() {
+    std::cout << "\n=== Grid Construction: Power ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 8, 8);
+    sys.placeModule("test_grid", 1, 1, components::GridConstruction::ModuleType::PowerNode);
+    sys.placeModule("test_grid", 1, 0, components::GridConstruction::ModuleType::HabitatModule);
+    float balance = sys.calculatePower("test_grid");
+    assertTrue(approxEqual(balance, 8.0f), "Power balance 10 - 2 = 8");
+    sys.update(1.0f);
+    assertTrue(sys.getPoweredCount("test_grid") == 2, "2 cells powered");
+}
+
+void testGridIntegrity() {
+    std::cout << "\n=== Grid Construction: Integrity ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 8, 8);
+    // Place a center module with 3+ neighbors for bonus
+    sys.placeModule("test_grid", 3, 3, components::GridConstruction::ModuleType::Foundation);
+    sys.placeModule("test_grid", 2, 3, components::GridConstruction::ModuleType::Wall);
+    sys.placeModule("test_grid", 4, 3, components::GridConstruction::ModuleType::Wall);
+    sys.placeModule("test_grid", 3, 2, components::GridConstruction::ModuleType::Floor);
+    float integrity = sys.calculateIntegrity("test_grid");
+    assertTrue(integrity > 0.0f, "Integrity calculated");
+    assertTrue(integrity <= 1.0f, "Integrity within bounds");
+}
+
+void testGridDamage() {
+    std::cout << "\n=== Grid Construction: Damage ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 8, 8);
+    sys.placeModule("test_grid", 0, 0, components::GridConstruction::ModuleType::Wall);
+    assertTrue(approxEqual(sys.getModuleHealth("test_grid", 0, 0), 1.0f), "Initial health 1.0");
+    assertTrue(sys.damageModule("test_grid", 0, 0, 0.3f), "Damage applied");
+    assertTrue(approxEqual(sys.getModuleHealth("test_grid", 0, 0), 0.7f), "Health reduced to 0.7");
+}
+
+void testGridRepair() {
+    std::cout << "\n=== Grid Construction: Repair ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 8, 8);
+    sys.placeModule("test_grid", 0, 0, components::GridConstruction::ModuleType::Wall);
+    sys.damageModule("test_grid", 0, 0, 0.5f);
+    assertTrue(sys.repairModule("test_grid", 0, 0, 0.3f), "Repair applied");
+    assertTrue(approxEqual(sys.getModuleHealth("test_grid", 0, 0), 0.8f), "Health restored to 0.8");
+    sys.repairModule("test_grid", 0, 0, 1.0f);
+    assertTrue(approxEqual(sys.getModuleHealth("test_grid", 0, 0), 1.0f), "Health capped at 1.0");
+}
+
+void testGridBounds() {
+    std::cout << "\n=== Grid Construction: Bounds ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    world.createEntity("test_grid");
+    sys.initializeGrid("test_grid", "player1", 4, 4);
+    assertTrue(!sys.placeModule("test_grid", -1, 0, components::GridConstruction::ModuleType::Wall), "Negative x rejected");
+    assertTrue(!sys.placeModule("test_grid", 0, -1, components::GridConstruction::ModuleType::Wall), "Negative y rejected");
+    assertTrue(!sys.placeModule("test_grid", 4, 0, components::GridConstruction::ModuleType::Wall), "X out of bounds rejected");
+    assertTrue(!sys.placeModule("test_grid", 0, 4, components::GridConstruction::ModuleType::Wall), "Y out of bounds rejected");
+    assertTrue(sys.getModuleAt("test_grid", 10, 10) == "unknown", "Out of bounds query returns unknown");
+}
+
+void testGridMissing() {
+    std::cout << "\n=== Grid Construction: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::GridConstructionSystem sys(&world);
+    assertTrue(!sys.initializeGrid("nonexistent", "player1", 8, 8), "Init fails on missing");
+    assertTrue(!sys.placeModule("nonexistent", 0, 0, components::GridConstruction::ModuleType::Wall), "Place fails on missing");
+    assertTrue(sys.getModuleCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(sys.getGridWidth("nonexistent") == 0, "Width 0 on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -27916,6 +28327,42 @@ int main() {
     testFarmingDeckWithering();
     testFarmingDeckPower();
     testFarmingDeckMissing();
+
+    // Docking Ring Extension System tests
+    testDockingRingInit();
+    testDockingRingExtend();
+    testDockingRingRetract();
+    testDockingRingConnect();
+    testDockingRingDisconnect();
+    testDockingRingAlignment();
+    testDockingRingPressure();
+    testDockingRingPower();
+    testDockingRingIntegrity();
+    testDockingRingMissing();
+
+    // Rover Bay Ramp System tests
+    testRoverBayInit();
+    testRoverBayOpen();
+    testRoverBayClose();
+    testRoverBayStore();
+    testRoverBayDeploy();
+    testRoverBayRetrieve();
+    testRoverBaySafety();
+    testRoverBayPower();
+    testRoverBayAtmosphere();
+    testRoverBayMissing();
+
+    // Grid Construction System tests
+    testGridInit();
+    testGridPlace();
+    testGridRemove();
+    testGridAdjacency();
+    testGridPower();
+    testGridIntegrity();
+    testGridDamage();
+    testGridRepair();
+    testGridBounds();
+    testGridMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
