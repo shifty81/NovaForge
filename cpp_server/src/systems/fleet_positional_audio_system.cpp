@@ -35,7 +35,9 @@ void FleetPositionalAudioSystem::update(float delta_time) {
 
         // Warp reverb
         bool in_warp = warp ? warp->in_fleet_warp : false;
-        float warp_speed = warp ? 3.0f : 0.0f;
+        // Default fleet warp speed used for reverb when no per-entity speed is available
+        static constexpr float kDefaultFleetWarpSpeed = 3.0f;
+        float warp_speed = in_warp ? kDefaultFleetWarpSpeed : 0.0f;
         computeWarpReverb(in_warp, warp_speed, audio->reverb_wet_mix, audio->reverb_decay);
     }
 }
