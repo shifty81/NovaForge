@@ -180,6 +180,7 @@ set(SERVER_SOURCES
     src/systems/food_processor_system.cpp
     src/systems/fleet_squad_system.cpp
     src/systems/jump_drive_system.cpp
+    src/systems/cargo_scan_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -371,6 +372,7 @@ set(SERVER_HEADERS
     include/systems/food_processor_system.h
     include/systems/fleet_squad_system.h
     include/systems/jump_drive_system.h
+    include/systems/cargo_scan_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -633,6 +635,7 @@ if(BUILD_TESTS)
         src/systems/food_processor_system.cpp
         src/systems/fleet_squad_system.cpp
         src/systems/jump_drive_system.cpp
+        src/systems/cargo_scan_system.cpp
         src/data/world_persistence.cpp
         src/data/world_serializer.cpp
         src/data/world_deserializer.cpp
