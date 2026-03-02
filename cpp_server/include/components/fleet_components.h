@@ -799,6 +799,32 @@ public:
     COMPONENT_TYPE(FleetMoraleResolution)
 };
 
+/**
+ * @brief Fleet logistics supply chain with fuel and ammo depots
+ *
+ * Manages supply depots that consume fuel and ammo over time.
+ */
+class FleetSupplyLine : public ecs::Component {
+public:
+    struct SupplyDepot {
+        std::string depot_id;
+        std::string system_id;
+        float fuel_level = 100.0f;   // 0-100
+        float ammo_level = 100.0f;   // 0-100
+        float capacity = 100.0f;
+    };
+
+    std::vector<SupplyDepot> depots;
+    int max_depots = 10;
+    float consumption_rate = 1.0f; // per second
+    int total_resupplies = 0;
+    float total_fuel_consumed = 0.0f;
+    float total_ammo_consumed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetSupplyLine)
+};
+
 } // namespace components
 } // namespace atlas
 

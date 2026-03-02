@@ -390,6 +390,34 @@ public:
     COMPONENT_TYPE(SpacePlanetTransition)
 };
 
+/**
+ * @brief Player-saved location bookmarks for quick navigation
+ *
+ * Stores named waypoints with coordinates, categories, and favorites.
+ */
+class NavigationBookmark : public ecs::Component {
+public:
+    struct Bookmark {
+        std::string bookmark_id;
+        std::string label;
+        std::string system_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        std::string category = "Personal"; // Personal, Corp, Shared
+        std::string notes;
+        float created_at = 0.0f;
+        bool is_favorite = false;
+    };
+
+    std::vector<Bookmark> bookmarks;
+    int max_bookmarks = 100;
+    int total_created = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(NavigationBookmark)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -187,6 +187,30 @@ public:
     COMPONENT_TYPE(RestingState)
 };
 
+/**
+ * @brief Crew member training with skill progression
+ *
+ * Tracks trainees progressing through skill training over time.
+ */
+class CrewTraining : public ecs::Component {
+public:
+    struct TrainingSlot {
+        std::string trainee_id;
+        std::string skill_name;
+        float progress = 0.0f;        // 0-1
+        float training_rate = 0.01f;   // per second
+        bool completed = false;
+    };
+
+    std::vector<TrainingSlot> trainees;
+    int max_trainees = 5;
+    int total_completed = 0;
+    float xp_bonus = 1.0f; // training rate multiplier
+    bool active = true;
+
+    COMPONENT_TYPE(CrewTraining)
+};
+
 
 } // namespace components
 } // namespace atlas
