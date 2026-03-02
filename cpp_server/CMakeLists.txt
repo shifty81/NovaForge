@@ -222,6 +222,9 @@ set(CORE_SOURCES
     src/systems/mission_editor_system.cpp
     src/systems/content_validation_system.cpp
     src/systems/cloud_deployment_config_system.cpp
+    src/systems/interest_management_priority_system.cpp
+    src/systems/visual_feedback_queue_system.cpp
+    src/systems/mod_doc_generator_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -499,6 +502,9 @@ set(SERVER_HEADERS
     include/systems/mission_editor_system.h
     include/systems/content_validation_system.h
     include/systems/cloud_deployment_config_system.h
+    include/systems/interest_management_priority_system.h
+    include/systems/visual_feedback_queue_system.h
+    include/systems/mod_doc_generator_system.h
     include/systems/convoy_ambush_system.h
     include/systems/npc_dialogue_system.h
     include/systems/station_monument_system.h

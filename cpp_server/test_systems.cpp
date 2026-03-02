@@ -216,6 +216,9 @@
 #include "systems/mission_editor_system.h"
 #include "systems/content_validation_system.h"
 #include "systems/cloud_deployment_config_system.h"
+#include "systems/interest_management_priority_system.h"
+#include "systems/visual_feedback_queue_system.h"
+#include "systems/mod_doc_generator_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -29762,6 +29765,418 @@ void testCloudDeploymentMissing() {
     assertTrue(!sys.isDeployed("nonexistent"), "Not deployed on missing");
 }
 
+// ==================== InterestManagementPriority Tests ====================
+
+void testInterestPriorityCreate() {
+    std::cout << "\n=== InterestManagementPriority: Create ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    auto* e = world.createEntity("ip1");
+    assertTrue(sys.createPriority("ip1"), "Create priority succeeds");
+    auto* ip = e->getComponent<components::InterestPriority>();
+    assertTrue(ip != nullptr, "Component exists");
+    assertTrue(ip->active, "Active by default");
+    assertTrue(ip->priority_tier == 2, "Default tier is Medium (2)");
+    assertTrue(ip->needs_update, "Needs update by default");
+    assertTrue(ip->total_updates == 0, "No updates yet");
+}
+
+void testInterestPrioritySetTier() {
+    std::cout << "\n=== InterestManagementPriority: SetTier ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    world.createEntity("ip1");
+    sys.createPriority("ip1");
+    assertTrue(sys.setPriorityTier("ip1", 0), "Set Critical tier");
+    assertTrue(sys.getPriorityTier("ip1") == 0, "Tier is Critical (0)");
+    assertTrue(sys.getBandwidthWeight("ip1") == 1.0f, "Critical bandwidth weight is 1.0");
+    assertTrue(sys.setPriorityTier("ip1", 3), "Set Low tier");
+    assertTrue(sys.getBandwidthWeight("ip1") == 0.25f, "Low bandwidth weight is 0.25");
+}
+
+void testInterestPriorityDistanceAuto() {
+    std::cout << "\n=== InterestManagementPriority: DistanceAuto ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    world.createEntity("ip1");
+    sys.createPriority("ip1");
+    assertTrue(sys.setDistance("ip1", 500.0f), "Set distance 500");
+    assertTrue(sys.getPriorityTier("ip1") == 0, "Distance 500 -> Critical");
+    assertTrue(sys.setDistance("ip1", 3000.0f), "Set distance 3000");
+    assertTrue(sys.getPriorityTier("ip1") == 1, "Distance 3000 -> High");
+    assertTrue(sys.setDistance("ip1", 10000.0f), "Set distance 10000");
+    assertTrue(sys.getPriorityTier("ip1") == 2, "Distance 10000 -> Medium");
+    assertTrue(sys.setDistance("ip1", 25000.0f), "Set distance 25000");
+    assertTrue(sys.getPriorityTier("ip1") == 3, "Distance 25000 -> Low");
+}
+
+void testInterestPriorityUpdate() {
+    std::cout << "\n=== InterestManagementPriority: Update ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    auto* e = world.createEntity("ip1");
+    sys.createPriority("ip1");
+    sys.setPriorityTier("ip1", 2); // Medium: 0.25s interval
+    auto* ip = e->getComponent<components::InterestPriority>();
+    ip->needs_update = false;
+    sys.update(0.3f);
+    assertTrue(sys.needsUpdate("ip1"), "Update triggered after 0.3s >= 0.25s");
+    assertTrue(sys.getTotalUpdates("ip1") == 1, "Total updates is 1");
+}
+
+void testInterestPriorityAccumulator() {
+    std::cout << "\n=== InterestManagementPriority: Accumulator ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    auto* e = world.createEntity("ip1");
+    sys.createPriority("ip1");
+    sys.setPriorityTier("ip1", 2); // Medium: 0.25s
+    auto* ip = e->getComponent<components::InterestPriority>();
+    ip->needs_update = false;
+    sys.update(0.1f);
+    assertTrue(!sys.needsUpdate("ip1"), "No update after 0.1s < 0.25s");
+    sys.update(0.1f);
+    assertTrue(!sys.needsUpdate("ip1"), "No update after 0.2s < 0.25s");
+    sys.update(0.1f);
+    assertTrue(sys.needsUpdate("ip1"), "Update after 0.3s >= 0.25s");
+}
+
+void testInterestPriorityCritical() {
+    std::cout << "\n=== InterestManagementPriority: Critical ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    auto* e = world.createEntity("ip1");
+    sys.createPriority("ip1");
+    sys.setPriorityTier("ip1", 0); // Critical: 0.05s
+    auto* ip = e->getComponent<components::InterestPriority>();
+    ip->needs_update = false;
+    sys.update(0.05f);
+    assertTrue(sys.needsUpdate("ip1"), "Critical updates every 0.05s");
+    assertTrue(sys.getTotalUpdates("ip1") == 1, "One update counted");
+}
+
+void testInterestPriorityLow() {
+    std::cout << "\n=== InterestManagementPriority: Low ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    auto* e = world.createEntity("ip1");
+    sys.createPriority("ip1");
+    sys.setPriorityTier("ip1", 3); // Low: 0.5s
+    auto* ip = e->getComponent<components::InterestPriority>();
+    ip->needs_update = false;
+    sys.update(0.4f);
+    assertTrue(!sys.needsUpdate("ip1"), "No update at 0.4s < 0.5s");
+    sys.update(0.2f);
+    assertTrue(sys.needsUpdate("ip1"), "Update after 0.6s >= 0.5s");
+}
+
+void testInterestPriorityBandwidth() {
+    std::cout << "\n=== InterestManagementPriority: Bandwidth ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    world.createEntity("ip1");
+    sys.createPriority("ip1");
+    sys.setPriorityTier("ip1", 0);
+    assertTrue(sys.getEstimatedBandwidth("ip1") == 100.0f, "Critical bandwidth = 100");
+    sys.setPriorityTier("ip1", 1);
+    assertTrue(sys.getEstimatedBandwidth("ip1") == 75.0f, "High bandwidth = 75");
+    sys.setPriorityTier("ip1", 2);
+    assertTrue(sys.getEstimatedBandwidth("ip1") == 50.0f, "Medium bandwidth = 50");
+    sys.setPriorityTier("ip1", 3);
+    assertTrue(sys.getEstimatedBandwidth("ip1") == 25.0f, "Low bandwidth = 25");
+}
+
+void testInterestPriorityInactive() {
+    std::cout << "\n=== InterestManagementPriority: Inactive ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    auto* e = world.createEntity("ip1");
+    sys.createPriority("ip1");
+    sys.setPriorityTier("ip1", 0); // Critical: 0.05s
+    auto* ip = e->getComponent<components::InterestPriority>();
+    ip->needs_update = false;
+    ip->active = false;
+    sys.update(1.0f);
+    assertTrue(!sys.needsUpdate("ip1"), "Inactive entity skipped");
+    assertTrue(sys.getTotalUpdates("ip1") == 0, "No updates on inactive");
+}
+
+void testInterestPriorityMissing() {
+    std::cout << "\n=== InterestManagementPriority: Missing ===" << std::endl;
+    ecs::World world;
+    systems::InterestManagementPrioritySystem sys(&world);
+    assertTrue(!sys.createPriority("nonexistent"), "Create fails on missing");
+    assertTrue(!sys.setClientId("nonexistent", 1), "SetClientId fails on missing");
+    assertTrue(!sys.setPriorityTier("nonexistent", 0), "SetTier fails on missing");
+    assertTrue(!sys.setDistance("nonexistent", 100.0f), "SetDistance fails on missing");
+    assertTrue(!sys.needsUpdate("nonexistent"), "needsUpdate false on missing");
+    assertTrue(sys.getPriorityTier("nonexistent") == -1, "-1 tier on missing");
+    assertTrue(sys.getBandwidthWeight("nonexistent") == 0.0f, "0 bandwidth on missing");
+    assertTrue(sys.getTotalUpdates("nonexistent") == 0, "0 updates on missing");
+    assertTrue(sys.getEstimatedBandwidth("nonexistent") == 0.0f, "0 est bandwidth on missing");
+}
+
+// ==================== VisualFeedbackQueue Tests ====================
+
+void testVisualFeedbackCreate() {
+    std::cout << "\n=== VisualFeedbackQueue: Create ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    auto* e = world.createEntity("vfq1");
+    assertTrue(sys.createQueue("vfq1"), "Create queue succeeds");
+    auto* vfq = e->getComponent<components::VisualFeedbackQueue>();
+    assertTrue(vfq != nullptr, "Component exists");
+    assertTrue(vfq->active, "Active by default");
+    assertTrue(vfq->max_effects == 20, "Default max effects is 20");
+    assertTrue(vfq->total_effects_queued == 0, "No effects queued");
+    assertTrue(vfq->effects.empty(), "Effects list empty");
+}
+
+void testVisualFeedbackQueue() {
+    std::cout << "\n=== VisualFeedbackQueue: Queue ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    int id = sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 1, "Hit");
+    assertTrue(id > 0, "Effect id is positive");
+    assertTrue(sys.getActiveEffectCount("vfq1") == 1, "One active effect");
+    assertTrue(sys.getTotalQueued("vfq1") == 1, "Total queued is 1");
+}
+
+void testVisualFeedbackMultiple() {
+    std::cout << "\n=== VisualFeedbackQueue: Multiple ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 1, "Hit1");
+    sys.queueEffect("vfq1", 1, 0.5f, 3.0f, 2, "Shield");
+    sys.queueEffect("vfq1", 2, 0.8f, 1.5f, 0, "Heal");
+    assertTrue(sys.getActiveEffectCount("vfq1") == 3, "Three active effects");
+    assertTrue(sys.getTotalQueued("vfq1") == 3, "Total queued is 3");
+}
+
+void testVisualFeedbackExpiry() {
+    std::cout << "\n=== VisualFeedbackQueue: Expiry ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    sys.queueEffect("vfq1", 0, 1.0f, 1.0f, 1, "Hit");
+    sys.update(1.5f);
+    assertTrue(sys.getActiveEffectCount("vfq1") == 0, "Effect expired");
+    assertTrue(sys.getTotalExpired("vfq1") == 1, "One expired");
+}
+
+void testVisualFeedbackFading() {
+    std::cout << "\n=== VisualFeedbackQueue: Fading ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    auto* e = world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    sys.queueEffect("vfq1", 0, 1.0f, 1.0f, 1, "Hit");
+    sys.update(0.8f); // lifetime = 0.2, which is < 0.3
+    auto* vfq = e->getComponent<components::VisualFeedbackQueue>();
+    assertTrue(vfq->effects.size() == 1, "Effect still alive");
+    assertTrue(vfq->effects[0].fading, "Effect is fading");
+}
+
+void testVisualFeedbackPriority() {
+    std::cout << "\n=== VisualFeedbackQueue: Priority ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 1, "Normal");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 3, "Critical");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 0, "Low");
+    assertTrue(sys.getHighestPriority("vfq1") == 3, "Highest priority is Critical (3)");
+}
+
+void testVisualFeedbackOverflow() {
+    std::cout << "\n=== VisualFeedbackQueue: Overflow ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    auto* e = world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    auto* vfq = e->getComponent<components::VisualFeedbackQueue>();
+    vfq->max_effects = 3;
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 1, "A");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 0, "B");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 2, "C");
+    assertTrue(sys.getActiveEffectCount("vfq1") == 3, "At max capacity");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 3, "D");
+    assertTrue(sys.getActiveEffectCount("vfq1") == 3, "Still at max after overflow");
+    assertTrue(sys.getHighestPriority("vfq1") == 3, "Highest is now 3");
+}
+
+void testVisualFeedbackRemove() {
+    std::cout << "\n=== VisualFeedbackQueue: Remove ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    int id = sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 1, "Hit");
+    assertTrue(sys.getActiveEffectCount("vfq1") == 1, "One effect before remove");
+    assertTrue(sys.removeEffect("vfq1", id), "Remove succeeds");
+    assertTrue(sys.getActiveEffectCount("vfq1") == 0, "Zero effects after remove");
+}
+
+void testVisualFeedbackCategory() {
+    std::cout << "\n=== VisualFeedbackQueue: Category ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    world.createEntity("vfq1");
+    sys.createQueue("vfq1");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 1, "Dmg1");
+    sys.queueEffect("vfq1", 0, 1.0f, 2.0f, 1, "Dmg2");
+    sys.queueEffect("vfq1", 1, 1.0f, 2.0f, 1, "Shield");
+    assertTrue(sys.getEffectsByCategory("vfq1", 0) == 2, "Two damage effects");
+    assertTrue(sys.getEffectsByCategory("vfq1", 1) == 1, "One shield effect");
+    assertTrue(sys.getEffectsByCategory("vfq1", 2) == 0, "Zero heal effects");
+}
+
+void testVisualFeedbackMissing() {
+    std::cout << "\n=== VisualFeedbackQueue: Missing ===" << std::endl;
+    ecs::World world;
+    systems::VisualFeedbackQueueSystem sys(&world);
+    assertTrue(!sys.createQueue("nonexistent"), "Create fails on missing");
+    assertTrue(sys.queueEffect("nonexistent", 0, 1.0f, 1.0f, 1, "X") == -1, "Queue fails on missing");
+    assertTrue(!sys.removeEffect("nonexistent", 1), "Remove fails on missing");
+    assertTrue(sys.getActiveEffectCount("nonexistent") == 0, "0 effects on missing");
+    assertTrue(sys.getHighestPriority("nonexistent") == -1, "-1 priority on missing");
+    assertTrue(sys.getTotalQueued("nonexistent") == 0, "0 queued on missing");
+    assertTrue(sys.getTotalExpired("nonexistent") == 0, "0 expired on missing");
+}
+
+// ==================== ModDocGenerator Tests ====================
+
+void testModDocCreate() {
+    std::cout << "\n=== ModDocGenerator: Create ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    auto* e = world.createEntity("mdg1");
+    assertTrue(sys.createGenerator("mdg1"), "Create generator succeeds");
+    auto* mdg = e->getComponent<components::ModDocGenerator>();
+    assertTrue(mdg != nullptr, "Component exists");
+    assertTrue(mdg->active, "Active by default");
+    assertTrue(mdg->title == "Nova Forge Modding Reference", "Default title");
+    assertTrue(mdg->version == "1.0", "Default version");
+    assertTrue(!mdg->generated, "Not generated by default");
+}
+
+void testModDocRegister() {
+    std::cout << "\n=== ModDocGenerator: Register ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    assertTrue(sys.registerType("mdg1", "BasicShip", "Ship", "A basic ship", 5), "Register succeeds");
+    assertTrue(sys.getEntryCount("mdg1") == 1, "Entry count is 1");
+}
+
+void testModDocDuplicate() {
+    std::cout << "\n=== ModDocGenerator: Duplicate ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    assertTrue(sys.registerType("mdg1", "BasicShip", "Ship", "A basic ship", 5), "First register");
+    assertTrue(!sys.registerType("mdg1", "BasicShip", "Ship", "Duplicate", 3), "Duplicate rejected");
+    assertTrue(sys.getEntryCount("mdg1") == 1, "Still one entry");
+}
+
+void testModDocAddExample() {
+    std::cout << "\n=== ModDocGenerator: AddExample ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    auto* e = world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    sys.registerType("mdg1", "BasicShip", "Ship", "A basic ship", 5);
+    assertTrue(sys.addExample("mdg1", "BasicShip"), "Add example succeeds");
+    auto* mdg = e->getComponent<components::ModDocGenerator>();
+    assertTrue(mdg->entries[0].has_example, "Example flag set");
+    assertTrue(!sys.addExample("mdg1", "NonExistent"), "Add example to missing type fails");
+}
+
+void testModDocValidate() {
+    std::cout << "\n=== ModDocGenerator: Validate ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    sys.registerType("mdg1", "BasicShip", "Ship", "A basic ship", 5);
+    sys.addExample("mdg1", "BasicShip");
+    assertTrue(sys.validateEntry("mdg1", "BasicShip"), "Validation succeeds");
+    assertTrue(sys.getValidatedCount("mdg1") == 1, "Validated count is 1");
+}
+
+void testModDocValidateFail() {
+    std::cout << "\n=== ModDocGenerator: ValidateFail ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    sys.registerType("mdg1", "BasicShip", "Ship", "A basic ship", 5);
+    assertTrue(!sys.validateEntry("mdg1", "BasicShip"), "Validate without example fails");
+    assertTrue(sys.getValidatedCount("mdg1") == 0, "Validated count still 0");
+}
+
+void testModDocGenerate() {
+    std::cout << "\n=== ModDocGenerator: Generate ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    sys.registerType("mdg1", "BasicShip", "Ship", "A basic ship", 5);
+    sys.addExample("mdg1", "BasicShip");
+    sys.validateEntry("mdg1", "BasicShip");
+    assertTrue(sys.generate("mdg1"), "Generate succeeds");
+    assertTrue(sys.isGenerated("mdg1"), "Is generated");
+    assertTrue(sys.getGenerationCount("mdg1") == 1, "Generation count is 1");
+}
+
+void testModDocGenerateFail() {
+    std::cout << "\n=== ModDocGenerator: GenerateFail ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    sys.registerType("mdg1", "BasicShip", "Ship", "A basic ship", 5);
+    assertTrue(!sys.generate("mdg1"), "Generate fails with unvalidated entries");
+    assertTrue(!sys.isGenerated("mdg1"), "Not generated");
+}
+
+void testModDocCategory() {
+    std::cout << "\n=== ModDocGenerator: Category ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    world.createEntity("mdg1");
+    sys.createGenerator("mdg1");
+    sys.registerType("mdg1", "BasicShip", "Ship", "A ship", 5);
+    sys.registerType("mdg1", "LaserModule", "Module", "A module", 3);
+    sys.registerType("mdg1", "HeavyShip", "Ship", "Heavy ship", 8);
+    assertTrue(sys.getEntriesByCategory("mdg1", "Ship") == 2, "Two ship entries");
+    assertTrue(sys.getEntriesByCategory("mdg1", "Module") == 1, "One module entry");
+    assertTrue(sys.getEntriesByCategory("mdg1", "Mission") == 0, "Zero mission entries");
+}
+
+void testModDocMissing() {
+    std::cout << "\n=== ModDocGenerator: Missing ===" << std::endl;
+    ecs::World world;
+    systems::ModDocGeneratorSystem sys(&world);
+    assertTrue(!sys.createGenerator("nonexistent"), "Create fails on missing");
+    assertTrue(!sys.registerType("nonexistent", "X", "Ship", "desc", 1), "Register fails on missing");
+    assertTrue(!sys.addExample("nonexistent", "X"), "AddExample fails on missing");
+    assertTrue(!sys.validateEntry("nonexistent", "X"), "Validate fails on missing");
+    assertTrue(!sys.generate("nonexistent"), "Generate fails on missing");
+    assertTrue(sys.getEntryCount("nonexistent") == 0, "0 entries on missing");
+    assertTrue(!sys.isGenerated("nonexistent"), "Not generated on missing");
+    assertTrue(sys.getValidatedCount("nonexistent") == 0, "0 validated on missing");
+    assertTrue(sys.getGenerationCount("nonexistent") == 0, "0 generations on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -31978,6 +32393,42 @@ int main() {
     testCloudDeploymentMaxPlayers();
     testCloudDeploymentCost();
     testCloudDeploymentMissing();
+
+    // InterestManagementPriority System tests
+    testInterestPriorityCreate();
+    testInterestPrioritySetTier();
+    testInterestPriorityDistanceAuto();
+    testInterestPriorityUpdate();
+    testInterestPriorityAccumulator();
+    testInterestPriorityCritical();
+    testInterestPriorityLow();
+    testInterestPriorityBandwidth();
+    testInterestPriorityInactive();
+    testInterestPriorityMissing();
+
+    // VisualFeedbackQueue System tests
+    testVisualFeedbackCreate();
+    testVisualFeedbackQueue();
+    testVisualFeedbackMultiple();
+    testVisualFeedbackExpiry();
+    testVisualFeedbackFading();
+    testVisualFeedbackPriority();
+    testVisualFeedbackOverflow();
+    testVisualFeedbackRemove();
+    testVisualFeedbackCategory();
+    testVisualFeedbackMissing();
+
+    // ModDocGenerator System tests
+    testModDocCreate();
+    testModDocRegister();
+    testModDocDuplicate();
+    testModDocAddExample();
+    testModDocValidate();
+    testModDocValidateFail();
+    testModDocGenerate();
+    testModDocGenerateFail();
+    testModDocCategory();
+    testModDocMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

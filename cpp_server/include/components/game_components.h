@@ -371,6 +371,75 @@ public:
     COMPONENT_TYPE(CloudDeploymentConfig)
 };
 
+// ==================== Interest Priority ====================
+
+class InterestPriority : public ecs::Component {
+public:
+    std::string entity_id;
+    int client_id = 0;
+    int priority_tier = 2;
+    float update_interval = 0.1f;
+    float time_since_update = 0.0f;
+    bool needs_update = true;
+    float distance = 0.0f;
+    float bandwidth_weight = 1.0f;
+    int total_updates = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(InterestPriority)
+};
+
+// ==================== Visual Feedback Queue ====================
+
+class VisualFeedbackQueue : public ecs::Component {
+public:
+    struct FeedbackEffect {
+        int id = 0;
+        int category = 0;
+        float intensity = 1.0f;
+        float lifetime = 1.0f;
+        float max_lifetime = 1.0f;
+        int priority = 0;
+        bool fading = false;
+        std::string label;
+    };
+
+    std::vector<FeedbackEffect> effects;
+    int next_effect_id = 1;
+    int max_effects = 20;
+    int total_effects_queued = 0;
+    int total_effects_expired = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(VisualFeedbackQueue)
+};
+
+// ==================== Mod Doc Generator ====================
+
+class ModDocGenerator : public ecs::Component {
+public:
+    struct DocEntry {
+        std::string type_name;
+        std::string category;
+        std::string description;
+        int field_count = 0;
+        bool has_example = false;
+        bool validated = false;
+    };
+
+    std::vector<DocEntry> entries;
+    std::string title = "Nova Forge Modding Reference";
+    std::string version = "1.0";
+    int total_entries = 0;
+    int total_validated = 0;
+    bool generated = false;
+    int generation_count = 0;
+    int max_entries = 100;
+    bool active = true;
+
+    COMPONENT_TYPE(ModDocGenerator)
+};
+
 } // namespace components
 } // namespace atlas
 
