@@ -241,6 +241,52 @@ public:
     COMPONENT_TYPE(WarpAudioProgression)
 };
 
+class JumpDriveState : public ecs::Component {
+public:
+    enum class JumpPhase { Idle, SpoolingUp, Jumping, Cooldown };
+    enum class FuelType { Hydrogen, Helium, Nitrogen, Oxygen };
+
+    JumpPhase phase = JumpPhase::Idle;
+    FuelType fuel_type = FuelType::Hydrogen;
+    float spool_time = 10.0f;           // seconds to spool up before jump
+    float cooldown_time = 300.0f;       // 5 minutes cooldown after jump
+    float phase_timer = 0.0f;           // progress in current phase
+    float max_range_ly = 5.0f;          // max jump range in light years
+    float fuel_per_ly = 500.0f;         // fuel consumed per light year jumped
+    float current_fuel = 5000.0f;       // current fuel amount
+    float max_fuel = 10000.0f;          // max fuel capacity
+    float fatigue_hours = 0.0f;         // accumulated jump fatigue
+    float fatigue_decay_rate = 0.1f;    // fatigue decay per real-second (for simulation)
+    float fatigue_per_jump = 1.0f;      // fatigue added per jump
+    float max_fatigue = 10.0f;          // max fatigue (at max, cannot jump)
+    std::string cyno_target_id;         // entity with active cynosural field
+    std::string destination_system;     // target system for jump
+    float jump_distance_ly = 0.0f;     // distance of current/last jump
+    int total_jumps = 0;                // total jumps performed
+    bool requires_cyno = true;          // whether cyno field is required
+
+    static std::string phaseToString(JumpPhase p) {
+        switch (p) {
+            case JumpPhase::Idle: return "idle";
+            case JumpPhase::SpoolingUp: return "spooling_up";
+            case JumpPhase::Jumping: return "jumping";
+            case JumpPhase::Cooldown: return "cooldown";
+            default: return "unknown";
+        }
+    }
+
+    static std::string fuelTypeToString(FuelType f) {
+        switch (f) {
+            case FuelType::Hydrogen: return "hydrogen";
+            case FuelType::Helium: return "helium";
+            case FuelType::Nitrogen: return "nitrogen";
+            case FuelType::Oxygen: return "oxygen";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(JumpDriveState)
+};
 
 } // namespace components
 } // namespace atlas

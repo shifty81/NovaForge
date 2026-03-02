@@ -218,7 +218,10 @@ Data-driven modding without code injection:
 | ResourceProductionChainSystem | ✅ Complete | 30 assertions |
 | FleetDoctrineSystem | ✅ Complete | 36 assertions |
 | PlayerProgressionSystem | ✅ Complete | 41 assertions |
-| **Total** | **50 systems** | **2265 assertions** |
+| CloakingSystem | ✅ Complete | 35 assertions |
+| JumpDriveSystem | ✅ Complete | 38 assertions |
+| CargoScanSystem | ✅ Complete | 39 assertions |
+| **Total** | **53 systems** | **2377 assertions** |
 
 ### Data Loaders Status
 

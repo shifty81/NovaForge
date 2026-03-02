@@ -490,6 +490,72 @@ public:
     COMPONENT_TYPE(TetherDockingArm)
 };
 
+class CloakingState : public ecs::Component {
+public:
+    enum class CloakType { Prototype, Improved, CovertOps };
+    enum class CloakPhase { Inactive, Activating, Cloaked, Deactivating };
+
+    CloakType cloak_type = CloakType::Prototype;
+    CloakPhase phase = CloakPhase::Inactive;
+    float activation_time = 5.0f;       // seconds to fully cloak
+    float deactivation_time = 2.0f;     // seconds to fully decloak
+    float phase_timer = 0.0f;           // progress in current phase
+    float fuel_per_second = 1.0f;       // capacitor drain while cloaked
+    float speed_penalty = 0.75f;        // max speed multiplier while cloaked (0.75 = 25% slower)
+    float targeting_delay = 10.0f;      // seconds of targeting lockout after decloak
+    float targeting_lockout_remaining = 0.0f;
+    float proximity_decloak_range = 2000.0f;  // meters - entities within range decloak ship
+    bool can_warp_while_cloaked = false;      // only CovertOps cloaks allow warp
+    int decloak_count = 0;                     // times decloaked (for tracking)
+    std::string owner_id;
+
+    COMPONENT_TYPE(CloakingState)
+};
+
+class CargoScanState : public ecs::Component {
+public:
+    enum class ScanPhase { Idle, Scanning, Complete, Failed };
+    enum class ContrabandType { None, Narcotics, Weapons, Stolen, Counterfeit, Exotic };
+
+    ScanPhase phase = ScanPhase::Idle;
+    float scan_time = 5.0f;              // seconds for a complete scan
+    float scan_timer = 0.0f;             // current scan progress
+    float scan_range = 5000.0f;          // max scan range in meters
+    float detection_chance = 0.8f;       // base chance to detect contraband (0-1)
+    std::string target_entity_id;        // entity being scanned
+    std::string scanner_owner_id;        // entity that owns this scanner
+    int contraband_found = 0;            // contraband items found in last scan
+    int total_scans = 0;                 // total scans performed
+    int total_contraband_detected = 0;   // lifetime contraband detected
+    float fine_per_contraband = 1000.0f; // Credits fine per contraband item
+    double total_fines_issued = 0.0;     // total Credits in fines issued
+    bool is_customs_scanner = false;     // true for gate/station customs
+    std::vector<ContrabandType> detected_types;  // contraband types present on this entity
+
+    static std::string phaseToString(ScanPhase p) {
+        switch (p) {
+            case ScanPhase::Idle: return "idle";
+            case ScanPhase::Scanning: return "scanning";
+            case ScanPhase::Complete: return "complete";
+            case ScanPhase::Failed: return "failed";
+            default: return "unknown";
+        }
+    }
+
+    static std::string contrabandToString(ContrabandType c) {
+        switch (c) {
+            case ContrabandType::None: return "none";
+            case ContrabandType::Narcotics: return "narcotics";
+            case ContrabandType::Weapons: return "weapons";
+            case ContrabandType::Stolen: return "stolen";
+            case ContrabandType::Counterfeit: return "counterfeit";
+            case ContrabandType::Exotic: return "exotic";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(CargoScanState)
+};
 
 } // namespace components
 } // namespace atlas
