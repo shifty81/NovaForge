@@ -620,6 +620,128 @@ public:
     COMPONENT_TYPE(FleetSquad)
 };
 
+// ==================== Commander Disagreement ====================
+
+/**
+ * @brief Tracks disagreements between wing commanders in a fleet
+ *
+ * When two wing commanders with conflicting personality traits face
+ * a strategic decision, a disagreement arises that must be resolved.
+ */
+class CommanderDisagreement : public ecs::Component {
+public:
+    enum class Topic { Strategy, Target, Formation, Retreat, LootSplit };
+    enum class Resolution { None, Vote, AuthorityOverride, Compromise, Escalated };
+    enum class Severity { Minor, Moderate, Serious, Critical };
+
+    struct Disagreement {
+        std::string commander_a_id;
+        std::string commander_b_id;
+        Topic topic = Topic::Strategy;
+        Severity severity = Severity::Minor;
+        Resolution resolution = Resolution::None;
+        float timer = 0.0f;           // seconds since raised
+        float escalation_threshold = 30.0f;  // escalate after this many seconds
+        bool resolved = false;
+        float morale_impact = 0.0f;   // accumulated morale impact
+    };
+
+    std::vector<Disagreement> disagreements;
+    int total_disagreements = 0;
+    int total_resolved = 0;
+    float fleet_tension = 0.0f;   // 0-100, accumulated tension
+
+    static std::string topicToString(Topic t) {
+        switch (t) {
+            case Topic::Strategy: return "Strategy";
+            case Topic::Target: return "Target";
+            case Topic::Formation: return "Formation";
+            case Topic::Retreat: return "Retreat";
+            case Topic::LootSplit: return "LootSplit";
+            default: return "Unknown";
+        }
+    }
+
+    static std::string severityToString(Severity s) {
+        switch (s) {
+            case Severity::Minor: return "Minor";
+            case Severity::Moderate: return "Moderate";
+            case Severity::Serious: return "Serious";
+            case Severity::Critical: return "Critical";
+            default: return "Unknown";
+        }
+    }
+
+    static std::string resolutionToString(Resolution r) {
+        switch (r) {
+            case Resolution::None: return "None";
+            case Resolution::Vote: return "Vote";
+            case Resolution::AuthorityOverride: return "AuthorityOverride";
+            case Resolution::Compromise: return "Compromise";
+            case Resolution::Escalated: return "Escalated";
+            default: return "Unknown";
+        }
+    }
+
+    COMPONENT_TYPE(CommanderDisagreement)
+};
+
+// ==================== Captain Background ====================
+
+/**
+ * @brief Captain backstory affecting stats, dialogue, and role preferences
+ *
+ * Each captain has a background archetype from their life before joining
+ * the fleet. This affects their stat modifiers, preferred fleet roles,
+ * personality weight adjustments, and dialogue flavor.
+ */
+class CaptainBackground : public ecs::Component {
+public:
+    enum class BackgroundType {
+        FormerMiner, ExMilitary, Smuggler, Scientist,
+        Noble, Colonist, BountyHunter, Trader
+    };
+
+    BackgroundType background = BackgroundType::Trader;
+    std::string origin_system;       // where the captain came from
+    int years_experience = 0;        // years of prior experience
+    float aggression_modifier = 0.0f;    // added to personality aggression
+    float loyalty_modifier = 0.0f;       // added to personality loyalty
+    float professionalism_modifier = 0.0f;
+    std::string preferred_role;      // preferred fleet role
+    std::string dialogue_flavor;     // dialogue prefix/style marker
+    float skill_bonus = 0.0f;       // bonus to relevant skill category
+    std::string skill_category;      // which skill category gets bonus
+
+    static std::string typeToString(BackgroundType t) {
+        switch (t) {
+            case BackgroundType::FormerMiner: return "FormerMiner";
+            case BackgroundType::ExMilitary: return "ExMilitary";
+            case BackgroundType::Smuggler: return "Smuggler";
+            case BackgroundType::Scientist: return "Scientist";
+            case BackgroundType::Noble: return "Noble";
+            case BackgroundType::Colonist: return "Colonist";
+            case BackgroundType::BountyHunter: return "BountyHunter";
+            case BackgroundType::Trader: return "Trader";
+            default: return "Unknown";
+        }
+    }
+
+    static BackgroundType stringToType(const std::string& s) {
+        if (s == "FormerMiner") return BackgroundType::FormerMiner;
+        if (s == "ExMilitary") return BackgroundType::ExMilitary;
+        if (s == "Smuggler") return BackgroundType::Smuggler;
+        if (s == "Scientist") return BackgroundType::Scientist;
+        if (s == "Noble") return BackgroundType::Noble;
+        if (s == "Colonist") return BackgroundType::Colonist;
+        if (s == "BountyHunter") return BackgroundType::BountyHunter;
+        if (s == "Trader") return BackgroundType::Trader;
+        return BackgroundType::Trader;
+    }
+
+    COMPONENT_TYPE(CaptainBackground)
+};
+
 } // namespace components
 } // namespace atlas
 

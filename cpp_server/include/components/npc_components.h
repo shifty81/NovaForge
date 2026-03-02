@@ -246,6 +246,49 @@ public:
     COMPONENT_TYPE(WreckPersistence)
 };
 
+// ==================== Imperfect Information ====================
+
+/**
+ * @brief Tracks scan-derived intelligence about other entities
+ *
+ * Entity information has accuracy based on scan resolution, distance,
+ * and time since last scan. Intel decays over time.
+ */
+class EntityIntel : public ecs::Component {
+public:
+    struct IntelEntry {
+        std::string target_id;
+        float confidence = 0.0f;       // 0.0 (no data) to 1.0 (perfect)
+        float scan_quality = 0.0f;     // quality of the scan that produced this
+        float age = 0.0f;              // seconds since recorded
+        float decay_rate = 0.01f;      // confidence lost per second
+        float distance_at_scan = 0.0f; // distance when scanned
+        bool is_ghost = false;         // became a sensor ghost
+    };
+
+    std::vector<IntelEntry> entries;
+    float sensor_strength = 1.0f;   // observer's sensor multiplier
+    int max_entries = 50;
+    float ghost_threshold = 0.1f;   // below this confidence, mark as ghost
+    int total_scans = 0;
+
+    IntelEntry* getEntry(const std::string& target_id) {
+        for (auto& e : entries) {
+            if (e.target_id == target_id) return &e;
+        }
+        return nullptr;
+    }
+
+    const IntelEntry* getEntry(const std::string& target_id) const {
+        for (const auto& e : entries) {
+            if (e.target_id == target_id) return &e;
+        }
+        return nullptr;
+    }
+
+    COMPONENT_TYPE(EntityIntel)
+};
+
 
 } // namespace components
 } // namespace atlas

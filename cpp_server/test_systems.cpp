@@ -179,6 +179,9 @@
 #include "systems/cloaking_system.h"
 #include "systems/jump_drive_system.h"
 #include "systems/cargo_scan_system.h"
+#include "systems/commander_disagreement_system.h"
+#include "systems/imperfect_information_system.h"
+#include "systems/captain_background_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -24635,6 +24638,434 @@ void testCargoScanMissing() {
     assertTrue(!sys.isCustomsScanner("nonexistent"), "Default not customs for missing");
 }
 
+// ==================== CommanderDisagreementSystem Tests ====================
+
+void testDisagreementRaise() {
+    std::cout << "\n=== Commander Disagreement: Raise ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    assertTrue(sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Strategy"), "Disagreement raised");
+    assertTrue(sys.getActiveCount("fleet1") == 1, "One active disagreement");
+    assertTrue(sys.getTotalDisagreements("fleet1") == 1, "Total disagreements is 1");
+    assertTrue(sys.getFleetTension("fleet1") > 0.0f, "Fleet tension increased");
+}
+
+void testDisagreementResolveCompromise() {
+    std::cout << "\n=== Commander Disagreement: Resolve Compromise ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Target");
+    float tension_before = sys.getFleetTension("fleet1");
+    assertTrue(sys.resolveDisagreement("fleet1", 0, "Compromise"), "Resolved by compromise");
+    assertTrue(sys.getActiveCount("fleet1") == 0, "No active disagreements");
+    assertTrue(sys.getTotalResolved("fleet1") == 1, "One resolved");
+    assertTrue(sys.getResolution("fleet1", 0) == "Compromise", "Resolution is Compromise");
+    assertTrue(sys.getFleetTension("fleet1") < tension_before, "Tension reduced after compromise");
+}
+
+void testDisagreementResolveVote() {
+    std::cout << "\n=== Commander Disagreement: Resolve Vote ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Formation");
+    assertTrue(sys.resolveDisagreement("fleet1", 0, "Vote"), "Resolved by vote");
+    assertTrue(sys.getResolution("fleet1", 0) == "Vote", "Resolution is Vote");
+    assertTrue(sys.getTotalResolved("fleet1") == 1, "One resolved");
+}
+
+void testDisagreementResolveAuthority() {
+    std::cout << "\n=== Commander Disagreement: Resolve Authority ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Retreat");
+    assertTrue(sys.resolveDisagreement("fleet1", 0, "AuthorityOverride"), "Resolved by authority");
+    assertTrue(sys.getResolution("fleet1", 0) == "AuthorityOverride", "Resolution is AuthorityOverride");
+    float impact = sys.getMoraleImpact("fleet1", 0);
+    assertTrue(impact < -2.0f, "Authority override hurts morale more");
+}
+
+void testDisagreementEscalation() {
+    std::cout << "\n=== Commander Disagreement: Escalation ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    auto* cd = addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "LootSplit");
+    assertTrue(sys.getSeverity("fleet1", 0) == "Minor", "Starts at Minor");
+
+    // Set short escalation for testing
+    cd->disagreements[0].escalation_threshold = 5.0f;
+    sys.update(5.0f);
+    assertTrue(sys.getSeverity("fleet1", 0) == "Moderate", "Escalated to Moderate");
+    sys.update(5.0f);
+    assertTrue(sys.getSeverity("fleet1", 0) == "Serious", "Escalated to Serious");
+    sys.update(5.0f);
+    assertTrue(sys.getSeverity("fleet1", 0) == "Critical", "Escalated to Critical");
+    assertTrue(sys.getActiveCount("fleet1") == 0, "Auto-resolved at Critical (escalated)");
+}
+
+void testDisagreementDismiss() {
+    std::cout << "\n=== Commander Disagreement: Dismiss ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Strategy");
+    assertTrue(sys.dismissDisagreement("fleet1", 0), "Dismissed disagreement");
+    assertTrue(sys.getActiveCount("fleet1") == 0, "No active after dismiss");
+}
+
+void testDisagreementMultiple() {
+    std::cout << "\n=== Commander Disagreement: Multiple ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Strategy");
+    sys.raiseDisagreement("fleet1", "cmd_b", "cmd_c", "Target");
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_c", "Retreat");
+    assertTrue(sys.getActiveCount("fleet1") == 3, "Three active disagreements");
+    assertTrue(sys.getTotalDisagreements("fleet1") == 3, "Three total");
+    assertTrue(sys.getFleetTension("fleet1") >= 15.0f, "High fleet tension from three disagreements");
+}
+
+void testDisagreementTensionCap() {
+    std::cout << "\n=== Commander Disagreement: Tension Cap ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    auto* cd = addComp<components::CommanderDisagreement>(e);
+    cd->fleet_tension = 98.0f;
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Strategy");
+    assertTrue(sys.getFleetTension("fleet1") <= 100.0f, "Tension capped at 100");
+}
+
+void testDisagreementAlreadyResolved() {
+    std::cout << "\n=== Commander Disagreement: Already Resolved ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("fleet1");
+    addComp<components::CommanderDisagreement>(e);
+
+    systems::CommanderDisagreementSystem sys(&world);
+    sys.raiseDisagreement("fleet1", "cmd_a", "cmd_b", "Strategy");
+    sys.resolveDisagreement("fleet1", 0, "Vote");
+    assertTrue(!sys.resolveDisagreement("fleet1", 0, "Compromise"), "Cannot resolve already resolved");
+}
+
+void testDisagreementMissing() {
+    std::cout << "\n=== Commander Disagreement: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::CommanderDisagreementSystem sys(&world);
+    assertTrue(sys.getActiveCount("nonexistent") == 0, "Default active count 0");
+    assertTrue(approxEqual(sys.getFleetTension("nonexistent"), 0.0f), "Default tension 0");
+    assertTrue(sys.getTotalDisagreements("nonexistent") == 0, "Default total 0");
+    assertTrue(sys.getTotalResolved("nonexistent") == 0, "Default resolved 0");
+    assertTrue(sys.getSeverity("nonexistent", 0) == "Unknown", "Default severity Unknown");
+    assertTrue(sys.getResolution("nonexistent", 0) == "None", "Default resolution None");
+    assertTrue(approxEqual(sys.getMoraleImpact("nonexistent", 0), 0.0f), "Default morale impact 0");
+}
+
+// ==================== ImperfectInformationSystem Tests ====================
+
+void testIntelRecord() {
+    std::cout << "\n=== Imperfect Information: Record Intel ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    addComp<components::EntityIntel>(e);
+
+    systems::ImperfectInformationSystem sys(&world);
+    assertTrue(sys.recordIntel("observer1", "target1", 0.8f, 100.0f), "Intel recorded");
+    assertTrue(sys.hasIntel("observer1", "target1"), "Has intel on target1");
+    assertTrue(sys.getConfidence("observer1", "target1") > 0.0f, "Confidence > 0");
+    assertTrue(sys.getIntelCount("observer1") == 1, "One intel entry");
+    assertTrue(sys.getTotalScans("observer1") == 1, "One scan recorded");
+}
+
+void testIntelConfidenceDistance() {
+    std::cout << "\n=== Imperfect Information: Confidence by Distance ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    addComp<components::EntityIntel>(e);
+
+    systems::ImperfectInformationSystem sys(&world);
+    sys.recordIntel("observer1", "close_target", 0.8f, 10.0f);
+    sys.recordIntel("observer1", "far_target", 0.8f, 5000.0f);
+    float close_conf = sys.getConfidence("observer1", "close_target");
+    float far_conf = sys.getConfidence("observer1", "far_target");
+    assertTrue(close_conf > far_conf, "Close target has higher confidence");
+}
+
+void testIntelDecay() {
+    std::cout << "\n=== Imperfect Information: Intel Decay ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    auto* intel = addComp<components::EntityIntel>(e);
+    intel->entries.push_back({"target1", 0.5f, 0.8f, 0.0f, 0.1f, 100.0f, false});
+
+    systems::ImperfectInformationSystem sys(&world);
+    float initial = sys.getConfidence("observer1", "target1");
+    sys.update(2.0f);  // 2 seconds of decay at 0.1/s = 0.2 lost
+    float after = sys.getConfidence("observer1", "target1");
+    assertTrue(after < initial, "Confidence decayed over time");
+    assertTrue(sys.getIntelAge("observer1", "target1") > 0.0f, "Intel age increased");
+}
+
+void testIntelGhost() {
+    std::cout << "\n=== Imperfect Information: Sensor Ghost ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    auto* intel = addComp<components::EntityIntel>(e);
+    intel->ghost_threshold = 0.1f;
+    intel->entries.push_back({"target1", 0.15f, 0.8f, 0.0f, 0.1f, 100.0f, false});
+
+    systems::ImperfectInformationSystem sys(&world);
+    assertTrue(!sys.isGhost("observer1", "target1"), "Not ghost initially");
+    sys.update(1.0f);  // 0.15 - 0.1 = 0.05, below 0.1 threshold
+    assertTrue(sys.isGhost("observer1", "target1"), "Became ghost after decay");
+}
+
+void testIntelRefresh() {
+    std::cout << "\n=== Imperfect Information: Refresh Intel ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    auto* intel = addComp<components::EntityIntel>(e);
+    intel->entries.push_back({"target1", 0.3f, 0.5f, 10.0f, 0.01f, 200.0f, true});
+
+    systems::ImperfectInformationSystem sys(&world);
+    assertTrue(sys.isGhost("observer1", "target1"), "Was ghost");
+    sys.recordIntel("observer1", "target1", 0.9f, 50.0f);
+    assertTrue(!sys.isGhost("observer1", "target1"), "No longer ghost after refresh");
+    assertTrue(sys.getConfidence("observer1", "target1") > 0.3f, "Confidence improved");
+}
+
+void testIntelClear() {
+    std::cout << "\n=== Imperfect Information: Clear Intel ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    addComp<components::EntityIntel>(e);
+
+    systems::ImperfectInformationSystem sys(&world);
+    sys.recordIntel("observer1", "target1", 0.8f, 100.0f);
+    sys.recordIntel("observer1", "target2", 0.6f, 200.0f);
+    assertTrue(sys.getIntelCount("observer1") == 2, "Two entries");
+    assertTrue(sys.clearIntel("observer1", "target1"), "Cleared target1");
+    assertTrue(!sys.hasIntel("observer1", "target1"), "target1 removed");
+    assertTrue(sys.hasIntel("observer1", "target2"), "target2 still present");
+}
+
+void testIntelClearAll() {
+    std::cout << "\n=== Imperfect Information: Clear All ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    addComp<components::EntityIntel>(e);
+
+    systems::ImperfectInformationSystem sys(&world);
+    sys.recordIntel("observer1", "target1", 0.8f, 100.0f);
+    sys.recordIntel("observer1", "target2", 0.6f, 200.0f);
+    assertTrue(sys.clearAllIntel("observer1"), "Cleared all");
+    assertTrue(sys.getIntelCount("observer1") == 0, "No entries after clear all");
+}
+
+void testIntelSensorStrength() {
+    std::cout << "\n=== Imperfect Information: Sensor Strength ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    addComp<components::EntityIntel>(e);
+
+    systems::ImperfectInformationSystem sys(&world);
+    assertTrue(approxEqual(sys.getSensorStrength("observer1"), 1.0f), "Default sensor strength 1.0");
+    sys.setSensorStrength("observer1", 2.0f);
+    assertTrue(approxEqual(sys.getSensorStrength("observer1"), 2.0f), "Sensor strength set to 2.0");
+
+    sys.recordIntel("observer1", "target1", 0.5f, 10.0f);
+    float strong_conf = sys.getConfidence("observer1", "target1");
+    assertTrue(strong_conf > 0.5f, "Higher sensor strength gives better confidence");
+}
+
+void testIntelZeroDecayRemoval() {
+    std::cout << "\n=== Imperfect Information: Zero Decay Removal ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("observer1");
+    auto* intel = addComp<components::EntityIntel>(e);
+    intel->entries.push_back({"target1", 0.05f, 0.5f, 0.0f, 0.1f, 100.0f, false});
+
+    systems::ImperfectInformationSystem sys(&world);
+    sys.update(1.0f);  // 0.05 - 0.1 = 0, removed
+    assertTrue(!sys.hasIntel("observer1", "target1"), "Removed entry at zero confidence");
+}
+
+void testIntelMissing() {
+    std::cout << "\n=== Imperfect Information: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::ImperfectInformationSystem sys(&world);
+    assertTrue(approxEqual(sys.getConfidence("nonexistent", "t"), 0.0f), "Default confidence 0");
+    assertTrue(!sys.hasIntel("nonexistent", "t"), "No intel on missing");
+    assertTrue(approxEqual(sys.getIntelAge("nonexistent", "t"), 0.0f), "Default age 0");
+    assertTrue(!sys.isGhost("nonexistent", "t"), "Not ghost for missing");
+    assertTrue(sys.getIntelCount("nonexistent") == 0, "Default count 0");
+    assertTrue(sys.getTotalScans("nonexistent") == 0, "Default scans 0");
+    assertTrue(approxEqual(sys.getSensorStrength("nonexistent"), 0.0f), "Default sensor 0");
+}
+
+// ==================== CaptainBackgroundSystem Tests ====================
+
+void testCaptainBgAssign() {
+    std::cout << "\n=== Captain Background: Assign ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("captain1");
+    addComp<components::CaptainBackground>(e);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    assertTrue(sys.assignBackground("captain1", "ExMilitary"), "Background assigned");
+    assertTrue(sys.getBackground("captain1") == "ExMilitary", "Background is ExMilitary");
+    assertTrue(sys.getPreferredRole("captain1") == "Combat", "ExMilitary prefers Combat");
+    assertTrue(sys.getDialogueFlavor("captain1") == "formal", "ExMilitary speaks formally");
+}
+
+void testCaptainBgFormerMiner() {
+    std::cout << "\n=== Captain Background: Former Miner ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("captain1");
+    addComp<components::CaptainBackground>(e);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    sys.assignBackground("captain1", "FormerMiner");
+    assertTrue(sys.getPreferredRole("captain1") == "Mining", "FormerMiner prefers Mining");
+    assertTrue(sys.getDialogueFlavor("captain1") == "gruff", "FormerMiner is gruff");
+    assertTrue(sys.getSkillCategory("captain1") == "mining", "Skill category is mining");
+    assertTrue(sys.getSkillBonus("captain1") > 0.0f, "Has skill bonus");
+    assertTrue(sys.getAggressionModifier("captain1") < 0.0f, "Miners are less aggressive");
+}
+
+void testCaptainBgSmuggler() {
+    std::cout << "\n=== Captain Background: Smuggler ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("captain1");
+    addComp<components::CaptainBackground>(e);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    sys.assignBackground("captain1", "Smuggler");
+    assertTrue(sys.getPreferredRole("captain1") == "Scout", "Smuggler prefers Scout");
+    assertTrue(sys.getDialogueFlavor("captain1") == "sly", "Smuggler is sly");
+    assertTrue(sys.getLoyaltyModifier("captain1") < 0.0f, "Smugglers have lower loyalty");
+}
+
+void testCaptainBgScientist() {
+    std::cout << "\n=== Captain Background: Scientist ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("captain1");
+    addComp<components::CaptainBackground>(e);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    sys.assignBackground("captain1", "Scientist");
+    assertTrue(sys.getPreferredRole("captain1") == "Support", "Scientist prefers Support");
+    assertTrue(sys.getDialogueFlavor("captain1") == "analytical", "Scientist is analytical");
+    assertTrue(sys.getSkillCategory("captain1") == "exploration", "Skill category is exploration");
+    assertTrue(sys.getAggressionModifier("captain1") < 0.0f, "Scientists are less aggressive");
+}
+
+void testCaptainBgGenerate() {
+    std::cout << "\n=== Captain Background: Generate from Seed ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("captain1");
+    addComp<components::CaptainBackground>(e);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    assertTrue(sys.generateBackground("captain1", 42), "Generated background");
+    std::string bg = sys.getBackground("captain1");
+    assertTrue(bg != "Unknown", "Valid background generated");
+    assertTrue(!sys.getPreferredRole("captain1").empty(), "Has preferred role");
+    assertTrue(!sys.getDialogueFlavor("captain1").empty(), "Has dialogue flavor");
+    assertTrue(sys.getExperience("captain1") > 0, "Has experience years");
+    assertTrue(!sys.getOriginSystem("captain1").empty(), "Has origin system");
+}
+
+void testCaptainBgDeterministic() {
+    std::cout << "\n=== Captain Background: Deterministic ===" << std::endl;
+    ecs::World world;
+    auto* e1 = world.createEntity("captain1");
+    auto* e2 = world.createEntity("captain2");
+    addComp<components::CaptainBackground>(e1);
+    addComp<components::CaptainBackground>(e2);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    sys.generateBackground("captain1", 12345);
+    sys.generateBackground("captain2", 12345);
+    assertTrue(sys.getBackground("captain1") == sys.getBackground("captain2"), "Same seed = same background");
+    assertTrue(sys.getExperience("captain1") == sys.getExperience("captain2"), "Same seed = same experience");
+    assertTrue(sys.getOriginSystem("captain1") == sys.getOriginSystem("captain2"), "Same seed = same origin");
+}
+
+void testCaptainBgSetOrigin() {
+    std::cout << "\n=== Captain Background: Set Origin ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("captain1");
+    addComp<components::CaptainBackground>(e);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    assertTrue(sys.setOriginSystem("captain1", "Solari Prime"), "Origin set");
+    assertTrue(sys.getOriginSystem("captain1") == "Solari Prime", "Origin is Solari Prime");
+}
+
+void testCaptainBgSetExperience() {
+    std::cout << "\n=== Captain Background: Set Experience ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("captain1");
+    addComp<components::CaptainBackground>(e);
+
+    systems::CaptainBackgroundSystem sys(&world);
+    assertTrue(sys.setExperience("captain1", 15), "Experience set");
+    assertTrue(sys.getExperience("captain1") == 15, "Experience is 15 years");
+}
+
+void testCaptainBgAllTypes() {
+    std::cout << "\n=== Captain Background: All Types ===" << std::endl;
+    ecs::World world;
+    systems::CaptainBackgroundSystem sys(&world);
+    const char* types[] = {"FormerMiner", "ExMilitary", "Smuggler", "Scientist",
+                           "Noble", "Colonist", "BountyHunter", "Trader"};
+    for (int i = 0; i < 8; ++i) {
+        std::string id = "captain_" + std::to_string(i);
+        auto* e = world.createEntity(id);
+        addComp<components::CaptainBackground>(e);
+        sys.assignBackground(id, types[i]);
+        assertTrue(!sys.getPreferredRole(id).empty(), std::string(types[i]) + " has preferred role");
+        assertTrue(!sys.getDialogueFlavor(id).empty(), std::string(types[i]) + " has dialogue flavor");
+        assertTrue(sys.getSkillBonus(id) > 0.0f, std::string(types[i]) + " has skill bonus");
+    }
+}
+
+void testCaptainBgMissing() {
+    std::cout << "\n=== Captain Background: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::CaptainBackgroundSystem sys(&world);
+    assertTrue(sys.getBackground("nonexistent") == "Unknown", "Default background Unknown");
+    assertTrue(sys.getPreferredRole("nonexistent").empty(), "Default role empty");
+    assertTrue(sys.getDialogueFlavor("nonexistent").empty(), "Default flavor empty");
+    assertTrue(approxEqual(sys.getSkillBonus("nonexistent"), 0.0f), "Default skill bonus 0");
+    assertTrue(sys.getSkillCategory("nonexistent").empty(), "Default skill category empty");
+    assertTrue(approxEqual(sys.getAggressionModifier("nonexistent"), 0.0f), "Default aggression mod 0");
+    assertTrue(approxEqual(sys.getLoyaltyModifier("nonexistent"), 0.0f), "Default loyalty mod 0");
+    assertTrue(sys.getExperience("nonexistent") == 0, "Default experience 0");
+    assertTrue(sys.getOriginSystem("nonexistent").empty(), "Default origin empty");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -24686,6 +25117,7 @@ int main() {
     std::cout << "FPSInteraction, FPSCombat, FPSInventory," << std::endl;
     std::cout << "ShipInteriorLayout, EnvironmentalHazard, FPSObjective" << std::endl;
     std::cout << "ResourceProductionChain, FleetDoctrine, PlayerProgression" << std::endl;
+    std::cout << "CommanderDisagreement, ImperfectInformation, CaptainBackground" << std::endl;
     std::cout << "========================================" << std::endl;
     
     // Capacitor tests
@@ -26405,6 +26837,42 @@ int main() {
     testCargoScanDetectionChance();
     testCargoScanMultipleScans();
     testCargoScanMissing();
+
+    // Commander Disagreement System tests
+    testDisagreementRaise();
+    testDisagreementResolveCompromise();
+    testDisagreementResolveVote();
+    testDisagreementResolveAuthority();
+    testDisagreementEscalation();
+    testDisagreementDismiss();
+    testDisagreementMultiple();
+    testDisagreementTensionCap();
+    testDisagreementAlreadyResolved();
+    testDisagreementMissing();
+
+    // Imperfect Information System tests
+    testIntelRecord();
+    testIntelConfidenceDistance();
+    testIntelDecay();
+    testIntelGhost();
+    testIntelRefresh();
+    testIntelClear();
+    testIntelClearAll();
+    testIntelSensorStrength();
+    testIntelZeroDecayRemoval();
+    testIntelMissing();
+
+    // Captain Background System tests
+    testCaptainBgAssign();
+    testCaptainBgFormerMiner();
+    testCaptainBgSmuggler();
+    testCaptainBgScientist();
+    testCaptainBgGenerate();
+    testCaptainBgDeterministic();
+    testCaptainBgSetOrigin();
+    testCaptainBgSetExperience();
+    testCaptainBgAllTypes();
+    testCaptainBgMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
