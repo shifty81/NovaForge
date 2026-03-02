@@ -490,6 +490,28 @@ public:
     COMPONENT_TYPE(TetherDockingArm)
 };
 
+class CloakingState : public ecs::Component {
+public:
+    enum class CloakType { Prototype, Improved, CovertOps };
+    enum class CloakPhase { Inactive, Activating, Cloaked, Deactivating };
+
+    CloakType cloak_type = CloakType::Prototype;
+    CloakPhase phase = CloakPhase::Inactive;
+    float activation_time = 5.0f;       // seconds to fully cloak
+    float deactivation_time = 2.0f;     // seconds to fully decloak
+    float phase_timer = 0.0f;           // progress in current phase
+    float fuel_per_second = 1.0f;       // capacitor drain while cloaked
+    float speed_penalty = 0.75f;        // max speed multiplier while cloaked (0.75 = 25% slower)
+    float targeting_delay = 10.0f;      // seconds of targeting lockout after decloak
+    float targeting_lockout_remaining = 0.0f;
+    float proximity_decloak_range = 2000.0f;  // meters - entities within range decloak ship
+    bool can_warp_while_cloaked = false;      // only CovertOps cloaks allow warp
+    int decloak_count = 0;                     // times decloaked (for tracking)
+    std::string owner_id;
+
+    COMPONENT_TYPE(CloakingState)
+};
+
 
 } // namespace components
 } // namespace atlas
