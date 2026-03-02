@@ -1,6 +1,6 @@
 # Nova Forge — Project Roadmap
 
-**Status**: In active R&D and development — actively testing until further notice
+**Status**: Active R&D — Server-side systems and tests are well ahead of client integration. The collaborative AI–human development process is ongoing; ECS components and test assertions do not equal playable, polished features.
 
 ---
 
@@ -39,7 +39,7 @@ Nova Forge is a PVE-focused space simulator designed for solo play or small grou
 
 ## Master Implementation Plan
 
-> Based on comprehensive baseline design document (February 2026) and `scopeforprojectsofar.rtf` project planning document
+> Based on comprehensive baseline design document (February 2026), `scopeforprojectsofar.rtf` project planning document, and the [Master Design Bible](design/MASTER_DESIGN_BIBLE.md) (consolidated from iterative AI–human design sessions)
 
 ### Architecture Pillars
 
@@ -325,9 +325,12 @@ All baseline systems are now implemented.
 
 ## Current Status
 
-### 🎯 Active R&D and Development
+### 🔬 Active R&D — Server Ahead of Client
 
-**Overall Progress**: Core features implemented, actively testing and expanding  
+**Overall Progress**: Server-side ECS systems, data pipelines, and test suites are mature. Client-side rendering, audio, UI integration, and playable gameplay loops are actively under development. Phases marked ✅ below reflect **server system and test completion** — client integration and polish remain ongoing across all phases.
+
+**What "complete" means here**: A checked item (✅) indicates the ECS components, server logic, and test assertions exist. It does **not** mean the feature is playable, visually polished, or integrated into the client. The gap between tested server code and a playable game is where active work continues.
+
 **Status**: All ship model integration complete (58+ ships). Tech II ships, capitals, mining barges, and exhumers implemented with 3D models. Mission system expansion complete with missions across 5 levels. Game systems being structured around the EVE Online manual. Atlas Engine expanded with 6 new modules merged from Atlas-NovaForge (physics, input, camera, audio, animation, plugin). Formal TLA+ specifications added for ECS, replay, and layout subsystems. Build infrastructure enhanced with CMakePresets.json and JSON validation schemas. Data layer logging standardized on Logger singleton across all data loaders. **915 Atlas engine + 3955 server test assertions total**.
 
 ---
@@ -1188,7 +1191,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 ### 📋 Phase 12: Procedural Ship Generation Overhaul (In Progress)
 **Timeline**: 2027  
 **Priority**: High  
-**Goal**: Ships that read in silhouette — spine-based hull grammar replacing blob-assembly
+**Goal**: Ships that read in silhouette — spine-based hull grammar replacing blob-assembly  
+**Design Reference**: [Master Design Bible — Ship Construction](design/MASTER_DESIGN_BIBLE.md#ship-construction-system) · [Procedural Pipeline](design/PROCEDURAL_SYSTEMS.md)
 
 #### Hull Grammar System
 - [x] **Spine selection** — Needle, Wedge, Hammer, Slab, Ring — defines ship purpose — SpineHullGenerator with hull-class-biased archetype selection (8 tests)
@@ -1224,7 +1228,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 ### 📋 Phase 13: FPS & Interior Systems (In Progress)
 **Timeline**: 2027  
 **Priority**: High  
-**Goal**: Full FPS gameplay inside ships, stations, and on planets with modular interiors and survival mechanics
+**Goal**: Full FPS gameplay inside ships, stations, and on planets with modular interiors and survival mechanics  
+**Design Reference**: [Master Design Bible — FPS & Interiors](design/MASTER_DESIGN_BIBLE.md#fps--interior-combat) · [Salvage & Legends](design/SALVAGE_AND_LEGENDS.md)
 
 #### Character & Race System
 - [x] **4 playable races** — TerranDescendant (balanced, fast learner), SynthBorn (AI hybrid, drone bonus), PureAlien (resilient, exotic), HybridEvolutionary (high-risk, mutating) — RaceInfo component with applyRaceDefaults() + CharacterMeshSystem PCG (3 tests)
@@ -1306,7 +1311,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 ### 📋 Phase 14: Vehicles & Planetary Systems (In Progress)
 **Timeline**: 2027–2028  
 **Priority**: Medium  
-**Goal**: Planetary exploration with rovers, grav bikes, and procedural terrain
+**Goal**: Planetary exploration with rovers, grav bikes, and procedural terrain  
+**Design Reference**: [Vehicles & Equipment](design/VEHICLES_AND_EQUIPMENT.md) · [Master Design Bible — Planet Landing](design/MASTER_DESIGN_BIBLE.md#planet-landing--surface-systems)
 
 #### Planet Generation
 - [x] **8 planet types** — Rocky, Gas, Ice, Lava, Ocean, Desert, Forest, Barren — PlanetGenerator with gravity, temperature, atmosphere, terraformability (4 tests)
@@ -1338,7 +1344,8 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 ### 📋 Phase 15: Turrets, Market, & Legends (In Progress)
 **Timeline**: 2027–2028  
 **Priority**: Medium  
-**Goal**: Procedural weapons, enhanced economy, and player legend system
+**Goal**: Procedural weapons, enhanced economy, and player legend system  
+**Design Reference**: [Salvage & Legends](design/SALVAGE_AND_LEGENDS.md) · [Vehicles & Equipment — Weapons](design/VEHICLES_AND_EQUIPMENT.md#weapon-system)
 
 #### Turret Generation
 - [x] **Procedural turrets** — 4 sizes × 5 types with faction style modifiers — TurretGenerator with range, tracking, damage, barrel count (3 tests)
@@ -1767,6 +1774,6 @@ Have questions about the roadmap? Want to suggest features?
 
 ---
 
-**Status**: In active R&D and development — actively testing until further notice
+**Status**: Active R&D — server systems ahead of client integration. The AI–human development dance continues.
 
 *This roadmap is a living document and will be updated as the project evolves.*
