@@ -196,6 +196,9 @@ set(SERVER_SOURCES
     src/systems/space_planet_transition_system.cpp
     src/systems/fleet_hangar_system.cpp
     src/systems/hangar_environment_system.cpp
+    src/systems/dock_node_layout_system.cpp
+    src/systems/mission_consequence_system.cpp
+    src/systems/server_performance_monitor_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -398,6 +401,9 @@ set(SERVER_HEADERS
     include/systems/space_planet_transition_system.h
     include/systems/fleet_hangar_system.h
     include/systems/hangar_environment_system.h
+    include/systems/dock_node_layout_system.h
+    include/systems/mission_consequence_system.h
+    include/systems/server_performance_monitor_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -676,6 +682,9 @@ if(BUILD_TESTS)
         src/systems/space_planet_transition_system.cpp
         src/systems/fleet_hangar_system.cpp
         src/systems/hangar_environment_system.cpp
+        src/systems/dock_node_layout_system.cpp
+        src/systems/mission_consequence_system.cpp
+        src/systems/server_performance_monitor_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp

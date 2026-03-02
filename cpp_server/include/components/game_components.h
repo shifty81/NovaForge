@@ -62,6 +62,46 @@ public:
     COMPONENT_TYPE(PlayerProgression)
 };
 
+// ==================== Server Performance Metrics ====================
+
+class ServerPerformanceMetrics : public ecs::Component {
+public:
+    std::string monitor_id;
+    std::string server_id;
+    float tick_budget_ms = 50.0f;
+
+    struct SystemTiming {
+        std::string system_name;
+        float last_time_ms = 0.0f;
+        float avg_time_ms = 0.0f;
+        float max_time_ms = 0.0f;
+        int sample_count = 0;
+    };
+
+    std::vector<SystemTiming> system_timings;
+    int entity_count = 0;
+    int component_count = 0;
+    float total_tick_time_ms = 0.0f;
+    float avg_tick_time_ms = 0.0f;
+    float max_tick_time_ms = 0.0f;
+    int ticks_over_budget = 0;
+    int total_ticks = 0;
+    float budget_utilization = 0.0f;
+    bool alert_active = false;
+    float alert_threshold = 0.8f;
+    int hot_path_count = 0;
+    std::string slowest_system;
+
+    SystemTiming* findTiming(const std::string& name) {
+        for (auto& t : system_timings) {
+            if (t.system_name == name) return &t;
+        }
+        return nullptr;
+    }
+
+    COMPONENT_TYPE(ServerPerformanceMetrics)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -155,6 +155,61 @@ public:
     COMPONENT_TYPE(ViewModeState)
 };
 
+// ==================== Dock Node Layout ====================
+
+class DockNodeLayout : public ecs::Component {
+public:
+    std::string layout_id;
+    std::string owner_id;
+
+    enum class NodeType { Root, Split, Leaf };
+    enum class SplitDirection { Horizontal, Vertical, None };
+
+    struct DockNode {
+        std::string node_id;
+        NodeType type = NodeType::Leaf;
+        SplitDirection direction = SplitDirection::None;
+        float split_ratio = 0.5f;
+        std::string left_child_id;
+        std::string right_child_id;
+        std::string window_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float width = 0.0f;
+        float height = 0.0f;
+    };
+
+    std::vector<DockNode> nodes;
+    std::string root_node_id;
+    int max_windows = 20;
+    int total_docks = 0;
+    int total_undocks = 0;
+
+    DockNode* findNode(const std::string& nid) {
+        for (auto& n : nodes) {
+            if (n.node_id == nid) return &n;
+        }
+        return nullptr;
+    }
+
+    const DockNode* findNode(const std::string& nid) const {
+        for (const auto& n : nodes) {
+            if (n.node_id == nid) return &n;
+        }
+        return nullptr;
+    }
+
+    int countLeaves() const {
+        int c = 0;
+        for (const auto& n : nodes) {
+            if (n.type == NodeType::Leaf && !n.window_id.empty()) c++;
+        }
+        return c;
+    }
+
+    COMPONENT_TYPE(DockNodeLayout)
+};
+
 
 } // namespace components
 } // namespace atlas

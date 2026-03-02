@@ -187,6 +187,50 @@ public:
     COMPONENT_TYPE(MissionTemplate)
 };
 
+// ==================== Mission Consequence ====================
+
+class MissionConsequence : public ecs::Component {
+public:
+    std::string consequence_id;
+    std::string mission_id;
+    std::string system_id;
+
+    enum class ConsequenceType {
+        StandingChange,
+        SecurityShift,
+        PriceImpact,
+        SpawnChange,
+        ReputationBoost,
+        TerritoryShift,
+        ResourceDepletion
+    };
+
+    ConsequenceType type = ConsequenceType::StandingChange;
+    float magnitude = 0.0f;
+    float duration = 300.0f;
+    float elapsed = 0.0f;
+    std::string target_faction;
+    std::string target_item;
+    bool is_active = false;
+    bool is_permanent = false;
+    bool is_expired = false;
+    int times_triggered = 0;
+    float decay_rate = 0.01f;
+
+    struct ConsequenceEntry {
+        std::string id;
+        std::string mission_id;
+        ConsequenceType type = ConsequenceType::StandingChange;
+        float magnitude = 0.0f;
+        float remaining_time = 0.0f;
+        bool permanent = false;
+    };
+
+    std::vector<ConsequenceEntry> active_consequences;
+
+    COMPONENT_TYPE(MissionConsequence)
+};
+
 
 } // namespace components
 } // namespace atlas

@@ -194,6 +194,9 @@
 #include "systems/space_planet_transition_system.h"
 #include "systems/fleet_hangar_system.h"
 #include "systems/hangar_environment_system.h"
+#include "systems/dock_node_layout_system.h"
+#include "systems/mission_consequence_system.h"
+#include "systems/server_performance_monitor_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -26843,6 +26846,417 @@ void testHangarEnvMissing() {
     assertTrue(sys.getOccupantCount("nonexistent") == 0, "Count 0 on missing");
 }
 
+// ==================== DockNodeLayout Tests ====================
+
+void testDockNodeInit() {
+    std::cout << "\n=== DockNodeLayout: Init ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    assertTrue(sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f), "Layout initialized");
+    assertTrue(sys.getWindowCount("layout_1") == 0, "No windows initially");
+    assertTrue(sys.getNodeType("layout_1", "root") == "root" || sys.getNodeType("layout_1", "root") == "leaf", "Root node exists");
+    assertTrue(!sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f), "Duplicate init fails");
+}
+
+void testDockNodeAddWindow() {
+    std::cout << "\n=== DockNodeLayout: Add Window ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f);
+    assertTrue(sys.addWindow("layout_1", "win_1"), "Window added");
+    assertTrue(sys.getWindowCount("layout_1") == 1, "Window count is 1");
+    assertTrue(sys.addWindow("layout_1", "win_2"), "Second window added");
+    assertTrue(sys.getWindowCount("layout_1") == 2, "Window count is 2");
+}
+
+void testDockNodeRemoveWindow() {
+    std::cout << "\n=== DockNodeLayout: Remove Window ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f);
+    sys.addWindow("layout_1", "win_1");
+    assertTrue(sys.getWindowCount("layout_1") == 1, "1 window before remove");
+    assertTrue(sys.removeWindow("layout_1", "win_1"), "Window removed");
+    assertTrue(sys.getWindowCount("layout_1") == 0, "0 windows after remove");
+    assertTrue(!sys.removeWindow("layout_1", "win_1"), "Double remove fails");
+}
+
+void testDockNodeSplit() {
+    std::cout << "\n=== DockNodeLayout: Split ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f);
+    sys.addWindow("layout_1", "win_1");
+    // Find the node with win_1 - it should be root which became a leaf
+    assertTrue(sys.splitNode("layout_1", "root",
+        components::DockNodeLayout::SplitDirection::Horizontal, 0.5f), "Node split");
+    assertTrue(sys.getNodeType("layout_1", "root") == "split", "Root is now split");
+}
+
+void testDockNodeDock() {
+    std::cout << "\n=== DockNodeLayout: Dock ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f);
+    sys.addWindow("layout_1", "win_1");
+    // Find leaf node with win_1
+    // Dock win_2 next to root
+    assertTrue(sys.dockWindow("layout_1", "win_2", "root",
+        components::DockNodeLayout::SplitDirection::Horizontal), "Window docked");
+    assertTrue(sys.getWindowCount("layout_1") == 2, "2 windows after dock");
+}
+
+void testDockNodeUndock() {
+    std::cout << "\n=== DockNodeLayout: Undock ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f);
+    sys.addWindow("layout_1", "win_1");
+    assertTrue(sys.undockWindow("layout_1", "win_1"), "Window undocked");
+    assertTrue(sys.getWindowCount("layout_1") == 0, "0 windows after undock");
+    assertTrue(!sys.undockWindow("layout_1", "win_1"), "Double undock fails");
+}
+
+void testDockNodeMaxWindows() {
+    std::cout << "\n=== DockNodeLayout: Max Windows ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f);
+    for (int i = 0; i < 20; i++) {
+        sys.addWindow("layout_1", "win_" + std::to_string(i));
+    }
+    assertTrue(sys.getWindowCount("layout_1") == 20, "20 windows added");
+    assertTrue(!sys.addWindow("layout_1", "win_overflow"), "Cannot exceed max windows");
+}
+
+void testDockNodeLayout() {
+    std::cout << "\n=== DockNodeLayout: Layout Calculation ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1000.0f, 500.0f);
+    sys.addWindow("layout_1", "win_1");
+    sys.dockWindow("layout_1", "win_2", "root",
+        components::DockNodeLayout::SplitDirection::Horizontal);
+    sys.update(0.016f);
+    auto bounds1 = sys.getWindowBounds("layout_1", "win_1");
+    auto bounds2 = sys.getWindowBounds("layout_1", "win_2");
+    assertTrue(std::get<2>(bounds1) > 0.0f, "Win1 has width");
+    assertTrue(std::get<2>(bounds2) > 0.0f, "Win2 has width");
+    assertTrue(approxEqual(std::get<2>(bounds1) + std::get<2>(bounds2), 1000.0f), "Widths sum to total");
+}
+
+void testDockNodeNestedSplit() {
+    std::cout << "\n=== DockNodeLayout: Nested Split ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    world.createEntity("layout_1");
+    sys.initializeLayout("layout_1", "owner_1", 1920.0f, 1080.0f);
+    sys.addWindow("layout_1", "win_1");
+    sys.splitNode("layout_1", "root",
+        components::DockNodeLayout::SplitDirection::Horizontal, 0.5f);
+    // The left child should have win_1, right is empty leaf
+    assertTrue(sys.getNodeType("layout_1", "root") == "split", "Root is split");
+    // Add window to the right child
+    sys.addWindow("layout_1", "win_2");
+    assertTrue(sys.getWindowCount("layout_1") == 2, "2 windows after nested ops");
+}
+
+void testDockNodeMissing() {
+    std::cout << "\n=== DockNodeLayout: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::DockNodeLayoutSystem sys(&world);
+    assertTrue(!sys.initializeLayout("nonexistent", "o", 100.0f, 100.0f), "Init fails on missing");
+    assertTrue(!sys.addWindow("nonexistent", "win"), "Add fails on missing");
+    assertTrue(sys.getWindowCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(sys.getNodeType("nonexistent", "root") == "unknown", "Type unknown on missing");
+}
+
+// ==================== MissionConsequence Tests ====================
+
+void testConsequenceInit() {
+    std::cout << "\n=== MissionConsequence: Init ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    assertTrue(sys.initializeConsequences("sys_1", "sol"), "Consequences initialized");
+    assertTrue(sys.getActiveCount("sys_1") == 0, "No active consequences initially");
+    assertTrue(!sys.initializeConsequences("sys_1", "sol"), "Duplicate init fails");
+}
+
+void testConsequenceTrigger() {
+    std::cout << "\n=== MissionConsequence: Trigger ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    assertTrue(sys.triggerConsequence("sys_1", "mission_1",
+        components::MissionConsequence::ConsequenceType::StandingChange,
+        0.5f, 300.0f, "empire", false), "Consequence triggered");
+    assertTrue(sys.getActiveCount("sys_1") == 1, "1 active consequence");
+    assertTrue(sys.isConsequenceActive("sys_1", "csq_0"), "Consequence csq_0 is active");
+}
+
+void testConsequenceExpiry() {
+    std::cout << "\n=== MissionConsequence: Expiry ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    sys.triggerConsequence("sys_1", "m1",
+        components::MissionConsequence::ConsequenceType::SecurityShift,
+        1.0f, 5.0f, "police", false);
+    assertTrue(sys.getActiveCount("sys_1") == 1, "1 active before expiry");
+    for (int i = 0; i < 10; i++) sys.update(1.0f);
+    assertTrue(sys.getActiveCount("sys_1") == 0, "0 active after expiry");
+}
+
+void testConsequencePermanent() {
+    std::cout << "\n=== MissionConsequence: Permanent ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    sys.triggerConsequence("sys_1", "m1",
+        components::MissionConsequence::ConsequenceType::TerritoryShift,
+        2.0f, 10.0f, "rebels", true);
+    for (int i = 0; i < 100; i++) sys.update(1.0f);
+    assertTrue(sys.getActiveCount("sys_1") == 1, "Permanent consequence persists");
+    assertTrue(sys.getPermanentCount("sys_1") == 1, "1 permanent consequence");
+}
+
+void testConsequenceMagnitude() {
+    std::cout << "\n=== MissionConsequence: Magnitude ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    sys.triggerConsequence("sys_1", "m1",
+        components::MissionConsequence::ConsequenceType::PriceImpact,
+        0.3f, 300.0f, "traders", false);
+    sys.triggerConsequence("sys_1", "m2",
+        components::MissionConsequence::ConsequenceType::PriceImpact,
+        0.7f, 300.0f, "traders", false);
+    float mag = sys.getMagnitude("sys_1",
+        components::MissionConsequence::ConsequenceType::PriceImpact);
+    assertTrue(approxEqual(mag, 1.0f), "Magnitudes sum to 1.0");
+}
+
+void testConsequenceDecay() {
+    std::cout << "\n=== MissionConsequence: Decay ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    sys.triggerConsequence("sys_1", "m1",
+        components::MissionConsequence::ConsequenceType::SpawnChange,
+        1.0f, 100.0f, "pirates", false);
+    assertTrue(sys.getActiveCount("sys_1") == 1, "Active before decay");
+    sys.update(50.0f);
+    assertTrue(sys.getActiveCount("sys_1") == 1, "Still active at 50s");
+    sys.update(60.0f);
+    assertTrue(sys.getActiveCount("sys_1") == 0, "Expired after 110s total");
+}
+
+void testConsequenceManualExpire() {
+    std::cout << "\n=== MissionConsequence: Manual Expire ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    sys.triggerConsequence("sys_1", "m1",
+        components::MissionConsequence::ConsequenceType::StandingChange,
+        1.0f, 300.0f, "faction_a", false);
+    assertTrue(sys.isConsequenceActive("sys_1", "csq_0"), "Active before manual expire");
+    assertTrue(sys.expireConsequence("sys_1", "csq_0"), "Manual expire succeeds");
+    assertTrue(sys.getActiveCount("sys_1") == 0, "0 active after manual expire");
+    assertTrue(!sys.expireConsequence("sys_1", "csq_0"), "Double expire fails");
+}
+
+void testConsequenceMultipleTypes() {
+    std::cout << "\n=== MissionConsequence: Multiple Types ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    sys.triggerConsequence("sys_1", "m1",
+        components::MissionConsequence::ConsequenceType::StandingChange,
+        0.5f, 300.0f, "empire", false);
+    sys.triggerConsequence("sys_1", "m2",
+        components::MissionConsequence::ConsequenceType::PriceImpact,
+        0.8f, 300.0f, "traders", false);
+    float standing = sys.getMagnitude("sys_1",
+        components::MissionConsequence::ConsequenceType::StandingChange);
+    float price = sys.getMagnitude("sys_1",
+        components::MissionConsequence::ConsequenceType::PriceImpact);
+    assertTrue(approxEqual(standing, 0.5f), "Standing magnitude is 0.5");
+    assertTrue(approxEqual(price, 0.8f), "Price magnitude is 0.8");
+}
+
+void testConsequenceCount() {
+    std::cout << "\n=== MissionConsequence: Count ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    world.createEntity("sys_1");
+    sys.initializeConsequences("sys_1", "sol");
+    for (int i = 0; i < 5; i++) {
+        sys.triggerConsequence("sys_1", "m" + std::to_string(i),
+            components::MissionConsequence::ConsequenceType::ReputationBoost,
+            0.1f, 300.0f, "faction", false);
+    }
+    assertTrue(sys.getActiveCount("sys_1") == 5, "5 active consequences");
+    sys.triggerConsequence("sys_1", "m5",
+        components::MissionConsequence::ConsequenceType::ResourceDepletion,
+        0.2f, 300.0f, "miners", true);
+    assertTrue(sys.getActiveCount("sys_1") == 6, "6 total after permanent");
+    assertTrue(sys.getPermanentCount("sys_1") == 1, "1 permanent");
+}
+
+void testConsequenceMissing() {
+    std::cout << "\n=== MissionConsequence: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::MissionConsequenceSystem sys(&world);
+    assertTrue(!sys.initializeConsequences("nonexistent", "sol"), "Init fails on missing");
+    assertTrue(sys.getActiveCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(approxEqual(sys.getMagnitude("nonexistent",
+        components::MissionConsequence::ConsequenceType::StandingChange), 0.0f), "Magnitude 0 on missing");
+    assertTrue(sys.getPermanentCount("nonexistent") == 0, "Permanent 0 on missing");
+}
+
+// ==================== ServerPerformanceMonitor Tests ====================
+
+void testPerfMonitorInit() {
+    std::cout << "\n=== PerfMonitor: Init ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    assertTrue(sys.initializeMonitor("mon_1", "server_1", 50.0f), "Monitor initialized");
+    assertTrue(approxEqual(sys.getAverageTickTime("mon_1"), 0.0f), "Avg tick 0 initially");
+    assertTrue(approxEqual(sys.getBudgetUtilization("mon_1"), 0.0f), "Budget 0 initially");
+    assertTrue(!sys.isAlertActive("mon_1"), "No alert initially");
+    assertTrue(!sys.initializeMonitor("mon_1", "server_1", 50.0f), "Duplicate init fails");
+}
+
+void testPerfMonitorRecordTiming() {
+    std::cout << "\n=== PerfMonitor: Record Timing ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    assertTrue(sys.recordSystemTiming("mon_1", "PhysicsSystem", 10.0f), "Timing recorded");
+    assertTrue(sys.recordSystemTiming("mon_1", "RenderSystem", 5.0f), "Second timing recorded");
+    sys.update(0.016f);
+    assertTrue(sys.getSlowestSystem("mon_1") == "PhysicsSystem", "Physics is slowest");
+}
+
+void testPerfMonitorTickComplete() {
+    std::cout << "\n=== PerfMonitor: Tick Complete ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    assertTrue(sys.recordTickComplete("mon_1", 30.0f, 100), "Tick recorded");
+    assertTrue(approxEqual(sys.getAverageTickTime("mon_1"), 30.0f), "Avg is 30ms");
+    assertTrue(approxEqual(sys.getBudgetUtilization("mon_1"), 0.6f), "Budget util is 0.6");
+}
+
+void testPerfMonitorAverage() {
+    std::cout << "\n=== PerfMonitor: Average ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    sys.recordTickComplete("mon_1", 20.0f, 100);
+    sys.recordTickComplete("mon_1", 40.0f, 100);
+    float avg = sys.getAverageTickTime("mon_1");
+    assertTrue(approxEqual(avg, 30.0f), "Average of 20 and 40 is 30");
+}
+
+void testPerfMonitorBudget() {
+    std::cout << "\n=== PerfMonitor: Budget ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    sys.recordTickComplete("mon_1", 25.0f, 50);
+    float util = sys.getBudgetUtilization("mon_1");
+    assertTrue(approxEqual(util, 0.5f), "25/50 = 50% utilization");
+}
+
+void testPerfMonitorAlert() {
+    std::cout << "\n=== PerfMonitor: Alert ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    sys.recordTickComplete("mon_1", 45.0f, 100);
+    sys.update(0.016f);
+    assertTrue(sys.isAlertActive("mon_1"), "Alert active at 90% budget");
+    sys.resetMetrics("mon_1");
+    sys.recordTickComplete("mon_1", 10.0f, 100);
+    sys.update(0.016f);
+    assertTrue(!sys.isAlertActive("mon_1"), "No alert at 20% budget");
+}
+
+void testPerfMonitorHotPath() {
+    std::cout << "\n=== PerfMonitor: Hot Path ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    // Hot path threshold: 25% of 50ms = 12.5ms
+    sys.recordSystemTiming("mon_1", "PhysicsSystem", 15.0f);
+    sys.recordSystemTiming("mon_1", "AISystem", 14.0f);
+    sys.recordSystemTiming("mon_1", "RenderSystem", 5.0f);
+    sys.update(0.016f);
+    assertTrue(sys.getHotPathCount("mon_1") == 2, "2 hot paths (Physics + AI)");
+}
+
+void testPerfMonitorSlowest() {
+    std::cout << "\n=== PerfMonitor: Slowest ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    sys.recordSystemTiming("mon_1", "SystemA", 5.0f);
+    sys.recordSystemTiming("mon_1", "SystemB", 20.0f);
+    sys.recordSystemTiming("mon_1", "SystemC", 8.0f);
+    sys.update(0.016f);
+    assertTrue(sys.getSlowestSystem("mon_1") == "SystemB", "SystemB is slowest");
+}
+
+void testPerfMonitorReset() {
+    std::cout << "\n=== PerfMonitor: Reset ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    world.createEntity("mon_1");
+    sys.initializeMonitor("mon_1", "server_1", 50.0f);
+    sys.recordTickComplete("mon_1", 40.0f, 200);
+    sys.recordSystemTiming("mon_1", "SysA", 15.0f);
+    assertTrue(sys.resetMetrics("mon_1"), "Reset succeeds");
+    assertTrue(approxEqual(sys.getAverageTickTime("mon_1"), 0.0f), "Avg 0 after reset");
+    assertTrue(approxEqual(sys.getBudgetUtilization("mon_1"), 0.0f), "Budget 0 after reset");
+    assertTrue(sys.getSlowestSystem("mon_1").empty(), "No slowest after reset");
+}
+
+void testPerfMonitorMissing() {
+    std::cout << "\n=== PerfMonitor: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::ServerPerformanceMonitorSystem sys(&world);
+    assertTrue(!sys.initializeMonitor("nonexistent", "s", 50.0f), "Init fails on missing");
+    assertTrue(approxEqual(sys.getAverageTickTime("nonexistent"), 0.0f), "Avg 0 on missing");
+    assertTrue(approxEqual(sys.getBudgetUtilization("nonexistent"), 0.0f), "Budget 0 on missing");
+    assertTrue(!sys.isAlertActive("nonexistent"), "No alert on missing");
+    assertTrue(sys.getSlowestSystem("nonexistent").empty(), "Empty slowest on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -28794,6 +29208,42 @@ int main() {
     testHangarEnvAlarm();
     testHangarEnvVacuum();
     testHangarEnvMissing();
+
+    // DockNodeLayout System tests
+    testDockNodeInit();
+    testDockNodeAddWindow();
+    testDockNodeRemoveWindow();
+    testDockNodeSplit();
+    testDockNodeDock();
+    testDockNodeUndock();
+    testDockNodeMaxWindows();
+    testDockNodeLayout();
+    testDockNodeNestedSplit();
+    testDockNodeMissing();
+
+    // MissionConsequence System tests
+    testConsequenceInit();
+    testConsequenceTrigger();
+    testConsequenceExpiry();
+    testConsequencePermanent();
+    testConsequenceMagnitude();
+    testConsequenceDecay();
+    testConsequenceManualExpire();
+    testConsequenceMultipleTypes();
+    testConsequenceCount();
+    testConsequenceMissing();
+
+    // ServerPerformanceMonitor System tests
+    testPerfMonitorInit();
+    testPerfMonitorRecordTiming();
+    testPerfMonitorTickComplete();
+    testPerfMonitorAverage();
+    testPerfMonitorBudget();
+    testPerfMonitorAlert();
+    testPerfMonitorHotPath();
+    testPerfMonitorSlowest();
+    testPerfMonitorReset();
+    testPerfMonitorMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
