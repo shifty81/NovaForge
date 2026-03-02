@@ -199,6 +199,10 @@ set(SERVER_SOURCES
     src/systems/dock_node_layout_system.cpp
     src/systems/mission_consequence_system.cpp
     src/systems/server_performance_monitor_system.cpp
+    src/systems/atlas_ui_panel_system.cpp
+    src/systems/keyboard_navigation_system.cpp
+    src/systems/data_binding_system.cpp
+    src/systems/entity_stress_test_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -404,6 +408,10 @@ set(SERVER_HEADERS
     include/systems/dock_node_layout_system.h
     include/systems/mission_consequence_system.h
     include/systems/server_performance_monitor_system.h
+    include/systems/atlas_ui_panel_system.h
+    include/systems/keyboard_navigation_system.h
+    include/systems/data_binding_system.h
+    include/systems/entity_stress_test_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -685,6 +693,10 @@ if(BUILD_TESTS)
         src/systems/dock_node_layout_system.cpp
         src/systems/mission_consequence_system.cpp
         src/systems/server_performance_monitor_system.cpp
+        src/systems/atlas_ui_panel_system.cpp
+        src/systems/keyboard_navigation_system.cpp
+        src/systems/data_binding_system.cpp
+        src/systems/entity_stress_test_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp
