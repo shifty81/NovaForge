@@ -305,44 +305,30 @@ See the [Modding Guide](docs/MODDING_GUIDE.md) for details.
 
 ## 🗺️ Roadmap
 
-> **[Full Roadmap →](docs/ROADMAP.md)** — Detailed milestones, ECS specs, and implementation status
+> **[Full Roadmap →](docs/ROADMAP.md)** — Detailed specs, ECS components, and test coverage
+>
+> 🔬 **Active R&D** — Built through iterative AI–human collaboration. Server-side systems and tests are well ahead of client integration. The dance between AI decoder, AI debugger, and human interrogator has just begun — nothing ships until it plays well.
 
-<table>
-<tr>
-<td width="50%" valign="top">
+| # | Milestone | Server | Client | Notes |
+|:-:|-----------|:------:|:------:|-------|
+| 1 | **Core Engine** — ECS, networking, tick sim | ✅ | ✅ | Foundation solid |
+| 2 | **Content** — 102 ships, 159 modules, 137 skills | ✅ | 🔄 | Data pipeline ready |
+| 3 | **Economy** — Mfg, market, exploration, loot | ✅ | 🔄 | Systems tested |
+| 4 | **Social** — Corps, contracts, mail, chat | ✅ | 🔄 | UI integration WIP |
+| 5 | **3D Graphics** — OpenGL, PBR, particles, audio | ✅ | 🔧 | Client polish ongoing |
+| 6 | **Tech II** — HAC, Recon, Logistics, capitals, L5 | ✅ | 🔧 | Models expanding |
+| 7 | **Industry** — Mining, PI, invention, wormholes | ✅ | 🔧 | Game loops WIP |
+| 🎯 | **Vertical Slice** — One star system, full loop | 🔄 | 📋 | *Next major goal* |
+| 8 | **Cinematic Warp** — Tunnel FX, meditation audio | ✅ | 📋 | Shaders TODO |
+| 9 | **Fleet AI** — Personalities, morale, chatter | ✅ | 📋 | Audio TODO |
+| 10 | **Tactical Overlay** — 2.5D view, range rings | ✅ | 📋 | Renderer TODO |
+| 11 | **Fleet Civilization** — 25 ships, stations, cargo | ✅ | 📋 | Design complete |
+| 12 | **Ship Gen v2** — Spine hulls, faction silhouettes | ✅ | 📋 | Mesh gen TODO |
+| 13 | **FPS & Interiors** — Rigs, survival, crews | 🔧 | 📋 | ~80% systems |
+| 14 | **Vehicles & Planets** — Rovers, bikes, terrain | 🔧 | 📋 | ~60% systems |
+| 15 | **Turrets, Market, Legends** — Weapons, myths | ✅ | 📋 | Visuals TODO |
 
-### ✅ Completed
-
-| Phase | Milestone | Status |
-|:-----:|-----------|:------:|
-| 1 | **Core Engine** — ECS, networking, tick-based sim | ✅ |
-| 2 | **Content** — 102 ships, 159 modules, 137 skills | ✅ |
-| 3 | **Economy** — Manufacturing, market, exploration, loot | ✅ |
-| 4 | **Social** — Corps, contracts, mail, chat | ✅ |
-| 5 | **3D Graphics** — OpenGL client, PBR, particles, audio | ✅ |
-| 6 | **Tech II** — HAC, Recon, Logistics, capitals, L5 missions | ✅ |
-| 7 | **Industry** — Mining, PI, invention, wormholes, fleet | ✅ |
-
-</td>
-<td width="50%" valign="top">
-
-### 🚧 In Progress
-
-| Phase | Milestone | Focus |
-|:-----:|-----------|:-----:|
-| 🎯 | **Vertical Slice** — One full star system, playable loop | 🔜 |
-| 8 | **Cinematic Warp** — Tunnel shaders, audio, meditation | 🔄 |
-| 9 | **Fleet AI** — Captain personalities, morale, departure | 🔄 |
-| 10 | **Tactical Overlay** — 2.5D strategy view, distance rings | 🔄 |
-| 11 | **Fleet Civilization** — 25-ship fleets, station deployment | 🔄 |
-| 12 | **Ship Gen v2** — Spine-based hulls, silhouette-first | 📋 |
-| 13 | **FPS & Interiors** — Rigs, survival, crews, ancient tech | 🔄 |
-| 14 | **Vehicles & Planets** — Rovers, grav bikes, planet gen | 🔄 |
-| 15 | **Turrets, Market, Legends** — Procedural weapons, myths | 🔄 |
-
-</td>
-</tr>
-</table>
+> ✅ Done · 🔧 Partial · 🔄 Active · 📋 Not started
 
 <details>
 <summary><strong>🔭 Vision — Where Nova Forge Is Going</strong></summary>

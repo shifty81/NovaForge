@@ -1,6 +1,6 @@
 # Nova Forge — Project Roadmap
 
-**Status**: In active R&D and development — actively testing until further notice
+**Status**: Active R&D — Server-side systems and tests are well ahead of client integration. The collaborative AI–human development process is ongoing; ECS components and test assertions do not equal playable, polished features.
 
 ---
 
@@ -325,9 +325,12 @@ All baseline systems are now implemented.
 
 ## Current Status
 
-### 🎯 Active R&D and Development
+### 🔬 Active R&D — Server Ahead of Client
 
-**Overall Progress**: Core features implemented, actively testing and expanding  
+**Overall Progress**: Server-side ECS systems, data pipelines, and test suites are mature. Client-side rendering, audio, UI integration, and playable gameplay loops are actively under development. Phases marked ✅ below reflect **server system and test completion** — client integration and polish remain ongoing across all phases.
+
+**What "complete" means here**: A checked item (✅) indicates the ECS components, server logic, and test assertions exist. It does **not** mean the feature is playable, visually polished, or integrated into the client. The gap between tested server code and a playable game is where active work continues.
+
 **Status**: All ship model integration complete (58+ ships). Tech II ships, capitals, mining barges, and exhumers implemented with 3D models. Mission system expansion complete with missions across 5 levels. Game systems being structured around the EVE Online manual. Atlas Engine expanded with 6 new modules merged from Atlas-NovaForge (physics, input, camera, audio, animation, plugin). Formal TLA+ specifications added for ECS, replay, and layout subsystems. Build infrastructure enhanced with CMakePresets.json and JSON validation schemas. Data layer logging standardized on Logger singleton across all data loaders. **915 Atlas engine + 3955 server test assertions total**.
 
 ---
@@ -1767,6 +1770,6 @@ Have questions about the roadmap? Want to suggest features?
 
 ---
 
-**Status**: In active R&D and development — actively testing until further notice
+**Status**: Active R&D — server systems ahead of client integration. The AI–human development dance continues.
 
 *This roadmap is a living document and will be updated as the project evolves.*
