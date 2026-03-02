@@ -209,6 +209,9 @@ set(SERVER_SOURCES
     src/systems/lavatory_interaction_system.cpp
     src/systems/eva_airlock_exit_system.cpp
     src/systems/ancient_module_discovery_system.cpp
+    src/systems/client_prediction_system.cpp
+    src/systems/ship_template_mod_system.cpp
+    src/systems/database_persistence_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -424,6 +427,9 @@ set(SERVER_HEADERS
     include/systems/lavatory_interaction_system.h
     include/systems/eva_airlock_exit_system.h
     include/systems/ancient_module_discovery_system.h
+    include/systems/client_prediction_system.h
+    include/systems/ship_template_mod_system.h
+    include/systems/database_persistence_system.h
     include/data/ship_database.h
     include/data/npc_database.h
     include/data/wormhole_database.h
@@ -715,6 +721,9 @@ if(BUILD_TESTS)
         src/systems/lavatory_interaction_system.cpp
         src/systems/eva_airlock_exit_system.cpp
         src/systems/ancient_module_discovery_system.cpp
+        src/systems/client_prediction_system.cpp
+        src/systems/ship_template_mod_system.cpp
+        src/systems/database_persistence_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp
