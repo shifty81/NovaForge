@@ -36,6 +36,14 @@ def test_addon_structure():
         'texture_generator.py',
         'brick_system.py',
         'pcg_panel.py',
+        'novaforge_importer.py',
+        'render_setup.py',
+        'lod_generator.py',
+        'collision_generator.py',
+        'animation_system.py',
+        'damage_system.py',
+        'power_system.py',
+        'build_validator.py',
     ]
     
     all_exist = True
@@ -67,6 +75,14 @@ def test_file_syntax():
         'texture_generator.py',
         'brick_system.py',
         'pcg_panel.py',
+        'novaforge_importer.py',
+        'render_setup.py',
+        'lod_generator.py',
+        'collision_generator.py',
+        'animation_system.py',
+        'damage_system.py',
+        'power_system.py',
+        'build_validator.py',
     ]
     
     all_valid = True
@@ -151,6 +167,14 @@ def test_register_functions():
         'texture_generator.py',
         'brick_system.py',
         'pcg_panel.py',
+        'novaforge_importer.py',
+        'render_setup.py',
+        'lod_generator.py',
+        'collision_generator.py',
+        'animation_system.py',
+        'damage_system.py',
+        'power_system.py',
+        'build_validator.py',
     ]
     
     all_valid = True
@@ -752,10 +776,356 @@ def test_lod_tiers():
     return all_valid
 
 
+def test_novaforge_importer():
+    """Test that novaforge_importer.py has all required functions and data"""
+    print("\nTesting NovaForge importer module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    nf_path = os.path.join(addon_path, 'novaforge_importer.py')
+
+    if not os.path.exists(nf_path):
+        print("✗ novaforge_importer.py not found")
+        return False
+
+    # Import the module directly (no bpy dependency)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("novaforge_importer", nf_path)
+    nf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(nf)
+
+    all_valid = True
+
+    # Check data tables
+    if len(nf.RACE_TO_STYLE) >= 4:
+        print(f"✓ RACE_TO_STYLE has {len(nf.RACE_TO_STYLE)} entries")
+    else:
+        print("✗ RACE_TO_STYLE missing entries")
+        all_valid = False
+
+    if len(nf.CLASS_MAP) >= 15:
+        print(f"✓ CLASS_MAP has {len(nf.CLASS_MAP)} entries")
+    else:
+        print("✗ CLASS_MAP missing entries")
+        all_valid = False
+
+    # Check translation function
+    test_def = {
+        'class': 'Frigate',
+        'race': 'Solari',
+        'model_data': {'generation_seed': 42, 'turret_hardpoints': 3}
+    }
+    params = nf.ship_to_generator_params(test_def)
+    if params['ship_class'] == 'FRIGATE' and params['style'] == 'SOLARI' and params['seed'] == 42:
+        print("✓ ship_to_generator_params works correctly")
+    else:
+        print("✗ ship_to_generator_params returned incorrect values")
+        all_valid = False
+
+    return all_valid
+
+
+def test_lod_generator():
+    """Test that lod_generator.py has required constants and functions"""
+    print("\nTesting LOD generator module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    lg_path = os.path.join(addon_path, 'lod_generator.py')
+
+    if not os.path.exists(lg_path):
+        print("✗ lod_generator.py not found")
+        return False
+
+    with open(lg_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'LOD_LEVELS': 'LOD_LEVELS constant',
+        'LOD_DISTANCES': 'LOD_DISTANCES constant',
+        'def generate_lods(': 'generate_lods function',
+        'def get_lod_distances(': 'get_lod_distances function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    return all_valid
+
+
+def test_collision_generator():
+    """Test that collision_generator.py has required constants and functions"""
+    print("\nTesting collision generator module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    cg_path = os.path.join(addon_path, 'collision_generator.py')
+
+    if not os.path.exists(cg_path):
+        print("✗ collision_generator.py not found")
+        return False
+
+    with open(cg_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'COLLISION_TYPES': 'COLLISION_TYPES constant',
+        'DEFAULT_COLLISION_TYPE': 'DEFAULT_COLLISION_TYPE constant',
+        'def generate_collision_mesh(': 'generate_collision_mesh function',
+        'def generate_box_collision(': 'generate_box_collision function',
+        'def generate_convex_hull_collision(': 'generate_convex_hull_collision function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    return all_valid
+
+
+def test_animation_system():
+    """Test that animation_system.py has required constants and functions"""
+    print("\nTesting animation system module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    anim_path = os.path.join(addon_path, 'animation_system.py')
+
+    if not os.path.exists(anim_path):
+        print("✗ animation_system.py not found")
+        return False
+
+    with open(anim_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'ANIMATION_PRESETS': 'ANIMATION_PRESETS constant',
+        'FRAME_RATE': 'FRAME_RATE constant',
+        'def create_turret_animation(': 'create_turret_animation function',
+        'def create_bay_door_animation(': 'create_bay_door_animation function',
+        'def create_landing_gear(': 'create_landing_gear function',
+        'def create_radar_spin_animation(': 'create_radar_spin_animation function',
+        'def setup_ship_animations(': 'setup_ship_animations function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    return all_valid
+
+
+def test_damage_system():
+    """Test the damage propagation system"""
+    print("\nTesting damage system module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    ds_path = os.path.join(addon_path, 'damage_system.py')
+
+    if not os.path.exists(ds_path):
+        print("✗ damage_system.py not found")
+        return False
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("damage_system", ds_path)
+    ds = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ds)
+
+    all_valid = True
+
+    # Check constants
+    if len(ds.HULL_WEIGHTS) >= 18:
+        print(f"✓ HULL_WEIGHTS has {len(ds.HULL_WEIGHTS)} entries")
+    else:
+        print("✗ HULL_WEIGHTS missing entries")
+        all_valid = False
+
+    if len(ds.BRICK_HP) >= 18:
+        print(f"✓ BRICK_HP has {len(ds.BRICK_HP)} entries")
+    else:
+        print("✗ BRICK_HP missing entries")
+        all_valid = False
+
+    # Test ShipDamageState from DNA
+    dna = {
+        'grid_size': 1.0,
+        'seed': 42,
+        'bricks': [
+            {'type': 'STRUCTURAL_SPINE', 'pos': [0, 0, 0]},
+            {'type': 'HULL_PLATE', 'pos': [1, 0, 0]},
+            {'type': 'ENGINE_BLOCK', 'pos': [0, -1, 0]},
+        ],
+    }
+    state = ds.ShipDamageState.from_ship_dna(dna)
+    if state.alive_count() == 3:
+        print("✓ ShipDamageState created with 3 bricks")
+    else:
+        print(f"✗ ShipDamageState has {state.alive_count()} bricks, expected 3")
+        all_valid = False
+
+    # Test damage application
+    events = state.apply_damage(1, 50)
+    brick = state.bricks.get(1)
+    if brick and brick.hp < brick.max_hp:
+        print("✓ apply_damage reduces HP")
+    else:
+        print("✗ apply_damage failed")
+        all_valid = False
+
+    return all_valid
+
+
+def test_power_system():
+    """Test the power flow simulation"""
+    print("\nTesting power system module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    ps_path = os.path.join(addon_path, 'power_system.py')
+
+    if not os.path.exists(ps_path):
+        print("✗ power_system.py not found")
+        return False
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("power_system", ps_path)
+    ps = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ps)
+
+    all_valid = True
+
+    # Check capacitor sizes
+    if len(ps.CAPACITOR_SIZE) >= 18:
+        print(f"✓ CAPACITOR_SIZE has {len(ps.CAPACITOR_SIZE)} entries")
+    else:
+        print("✗ CAPACITOR_SIZE missing entries")
+        all_valid = False
+
+    # Test ShipPowerState from DNA
+    dna = {
+        'class': 'CRUISER',
+        'bricks': [
+            {'type': 'REACTOR_CORE', 'pos': [0, 0, 0]},
+            {'type': 'ENGINE_BLOCK', 'pos': [0, -1, 0]},
+            {'type': 'SHIELD_EMITTER', 'pos': [0, 1, 0]},
+        ],
+    }
+    power = ps.ShipPowerState.from_ship_dna(dna)
+    if power.total_generation > 0:
+        print(f"✓ Power generation: {power.total_generation} MW")
+    else:
+        print("✗ No power generation")
+        all_valid = False
+
+    if power.total_consumption > 0:
+        print(f"✓ Power consumption: {power.total_consumption} MW")
+    else:
+        print("✗ No power consumption")
+        all_valid = False
+
+    if power.power_stable:
+        print("✓ Power is stable (generation >= consumption)")
+    else:
+        print("✗ Power is unstable")
+        all_valid = False
+
+    return all_valid
+
+
+def test_build_validator():
+    """Test the build validation system"""
+    print("\nTesting build validator module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    bv_path = os.path.join(addon_path, 'build_validator.py')
+
+    if not os.path.exists(bv_path):
+        print("✗ build_validator.py not found")
+        return False
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("build_validator", bv_path)
+    bv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bv)
+
+    all_valid = True
+
+    # Test basic placement
+    validator = bv.BuildValidator(grid_size=1.0)
+    validator.place_brick('STRUCTURAL_SPINE', (0, 0, 0))
+
+    # Validate adjacent placement
+    result = validator.validate_placement('HULL_PLATE', (1, 0, 0))
+    if result.valid:
+        print("✓ Adjacent placement validates correctly")
+    else:
+        print(f"✗ Adjacent placement rejected: {result.errors}")
+        all_valid = False
+
+    # Validate overlap detection
+    result = validator.validate_placement('HULL_PLATE', (0, 0, 0))
+    if not result.valid:
+        print("✓ Overlap detection works")
+    else:
+        print("✗ Overlap not detected")
+        all_valid = False
+
+    # Test connectivity check
+    validator.place_brick('HULL_PLATE', (1, 0, 0))
+    if validator.check_connectivity():
+        print("✓ Connectivity check passes for connected bricks")
+    else:
+        print("✗ Connectivity check failed for connected bricks")
+        all_valid = False
+
+    return all_valid
+
+
+def test_render_setup():
+    """Test that render_setup.py has required functions"""
+    print("\nTesting render setup module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    rs_path = os.path.join(addon_path, 'render_setup.py')
+
+    if not os.path.exists(rs_path):
+        print("✗ render_setup.py not found")
+        return False
+
+    with open(rs_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'CATALOG_RESOLUTION': 'CATALOG_RESOLUTION constant',
+        'THUMBNAIL_RESOLUTION': 'THUMBNAIL_RESOLUTION constant',
+        'def setup_catalog_render(': 'setup_catalog_render function',
+        'def setup_thumbnail_render(': 'setup_thumbnail_render function',
+        'def render_to_file(': 'render_to_file function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    return all_valid
+
+
 def run_tests():
     """Run all validation tests"""
     print("=" * 60)
-    print("Blender Spaceship Generator - Validation Tests")
+    print("AtlasForge Generator - Validation Tests")
     print("=" * 60)
     
     tests = [
@@ -777,6 +1147,14 @@ def run_tests():
         ("PCG Panel", test_pcg_panel),
         ("PCG Pipeline Init Exports", test_pcg_pipeline_init_exports),
         ("LOD Tiers", test_lod_tiers),
+        ("NovaForge Importer", test_novaforge_importer),
+        ("LOD Generator", test_lod_generator),
+        ("Collision Generator", test_collision_generator),
+        ("Animation System", test_animation_system),
+        ("Damage System", test_damage_system),
+        ("Power System", test_power_system),
+        ("Build Validator", test_build_validator),
+        ("Render Setup", test_render_setup),
     ]
     
     results = []

@@ -1,16 +1,16 @@
 """
-Blender Spaceship Generator Addon
-Generates procedural spaceships with modular parts and interiors
-Inspired by X4, Elite Dangerous, Eve Online, and the EVEOFFLINE project
+AtlasForge Generator — Blender Addon
+Procedural content generation (PCG) tool for spaceships, stations, and asteroids.
+Engine-agnostic asset generation pipeline designed for integration into multiple projects.
 """
 
 bl_info = {
-    "name": "Spaceship Generator",
-    "author": "BlenderSpaceshipGenerator",
-    "version": (2, 0, 0),
+    "name": "AtlasForge Generator",
+    "author": "AtlasForge",
+    "version": (3, 0, 0),
     "blender": (2, 80, 0),
-    "location": "View3D > Sidebar > Spaceship",
-    "description": "Generate procedural spaceships with EVEOFFLINE/Atlas integration",
+    "location": "View3D > Sidebar > AtlasForge",
+    "description": "Engine-based PCG asset pipeline for procedural spaceships, stations, and asteroids",
     "category": "Add Mesh",
 }
 
@@ -33,6 +33,14 @@ from . import asteroid_generator
 from . import texture_generator
 from . import brick_system
 from . import pcg_panel
+from . import novaforge_importer
+from . import render_setup
+from . import lod_generator
+from . import collision_generator
+from . import animation_system
+from . import damage_system
+from . import power_system
+from . import build_validator
 
 
 class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
@@ -245,6 +253,66 @@ class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
         default=""
     )
 
+    launcher_hardpoints: IntProperty(
+        name="Launcher Hardpoints",
+        description="Number of missile/torpedo launcher hardpoints",
+        default=0,
+        min=0,
+        max=8
+    )
+
+    drone_bays: IntProperty(
+        name="Drone Bays",
+        description="Number of drone bay recesses",
+        default=0,
+        min=0,
+        max=5
+    )
+
+    generate_lods: BoolProperty(
+        name="Generate LODs",
+        description="Create LOD1-LOD3 decimated meshes for game engine use",
+        default=False
+    )
+
+    generate_collision: BoolProperty(
+        name="Generate Collision",
+        description="Create simplified collision meshes for physics",
+        default=False
+    )
+
+    collision_type: EnumProperty(
+        name="Collision Type",
+        description="Type of collision mesh to generate",
+        items=[
+            ('AUTO', "Auto", "Choose collision type based on ship class"),
+            ('BOX', "Box", "Simple bounding box"),
+            ('CONVEX_HULL', "Convex Hull", "Single convex hull"),
+            ('MULTI_CONVEX', "Multi Convex", "Decomposed convex parts"),
+        ],
+        default='AUTO'
+    )
+
+    generate_animations: BoolProperty(
+        name="Generate Animations",
+        description="Set up animation actions for turrets, bays, and sensors",
+        default=False
+    )
+
+    novaforge_data_dir: StringProperty(
+        name="Data Directory",
+        description="Path to project data/ships/ directory for batch import",
+        subtype='DIR_PATH',
+        default=""
+    )
+
+    batch_output_path: StringProperty(
+        name="Batch Output",
+        description="Directory for batch-generated OBJ + JSON output",
+        subtype='DIR_PATH',
+        default=""
+    )
+
 
 class SPACESHIP_OT_generate(bpy.types.Operator):
     """Generate a procedural spaceship"""
@@ -276,6 +344,34 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
                 style=props.style,
                 seed=props.seed,
                 weathering=props.weathering,
+            )
+
+        # Generate LODs if requested
+        if props.generate_lods:
+            lod_generator.generate_lods(
+                hull,
+                ship_class=props.ship_class,
+                naming_prefix=props.naming_prefix,
+            )
+
+        # Generate collision mesh if requested
+        if props.generate_collision:
+            col_type = None if props.collision_type == 'AUTO' else props.collision_type
+            collision_generator.generate_collision_mesh(
+                hull,
+                collision_type=col_type,
+                ship_class=props.ship_class,
+                naming_prefix=props.naming_prefix,
+            )
+
+        # Set up animations if requested
+        if props.generate_animations:
+            from . import ship_parts as _sp
+            scale = _sp.SHIP_CONFIGS.get(props.ship_class, {}).get('scale', 1.0)
+            animation_system.setup_ship_animations(
+                hull,
+                scale=scale,
+                naming_prefix=props.naming_prefix,
             )
 
         self.report({'INFO'}, f"Generated {props.ship_class} class spaceship")
@@ -426,13 +522,220 @@ class SPACESHIP_OT_export_ship_dna(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class SPACESHIP_OT_import_novaforge_dir(bpy.types.Operator):
+    """Import a single ship from the NovaForge data directory"""
+    bl_idname = "mesh.import_novaforge_ship"
+    bl_label = "Import from Project Data"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        props = context.scene.spaceship_props
+        data_dir = bpy.path.abspath(props.novaforge_data_dir)
+
+        if not data_dir:
+            self.report({'ERROR'}, "Set the project data/ships/ directory first")
+            return {'CANCELLED'}
+
+        import os
+        if not os.path.isdir(data_dir):
+            self.report({'ERROR'}, f"Directory not found: {data_dir}")
+            return {'CANCELLED'}
+
+        ships = novaforge_importer.load_ships_from_directory(data_dir)
+        if not ships:
+            self.report({'WARNING'}, "No ship definitions found in directory")
+            return {'CANCELLED'}
+
+        # Generate the first ship found
+        ship_id, ship_def = next(iter(ships.items()))
+        params = novaforge_importer.ship_to_generator_params(ship_def)
+        ship_generator.generate_spaceship(**{
+            k: v for k, v in params.items()
+            if k in ('ship_class', 'seed', 'style', 'turret_hardpoints',
+                     'hull_taper', 'generate_interior', 'module_slots',
+                     'naming_prefix')
+        })
+
+        self.report({'INFO'}, f"Generated ship '{ship_id}' from project data")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_batch_novaforge(bpy.types.Operator):
+    """Batch generate all ships from the NovaForge data directory"""
+    bl_idname = "mesh.batch_novaforge_ships"
+    bl_label = "Batch Generate All Ships"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        props = context.scene.spaceship_props
+        data_dir = bpy.path.abspath(props.novaforge_data_dir)
+
+        if not data_dir:
+            self.report({'ERROR'}, "Set the project data/ships/ directory first")
+            return {'CANCELLED'}
+
+        import os
+        if not os.path.isdir(data_dir):
+            self.report({'ERROR'}, f"Directory not found: {data_dir}")
+            return {'CANCELLED'}
+
+        ships = novaforge_importer.load_ships_from_directory(data_dir)
+        all_params = novaforge_importer.get_all_generator_params(ships)
+
+        count = 0
+        for ship_id, params in all_params:
+            gen_kwargs = {
+                k: v for k, v in params.items()
+                if k in ('ship_class', 'seed', 'style', 'turret_hardpoints',
+                         'hull_taper', 'generate_interior', 'module_slots',
+                         'naming_prefix')
+            }
+            ship_generator.generate_spaceship(**gen_kwargs)
+            count += 1
+
+        self.report({'INFO'}, f"Batch generated {count} ships from project data")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_catalog_render(bpy.types.Operator):
+    """Set up catalog camera and lighting for the selected ship"""
+    bl_idname = "mesh.catalog_render"
+    bl_label = "Setup Catalog Render"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        obj = context.active_object
+        if obj is None:
+            self.report({'ERROR'}, "Select a ship object first")
+            return {'CANCELLED'}
+
+        render_setup.setup_catalog_render(obj)
+        self.report({'INFO'}, "Catalog render configured")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_batch_generate(bpy.types.Operator):
+    """Batch generate ships and export to output directory"""
+    bl_idname = "mesh.batch_generate_all"
+    bl_label = "Batch Generate & Export"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        import os
+
+        props = context.scene.spaceship_props
+        output_dir = bpy.path.abspath(props.batch_output_path)
+
+        if not output_dir:
+            self.report({'ERROR'}, "Set an output directory first")
+            return {'CANCELLED'}
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        data_dir = bpy.path.abspath(props.novaforge_data_dir)
+        if not data_dir or not os.path.isdir(data_dir):
+            self.report({'ERROR'}, "Set a valid project data directory")
+            return {'CANCELLED'}
+
+        ships = novaforge_importer.load_ships_from_directory(data_dir)
+        all_params = novaforge_importer.get_all_generator_params(ships)
+
+        count = 0
+        for ship_id, params in all_params:
+            gen_kwargs = {
+                k: v for k, v in params.items()
+                if k in ('ship_class', 'seed', 'style', 'turret_hardpoints',
+                         'hull_taper', 'generate_interior', 'module_slots',
+                         'naming_prefix')
+            }
+            hull = ship_generator.generate_spaceship(**gen_kwargs)
+
+            # Export OBJ
+            filepath = os.path.join(output_dir, f"{ship_id}.obj")
+            bpy.ops.object.select_all(action='DESELECT')
+            hull.select_set(True)
+            for child in hull.children_recursive:
+                child.select_set(True)
+            atlas_exporter.export_obj(filepath)
+            count += 1
+
+        self.report({'INFO'}, f"Batch exported {count} ships to {output_dir}")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_novaforge_pipeline(bpy.types.Operator):
+    """Full pipeline: generate from project JSON, apply textures, export OBJ"""
+    bl_idname = "mesh.novaforge_pipeline_export"
+    bl_label = "Full Pipeline Export"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        import os
+
+        props = context.scene.spaceship_props
+        data_dir = bpy.path.abspath(props.novaforge_data_dir)
+        output_dir = bpy.path.abspath(props.batch_output_path or props.novaforge_export_path)
+
+        if not data_dir or not os.path.isdir(data_dir):
+            self.report({'ERROR'}, "Set a valid project data directory")
+            return {'CANCELLED'}
+
+        if not output_dir:
+            self.report({'ERROR'}, "Set an output directory")
+            return {'CANCELLED'}
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        ships = novaforge_importer.load_ships_from_directory(data_dir)
+        all_params = novaforge_importer.get_all_generator_params(ships)
+
+        count = 0
+        for ship_id, params in all_params:
+            gen_kwargs = {
+                k: v for k, v in params.items()
+                if k in ('ship_class', 'seed', 'style', 'turret_hardpoints',
+                         'hull_taper', 'generate_interior', 'module_slots',
+                         'naming_prefix')
+            }
+            hull = ship_generator.generate_spaceship(**gen_kwargs)
+
+            # Apply textures
+            if props.generate_textures:
+                texture_generator.apply_textures_to_ship(
+                    hull,
+                    style=params.get('style', 'SOLARI'),
+                    seed=params.get('seed', 1),
+                    weathering=props.weathering,
+                )
+
+            # Generate LODs
+            if props.generate_lods:
+                lod_generator.generate_lods(
+                    hull,
+                    ship_class=params.get('ship_class', 'FRIGATE'),
+                    naming_prefix=params.get('naming_prefix', ''),
+                )
+
+            # Export OBJ
+            filepath = os.path.join(output_dir, f"{ship_id}.obj")
+            bpy.ops.object.select_all(action='DESELECT')
+            hull.select_set(True)
+            for child in hull.children_recursive:
+                child.select_set(True)
+            atlas_exporter.export_obj(filepath)
+            count += 1
+
+        self.report({'INFO'}, f"Pipeline exported {count} ships to {output_dir}")
+        return {'FINISHED'}
+
+
 class SPACESHIP_PT_main_panel(bpy.types.Panel):
-    """Main panel for spaceship generator"""
-    bl_label = "Spaceship Generator"
+    """Main panel for AtlasForge generator"""
+    bl_label = "AtlasForge Generator"
     bl_idname = "SPACESHIP_PT_main_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Spaceship'
+    bl_category = 'AtlasForge'
     
     def draw(self, context):
         layout = self.layout
@@ -454,6 +757,8 @@ class SPACESHIP_PT_main_panel(bpy.types.Panel):
         layout.label(text="Naming & Hardpoints:")
         layout.prop(props, "naming_prefix")
         layout.prop(props, "turret_hardpoints")
+        layout.prop(props, "launcher_hardpoints")
+        layout.prop(props, "drone_bays")
 
         layout.separator()
         layout.label(text="Hull Shaping:")
@@ -469,7 +774,20 @@ class SPACESHIP_PT_main_panel(bpy.types.Panel):
         layout.operator("mesh.generate_spaceship", icon='MESH_CUBE')
 
         layout.separator()
-        layout.label(text="EVEOFFLINE / Atlas Integration:")
+        layout.label(text="Batch Generation:")
+        layout.prop(props, "batch_output_path")
+        layout.operator("mesh.batch_generate_all", icon='FILE_REFRESH')
+
+        layout.separator()
+        layout.label(text="Project Integration:")
+        layout.prop(props, "novaforge_data_dir")
+        layout.operator("mesh.import_novaforge_ship", icon='IMPORT')
+        layout.operator("mesh.batch_novaforge_ships", icon='FILE_REFRESH')
+        layout.operator("mesh.novaforge_pipeline_export", icon='EXPORT')
+        layout.operator("mesh.catalog_render", icon='RENDER_STILL')
+
+        layout.separator()
+        layout.label(text="AtlasForge Export:")
         layout.prop(props, "novaforge_json_path")
         layout.operator("mesh.import_novaforge_ships", icon='IMPORT')
         layout.prop(props, "novaforge_export_path")
@@ -493,6 +811,14 @@ class SPACESHIP_PT_main_panel(bpy.types.Panel):
         layout.prop(props, "ship_dna_export_path")
         layout.operator("mesh.export_ship_dna", icon='FILE_TEXT')
 
+        layout.separator()
+        layout.label(text="Game Engine Helpers:")
+        layout.prop(props, "generate_lods")
+        layout.prop(props, "generate_collision")
+        if props.generate_collision:
+            layout.prop(props, "collision_type")
+        layout.prop(props, "generate_animations")
+
 
 # Registration
 classes = (
@@ -503,6 +829,11 @@ classes = (
     SPACESHIP_OT_generate_station,
     SPACESHIP_OT_generate_asteroid_belt,
     SPACESHIP_OT_export_ship_dna,
+    SPACESHIP_OT_import_novaforge_dir,
+    SPACESHIP_OT_batch_novaforge,
+    SPACESHIP_OT_catalog_render,
+    SPACESHIP_OT_batch_generate,
+    SPACESHIP_OT_novaforge_pipeline,
     SPACESHIP_PT_main_panel,
 )
 
@@ -526,10 +857,26 @@ def register():
     texture_generator.register()
     brick_system.register()
     pcg_panel.register()
+    novaforge_importer.register()
+    render_setup.register()
+    lod_generator.register()
+    collision_generator.register()
+    animation_system.register()
+    damage_system.register()
+    power_system.register()
+    build_validator.register()
 
 
 def unregister():
     # Unregister submodules
+    build_validator.unregister()
+    power_system.unregister()
+    damage_system.unregister()
+    animation_system.unregister()
+    collision_generator.unregister()
+    lod_generator.unregister()
+    render_setup.unregister()
+    novaforge_importer.unregister()
     pcg_panel.unregister()
     brick_system.unregister()
     texture_generator.unregister()
