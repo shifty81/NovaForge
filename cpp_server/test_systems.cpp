@@ -176,6 +176,9 @@
 #include "systems/terraforming_system.h"
 #include "systems/food_processor_system.h"
 #include "systems/fleet_squad_system.h"
+#include "systems/cloaking_system.h"
+#include "systems/jump_drive_system.h"
+#include "systems/cargo_scan_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -24087,6 +24090,551 @@ void testFleetSquadMissing() {
     assertTrue(!sys.isSquadActive("nonexistent"), "Default inactive for missing");
 }
 
+// ==================== CloakingSystem Tests ====================
+
+void testCloakingActivate() {
+    std::cout << "\n=== Cloaking: Activate ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    addComp<components::CloakingState>(e);
+
+    systems::CloakingSystem sys(&world);
+    assertTrue(sys.getPhase("ship1") == "Inactive", "Initial phase is Inactive");
+    assertTrue(sys.activateCloak("ship1"), "Cloak activated");
+    assertTrue(sys.getPhase("ship1") == "Activating", "Phase is Activating");
+    assertTrue(!sys.activateCloak("ship1"), "Cannot activate while activating");
+}
+
+void testCloakingFullCycle() {
+    std::cout << "\n=== Cloaking: Full Cycle ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* cloak = addComp<components::CloakingState>(e);
+    cloak->activation_time = 2.0f;
+    cloak->deactivation_time = 1.0f;
+    auto* cap = addComp<components::Capacitor>(e);
+    cap->capacitor = 100.0f;
+    cap->capacitor_max = 100.0f;
+
+    systems::CloakingSystem sys(&world);
+    sys.activateCloak("ship1");
+    sys.update(2.0f);  // activation_time reached
+    assertTrue(sys.isCloaked("ship1"), "Ship is cloaked after activation_time");
+    assertTrue(sys.deactivateCloak("ship1"), "Decloak initiated");
+    assertTrue(sys.getPhase("ship1") == "Deactivating", "Phase is Deactivating");
+    sys.update(1.0f);  // deactivation_time reached
+    assertTrue(sys.getPhase("ship1") == "Inactive", "Phase returns to Inactive");
+}
+
+void testCloakingCapacitorDrain() {
+    std::cout << "\n=== Cloaking: Capacitor Drain ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* cloak = addComp<components::CloakingState>(e);
+    cloak->activation_time = 1.0f;
+    cloak->fuel_per_second = 10.0f;
+    auto* cap = addComp<components::Capacitor>(e);
+    cap->capacitor = 25.0f;
+    cap->capacitor_max = 100.0f;
+
+    systems::CloakingSystem sys(&world);
+    sys.activateCloak("ship1");
+    sys.update(1.0f);  // become cloaked
+    assertTrue(sys.isCloaked("ship1"), "Ship cloaked");
+    sys.update(2.0f);  // drain 20 cap (25 - 20 = 5)
+    assertTrue(sys.isCloaked("ship1"), "Still cloaked with remaining cap");
+    assertTrue(cap->capacitor < 10.0f, "Capacitor drained");
+}
+
+void testCloakingCapacitorEmpty() {
+    std::cout << "\n=== Cloaking: Capacitor Empty Force Decloak ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* cloak = addComp<components::CloakingState>(e);
+    cloak->activation_time = 1.0f;
+    cloak->fuel_per_second = 50.0f;
+    auto* cap = addComp<components::Capacitor>(e);
+    cap->capacitor = 10.0f;
+    cap->capacitor_max = 100.0f;
+
+    systems::CloakingSystem sys(&world);
+    sys.activateCloak("ship1");
+    sys.update(1.0f);  // become cloaked
+    assertTrue(sys.isCloaked("ship1"), "Ship cloaked");
+    sys.update(1.0f);  // drain 50 cap but only 10 available → force decloak
+    assertTrue(!sys.isCloaked("ship1"), "Force decloaked by cap empty");
+    assertTrue(sys.getPhase("ship1") == "Deactivating", "Phase is Deactivating");
+    assertTrue(approxEqual(cap->capacitor, 0.0f), "Capacitor at zero");
+}
+
+void testCloakingProximityDecloak() {
+    std::cout << "\n=== Cloaking: Proximity Decloak ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* cloak = addComp<components::CloakingState>(e);
+    cloak->activation_time = 1.0f;
+    cloak->proximity_decloak_range = 2000.0f;
+
+    systems::CloakingSystem sys(&world);
+    sys.activateCloak("ship1");
+    sys.update(1.0f);
+    assertTrue(sys.isCloaked("ship1"), "Ship cloaked");
+    assertTrue(!sys.proximityDecloak("ship1", 3000.0f), "No decloak at 3000m");
+    assertTrue(sys.proximityDecloak("ship1", 1500.0f), "Decloak at 1500m");
+    assertTrue(sys.getPhase("ship1") == "Deactivating", "Phase is Deactivating");
+}
+
+void testCloakingTargetingLockout() {
+    std::cout << "\n=== Cloaking: Targeting Lockout ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* cloak = addComp<components::CloakingState>(e);
+    cloak->activation_time = 1.0f;
+    cloak->targeting_delay = 5.0f;
+
+    systems::CloakingSystem sys(&world);
+    sys.activateCloak("ship1");
+    sys.update(1.0f);  // cloaked
+    sys.deactivateCloak("ship1");
+    assertTrue(sys.isTargetingLocked("ship1"), "Targeting locked after decloak");
+    assertTrue(approxEqual(sys.getTargetingLockoutRemaining("ship1"), 5.0f), "Lockout is 5s");
+    sys.update(3.0f);  // 3s pass
+    assertTrue(sys.isTargetingLocked("ship1"), "Still locked after 3s");
+    sys.update(3.0f);  // 3 more seconds
+    assertTrue(!sys.isTargetingLocked("ship1"), "Lockout expired");
+}
+
+void testCloakingCovertOps() {
+    std::cout << "\n=== Cloaking: Covert Ops ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* cloak = addComp<components::CloakingState>(e);
+    cloak->cloak_type = components::CloakingState::CloakType::CovertOps;
+    cloak->can_warp_while_cloaked = true;
+
+    systems::CloakingSystem sys(&world);
+    assertTrue(sys.canWarpCloaked("ship1"), "CovertOps can warp cloaked");
+}
+
+void testCloakingDecloakCount() {
+    std::cout << "\n=== Cloaking: Decloak Count ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    auto* cloak = addComp<components::CloakingState>(e);
+    cloak->activation_time = 0.1f;
+    cloak->deactivation_time = 0.1f;
+
+    systems::CloakingSystem sys(&world);
+    assertTrue(sys.getDecloakCount("ship1") == 0, "Initial decloak count 0");
+    sys.activateCloak("ship1");
+    sys.update(0.1f);  // cloaked
+    sys.deactivateCloak("ship1");
+    assertTrue(sys.getDecloakCount("ship1") == 1, "Decloak count 1");
+    sys.update(0.1f);  // inactive
+    sys.activateCloak("ship1");
+    sys.update(0.1f);  // cloaked
+    sys.deactivateCloak("ship1");
+    assertTrue(sys.getDecloakCount("ship1") == 2, "Decloak count 2");
+}
+
+void testCloakingSetProximityRange() {
+    std::cout << "\n=== Cloaking: Set Proximity Range ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("ship1");
+    addComp<components::CloakingState>(e);
+
+    systems::CloakingSystem sys(&world);
+    assertTrue(sys.setProximityRange("ship1", 5000.0f), "Set range success");
+    assertTrue(!sys.setProximityRange("nonexistent", 5000.0f), "Set range on missing fails");
+}
+
+void testCloakingMissing() {
+    std::cout << "\n=== Cloaking: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::CloakingSystem sys(&world);
+    assertTrue(sys.getPhase("nonexistent") == "unknown", "Default phase for missing");
+    assertTrue(!sys.isCloaked("nonexistent"), "Default not cloaked for missing");
+    assertTrue(!sys.isTargetingLocked("nonexistent"), "Default no lockout for missing");
+    assertTrue(approxEqual(sys.getTargetingLockoutRemaining("nonexistent"), 0.0f), "Default lockout 0");
+    assertTrue(approxEqual(sys.getFuelRate("nonexistent"), 0.0f), "Default fuel rate 0");
+    assertTrue(!sys.canWarpCloaked("nonexistent"), "Default no warp for missing");
+    assertTrue(sys.getDecloakCount("nonexistent") == 0, "Default decloak count 0");
+}
+
+// ==================== JumpDriveSystem Tests ====================
+
+void testJumpDriveInitiate() {
+    std::cout << "\n=== Jump Drive: Initiate Jump ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->max_range_ly = 5.0f;
+    jd->fuel_per_ly = 500.0f;
+    jd->current_fuel = 5000.0f;
+    jd->requires_cyno = true;
+
+    systems::JumpDriveSystem sys(&world);
+    assertTrue(sys.getPhase("capital1") == "idle", "Initial phase is idle");
+    assertTrue(sys.initiateJump("capital1", "SystemB", 3.0f, "cyno1"), "Jump initiated with cyno");
+    assertTrue(sys.getPhase("capital1") == "spooling_up", "Phase is spooling_up");
+    assertTrue(!sys.initiateJump("capital1", "SystemC", 2.0f, "cyno2"), "Cannot initiate while spooling");
+}
+
+void testJumpDriveNoCyno() {
+    std::cout << "\n=== Jump Drive: No Cyno Required ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->requires_cyno = true;
+    jd->current_fuel = 5000.0f;
+
+    systems::JumpDriveSystem sys(&world);
+    assertTrue(!sys.initiateJump("capital1", "SystemB", 3.0f, ""), "Jump fails without cyno when required");
+    jd->requires_cyno = false;
+    assertTrue(sys.initiateJump("capital1", "SystemB", 3.0f, ""), "Jump succeeds without cyno when not required");
+}
+
+void testJumpDriveFullCycle() {
+    std::cout << "\n=== Jump Drive: Full Cycle ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->spool_time = 5.0f;
+    jd->cooldown_time = 10.0f;
+    jd->fuel_per_ly = 500.0f;
+    jd->current_fuel = 5000.0f;
+    jd->max_range_ly = 5.0f;
+    jd->requires_cyno = false;
+
+    systems::JumpDriveSystem sys(&world);
+    sys.initiateJump("capital1", "SystemB", 3.0f);
+    sys.update(5.0f);  // spool complete → Jumping phase, fuel consumed
+    assertTrue(sys.getPhase("capital1") == "jumping", "Phase is jumping after spool");
+    assertTrue(sys.getTotalJumps("capital1") == 1, "1 jump completed");
+    assertTrue(approxEqual(sys.getFuel("capital1"), 3500.0f), "Fuel consumed: 5000 - 500*3 = 3500");
+
+    sys.update(0.1f);  // Jumping → Cooldown
+    assertTrue(sys.getPhase("capital1") == "cooldown", "Phase is cooldown");
+
+    sys.update(10.0f);  // Cooldown complete
+    assertTrue(sys.getPhase("capital1") == "idle", "Phase returns to idle");
+}
+
+void testJumpDriveFuelCheck() {
+    std::cout << "\n=== Jump Drive: Fuel Check ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->fuel_per_ly = 500.0f;
+    jd->current_fuel = 1000.0f;
+    jd->max_range_ly = 5.0f;
+    jd->requires_cyno = false;
+
+    systems::JumpDriveSystem sys(&world);
+    assertTrue(!sys.initiateJump("capital1", "SystemFar", 3.0f), "Jump fails: not enough fuel for 3 LY");
+    assertTrue(sys.initiateJump("capital1", "SystemNear", 2.0f), "Jump succeeds: enough fuel for 2 LY");
+}
+
+void testJumpDriveFatigue() {
+    std::cout << "\n=== Jump Drive: Fatigue ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->spool_time = 1.0f;
+    jd->cooldown_time = 1.0f;
+    jd->fuel_per_ly = 100.0f;
+    jd->current_fuel = 10000.0f;
+    jd->max_range_ly = 5.0f;
+    jd->max_fatigue = 10.0f;
+    jd->fatigue_per_jump = 3.0f;
+    jd->fatigue_decay_rate = 0.0f;
+    jd->requires_cyno = false;
+
+    systems::JumpDriveSystem sys(&world);
+    // Jump 1: fatigue 0 → 3
+    sys.initiateJump("capital1", "S1", 1.0f);
+    sys.update(1.0f);  // spool → jump
+    sys.update(0.1f);  // jump → cooldown
+    sys.update(1.0f);  // cooldown → idle
+    assertTrue(approxEqual(sys.getFatigue("capital1"), 3.0f), "Fatigue after 1 jump");
+
+    // Jump 2: fatigue 3 → 6
+    sys.initiateJump("capital1", "S2", 1.0f);
+    sys.update(1.0f);
+    sys.update(0.1f);
+    sys.update(1.0f);
+    assertTrue(approxEqual(sys.getFatigue("capital1"), 6.0f), "Fatigue after 2 jumps");
+
+    // Jump 3: fatigue 6 → 9
+    sys.initiateJump("capital1", "S3", 1.0f);
+    sys.update(1.0f);
+    sys.update(0.1f);
+    sys.update(1.0f);
+    assertTrue(approxEqual(sys.getFatigue("capital1"), 9.0f), "Fatigue after 3 jumps");
+
+    // Jump 4: fatigue 9 → would be 12 but capped at 10, also effective range reduced
+    // effective range = 5 * (1 - 9/10) = 0.5 LY — can still jump 0.4 LY
+    assertTrue(sys.canJump("capital1", 0.4f), "Can jump short distance with high fatigue");
+}
+
+void testJumpDriveFatigueDecay() {
+    std::cout << "\n=== Jump Drive: Fatigue Decay ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->fatigue_hours = 5.0f;
+    jd->fatigue_decay_rate = 1.0f;
+    jd->max_fatigue = 10.0f;
+
+    systems::JumpDriveSystem sys(&world);
+    sys.update(3.0f);  // decay: 5 - 1*3 = 2
+    assertTrue(approxEqual(sys.getFatigue("capital1"), 2.0f), "Fatigue decayed to 2");
+    sys.update(5.0f);  // decay: 2 - 5 → clamped to 0
+    assertTrue(approxEqual(sys.getFatigue("capital1"), 0.0f), "Fatigue decayed to 0 (clamped)");
+}
+
+void testJumpDriveCancel() {
+    std::cout << "\n=== Jump Drive: Cancel ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->current_fuel = 5000.0f;
+    jd->requires_cyno = false;
+
+    systems::JumpDriveSystem sys(&world);
+    sys.initiateJump("capital1", "SystemB", 2.0f);
+    assertTrue(sys.cancelJump("capital1"), "Cancel during spool succeeds");
+    assertTrue(sys.getPhase("capital1") == "idle", "Phase back to idle");
+    assertTrue(!sys.cancelJump("capital1"), "Cancel in idle fails");
+}
+
+void testJumpDriveRefuel() {
+    std::cout << "\n=== Jump Drive: Refuel ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->current_fuel = 2000.0f;
+    jd->max_fuel = 10000.0f;
+
+    systems::JumpDriveSystem sys(&world);
+    assertTrue(sys.refuel("capital1", 3000.0f), "Refuel success");
+    assertTrue(approxEqual(sys.getFuel("capital1"), 5000.0f), "Fuel is 5000 after refuel");
+    sys.refuel("capital1", 20000.0f);
+    assertTrue(approxEqual(sys.getFuel("capital1"), 10000.0f), "Fuel capped at max");
+}
+
+void testJumpDriveEffectiveRange() {
+    std::cout << "\n=== Jump Drive: Effective Range ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->max_range_ly = 10.0f;
+    jd->max_fatigue = 10.0f;
+    jd->fatigue_hours = 0.0f;
+
+    systems::JumpDriveSystem sys(&world);
+    assertTrue(approxEqual(sys.getEffectiveRange("capital1"), 10.0f), "Full range with no fatigue");
+    jd->fatigue_hours = 5.0f;
+    assertTrue(approxEqual(sys.getEffectiveRange("capital1"), 5.0f), "Half range at 50% fatigue");
+    jd->fatigue_hours = 10.0f;
+    assertTrue(approxEqual(sys.getEffectiveRange("capital1"), 0.0f), "Zero range at max fatigue");
+}
+
+void testJumpDriveCooldownRemaining() {
+    std::cout << "\n=== Jump Drive: Cooldown Remaining ===" << std::endl;
+    ecs::World world;
+    auto* e = world.createEntity("capital1");
+    auto* jd = addComp<components::JumpDriveState>(e);
+    jd->spool_time = 1.0f;
+    jd->cooldown_time = 10.0f;
+    jd->current_fuel = 5000.0f;
+    jd->requires_cyno = false;
+
+    systems::JumpDriveSystem sys(&world);
+    assertTrue(approxEqual(sys.getCooldownRemaining("capital1"), 0.0f), "No cooldown in idle");
+    sys.initiateJump("capital1", "S1", 1.0f);
+    sys.update(1.0f);  // spool → jump
+    sys.update(0.1f);  // jump → cooldown
+    assertTrue(sys.getCooldownRemaining("capital1") > 9.0f, "Cooldown remaining after jump");
+}
+
+void testJumpDriveMissing() {
+    std::cout << "\n=== Jump Drive: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::JumpDriveSystem sys(&world);
+    assertTrue(sys.getPhase("nonexistent") == "unknown", "Default phase for missing");
+    assertTrue(approxEqual(sys.getFuel("nonexistent"), 0.0f), "Default fuel for missing");
+    assertTrue(approxEqual(sys.getMaxFuel("nonexistent"), 0.0f), "Default max fuel for missing");
+    assertTrue(approxEqual(sys.getFatigue("nonexistent"), 0.0f), "Default fatigue for missing");
+    assertTrue(approxEqual(sys.getMaxRange("nonexistent"), 0.0f), "Default max range for missing");
+    assertTrue(approxEqual(sys.getEffectiveRange("nonexistent"), 0.0f), "Default effective range for missing");
+    assertTrue(!sys.canJump("nonexistent", 1.0f), "Cannot jump for missing");
+    assertTrue(sys.getTotalJumps("nonexistent") == 0, "Default total jumps for missing");
+    assertTrue(approxEqual(sys.getCooldownRemaining("nonexistent"), 0.0f), "Default cooldown for missing");
+}
+
+// ==================== CargoScanSystem Tests ====================
+
+void testCargoScanInitiate() {
+    std::cout << "\n=== Cargo Scan: Initiate ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    addComp<components::CargoScanState>(scanner);
+    world.createEntity("target1");
+
+    systems::CargoScanSystem sys(&world);
+    assertTrue(sys.getPhase("scanner1") == "idle", "Initial phase is idle");
+    assertTrue(sys.initiateScan("scanner1", "target1"), "Scan initiated");
+    assertTrue(sys.getPhase("scanner1") == "scanning", "Phase is scanning");
+    assertTrue(!sys.initiateScan("scanner1", "target1"), "Cannot initiate while scanning");
+}
+
+void testCargoScanCancel() {
+    std::cout << "\n=== Cargo Scan: Cancel ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    addComp<components::CargoScanState>(scanner);
+    world.createEntity("target1");
+
+    systems::CargoScanSystem sys(&world);
+    sys.initiateScan("scanner1", "target1");
+    assertTrue(sys.cancelScan("scanner1"), "Cancel scan success");
+    assertTrue(sys.getPhase("scanner1") == "idle", "Phase back to idle");
+    assertTrue(!sys.cancelScan("scanner1"), "Cannot cancel when idle");
+}
+
+void testCargoScanComplete() {
+    std::cout << "\n=== Cargo Scan: Complete Clean ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    auto* scan = addComp<components::CargoScanState>(scanner);
+    scan->scan_time = 2.0f;
+    world.createEntity("target1");
+
+    systems::CargoScanSystem sys(&world);
+    sys.initiateScan("scanner1", "target1");
+    sys.update(2.0f);
+    assertTrue(sys.getPhase("scanner1") == "complete", "Phase is complete");
+    assertTrue(sys.getContrabandFound("scanner1") == 0, "No contraband on clean target");
+    assertTrue(sys.getTotalScans("scanner1") == 1, "1 total scan");
+}
+
+void testCargoScanContraband() {
+    std::cout << "\n=== Cargo Scan: Contraband Found ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    auto* scan = addComp<components::CargoScanState>(scanner);
+    scan->scan_time = 1.0f;
+    scan->fine_per_contraband = 1000.0f;
+    auto* target = world.createEntity("target1");
+
+    systems::CargoScanSystem sys(&world);
+    sys.plantContraband("target1", components::CargoScanState::ContrabandType::Narcotics);
+    sys.plantContraband("target1", components::CargoScanState::ContrabandType::Weapons);
+    sys.initiateScan("scanner1", "target1");
+    sys.update(1.0f);
+    assertTrue(sys.getPhase("scanner1") == "complete", "Scan complete");
+    assertTrue(sys.getContrabandFound("scanner1") == 2, "Found 2 contraband items");
+    assertTrue(sys.getTotalContrabandDetected("scanner1") == 2, "Lifetime 2 detected");
+    assertTrue(approxEqual(static_cast<float>(sys.getTotalFinesIssued("scanner1")), 2000.0f), "Fines: 2 * 1000");
+}
+
+void testCargoScanProgress() {
+    std::cout << "\n=== Cargo Scan: Progress ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    auto* scan = addComp<components::CargoScanState>(scanner);
+    scan->scan_time = 4.0f;
+    world.createEntity("target1");
+
+    systems::CargoScanSystem sys(&world);
+    assertTrue(approxEqual(sys.getScanProgress("scanner1"), 0.0f), "Progress 0 before scan");
+    sys.initiateScan("scanner1", "target1");
+    sys.update(2.0f);
+    assertTrue(approxEqual(sys.getScanProgress("scanner1"), 0.5f), "Progress 0.5 at halfway");
+}
+
+void testCargoScanCustoms() {
+    std::cout << "\n=== Cargo Scan: Customs Scanner ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    addComp<components::CargoScanState>(scanner);
+
+    systems::CargoScanSystem sys(&world);
+    assertTrue(!sys.isCustomsScanner("scanner1"), "Not customs by default");
+    assertTrue(sys.markAsCustomsScanner("scanner1", true), "Mark as customs");
+    assertTrue(sys.isCustomsScanner("scanner1"), "Is now customs");
+}
+
+void testCargoScanRemoveContraband() {
+    std::cout << "\n=== Cargo Scan: Remove Contraband ===" << std::endl;
+    ecs::World world;
+    world.createEntity("target1");
+
+    systems::CargoScanSystem sys(&world);
+    sys.plantContraband("target1", components::CargoScanState::ContrabandType::Narcotics);
+    sys.plantContraband("target1", components::CargoScanState::ContrabandType::Stolen);
+    assertTrue(sys.removeContraband("target1", components::CargoScanState::ContrabandType::Narcotics), "Remove success");
+    auto types = sys.getDetectedTypes("target1");
+    assertTrue(types.size() == 1, "1 type remaining");
+    assertTrue(types[0] == "stolen", "Remaining type is stolen");
+}
+
+void testCargoScanDetectionChance() {
+    std::cout << "\n=== Cargo Scan: Detection Chance ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    addComp<components::CargoScanState>(scanner);
+
+    systems::CargoScanSystem sys(&world);
+    assertTrue(sys.setDetectionChance("scanner1", 0.5f), "Set detection chance");
+    assertTrue(!sys.setDetectionChance("nonexistent", 0.5f), "Set on missing fails");
+}
+
+void testCargoScanMultipleScans() {
+    std::cout << "\n=== Cargo Scan: Multiple Scans ===" << std::endl;
+    ecs::World world;
+    auto* scanner = world.createEntity("scanner1");
+    auto* scan = addComp<components::CargoScanState>(scanner);
+    scan->scan_time = 1.0f;
+    scan->fine_per_contraband = 500.0f;
+    world.createEntity("target1");
+    world.createEntity("target2");
+
+    systems::CargoScanSystem sys(&world);
+    sys.plantContraband("target1", components::CargoScanState::ContrabandType::Exotic);
+
+    // Scan 1
+    sys.initiateScan("scanner1", "target1");
+    sys.update(1.0f);
+    assertTrue(sys.getTotalScans("scanner1") == 1, "1 scan complete");
+    assertTrue(sys.getContrabandFound("scanner1") == 1, "Found 1 contraband");
+
+    // Reset to idle for next scan
+    scan->phase = components::CargoScanState::ScanPhase::Idle;
+
+    // Scan 2: clean target
+    sys.initiateScan("scanner1", "target2");
+    sys.update(1.0f);
+    assertTrue(sys.getTotalScans("scanner1") == 2, "2 scans total");
+    assertTrue(sys.getContrabandFound("scanner1") == 0, "No contraband on clean target");
+    assertTrue(sys.getTotalContrabandDetected("scanner1") == 1, "Lifetime 1 detected");
+    assertTrue(approxEqual(static_cast<float>(sys.getTotalFinesIssued("scanner1")), 500.0f), "Total fines 500");
+}
+
+void testCargoScanMissing() {
+    std::cout << "\n=== Cargo Scan: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::CargoScanSystem sys(&world);
+    assertTrue(sys.getPhase("nonexistent") == "unknown", "Default phase for missing");
+    assertTrue(approxEqual(sys.getScanProgress("nonexistent"), 0.0f), "Default progress for missing");
+    assertTrue(sys.getContrabandFound("nonexistent") == 0, "Default contraband for missing");
+    assertTrue(sys.getTotalScans("nonexistent") == 0, "Default scans for missing");
+    assertTrue(sys.getTotalContrabandDetected("nonexistent") == 0, "Default lifetime for missing");
+    assertTrue(approxEqual(static_cast<float>(sys.getTotalFinesIssued("nonexistent")), 0.0f), "Default fines for missing");
+    assertTrue(!sys.isCustomsScanner("nonexistent"), "Default not customs for missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -25820,6 +26368,43 @@ int main() {
     testFleetSquadRole();
     testFleetSquadEffectiveness();
     testFleetSquadMissing();
+
+    // Cloaking System tests
+    testCloakingActivate();
+    testCloakingFullCycle();
+    testCloakingCapacitorDrain();
+    testCloakingCapacitorEmpty();
+    testCloakingProximityDecloak();
+    testCloakingTargetingLockout();
+    testCloakingCovertOps();
+    testCloakingDecloakCount();
+    testCloakingSetProximityRange();
+    testCloakingMissing();
+
+    // Jump Drive System tests
+    testJumpDriveInitiate();
+    testJumpDriveNoCyno();
+    testJumpDriveFullCycle();
+    testJumpDriveFuelCheck();
+    testJumpDriveFatigue();
+    testJumpDriveFatigueDecay();
+    testJumpDriveCancel();
+    testJumpDriveRefuel();
+    testJumpDriveEffectiveRange();
+    testJumpDriveCooldownRemaining();
+    testJumpDriveMissing();
+
+    // Cargo Scan System tests
+    testCargoScanInitiate();
+    testCargoScanCancel();
+    testCargoScanComplete();
+    testCargoScanContraband();
+    testCargoScanProgress();
+    testCargoScanCustoms();
+    testCargoScanRemoveContraband();
+    testCargoScanDetectionChance();
+    testCargoScanMultipleScans();
+    testCargoScanMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
