@@ -187,6 +187,9 @@ set(SERVER_SOURCES
     src/systems/rover_interior_system.cpp
     src/systems/bike_garage_system.cpp
     src/systems/visual_rig_system.cpp
+    src/systems/planetary_traversal_system.cpp
+    src/systems/solar_panel_system.cpp
+    src/systems/farming_deck_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -655,6 +658,9 @@ if(BUILD_TESTS)
         src/systems/rover_interior_system.cpp
         src/systems/bike_garage_system.cpp
         src/systems/visual_rig_system.cpp
+        src/systems/planetary_traversal_system.cpp
+        src/systems/solar_panel_system.cpp
+        src/systems/farming_deck_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp

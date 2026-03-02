@@ -491,6 +491,193 @@ public:
     COMPONENT_TYPE(VisualRigState)
 };
 
+// ==================== Planetary Traversal System (Phase 14) ====================
+
+/**
+ * @brief Planetary surface traversal component
+ *
+ * Surface movement across planetary terrain with vehicle support and
+ * terrain speed modifiers. Tracks position, heading, and distance traveled.
+ */
+class PlanetaryTraversal : public ecs::Component {
+public:
+    enum class TerrainType {
+        Plains,
+        Mountains,
+        Valleys,
+        Plateaus,
+        Craters,
+        Dunes,
+        Tundra,
+        Volcanic
+    };
+
+    std::string planet_entity_id;
+    float position_x = 0.0f;
+    float position_y = 0.0f;
+    float heading = 0.0f;          // degrees (0-360)
+    float speed = 0.0f;            // current speed m/s
+    float max_speed = 5.0f;        // on foot default
+    TerrainType terrain = TerrainType::Plains;
+    float terrain_speed_modifier = 1.0f;
+    std::string vehicle_id;        // empty = on foot
+    float destination_x = 0.0f;
+    float destination_y = 0.0f;
+    bool has_destination = false;
+    bool is_traversing = false;
+    float distance_traveled = 0.0f;
+
+    static float getTerrainModifier(TerrainType t) {
+        switch (t) {
+            case TerrainType::Plains: return 1.0f;
+            case TerrainType::Mountains: return 0.4f;
+            case TerrainType::Valleys: return 0.7f;
+            case TerrainType::Plateaus: return 0.9f;
+            case TerrainType::Craters: return 0.5f;
+            case TerrainType::Dunes: return 0.6f;
+            case TerrainType::Tundra: return 0.7f;
+            case TerrainType::Volcanic: return 0.3f;
+            default: return 1.0f;
+        }
+    }
+
+    static std::string terrainTypeToString(TerrainType t) {
+        switch (t) {
+            case TerrainType::Plains: return "plains";
+            case TerrainType::Mountains: return "mountains";
+            case TerrainType::Valleys: return "valleys";
+            case TerrainType::Plateaus: return "plateaus";
+            case TerrainType::Craters: return "craters";
+            case TerrainType::Dunes: return "dunes";
+            case TerrainType::Tundra: return "tundra";
+            case TerrainType::Volcanic: return "volcanic";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(PlanetaryTraversal)
+};
+
+// ==================== Solar Panel System (Phase 14) ====================
+
+/**
+ * @brief Solar energy generation component
+ *
+ * Solar energy generation with day/night cycle, panel degradation,
+ * and energy storage. Tracks panel count, efficiency, and battery level.
+ */
+class SolarPanel : public ecs::Component {
+public:
+    std::string owner_entity_id;
+    int panel_count = 0;
+    int max_panels = 10;
+    float panel_efficiency = 1.0f;     // 0.0-1.0
+    float energy_per_panel = 5.0f;     // MW per panel at full sunlight
+    float total_energy_output = 0.0f;  // current output MW
+    float day_cycle_position = 0.5f;   // 0.0-1.0, 0.5=noon, 0/1=midnight
+    float day_cycle_speed = 0.01f;     // per second advance
+    bool is_deployed = false;
+    float degradation_rate = 0.001f;   // efficiency loss per second when deployed
+    float maintenance_level = 1.0f;    // 0.0-1.0
+    float energy_stored = 0.0f;        // MWh in battery
+    float max_energy_storage = 100.0f; // MWh max
+
+    float getSunlightFactor() const {
+        float angle = day_cycle_position * 3.14159265f;
+        float factor = std::sin(angle);
+        return factor > 0.0f ? factor : 0.0f;
+    }
+
+    COMPONENT_TYPE(SolarPanel)
+};
+
+// ==================== Farming Deck System (Phase 14) ====================
+
+/**
+ * @brief Agricultural module component
+ *
+ * Manages crop growth lifecycle with watering, fertilizing, and harvesting.
+ * Supports multiple crop plots with different crop types.
+ */
+class FarmingDeck : public ecs::Component {
+public:
+    enum class CropType {
+        Grain,
+        Vegetables,
+        Fruit,
+        Herbs,
+        Algae
+    };
+
+    enum class GrowthStage {
+        Empty,
+        Planted,
+        Growing,
+        Mature,
+        Harvestable,
+        Withered
+    };
+
+    struct CropPlot {
+        std::string plot_id;
+        CropType crop_type = CropType::Grain;
+        GrowthStage stage = GrowthStage::Empty;
+        float growth_progress = 0.0f;   // 0.0-1.0
+        float growth_rate = 0.1f;        // per second
+        float water_level = 1.0f;        // 0.0-1.0
+        float nutrient_level = 1.0f;     // 0.0-1.0
+        float water_consumption = 0.02f; // per second
+        float nutrient_consumption = 0.01f; // per second
+    };
+
+    std::string owner_entity_id;
+    std::vector<CropPlot> plots;
+    int max_plots = 6;
+    float total_food_produced = 0.0f;
+    bool is_powered = true;
+    float light_level = 1.0f;           // 0.0-1.0
+    float temperature = 22.0f;          // celsius, optimal 18-28
+
+    int getPlotCount() const { return static_cast<int>(plots.size()); }
+    bool canAddPlot() const { return getPlotCount() < max_plots; }
+
+    static float getYieldMultiplier(CropType t) {
+        switch (t) {
+            case CropType::Grain: return 1.0f;
+            case CropType::Vegetables: return 0.8f;
+            case CropType::Fruit: return 0.6f;
+            case CropType::Herbs: return 0.4f;
+            case CropType::Algae: return 1.5f;
+            default: return 1.0f;
+        }
+    }
+
+    static std::string cropTypeToString(CropType t) {
+        switch (t) {
+            case CropType::Grain: return "grain";
+            case CropType::Vegetables: return "vegetables";
+            case CropType::Fruit: return "fruit";
+            case CropType::Herbs: return "herbs";
+            case CropType::Algae: return "algae";
+            default: return "unknown";
+        }
+    }
+
+    static std::string growthStageToString(GrowthStage s) {
+        switch (s) {
+            case GrowthStage::Empty: return "empty";
+            case GrowthStage::Planted: return "planted";
+            case GrowthStage::Growing: return "growing";
+            case GrowthStage::Mature: return "mature";
+            case GrowthStage::Harvestable: return "harvestable";
+            case GrowthStage::Withered: return "withered";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(FarmingDeck)
+};
+
 } // namespace components
 } // namespace atlas
 

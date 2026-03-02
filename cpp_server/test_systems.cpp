@@ -185,6 +185,9 @@
 #include "systems/rover_interior_system.h"
 #include "systems/bike_garage_system.h"
 #include "systems/visual_rig_system.h"
+#include "systems/planetary_traversal_system.h"
+#include "systems/solar_panel_system.h"
+#include "systems/farming_deck_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -25584,6 +25587,456 @@ void testVisualRigMissing() {
     assertTrue(sys.getTrinketCount("nonexistent") == 0, "No trinkets on missing");
 }
 
+// ==================== Planetary Traversal System Tests ====================
+
+void testTraversalInit() {
+    std::cout << "\n=== Planetary Traversal: Initialize ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    assertTrue(sys.initializeTraversal("explorer1", "planet_001", 10.0f, 20.0f), "Traversal initialized");
+    assertTrue(approxEqual(sys.getPositionX("explorer1"), 10.0f), "Start X correct");
+    assertTrue(approxEqual(sys.getPositionY("explorer1"), 20.0f), "Start Y correct");
+    assertTrue(!sys.initializeTraversal("explorer1", "planet_002", 0.0f, 0.0f), "Duplicate init rejected");
+}
+
+void testTraversalSetDestination() {
+    std::cout << "\n=== Planetary Traversal: Set Destination ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+
+    assertTrue(sys.setDestination("explorer1", 100.0f, 100.0f), "Destination set");
+    assertTrue(sys.isTraversing("explorer1"), "Is traversing");
+    assertTrue(sys.getDistanceToDestination("explorer1") > 0.0f, "Distance to dest > 0");
+}
+
+void testTraversalMovement() {
+    std::cout << "\n=== Planetary Traversal: Movement ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+    sys.setDestination("explorer1", 100.0f, 0.0f);
+
+    sys.update(1.0f);
+    assertTrue(sys.getPositionX("explorer1") > 0.0f, "Position X advanced");
+    assertTrue(sys.isTraversing("explorer1"), "Still traversing");
+    assertTrue(sys.getSpeed("explorer1") > 0.0f, "Speed > 0 while moving");
+}
+
+void testTraversalArrival() {
+    std::cout << "\n=== Planetary Traversal: Arrival ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+    sys.setDestination("explorer1", 0.5f, 0.0f);  // very close
+
+    sys.update(1.0f);
+    assertTrue(!sys.isTraversing("explorer1"), "Arrived at destination");
+    assertTrue(approxEqual(sys.getPositionX("explorer1"), 0.5f), "At destination X");
+}
+
+void testTraversalVehicle() {
+    std::cout << "\n=== Planetary Traversal: Vehicle ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+
+    assertTrue(sys.setVehicle("explorer1", "rover_001", 20.0f), "Vehicle set");
+    sys.setDestination("explorer1", 100.0f, 0.0f);
+    sys.update(1.0f);
+    assertTrue(sys.getSpeed("explorer1") > 5.0f, "Speed increased with vehicle");
+}
+
+void testTraversalDismount() {
+    std::cout << "\n=== Planetary Traversal: Dismount ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+    sys.setVehicle("explorer1", "rover_001", 20.0f);
+
+    assertTrue(sys.dismountVehicle("explorer1"), "Dismounted");
+    sys.setDestination("explorer1", 100.0f, 0.0f);
+    sys.update(1.0f);
+    assertTrue(approxEqual(sys.getSpeed("explorer1"), 5.0f), "Speed reset to foot speed");
+}
+
+void testTraversalTerrain() {
+    std::cout << "\n=== Planetary Traversal: Terrain ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+
+    assertTrue(sys.setTerrainType("explorer1", components::PlanetaryTraversal::TerrainType::Mountains), "Terrain set");
+    assertTrue(sys.getTerrainTypeStr("explorer1") == "mountains", "Terrain is mountains");
+    sys.setDestination("explorer1", 100.0f, 0.0f);
+    sys.update(1.0f);
+    assertTrue(sys.getSpeed("explorer1") < 5.0f, "Speed reduced on mountains");
+}
+
+void testTraversalDistance() {
+    std::cout << "\n=== Planetary Traversal: Distance ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+    sys.setDestination("explorer1", 100.0f, 0.0f);
+
+    sys.update(1.0f);
+    sys.update(1.0f);
+    assertTrue(sys.getDistanceTraveled("explorer1") > 0.0f, "Distance accumulated");
+    float dist = sys.getDistanceTraveled("explorer1");
+    sys.update(1.0f);
+    assertTrue(sys.getDistanceTraveled("explorer1") > dist, "Distance keeps increasing");
+}
+
+void testTraversalClear() {
+    std::cout << "\n=== Planetary Traversal: Clear Destination ===" << std::endl;
+    ecs::World world;
+    world.createEntity("explorer1");
+
+    systems::PlanetaryTraversalSystem sys(&world);
+    sys.initializeTraversal("explorer1", "planet_001", 0.0f, 0.0f);
+    sys.setDestination("explorer1", 100.0f, 100.0f);
+
+    assertTrue(sys.isTraversing("explorer1"), "Traversing after set");
+    assertTrue(sys.clearDestination("explorer1"), "Cleared destination");
+    assertTrue(!sys.isTraversing("explorer1"), "Not traversing after clear");
+}
+
+void testTraversalMissing() {
+    std::cout << "\n=== Planetary Traversal: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::PlanetaryTraversalSystem sys(&world);
+    assertTrue(!sys.initializeTraversal("nonexistent", "planet", 0.0f, 0.0f), "Init fails on missing");
+    assertTrue(!sys.setDestination("nonexistent", 10.0f, 10.0f), "SetDest fails on missing");
+    assertTrue(approxEqual(sys.getPositionX("nonexistent"), 0.0f), "PosX 0 on missing");
+    assertTrue(approxEqual(sys.getDistanceTraveled("nonexistent"), 0.0f), "Distance 0 on missing");
+    assertTrue(!sys.isTraversing("nonexistent"), "Not traversing on missing");
+}
+
+// ==================== Solar Panel System Tests ====================
+
+void testSolarPanelInit() {
+    std::cout << "\n=== Solar Panel: Initialize ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    assertTrue(sys.initializePanels("base1", "owner_001", 4), "Panels initialized");
+    assertTrue(sys.getPanelCount("base1") == 4, "4 panels");
+    assertTrue(!sys.isDeployed("base1"), "Not deployed initially");
+    assertTrue(!sys.initializePanels("base1", "owner_002", 2), "Duplicate init rejected");
+}
+
+void testSolarPanelDeploy() {
+    std::cout << "\n=== Solar Panel: Deploy ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+
+    assertTrue(sys.deployPanels("base1"), "Deployed");
+    assertTrue(sys.isDeployed("base1"), "Is deployed");
+}
+
+void testSolarPanelRetract() {
+    std::cout << "\n=== Solar Panel: Retract ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+    sys.deployPanels("base1");
+
+    assertTrue(sys.retractPanels("base1"), "Retracted");
+    assertTrue(!sys.isDeployed("base1"), "Not deployed after retract");
+}
+
+void testSolarPanelAddRemove() {
+    std::cout << "\n=== Solar Panel: Add/Remove ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+
+    assertTrue(sys.addPanel("base1"), "Panel added");
+    assertTrue(sys.getPanelCount("base1") == 5, "5 panels");
+    assertTrue(sys.removePanel("base1"), "Panel removed");
+    assertTrue(sys.getPanelCount("base1") == 4, "Back to 4 panels");
+
+    // Fill to max
+    for (int i = 0; i < 6; i++) sys.addPanel("base1");
+    assertTrue(sys.getPanelCount("base1") == 10, "At max panels");
+    assertTrue(!sys.addPanel("base1"), "Cannot exceed max");
+}
+
+void testSolarPanelEnergyOutput() {
+    std::cout << "\n=== Solar Panel: Energy Output ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+    sys.deployPanels("base1");
+    sys.setDayCyclePosition("base1", 0.5f);  // noon
+
+    sys.update(0.1f);
+    assertTrue(sys.getEnergyOutput("base1") > 0.0f, "Energy output at noon > 0");
+    assertTrue(sys.isDaytime("base1"), "Is daytime at noon");
+}
+
+void testSolarPanelNighttime() {
+    std::cout << "\n=== Solar Panel: Nighttime ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+    sys.deployPanels("base1");
+    sys.setDayCyclePosition("base1", 0.0f);  // midnight
+
+    sys.update(0.001f);  // tiny dt to avoid advancing cycle much
+    assertTrue(approxEqual(sys.getEnergyOutput("base1"), 0.0f), "No energy at midnight");
+}
+
+void testSolarPanelDegradation() {
+    std::cout << "\n=== Solar Panel: Degradation ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+    sys.deployPanels("base1");
+    sys.setDayCyclePosition("base1", 0.5f);
+
+    float initial_eff = sys.getEfficiency("base1");
+    for (int i = 0; i < 100; i++) {
+        sys.setDayCyclePosition("base1", 0.5f);  // keep at noon
+        sys.update(1.0f);
+    }
+    assertTrue(sys.getEfficiency("base1") < initial_eff, "Efficiency decreased over time");
+}
+
+void testSolarPanelMaintenance() {
+    std::cout << "\n=== Solar Panel: Maintenance ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+    sys.deployPanels("base1");
+
+    // Degrade
+    for (int i = 0; i < 50; i++) {
+        sys.setDayCyclePosition("base1", 0.5f);
+        sys.update(1.0f);
+    }
+    float degraded = sys.getEfficiency("base1");
+    assertTrue(degraded < 1.0f, "Efficiency degraded");
+
+    assertTrue(sys.performMaintenance("base1", 0.5f), "Maintenance performed");
+    assertTrue(sys.getEfficiency("base1") > degraded, "Efficiency restored after maintenance");
+    assertTrue(sys.getEfficiency("base1") <= 1.0f, "Efficiency clamped to 1.0");
+}
+
+void testSolarPanelEnergyStorage() {
+    std::cout << "\n=== Solar Panel: Energy Storage ===" << std::endl;
+    ecs::World world;
+    world.createEntity("base1");
+
+    systems::SolarPanelSystem sys(&world);
+    sys.initializePanels("base1", "owner_001", 4);
+    sys.deployPanels("base1");
+    sys.setDayCyclePosition("base1", 0.5f);
+
+    assertTrue(approxEqual(sys.getEnergyStored("base1"), 0.0f), "No stored energy initially");
+    sys.update(1.0f);
+    assertTrue(sys.getEnergyStored("base1") > 0.0f, "Energy stored after update");
+}
+
+void testSolarPanelMissing() {
+    std::cout << "\n=== Solar Panel: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::SolarPanelSystem sys(&world);
+    assertTrue(!sys.initializePanels("nonexistent", "owner", 4), "Init fails on missing");
+    assertTrue(!sys.deployPanels("nonexistent"), "Deploy fails on missing");
+    assertTrue(sys.getPanelCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(approxEqual(sys.getEnergyOutput("nonexistent"), 0.0f), "Output 0 on missing");
+    assertTrue(!sys.isDeployed("nonexistent"), "Not deployed on missing");
+}
+
+// ==================== Farming Deck System Tests ====================
+
+void testFarmingDeckInit() {
+    std::cout << "\n=== Farming Deck: Initialize ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    assertTrue(sys.initializeDeck("ship1", "owner_001", 6), "Deck initialized");
+    assertTrue(sys.getPlotCount("ship1") == 0, "No plots initially");
+    assertTrue(!sys.initializeDeck("ship1", "owner_002", 4), "Duplicate init rejected");
+}
+
+void testFarmingDeckPlant() {
+    std::cout << "\n=== Farming Deck: Plant ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+
+    assertTrue(sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain), "Crop planted");
+    assertTrue(sys.getPlotCount("ship1") == 1, "1 plot");
+    assertTrue(sys.getGrowthStage("ship1", "plot_a") == "planted", "Stage is planted");
+    assertTrue(approxEqual(sys.getGrowthProgress("ship1", "plot_a"), 0.0f), "Progress at 0");
+}
+
+void testFarmingDeckGrowth() {
+    std::cout << "\n=== Farming Deck: Growth ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+    sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain);
+
+    // Update enough to advance growth
+    for (int i = 0; i < 50; i++) {
+        sys.waterPlot("ship1", "plot_a", 0.5f);
+        sys.fertilizePlot("ship1", "plot_a", 0.5f);
+        sys.update(0.5f);
+    }
+    assertTrue(sys.getGrowthProgress("ship1", "plot_a") > 0.0f, "Growth progressed");
+    std::string stage = sys.getGrowthStage("ship1", "plot_a");
+    assertTrue(stage != "planted", "Stage advanced beyond planted");
+}
+
+void testFarmingDeckHarvest() {
+    std::cout << "\n=== Farming Deck: Harvest ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+    sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain);
+
+    // Grow to harvestable
+    for (int i = 0; i < 200; i++) {
+        sys.waterPlot("ship1", "plot_a", 1.0f);
+        sys.fertilizePlot("ship1", "plot_a", 1.0f);
+        sys.update(0.1f);
+    }
+    assertTrue(sys.getGrowthStage("ship1", "plot_a") == "harvestable", "Crop is harvestable");
+
+    float yield = sys.harvestCrop("ship1", "plot_a");
+    assertTrue(yield > 0.0f, "Harvest yields food");
+    assertTrue(sys.getGrowthStage("ship1", "plot_a") == "empty", "Plot reset to empty");
+    assertTrue(sys.getTotalFoodProduced("ship1") > 0.0f, "Total food increased");
+}
+
+void testFarmingDeckHarvestNotReady() {
+    std::cout << "\n=== Farming Deck: Harvest Not Ready ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+    sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain);
+
+    sys.update(0.1f);  // barely any growth
+    float yield = sys.harvestCrop("ship1", "plot_a");
+    assertTrue(approxEqual(yield, 0.0f), "Cannot harvest unready crop");
+}
+
+void testFarmingDeckWater() {
+    std::cout << "\n=== Farming Deck: Water ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+    sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain);
+
+    // Water should consume first, then add
+    sys.update(1.0f);  // consume some water
+    assertTrue(sys.waterPlot("ship1", "plot_a", 0.5f), "Watered plot");
+}
+
+void testFarmingDeckFertilize() {
+    std::cout << "\n=== Farming Deck: Fertilize ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+    sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain);
+
+    sys.update(1.0f);  // consume some nutrients
+    assertTrue(sys.fertilizePlot("ship1", "plot_a", 0.5f), "Fertilized plot");
+}
+
+void testFarmingDeckWithering() {
+    std::cout << "\n=== Farming Deck: Withering ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+    sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain);
+
+    // Drain water low so it withers on next update cycle
+    // Water starts at 1.0, consumption is 0.02/s. Use many small updates without rewatering.
+    // Set growth rate slow by using low light
+    sys.setLightLevel("ship1", 0.01f);  // minimal light = very slow growth
+    for (int i = 0; i < 200; i++) {
+        sys.update(0.5f);
+    }
+    assertTrue(sys.getGrowthStage("ship1", "plot_a") == "withered", "Crop withered without water");
+}
+
+void testFarmingDeckPower() {
+    std::cout << "\n=== Farming Deck: Power ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::FarmingDeckSystem sys(&world);
+    sys.initializeDeck("ship1", "owner_001", 6);
+    sys.plantCrop("ship1", "plot_a", components::FarmingDeck::CropType::Grain);
+
+    assertTrue(sys.setPowerEnabled("ship1", false), "Power disabled");
+    float progress_before = sys.getGrowthProgress("ship1", "plot_a");
+    sys.update(1.0f);
+    assertTrue(approxEqual(sys.getGrowthProgress("ship1", "plot_a"), progress_before), "No growth without power");
+}
+
+void testFarmingDeckMissing() {
+    std::cout << "\n=== Farming Deck: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::FarmingDeckSystem sys(&world);
+    assertTrue(!sys.initializeDeck("nonexistent", "owner", 6), "Init fails on missing");
+    assertTrue(!sys.plantCrop("nonexistent", "plot", components::FarmingDeck::CropType::Grain), "Plant fails on missing");
+    assertTrue(sys.getPlotCount("nonexistent") == 0, "Count 0 on missing");
+    assertTrue(approxEqual(sys.getTotalFoodProduced("nonexistent"), 0.0f), "Food 0 on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -27427,6 +27880,42 @@ int main() {
     testVisualRigBulkGlow();
     testVisualRigScale();
     testVisualRigMissing();
+
+    // Planetary Traversal System tests
+    testTraversalInit();
+    testTraversalSetDestination();
+    testTraversalMovement();
+    testTraversalArrival();
+    testTraversalVehicle();
+    testTraversalDismount();
+    testTraversalTerrain();
+    testTraversalDistance();
+    testTraversalClear();
+    testTraversalMissing();
+
+    // Solar Panel System tests
+    testSolarPanelInit();
+    testSolarPanelDeploy();
+    testSolarPanelRetract();
+    testSolarPanelAddRemove();
+    testSolarPanelEnergyOutput();
+    testSolarPanelNighttime();
+    testSolarPanelDegradation();
+    testSolarPanelMaintenance();
+    testSolarPanelEnergyStorage();
+    testSolarPanelMissing();
+
+    // Farming Deck System tests
+    testFarmingDeckInit();
+    testFarmingDeckPlant();
+    testFarmingDeckGrowth();
+    testFarmingDeckHarvest();
+    testFarmingDeckHarvestNotReady();
+    testFarmingDeckWater();
+    testFarmingDeckFertilize();
+    testFarmingDeckWithering();
+    testFarmingDeckPower();
+    testFarmingDeckMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
