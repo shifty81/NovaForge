@@ -182,6 +182,9 @@
 #include "systems/commander_disagreement_system.h"
 #include "systems/imperfect_information_system.h"
 #include "systems/captain_background_system.h"
+#include "systems/rover_interior_system.h"
+#include "systems/bike_garage_system.h"
+#include "systems/visual_rig_system.h"
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -25066,6 +25069,521 @@ void testCaptainBgMissing() {
     assertTrue(sys.getOriginSystem("nonexistent").empty(), "Default origin empty");
 }
 
+// ==================== RoverInteriorSystem Tests ====================
+
+void testRoverInteriorInit() {
+    std::cout << "\n=== Rover Interior: Initialize ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    assertTrue(sys.initializeInterior("rover1", "rover_001"), "Interior initialized");
+    assertTrue(sys.isPressurized("rover1"), "Initially pressurized");
+    assertTrue(approxEqual(sys.getOxygenLevel("rover1"), 100.0f), "Oxygen at 100%");
+    assertTrue(!sys.initializeInterior("rover1", "rover_002"), "Duplicate init rejected");
+}
+
+void testRoverInteriorAddRoom() {
+    std::cout << "\n=== Rover Interior: Add Room ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    sys.initializeInterior("rover1", "rover_001");
+
+    assertTrue(sys.addRoom("rover1", "cockpit", components::RoverInterior::RoomType::Cockpit), "Cockpit added");
+    assertTrue(sys.getRoomCount("rover1") == 1, "1 room");
+    assertTrue(sys.getRoomType("rover1", "cockpit") == "cockpit", "Room type is cockpit");
+    assertTrue(!sys.addRoom("rover1", "cockpit", components::RoverInterior::RoomType::CargoHold), "Duplicate room rejected");
+}
+
+void testRoverInteriorRigLocker() {
+    std::cout << "\n=== Rover Interior: Rig Locker ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    sys.initializeInterior("rover1", "rover_001");
+
+    assertTrue(!sys.hasRigLocker("rover1"), "No rig locker initially");
+    assertTrue(!sys.storeRig("rover1", "rig1"), "Cannot store without locker");
+
+    sys.addRoom("rover1", "locker", components::RoverInterior::RoomType::RigLocker);
+    sys.update(0.1f);  // Update to detect rig locker
+    assertTrue(sys.hasRigLocker("rover1"), "Has rig locker after adding");
+    assertTrue(sys.storeRig("rover1", "rig1"), "Rig stored");
+    assertTrue(sys.getStoredRigCount("rover1") == 1, "1 rig stored");
+    assertTrue(sys.retrieveRig("rover1", "rig1"), "Rig retrieved");
+    assertTrue(sys.getStoredRigCount("rover1") == 0, "0 rigs after retrieval");
+}
+
+void testRoverInteriorEquipment() {
+    std::cout << "\n=== Rover Interior: Equipment ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    sys.initializeInterior("rover1", "rover_001");
+    sys.addRoom("rover1", "bay", components::RoverInterior::RoomType::EquipmentBay);
+
+    assertTrue(sys.installEquipment("rover1", "bay", "equip1"), "Equipment installed");
+    assertTrue(sys.getEquipmentCount("rover1", "bay") == 1, "1 equipment");
+    assertTrue(sys.removeEquipment("rover1", "bay", "equip1"), "Equipment removed");
+    assertTrue(sys.getEquipmentCount("rover1", "bay") == 0, "0 equipment after removal");
+}
+
+void testRoverInteriorPressurization() {
+    std::cout << "\n=== Rover Interior: Pressurization ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    sys.initializeInterior("rover1", "rover_001");
+    sys.addRoom("rover1", "room", components::RoverInterior::RoomType::CargoHold);
+
+    assertTrue(sys.isPressurized("rover1"), "Initially pressurized");
+    assertTrue(sys.setPressurized("rover1", false), "Depressurize");
+    assertTrue(!sys.isPressurized("rover1"), "Not pressurized");
+
+    sys.update(10.0f); // 10 seconds of oxygen leak
+    assertTrue(sys.getOxygenLevel("rover1") < 100.0f, "Oxygen decreased");
+}
+
+void testRoverInteriorVolume() {
+    std::cout << "\n=== Rover Interior: Volume ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    sys.initializeInterior("rover1", "rover_001");
+    sys.addRoom("rover1", "cargo", components::RoverInterior::RoomType::CargoHold);
+    sys.update(0.1f);
+
+    assertTrue(sys.getTotalVolume("rover1") > 0.0f, "Volume > 0 after adding room");
+}
+
+void testRoverInteriorMaxRooms() {
+    std::cout << "\n=== Rover Interior: Max Rooms ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    sys.initializeInterior("rover1", "rover_001");
+
+    // Default max is 4
+    sys.addRoom("rover1", "r1", components::RoverInterior::RoomType::Cockpit);
+    sys.addRoom("rover1", "r2", components::RoverInterior::RoomType::CargoHold);
+    sys.addRoom("rover1", "r3", components::RoverInterior::RoomType::Scanner);
+    sys.addRoom("rover1", "r4", components::RoverInterior::RoomType::Airlock);
+    assertTrue(sys.getRoomCount("rover1") == 4, "4 rooms");
+    assertTrue(!sys.addRoom("rover1", "r5", components::RoverInterior::RoomType::EquipmentBay), "5th room rejected");
+}
+
+void testRoverInteriorRemoveRoom() {
+    std::cout << "\n=== Rover Interior: Remove Room ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rover1");
+
+    systems::RoverInteriorSystem sys(&world);
+    sys.initializeInterior("rover1", "rover_001");
+    sys.addRoom("rover1", "cargo", components::RoverInterior::RoomType::CargoHold);
+    assertTrue(sys.getRoomCount("rover1") == 1, "1 room");
+    assertTrue(sys.removeRoom("rover1", "cargo"), "Room removed");
+    assertTrue(sys.getRoomCount("rover1") == 0, "0 rooms");
+    assertTrue(!sys.removeRoom("rover1", "cargo"), "Double remove fails");
+}
+
+void testRoverInteriorMissing() {
+    std::cout << "\n=== Rover Interior: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::RoverInteriorSystem sys(&world);
+    assertTrue(sys.getRoomCount("nonexistent") == 0, "No rooms on missing");
+    assertTrue(!sys.isPressurized("nonexistent"), "Not pressurized on missing");
+    assertTrue(approxEqual(sys.getOxygenLevel("nonexistent"), 0.0f), "Zero oxygen on missing");
+    assertTrue(!sys.hasRigLocker("nonexistent"), "No locker on missing");
+}
+
+// ==================== BikeGarageSystem Tests ====================
+
+void testBikeGarageInit() {
+    std::cout << "\n=== Bike Garage: Initialize ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    assertTrue(sys.initializeGarage("ship1", "ship_owner", 2), "Garage initialized");
+    assertTrue(sys.getCapacity("ship1") == 2, "Capacity is 2");
+    assertTrue(sys.getBikeCount("ship1") == 0, "No bikes initially");
+    assertTrue(!sys.isFull("ship1"), "Not full");
+    assertTrue(!sys.initializeGarage("ship1", "other_owner", 3), "Duplicate init rejected");
+}
+
+void testBikeGarageStore() {
+    std::cout << "\n=== Bike Garage: Store Bike ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+
+    assertTrue(sys.storeBike("ship1", "bike1", 12345, "Solari"), "Bike stored");
+    assertTrue(sys.getBikeCount("ship1") == 1, "1 bike");
+    assertTrue(sys.hasBike("ship1", "bike1"), "Has bike1");
+    assertTrue(!sys.storeBike("ship1", "bike1", 67890, "Veyren"), "Duplicate bike rejected");
+}
+
+void testBikeGarageRetrieve() {
+    std::cout << "\n=== Bike Garage: Retrieve Bike ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+    sys.storeBike("ship1", "bike1", 12345, "Solari");
+
+    assertTrue(sys.retrieveBike("ship1", "bike1"), "Bike retrieved");
+    assertTrue(sys.getBikeCount("ship1") == 0, "0 bikes");
+    assertTrue(!sys.hasBike("ship1", "bike1"), "No longer has bike1");
+    assertTrue(!sys.retrieveBike("ship1", "bike1"), "Double retrieve fails");
+}
+
+void testBikeGarageFull() {
+    std::cout << "\n=== Bike Garage: Full ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+    sys.storeBike("ship1", "bike1", 111, "Solari");
+    sys.storeBike("ship1", "bike2", 222, "Veyren");
+
+    assertTrue(sys.isFull("ship1"), "Garage is full");
+    assertTrue(!sys.storeBike("ship1", "bike3", 333, "Aurelian"), "Third bike rejected");
+}
+
+void testBikeGarageLock() {
+    std::cout << "\n=== Bike Garage: Lock/Unlock ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+    sys.storeBike("ship1", "bike1", 12345, "Solari");
+
+    assertTrue(!sys.isBikeLocked("ship1", "bike1"), "Not locked initially");
+    assertTrue(sys.lockBike("ship1", "bike1"), "Locked");
+    assertTrue(sys.isBikeLocked("ship1", "bike1"), "Is locked");
+    assertTrue(!sys.retrieveBike("ship1", "bike1"), "Cannot retrieve locked");
+    assertTrue(sys.unlockBike("ship1", "bike1"), "Unlocked");
+    assertTrue(sys.retrieveBike("ship1", "bike1"), "Can retrieve after unlock");
+}
+
+void testBikeGarageFuel() {
+    std::cout << "\n=== Bike Garage: Fuel ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+    sys.storeBike("ship1", "bike1", 12345, "Solari");
+
+    assertTrue(approxEqual(sys.getBikeFuel("ship1", "bike1"), 100.0f), "Full fuel");
+    assertTrue(sys.setBikeFuel("ship1", "bike1", 50.0f), "Set fuel");
+    assertTrue(approxEqual(sys.getBikeFuel("ship1", "bike1"), 50.0f), "Fuel at 50%");
+}
+
+void testBikeGarageHull() {
+    std::cout << "\n=== Bike Garage: Hull Integrity ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+    sys.storeBike("ship1", "bike1", 12345, "Solari");
+
+    assertTrue(approxEqual(sys.getBikeHullIntegrity("ship1", "bike1"), 100.0f), "Full hull");
+    assertTrue(sys.setBikeHullIntegrity("ship1", "bike1", 75.0f), "Set hull");
+    assertTrue(approxEqual(sys.getBikeHullIntegrity("ship1", "bike1"), 75.0f), "Hull at 75%");
+}
+
+void testBikeGarageDoor() {
+    std::cout << "\n=== Bike Garage: Door ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+
+    assertTrue(!sys.isDoorOpen("ship1"), "Door closed initially");
+    assertTrue(sys.openDoor("ship1"), "Door opened");
+    assertTrue(sys.isDoorOpen("ship1"), "Door is open");
+
+    sys.update(2.0f); // Animate door
+    assertTrue(sys.getDoorProgress("ship1") > 0.0f, "Door progress > 0");
+
+    assertTrue(sys.closeDoor("ship1"), "Door closed");
+    assertTrue(!sys.isDoorOpen("ship1"), "Door is closed");
+}
+
+void testBikeGaragePower() {
+    std::cout << "\n=== Bike Garage: Power ===" << std::endl;
+    ecs::World world;
+    world.createEntity("ship1");
+
+    systems::BikeGarageSystem sys(&world);
+    sys.initializeGarage("ship1", "owner", 2);
+
+    assertTrue(sys.isPowerEnabled("ship1"), "Power enabled initially");
+    assertTrue(sys.setPowerEnabled("ship1", false), "Power disabled");
+    assertTrue(!sys.isPowerEnabled("ship1"), "Power is off");
+    assertTrue(!sys.openDoor("ship1"), "Cannot open door without power");
+    assertTrue(!sys.storeBike("ship1", "bike1", 111, "Solari"), "Cannot store without power");
+}
+
+void testBikeGarageMissing() {
+    std::cout << "\n=== Bike Garage: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::BikeGarageSystem sys(&world);
+    assertTrue(sys.getBikeCount("nonexistent") == 0, "No bikes on missing");
+    assertTrue(sys.getCapacity("nonexistent") == 0, "No capacity on missing");
+    assertTrue(sys.isFull("nonexistent"), "Full on missing (default true)");
+    assertTrue(!sys.hasBike("nonexistent", "bike1"), "No bike on missing");
+}
+
+// ==================== VisualRigSystem Tests ====================
+
+void testVisualRigInit() {
+    std::cout << "\n=== Visual Rig: Initialize ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rig1");
+
+    systems::VisualRigSystem sys(&world);
+    assertTrue(sys.initializeVisualState("rig1", 12345), "Visual state initialized");
+    assertTrue(sys.getThrusterConfig("rig1") == "none", "No thrusters initially");
+    assertTrue(sys.getCargoSize("rig1") == "none", "No cargo initially");
+    assertTrue(!sys.initializeVisualState("rig1", 67890), "Duplicate init rejected");
+}
+
+void testVisualRigUpdateFromLoadout() {
+    std::cout << "\n=== Visual Rig: Update From Loadout ===" << std::endl;
+    ecs::World world;
+    auto* rig = world.createEntity("rig1");
+    auto* mod1 = world.createEntity("mod_jet");
+    auto* mod2 = world.createEntity("mod_cargo");
+
+    // Add rig loadout
+    auto loadout = std::make_unique<components::RigLoadout>();
+    loadout->installed_module_ids.push_back("mod_jet");
+    loadout->installed_module_ids.push_back("mod_cargo");
+    rig->addComponent(std::move(loadout));
+
+    // Add modules
+    auto jet = std::make_unique<components::RigModule>();
+    jet->type = components::RigModule::ModuleType::JetpackTank;
+    mod1->addComponent(std::move(jet));
+
+    auto cargo = std::make_unique<components::RigModule>();
+    cargo->type = components::RigModule::ModuleType::CargoPod;
+    mod2->addComponent(std::move(cargo));
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+    assertTrue(sys.updateFromLoadout("rig1"), "Updated from loadout");
+    assertTrue(sys.getThrusterConfig("rig1") == "single", "Single thruster");
+    assertTrue(sys.getCargoSize("rig1") == "small", "Small cargo");
+}
+
+void testVisualRigThrusterConfig() {
+    std::cout << "\n=== Visual Rig: Thruster Config ===" << std::endl;
+    ecs::World world;
+    auto* rig = world.createEntity("rig1");
+    auto* mod1 = world.createEntity("mod1");
+    auto* mod2 = world.createEntity("mod2");
+    auto* mod3 = world.createEntity("mod3");
+
+    auto loadout = std::make_unique<components::RigLoadout>();
+    loadout->installed_module_ids = {"mod1", "mod2", "mod3"};
+    rig->addComponent(std::move(loadout));
+
+    // Add 3 jetpack tanks
+    for (const auto& id : {"mod1", "mod2", "mod3"}) {
+        auto* e = world.getEntity(id);
+        auto jet = std::make_unique<components::RigModule>();
+        jet->type = components::RigModule::ModuleType::JetpackTank;
+        e->addComponent(std::move(jet));
+    }
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+    sys.updateFromLoadout("rig1");
+    assertTrue(sys.getThrusterConfig("rig1") == "quad", "Quad thrusters from 3 tanks");
+}
+
+void testVisualRigCargoSize() {
+    std::cout << "\n=== Visual Rig: Cargo Size ===" << std::endl;
+    ecs::World world;
+    auto* rig = world.createEntity("rig1");
+    auto* mod1 = world.createEntity("mod1");
+    auto* mod2 = world.createEntity("mod2");
+
+    auto loadout = std::make_unique<components::RigLoadout>();
+    loadout->installed_module_ids = {"mod1", "mod2"};
+    rig->addComponent(std::move(loadout));
+
+    for (const auto& id : {"mod1", "mod2"}) {
+        auto* e = world.getEntity(id);
+        auto cargo = std::make_unique<components::RigModule>();
+        cargo->type = components::RigModule::ModuleType::CargoPod;
+        e->addComponent(std::move(cargo));
+    }
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+    sys.updateFromLoadout("rig1");
+    assertTrue(sys.getCargoSize("rig1") == "medium", "Medium cargo from 2 pods");
+}
+
+void testVisualRigFeatures() {
+    std::cout << "\n=== Visual Rig: Features ===" << std::endl;
+    ecs::World world;
+    auto* rig = world.createEntity("rig1");
+    auto* mod1 = world.createEntity("mod1");
+    auto* mod2 = world.createEntity("mod2");
+    auto* mod3 = world.createEntity("mod3");
+
+    auto loadout = std::make_unique<components::RigLoadout>();
+    loadout->installed_module_ids = {"mod1", "mod2", "mod3"};
+    rig->addComponent(std::move(loadout));
+
+    auto shield = std::make_unique<components::RigModule>();
+    shield->type = components::RigModule::ModuleType::Shield;
+    world.getEntity("mod1")->addComponent(std::move(shield));
+
+    auto sensor = std::make_unique<components::RigModule>();
+    sensor->type = components::RigModule::ModuleType::Sensor;
+    world.getEntity("mod2")->addComponent(std::move(sensor));
+
+    auto solar = std::make_unique<components::RigModule>();
+    solar->type = components::RigModule::ModuleType::SolarPanel;
+    world.getEntity("mod3")->addComponent(std::move(solar));
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+    sys.updateFromLoadout("rig1");
+    assertTrue(sys.hasShieldEmitter("rig1"), "Has shield emitter");
+    assertTrue(sys.hasAntenna("rig1"), "Has antenna from sensor");
+    assertTrue(sys.hasSolarPanels("rig1"), "Has solar panels");
+}
+
+void testVisualRigMounts() {
+    std::cout << "\n=== Visual Rig: Weapon/Tool Mounts ===" << std::endl;
+    ecs::World world;
+    auto* rig = world.createEntity("rig1");
+    auto* mod1 = world.createEntity("mod1");
+    auto* mod2 = world.createEntity("mod2");
+
+    auto loadout = std::make_unique<components::RigLoadout>();
+    loadout->installed_module_ids = {"mod1", "mod2"};
+    rig->addComponent(std::move(loadout));
+
+    auto weapon = std::make_unique<components::RigModule>();
+    weapon->type = components::RigModule::ModuleType::WeaponMount;
+    world.getEntity("mod1")->addComponent(std::move(weapon));
+
+    auto tool = std::make_unique<components::RigModule>();
+    tool->type = components::RigModule::ModuleType::ToolMount;
+    world.getEntity("mod2")->addComponent(std::move(tool));
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+    sys.updateFromLoadout("rig1");
+    assertTrue(sys.getWeaponMountCount("rig1") == 1, "1 weapon mount");
+    assertTrue(sys.getToolMountCount("rig1") == 1, "1 tool mount");
+}
+
+void testVisualRigColors() {
+    std::cout << "\n=== Visual Rig: Colors ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rig1");
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+
+    assertTrue(sys.setColors("rig1", "red", "white"), "Colors set");
+    assertTrue(sys.getPrimaryColor("rig1") == "red", "Primary is red");
+    assertTrue(sys.getSecondaryColor("rig1") == "white", "Secondary is white");
+}
+
+void testVisualRigTrinkets() {
+    std::cout << "\n=== Visual Rig: Trinkets ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rig1");
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+
+    assertTrue(sys.canAddTrinket("rig1"), "Can add trinket");
+    assertTrue(sys.addTrinket("rig1", "bobblehead1"), "Trinket added");
+    assertTrue(sys.getTrinketCount("rig1") == 1, "1 trinket");
+    assertTrue(!sys.addTrinket("rig1", "bobblehead1"), "Duplicate rejected");
+
+    sys.addTrinket("rig1", "sticker1");
+    sys.addTrinket("rig1", "mug1");
+    sys.addTrinket("rig1", "figure1");
+    assertTrue(sys.getTrinketCount("rig1") == 4, "4 trinkets");
+    assertTrue(!sys.canAddTrinket("rig1"), "Max trinkets reached");
+
+    assertTrue(sys.removeTrinket("rig1", "mug1"), "Trinket removed");
+    assertTrue(sys.getTrinketCount("rig1") == 3, "3 trinkets");
+}
+
+void testVisualRigBulkGlow() {
+    std::cout << "\n=== Visual Rig: Bulk and Glow ===" << std::endl;
+    ecs::World world;
+    auto* rig = world.createEntity("rig1");
+
+    auto loadout = std::make_unique<components::RigLoadout>();
+    loadout->total_cargo = 500.0f;
+    loadout->total_shield = 50.0f;
+    loadout->total_power = 100.0f;
+    rig->addComponent(std::move(loadout));
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+    sys.update(0.1f);
+
+    assertTrue(sys.getTotalBulk("rig1") > 1.0f, "Bulk > 1 with cargo/shield");
+    assertTrue(approxEqual(sys.getGlowIntensity("rig1"), 1.0f), "Glow at max from power");
+
+    assertTrue(sys.setGlowIntensity("rig1", 0.5f), "Glow set");
+    assertTrue(approxEqual(sys.getGlowIntensity("rig1"), 0.5f), "Glow at 0.5");
+}
+
+void testVisualRigScale() {
+    std::cout << "\n=== Visual Rig: Scale ===" << std::endl;
+    ecs::World world;
+    world.createEntity("rig1");
+
+    systems::VisualRigSystem sys(&world);
+    sys.initializeVisualState("rig1", 12345);
+
+    assertTrue(sys.setThrusterScale("rig1", 2.0f), "Thruster scale set");
+    assertTrue(approxEqual(sys.getThrusterScale("rig1"), 2.0f), "Thruster scale is 2.0");
+    assertTrue(sys.setCargoScale("rig1", 1.5f), "Cargo scale set");
+    assertTrue(approxEqual(sys.getCargoScale("rig1"), 1.5f), "Cargo scale is 1.5");
+}
+
+void testVisualRigMissing() {
+    std::cout << "\n=== Visual Rig: Missing Entity ===" << std::endl;
+    ecs::World world;
+    systems::VisualRigSystem sys(&world);
+    assertTrue(sys.getThrusterConfig("nonexistent") == "unknown", "Unknown config on missing");
+    assertTrue(sys.getCargoSize("nonexistent") == "unknown", "Unknown cargo on missing");
+    assertTrue(!sys.hasShieldEmitter("nonexistent"), "No shield on missing");
+    assertTrue(sys.getPrimaryColor("nonexistent").empty(), "Empty color on missing");
+    assertTrue(sys.getTrinketCount("nonexistent") == 0, "No trinkets on missing");
+}
+
 int main() {
     std::cout << "========================================" << std::endl;
     std::cout << "Nova Forge C++ Server System Tests" << std::endl;
@@ -26873,6 +27391,42 @@ int main() {
     testCaptainBgSetExperience();
     testCaptainBgAllTypes();
     testCaptainBgMissing();
+
+    // Rover Interior System tests
+    testRoverInteriorInit();
+    testRoverInteriorAddRoom();
+    testRoverInteriorRigLocker();
+    testRoverInteriorEquipment();
+    testRoverInteriorPressurization();
+    testRoverInteriorVolume();
+    testRoverInteriorMaxRooms();
+    testRoverInteriorRemoveRoom();
+    testRoverInteriorMissing();
+
+    // Bike Garage System tests
+    testBikeGarageInit();
+    testBikeGarageStore();
+    testBikeGarageRetrieve();
+    testBikeGarageFull();
+    testBikeGarageLock();
+    testBikeGarageFuel();
+    testBikeGarageHull();
+    testBikeGarageDoor();
+    testBikeGaragePower();
+    testBikeGarageMissing();
+
+    // Visual Rig System tests
+    testVisualRigInit();
+    testVisualRigUpdateFromLoadout();
+    testVisualRigThrusterConfig();
+    testVisualRigCargoSize();
+    testVisualRigFeatures();
+    testVisualRigMounts();
+    testVisualRigColors();
+    testVisualRigTrinkets();
+    testVisualRigBulkGlow();
+    testVisualRigScale();
+    testVisualRigMissing();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

@@ -322,6 +322,175 @@ public:
     COMPONENT_TYPE(Terraforming)
 };
 
+// ==================== Rover Interior System (Phase 14) ====================
+
+/**
+ * @brief Rover interior configuration component
+ *
+ * Enables rover interiors with rig locker, equipment mount, and scannable rooms.
+ * Each rover can have multiple rooms with different purposes.
+ */
+class RoverInterior : public ecs::Component {
+public:
+    enum class RoomType {
+        Cockpit,        // Driver's seat and controls
+        CargoHold,      // Storage area
+        RigLocker,      // Suit/rig storage and equip area
+        EquipmentBay,   // Tool and equipment mounting
+        Scanner,        // Scanning equipment room
+        Airlock         // Entry/exit point
+    };
+
+    struct InteriorRoom {
+        std::string room_id;
+        RoomType type = RoomType::Cockpit;
+        float size_x = 2.0f;  // meters
+        float size_y = 2.0f;
+        float size_z = 2.0f;
+        bool is_pressurized = true;
+        int equipment_slots = 0;
+        std::vector<std::string> installed_equipment_ids;
+    };
+
+    std::string rover_id;
+    std::vector<InteriorRoom> rooms;
+    int max_rooms = 4;
+    float total_interior_volume = 0.0f;  // cubic meters
+    bool has_rig_locker = false;
+    bool has_equipment_bay = false;
+    int rig_locker_capacity = 2;        // max rigs that can be stored
+    int equipment_bay_slots = 4;        // max equipment items
+    std::vector<std::string> stored_rig_ids;
+    bool is_sealed = true;              // interior pressurization state
+    float oxygen_level = 100.0f;        // percent
+
+    int getRoomCount() const { return static_cast<int>(rooms.size()); }
+    bool canAddRoom() const { return static_cast<int>(rooms.size()) < max_rooms; }
+
+    static std::string roomTypeToString(RoomType t) {
+        switch (t) {
+            case RoomType::Cockpit: return "cockpit";
+            case RoomType::CargoHold: return "cargo_hold";
+            case RoomType::RigLocker: return "rig_locker";
+            case RoomType::EquipmentBay: return "equipment_bay";
+            case RoomType::Scanner: return "scanner";
+            case RoomType::Airlock: return "airlock";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(RoverInterior)
+};
+
+// ==================== Bike Garage System (Phase 14) ====================
+
+/**
+ * @brief Bike storage component for rovers and ships
+ *
+ * Manages storage of grav bikes in vehicles. Supports store/retrieve operations
+ * with capacity limits and docking state tracking.
+ */
+class BikeGarage : public ecs::Component {
+public:
+    struct StoredBike {
+        std::string bike_id;
+        uint64_t bike_seed = 0;
+        std::string faction_style;
+        float fuel_level = 100.0f;     // percent remaining
+        float hull_integrity = 100.0f; // percent remaining
+        bool is_locked = false;
+    };
+
+    std::string owner_entity_id;       // Ship or rover that owns this garage
+    int max_capacity = 2;              // max bikes that can be stored
+    std::vector<StoredBike> stored_bikes;
+    bool is_open = false;              // garage bay door state
+    float bay_door_progress = 0.0f;    // 0.0 = closed, 1.0 = open
+    float door_speed = 0.5f;           // door movement per second
+    bool power_enabled = true;         // needs power to operate
+
+    int getBikeCount() const { return static_cast<int>(stored_bikes.size()); }
+    bool canStoreBike() const { return power_enabled && getBikeCount() < max_capacity; }
+    bool isFull() const { return getBikeCount() >= max_capacity; }
+
+    bool hasBike(const std::string& bike_id) const {
+        for (const auto& b : stored_bikes) {
+            if (b.bike_id == bike_id) return true;
+        }
+        return false;
+    }
+
+    COMPONENT_TYPE(BikeGarage)
+};
+
+// ==================== Visual Rig Generator System (Phase 13) ====================
+
+/**
+ * @brief Visual rig state component for PCG shape generation
+ *
+ * Tracks the visual state of a rig with installed modules affecting
+ * appearance (thrusters, cargo pods, shield emitters, etc.)
+ */
+class VisualRigState : public ecs::Component {
+public:
+    enum class ThrusterConfig {
+        None,
+        Single,    // One central thruster
+        Dual,      // Two side thrusters
+        Quad       // Four corner thrusters
+    };
+
+    enum class CargoSize {
+        None,
+        Small,     // Compact cargo pod
+        Medium,    // Standard cargo pod
+        Large      // Extended cargo rack
+    };
+
+    std::string rig_entity_id;
+    uint64_t visual_seed = 0;          // PCG seed for visual variation
+    ThrusterConfig thruster_config = ThrusterConfig::None;
+    CargoSize cargo_size = CargoSize::None;
+    float thruster_scale = 1.0f;       // size multiplier for thrusters
+    float cargo_scale = 1.0f;          // size multiplier for cargo pods
+    bool has_shield_emitter = false;
+    bool has_antenna = false;
+    bool has_solar_panels = false;
+    bool has_drone_bay = false;
+    int weapon_mount_count = 0;
+    int tool_mount_count = 0;
+    float total_bulk = 1.0f;           // overall size modifier
+    float glow_intensity = 0.0f;       // power indicator glow
+    std::string primary_color;         // faction/custom color
+    std::string secondary_color;
+    std::vector<std::string> trinket_ids;  // attached trinkets (bobbleheads, stickers)
+    int max_trinkets = 4;
+
+    bool canAddTrinket() const { return static_cast<int>(trinket_ids.size()) < max_trinkets; }
+
+    static std::string thrusterConfigToString(ThrusterConfig t) {
+        switch (t) {
+            case ThrusterConfig::None: return "none";
+            case ThrusterConfig::Single: return "single";
+            case ThrusterConfig::Dual: return "dual";
+            case ThrusterConfig::Quad: return "quad";
+            default: return "unknown";
+        }
+    }
+
+    static std::string cargoSizeToString(CargoSize s) {
+        switch (s) {
+            case CargoSize::None: return "none";
+            case CargoSize::Small: return "small";
+            case CargoSize::Medium: return "medium";
+            case CargoSize::Large: return "large";
+            default: return "unknown";
+        }
+    }
+
+    COMPONENT_TYPE(VisualRigState)
+};
+
 } // namespace components
 } // namespace atlas
 

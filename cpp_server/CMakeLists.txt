@@ -184,6 +184,9 @@ set(SERVER_SOURCES
     src/systems/commander_disagreement_system.cpp
     src/systems/imperfect_information_system.cpp
     src/systems/captain_background_system.cpp
+    src/systems/rover_interior_system.cpp
+    src/systems/bike_garage_system.cpp
+    src/systems/visual_rig_system.cpp
     src/systems/warp_performance_budget_system.cpp
     src/systems/fleet_positional_audio_system.cpp
     src/data/ship_database.cpp
@@ -649,6 +652,9 @@ if(BUILD_TESTS)
         src/systems/commander_disagreement_system.cpp
         src/systems/imperfect_information_system.cpp
         src/systems/captain_background_system.cpp
+        src/systems/rover_interior_system.cpp
+        src/systems/bike_garage_system.cpp
+        src/systems/visual_rig_system.cpp
         src/systems/warp_performance_budget_system.cpp
         src/systems/fleet_positional_audio_system.cpp
         src/data/world_persistence.cpp
