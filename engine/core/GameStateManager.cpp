@@ -19,7 +19,9 @@ void GameStateManager::SetPhase(GamePhase phase) {
     if (phase == m_phase) return;
     GamePhase old = m_phase;
     m_phase = phase;
-    for (auto& cb : m_phaseCallbacks) {
+    // Copy callbacks before iterating to guard against modification during iteration.
+    auto callbacks = m_phaseCallbacks;
+    for (auto& cb : callbacks) {
         if (cb) cb(old, m_phase);
     }
 }
