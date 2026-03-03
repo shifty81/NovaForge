@@ -10,6 +10,7 @@
 
 #include "ECS.h"
 #include "../cpp_client/include/editor/editor_command_bus.h"
+#include "../cpp_client/include/editor/undoable_command_bus.h"
 #include <any>
 #include <functional>
 #include <string>
@@ -133,6 +134,98 @@ public:
     }
 
     const char* Description() const override { return "Remove Component"; }
+
+    bool HadPrevious() const { return m_hadPrevious; }
+    const T& PreviousValue() const { return m_previousValue; }
+    EntityID TargetID() const { return m_entityID; }
+
+private:
+    World& m_world;
+    EntityID m_entityID;
+    T m_previousValue{};
+    bool m_hadPrevious = false;
+};
+
+// ── Undoable Entity Commands ────────────────────────────────────────
+//
+// These extend IUndoableCommand so the UndoableCommandBus records them
+// in the undo/redo history automatically.
+//
+// Thread safety: Like all ECS commands, these assume single-threaded
+// access to the World.  The ECS World is not thread-safe.
+// ────────────────────────────────────────────────────────────────────
+
+/**
+ * Undoable version of SetComponentCommand.
+ *
+ * On Execute: adds/replaces the component and records the previous value.
+ * On Undo:    restores the previous component (or removes it if new).
+ */
+template<typename T>
+class UndoableSetComponentCommand : public atlas::editor::IUndoableCommand {
+public:
+    UndoableSetComponentCommand(World& world, EntityID id, const T& value)
+        : m_world(world), m_entityID(id), m_newValue(value) {}
+
+    void Execute() override {
+        T* existing = m_world.GetComponent<T>(m_entityID);
+        if (existing) {
+            m_hadPrevious = true;
+            m_previousValue = *existing;
+        }
+        m_world.AddComponent<T>(m_entityID, m_newValue);
+    }
+
+    void Undo() override {
+        if (m_hadPrevious) {
+            m_world.AddComponent<T>(m_entityID, m_previousValue);
+        } else {
+            m_world.RemoveComponent<T>(m_entityID);
+        }
+    }
+
+    const char* Description() const override { return "Set Component (Undoable)"; }
+
+    bool HadPrevious() const { return m_hadPrevious; }
+    const T& PreviousValue() const { return m_previousValue; }
+    EntityID TargetID() const { return m_entityID; }
+
+private:
+    World& m_world;
+    EntityID m_entityID;
+    T m_newValue;
+    T m_previousValue{};
+    bool m_hadPrevious = false;
+};
+
+/**
+ * Undoable version of RemoveComponentCommand.
+ *
+ * On Execute: removes the component and records its value.
+ * On Undo:    re-adds the component with the recorded value.
+ */
+template<typename T>
+class UndoableRemoveComponentCommand : public atlas::editor::IUndoableCommand {
+public:
+    UndoableRemoveComponentCommand(World& world, EntityID id)
+        : m_world(world), m_entityID(id) {}
+
+    void Execute() override {
+        T* existing = m_world.GetComponent<T>(m_entityID);
+        if (existing) {
+            m_hadPrevious = true;
+            m_previousValue = *existing;
+            m_world.RemoveComponent<T>(m_entityID);
+        }
+    }
+
+    void Undo() override {
+        if (m_hadPrevious) {
+            m_world.AddComponent<T>(m_entityID, m_previousValue);
+        }
+    }
+
+    const char* Description() const override { return "Remove Component (Undoable)"; }
 
     bool HadPrevious() const { return m_hadPrevious; }
     const T& PreviousValue() const { return m_previousValue; }
