@@ -25,14 +25,15 @@ void UndoableCommandBus::ProcessCommands() {
                     m_history.end());
             }
 
-            // Release from the unique_ptr<ICommand> and re-own as IUndoableCommand.
+            // Transfer ownership: release ICommand, re-own as IUndoableCommand.
             cmd.release();
-            m_history.emplace_back(undoable);
+            m_history.push_back(
+                std::unique_ptr<IUndoableCommand>(undoable));
             m_undoIndex = m_history.size();
 
-            // Enforce depth limit.
+            // Enforce depth limit (O(1) with deque).
             if (m_history.size() > m_maxHistory) {
-                m_history.erase(m_history.begin());
+                m_history.pop_front();
                 --m_undoIndex;
             }
         }

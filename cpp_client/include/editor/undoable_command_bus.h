@@ -8,10 +8,10 @@
  * plain ICommand instances are executed fire-and-forget.
  */
 
+#include <deque>
 #include <memory>
 #include <queue>
 #include <string>
-#include <vector>
 #include "editor/editor_command_bus.h"
 
 namespace atlas::editor {
@@ -87,7 +87,7 @@ public:
 
 private:
     std::queue<std::unique_ptr<ICommand>> m_queue;
-    std::vector<std::unique_ptr<IUndoableCommand>> m_history;
+    std::deque<std::unique_ptr<IUndoableCommand>> m_history;
     size_t m_undoIndex = 0;
     size_t m_maxHistory = 64;
 };
