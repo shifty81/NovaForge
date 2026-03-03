@@ -103,8 +103,11 @@ public:
     /** Number of snapshots currently stored. */
     size_t SnapshotCount() const { return m_snapshots.size(); }
 
-    /** Label of a stored snapshot. */
+    /** Label of a stored snapshot.
+     *  Returns an empty string if index is out of bounds. */
     const std::string& SnapshotLabel(size_t index) const {
+        static const std::string kEmpty;
+        if (index >= m_snapshots.size()) return kEmpty;
         return m_snapshots[index].label;
     }
 
