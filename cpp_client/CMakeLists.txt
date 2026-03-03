@@ -420,6 +420,65 @@ elseif(APPLE)
     target_link_libraries(atlas_client "-framework Cocoa -framework IOKit -framework CoreVideo")
 endif()
 
+# ── Optional Editor Tool Layer ──────────────────────────────────────
+# When NOVAFORGE_EDITOR_TOOLS is ON, compile editor panels and tools
+# directly into the client as an F12-toggleable overlay.  Turn OFF
+# for release builds to strip all editor code.
+if(NOVAFORGE_EDITOR_TOOLS)
+    message(STATUS "  Editor tool layer: ENABLED (F12 toggle)")
+    target_compile_definitions(atlas_client PRIVATE NOVAFORGE_EDITOR_TOOLS)
+    target_include_directories(atlas_client PRIVATE
+        ${CMAKE_SOURCE_DIR}/editor
+        ${CMAKE_SOURCE_DIR}/cpp_server/include
+    )
+    target_sources(atlas_client PRIVATE
+        # Tool layer core
+        src/editor/editor_command_bus.cpp
+        src/editor/editor_tool_layer.cpp
+        # Editor panels & infrastructure
+        ${CMAKE_SOURCE_DIR}/editor/ui/EditorLayout.cpp
+        ${CMAKE_SOURCE_DIR}/editor/ui/EditorMenuBar.cpp
+        ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp
+        ${CMAKE_SOURCE_DIR}/editor/ui/KeybindManager.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/AssetStylePanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/ShipArchetypePanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/GamePackagerPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/CharacterSelectPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/MissionEditorPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/SceneGraphPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/DataBrowserPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/ModuleEditorPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/NPCEditorPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/GalaxyMapPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/FleetFormationPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/PCGOverrideStore.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/LiveSceneManager.cpp
+        ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
+        ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
+        # PCG sources used by editor panels
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/pcg_manager.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/ship_generator.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/station_generator.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/interior_generator.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/interior_budget.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/constraint_solver.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/pcg_trace.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/lowpoly_character_generator.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/generation_style.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/pcg_asset_style.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/ship_archetype.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/spine_hull_generator.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_placement_system.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_generator.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/galaxy_generator.cpp
+    )
+else()
+    message(STATUS "  Editor tool layer: DISABLED (release mode)")
+endif()
+
 # Copy shaders to build directory
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/
      DESTINATION ${CMAKE_BINARY_DIR}/bin/shaders)

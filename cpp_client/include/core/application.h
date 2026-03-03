@@ -34,6 +34,10 @@ namespace atlas {
     class AtlasTitleScreen;
 }
 
+#ifdef NOVAFORGE_EDITOR_TOOLS
+namespace atlas::editor { class EditorToolLayer; }
+#endif
+
 namespace atlas {
 
 /**
@@ -326,6 +330,10 @@ private:
     std::unique_ptr<atlas::AtlasTitleScreen> m_titleScreen;
     std::unique_ptr<UI::ContextMenu> m_contextMenu;
     std::unique_ptr<UI::RadialMenu> m_radialMenu;
+
+#ifdef NOVAFORGE_EDITOR_TOOLS
+    std::unique_ptr<atlas::editor::EditorToolLayer> m_editorToolLayer;
+#endif
 
     bool m_running;
     float m_lastFrameTime;

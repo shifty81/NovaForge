@@ -13,6 +13,9 @@
 #include "ui/atlas/atlas_console.h"
 #include "ui/atlas/atlas_pause_menu.h"
 #include "ui/atlas/atlas_title_screen.h"
+#ifdef NOVAFORGE_EDITOR_TOOLS
+#include "editor/editor_tool_layer.h"
+#endif
 
 namespace atlas {
 
@@ -196,6 +199,13 @@ void Application::render() {
         if (m_pauseMenu && m_pauseMenu->isOpen()) {
             m_pauseMenu->render(*m_atlasCtx);
         }
+
+#ifdef NOVAFORGE_EDITOR_TOOLS
+        // Render Editor Tool Layer overlay (F12 toggle)
+        if (m_editorToolLayer && m_editorToolLayer->isActive()) {
+            m_editorToolLayer->draw(*m_atlasCtx);
+        }
+#endif
 
         // Render Console overlay (topmost layer)
         if (m_console && m_console->isOpen()) {

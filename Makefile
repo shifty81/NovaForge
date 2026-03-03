@@ -98,6 +98,17 @@ build-editor: ## Build Atlas Editor (PCG design tools)
 	@echo "  - Game Packager     (package builds)"
 	@echo ""
 
+.PHONY: build-client-editor
+build-client-editor: ## Build client with editor tool layer (F12 toggle)
+	@mkdir -p $(LOG_DIR)
+	@mkdir -p build
+	(cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_CLIENT=ON -DNOVAFORGE_EDITOR_TOOLS=ON -DBUILD_SERVER=OFF -DBUILD_ATLAS_EDITOR=OFF -DBUILD_ATLAS_TESTS=OFF && cmake --build . --config Release --target atlas_client -j$$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)) 2>&1 | tee $(LOG_DIR)/build-client-editor_$(TIMESTAMP).log
+	@echo ""
+	@echo "Client built with editor tools!"
+	@echo "Run with: ./build/bin/atlas_client"
+	@echo "Press F12 in-game to toggle editor tool overlay"
+	@echo ""
+
 .PHONY: test
 test: test-server test-engine ## Run all tests
 
