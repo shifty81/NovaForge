@@ -310,9 +310,9 @@ size_t AssetPalettePanel::ImportFromJson(const std::string& json) {
                 while (!raw.empty() && (raw.back() == ' ' || raw.back() == '\n'))
                     raw.pop_back();
 
-                if (fkey == "isPrefab")
+                if (fkey == "isPrefab") {
                     entry.isPrefab = (raw == "true");
-                else if (fkey == "previewScale") {
+                } else if (fkey == "previewScale") {
                     try { entry.previewScale = std::stof(raw); }
                     catch (...) { entry.previewScale = 1.0f; }
                 }
