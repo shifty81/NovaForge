@@ -863,7 +863,7 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 #### More Missions & Content
 - [x] Level 5 missions (6 extreme difficulty fleet missions)
 - [x] Epic mission arcs
-- [x] Incursions (group PVE events) — 8 encounters, 4 tiers, 6 NPC types
+- [x] Incursions (group PVE events) — 8 encounters, 4 tiers, 6 NPC types + IncursionSystem with dynamic wave management, influence tracking, participant roster, reward pool accumulation, Pending→Active→Withdrawing→Defeated state machine (10 tests)
 - [x] More NPC factions (Mordu's Legion, Sisters of EVE)
 - [x] Rare NPC spawns (4 faction commanders, 4 officer NPCs)
 - [x] More exploration sites (12 new templates: combat, relic, data, wormhole anomalies)
@@ -1455,6 +1455,9 @@ Phase 5 core features (Panda3D client, ship models, performance optimization, pa
 - [x] Jump gate network — JumpGate component + JumpGateSystem with per-gate destination pairing, activation progress tracking, cooldown enforcement, fuel cost, security level, online/offline state, gate readiness checks, max gates limit (10 tests)
 - [x] Snapshot replication — SnapshotReplication component + SnapshotReplicationSystem2 with EntitySnapshot capture, SnapshotFrame history buffer (configurable max 60), auto-capture at 20Hz, per-client acknowledgment tracking, delta entity counting, max clients limit (10 tests)
 - [x] Procedural mission generation — ProceduralMissionGenerator component + ProceduralMissionGeneratorSystem with 5 mission types, difficulty 1-5 with bias modifier, reward/standing scaling, accept/complete/expire lifecycle, time limit auto-expiry, max available limit (10 tests)
+- [x] Dynamic incursion events — Incursion component + IncursionSystem with NPC wave management (spawn/defeat), 4-state lifecycle (Pending→Active→Withdrawing→Defeated), influence tracking, participant roster, reward pool accumulation, tier-based difficulty (1-3), max waves/participants limits (10 tests)
+- [x] Clone bay medical system — CloneBay component + CloneBaySystem with 5 clone grades (Alpha→Omega), grade-based SP limits and implant slots, implant installation with slot validation, death processing with SP-at-risk calculation, clone activation tracking (10 tests)
+- [x] Loyalty point store — LoyaltyPointStore component + LoyaltyPointStoreSystem with faction-based LP stores, item catalog with 5 categories (Ship/Module/Implant/Blueprint/Ammunition), player LP balances, purchase validation (LP+ISK), category filtering, ISK collection tracking (10 tests)
 - [ ] In-game web browser (dotlan-style maps)
 - [ ] Voice chat integration
 - [ ] Mobile companion app
@@ -1754,7 +1757,7 @@ Have questions about the roadmap? Want to suggest features?
 
 ### R&D - Manual-Aligned Systems (Previous)
 - Character creation system with 4 races, bloodlines, and attributes
-- Clone system with medical clones and relay clones
+- Clone system with medical clones and relay clones — CloneBay component + CloneBaySystem with 5 clone grades (Alpha→Omega), SP limits, implant slot management, death processing with SP-at-risk calculation, clone activation tracking (10 tests)
 - Implant system for attribute enhancement (5 slots, 4 grades)
 - AEGIS security enforcement and criminal flag mechanics
 - Insurance system with 6 coverage levels
