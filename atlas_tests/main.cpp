@@ -1410,6 +1410,49 @@ void test_stats_panel_sorted_by_memory();
 void test_stats_panel_unique_types();
 void test_stats_panel_clear();
 
+// PrefabLibrary tests
+void test_prefab_library_defaults();
+void test_prefab_library_add();
+void test_prefab_library_add_duplicate();
+void test_prefab_library_add_empty_name();
+void test_prefab_library_remove();
+void test_prefab_library_get();
+void test_prefab_library_rename();
+void test_prefab_library_rename_conflict();
+void test_prefab_library_rename_empty();
+void test_prefab_library_rename_not_found();
+void test_prefab_library_filter_by_type();
+void test_prefab_library_unique_types();
+void test_prefab_library_properties();
+void test_prefab_library_clear();
+
+// SimulationStepController tests
+void test_sim_ctrl_default_running();
+void test_sim_ctrl_pause_resume();
+void test_sim_ctrl_should_tick_running();
+void test_sim_ctrl_should_tick_paused();
+void test_sim_ctrl_step_once();
+void test_sim_ctrl_step_once_accumulate();
+void test_sim_ctrl_step_n();
+void test_sim_ctrl_step_n_zero();
+void test_sim_ctrl_resume_clears_steps();
+void test_sim_ctrl_total_ticks();
+void test_sim_ctrl_reset();
+
+// MultiSelectionManager tests
+void test_multi_sel_defaults();
+void test_multi_sel_select();
+void test_multi_sel_select_duplicate();
+void test_multi_sel_deselect();
+void test_multi_sel_deselect_not_found();
+void test_multi_sel_toggle();
+void test_multi_sel_clear();
+void test_multi_sel_set_selection();
+void test_multi_sel_select_multiple();
+void test_multi_sel_select_multiple_overlap();
+void test_multi_sel_sorted();
+void test_multi_sel_is_selected();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2099,6 +2142,52 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_stats_panel_sorted_by_memory);
     RUN_TEST(test_stats_panel_unique_types);
     RUN_TEST(test_stats_panel_clear);
+
+    // PrefabLibrary
+    log.BeginSection("PrefabLibrary");
+    RUN_TEST(test_prefab_library_defaults);
+    RUN_TEST(test_prefab_library_add);
+    RUN_TEST(test_prefab_library_add_duplicate);
+    RUN_TEST(test_prefab_library_add_empty_name);
+    RUN_TEST(test_prefab_library_remove);
+    RUN_TEST(test_prefab_library_get);
+    RUN_TEST(test_prefab_library_rename);
+    RUN_TEST(test_prefab_library_rename_conflict);
+    RUN_TEST(test_prefab_library_rename_empty);
+    RUN_TEST(test_prefab_library_rename_not_found);
+    RUN_TEST(test_prefab_library_filter_by_type);
+    RUN_TEST(test_prefab_library_unique_types);
+    RUN_TEST(test_prefab_library_properties);
+    RUN_TEST(test_prefab_library_clear);
+
+    // SimulationStepController
+    log.BeginSection("SimulationStepController");
+    RUN_TEST(test_sim_ctrl_default_running);
+    RUN_TEST(test_sim_ctrl_pause_resume);
+    RUN_TEST(test_sim_ctrl_should_tick_running);
+    RUN_TEST(test_sim_ctrl_should_tick_paused);
+    RUN_TEST(test_sim_ctrl_step_once);
+    RUN_TEST(test_sim_ctrl_step_once_accumulate);
+    RUN_TEST(test_sim_ctrl_step_n);
+    RUN_TEST(test_sim_ctrl_step_n_zero);
+    RUN_TEST(test_sim_ctrl_resume_clears_steps);
+    RUN_TEST(test_sim_ctrl_total_ticks);
+    RUN_TEST(test_sim_ctrl_reset);
+
+    // MultiSelectionManager
+    log.BeginSection("MultiSelectionManager");
+    RUN_TEST(test_multi_sel_defaults);
+    RUN_TEST(test_multi_sel_select);
+    RUN_TEST(test_multi_sel_select_duplicate);
+    RUN_TEST(test_multi_sel_deselect);
+    RUN_TEST(test_multi_sel_deselect_not_found);
+    RUN_TEST(test_multi_sel_toggle);
+    RUN_TEST(test_multi_sel_clear);
+    RUN_TEST(test_multi_sel_set_selection);
+    RUN_TEST(test_multi_sel_select_multiple);
+    RUN_TEST(test_multi_sel_select_multiple_overlap);
+    RUN_TEST(test_multi_sel_sorted);
+    RUN_TEST(test_multi_sel_is_selected);
 
     // Dock Layout
     log.BeginSection("Dock Layout");

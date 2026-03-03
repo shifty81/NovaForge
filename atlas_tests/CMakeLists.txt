@@ -83,6 +83,9 @@ set(ATLAS_TEST_SOURCES
     test_layer_tag_system.cpp
     test_snap_align_tool.cpp
     test_asset_stats_panel.cpp
+    test_prefab_library.cpp
+    test_simulation_step_controller.cpp
+    test_multi_selection_manager.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
