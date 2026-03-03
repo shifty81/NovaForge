@@ -4,6 +4,8 @@
  *   - DestroyEntityCommand
  *   - SetComponentCommand
  *
+ * RemoveComponentCommand tests live in test_remove_component_cmd.cpp.
+ *
  * Validates that commands execute correctly against the ECS World and
  * integrate with the EditorCommandBus.
  */
@@ -159,55 +161,5 @@ void test_set_component_cmd_target_id() {
     World world;
     EntityID eid = world.CreateEntity();
     SetComponentCommand<Health> cmd(world, eid, Health{});
-    assert(cmd.TargetID() == eid);
-}
-
-// ── RemoveComponentCommand tests ────────────────────────────────────
-
-void test_remove_component_cmd_removes() {
-    World world;
-    EntityID eid = world.CreateEntity();
-    world.AddComponent<Health>(eid, Health{80.0f});
-
-    RemoveComponentCommand<Health> cmd(world, eid);
-    cmd.Execute();
-
-    assert(!world.HasComponent<Health>(eid));
-    assert(cmd.HadComponent());
-    assert(cmd.PreviousValue().hp > 79.9f && cmd.PreviousValue().hp < 80.1f);
-}
-
-void test_remove_component_cmd_nonexistent() {
-    World world;
-    EntityID eid = world.CreateEntity();
-
-    RemoveComponentCommand<Health> cmd(world, eid);
-    cmd.Execute();
-
-    assert(!cmd.HadComponent());
-}
-
-void test_remove_component_cmd_description() {
-    World world;
-    RemoveComponentCommand<Health> cmd(world, 1);
-    assert(std::string(cmd.Description()) == "Remove Component");
-}
-
-void test_remove_component_cmd_via_bus() {
-    World world;
-    EntityID eid = world.CreateEntity();
-    world.AddComponent<Name>(eid, Name{"TestShip"});
-
-    EditorCommandBus bus;
-    bus.PostCommand(std::make_unique<RemoveComponentCommand<Name>>(world, eid));
-    bus.ProcessCommands();
-
-    assert(!world.HasComponent<Name>(eid));
-}
-
-void test_remove_component_cmd_target_id() {
-    World world;
-    EntityID eid = world.CreateEntity();
-    RemoveComponentCommand<Health> cmd(world, eid);
     assert(cmd.TargetID() == eid);
 }

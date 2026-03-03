@@ -1163,12 +1163,6 @@ void test_set_component_cmd_replaces_existing();
 void test_set_component_cmd_description();
 void test_set_component_cmd_via_bus();
 void test_set_component_cmd_target_id();
-void test_remove_component_cmd_removes();
-void test_remove_component_cmd_nonexistent();
-void test_remove_component_cmd_description();
-void test_remove_component_cmd_via_bus();
-void test_remove_component_cmd_target_id();
-
 // GameStateManager tests
 void test_gsm_default_phase();
 void test_gsm_set_phase();
@@ -2496,11 +2490,6 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_set_component_cmd_description);
     RUN_TEST(test_set_component_cmd_via_bus);
     RUN_TEST(test_set_component_cmd_target_id);
-    RUN_TEST(test_remove_component_cmd_removes);
-    RUN_TEST(test_remove_component_cmd_nonexistent);
-    RUN_TEST(test_remove_component_cmd_description);
-    RUN_TEST(test_remove_component_cmd_via_bus);
-    RUN_TEST(test_remove_component_cmd_target_id);
 
     // GameStateManager
     log.BeginSection("GameStateManager");
