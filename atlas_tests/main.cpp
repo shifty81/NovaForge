@@ -1521,6 +1521,43 @@ void test_sconsole_execute_set_property();
 void test_sconsole_execute_set_property_undo();
 void test_sconsole_multiple_commands();
 
+// CameraViewTool
+void test_camera_tool_name();
+void test_camera_tool_activate_deactivate();
+void test_camera_tool_set_view_mode();
+void test_camera_tool_set_view_mode_undo();
+void test_camera_tool_set_property();
+void test_camera_tool_set_property_undo();
+void test_camera_tool_save_bookmark();
+void test_camera_tool_save_bookmark_undo();
+void test_camera_tool_multiple_properties();
+void test_camera_tool_multiple_entities();
+void test_camera_view_mode_names();
+
+// MaterialShaderTool
+void test_mat_tool_name();
+void test_mat_tool_activate_deactivate();
+void test_mat_tool_set_property();
+void test_mat_tool_set_property_undo();
+void test_mat_tool_apply_preset();
+void test_mat_tool_apply_preset_undo();
+void test_mat_tool_multiple_properties();
+void test_mat_tool_multiple_entities();
+
+// HotkeyActionManager
+void test_hotkey_tool_name();
+void test_hotkey_tool_activate_deactivate();
+void test_hotkey_bind();
+void test_hotkey_bind_undo();
+void test_hotkey_unbind();
+void test_hotkey_unbind_undo();
+void test_hotkey_local_map();
+void test_hotkey_all_bindings();
+void test_hotkey_clear_bindings();
+void test_hotkey_rebind();
+void test_hotkey_rebind_undo();
+void test_hotkey_multiple_keys();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -3179,6 +3216,46 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_env_tool_apply_preset);
     RUN_TEST(test_env_tool_apply_preset_undo);
     RUN_TEST(test_env_tool_multiple_properties);
+
+    // CameraViewTool
+    log.BeginSection("CameraViewTool");
+    RUN_TEST(test_camera_tool_name);
+    RUN_TEST(test_camera_tool_activate_deactivate);
+    RUN_TEST(test_camera_tool_set_view_mode);
+    RUN_TEST(test_camera_tool_set_view_mode_undo);
+    RUN_TEST(test_camera_tool_set_property);
+    RUN_TEST(test_camera_tool_set_property_undo);
+    RUN_TEST(test_camera_tool_save_bookmark);
+    RUN_TEST(test_camera_tool_save_bookmark_undo);
+    RUN_TEST(test_camera_tool_multiple_properties);
+    RUN_TEST(test_camera_tool_multiple_entities);
+    RUN_TEST(test_camera_view_mode_names);
+
+    // MaterialShaderTool
+    log.BeginSection("MaterialShaderTool");
+    RUN_TEST(test_mat_tool_name);
+    RUN_TEST(test_mat_tool_activate_deactivate);
+    RUN_TEST(test_mat_tool_set_property);
+    RUN_TEST(test_mat_tool_set_property_undo);
+    RUN_TEST(test_mat_tool_apply_preset);
+    RUN_TEST(test_mat_tool_apply_preset_undo);
+    RUN_TEST(test_mat_tool_multiple_properties);
+    RUN_TEST(test_mat_tool_multiple_entities);
+
+    // HotkeyActionManager
+    log.BeginSection("HotkeyActionManager");
+    RUN_TEST(test_hotkey_tool_name);
+    RUN_TEST(test_hotkey_tool_activate_deactivate);
+    RUN_TEST(test_hotkey_bind);
+    RUN_TEST(test_hotkey_bind_undo);
+    RUN_TEST(test_hotkey_unbind);
+    RUN_TEST(test_hotkey_unbind_undo);
+    RUN_TEST(test_hotkey_local_map);
+    RUN_TEST(test_hotkey_all_bindings);
+    RUN_TEST(test_hotkey_clear_bindings);
+    RUN_TEST(test_hotkey_rebind);
+    RUN_TEST(test_hotkey_rebind_undo);
+    RUN_TEST(test_hotkey_multiple_keys);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
