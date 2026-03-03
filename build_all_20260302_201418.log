@@ -1,0 +1,983 @@
+Log file: /c/GIT PROJECTS/NovaForge/logs/build_all_20260302_201418.log
+
+================================================
+Nova Forge - Windows Build (All Targets)
+================================================
+
+Checking dependencies...
+  CMake cmake version 4.2.3
+  Visual Studio: Visual Studio 17 2022
+  vcpkg: C:\vcpkg
+
+Configuration:
+  Build Type:   Release
+  Build Dir:    /c/GIT PROJECTS/NovaForge/build
+  Output Dir:   /c/GIT PROJECTS/NovaForge/build/bin
+  Run Tests:    false
+  Generator:    Visual Studio 17 2022
+  Architecture: x64
+
+Configuring CMake (Release) — all targets...
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.19045.
+-- The C compiler identification is MSVC 19.38.33145.0
+-- The CXX compiler identification is MSVC 19.38.33145.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Adding Atlas Engine library...
+-- Adding Atlas Editor...
+-- Found OpenGL: opengl32
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- AtlasEditor: using system GLEW
+-- Adding Atlas Engine tests...
+-- GLM found -- camera & character select tests enabled
+-- Adding C++ Client to solution...
+-- OpenAL found - audio support enabled
+-- GLEW found - using system GLEW
+-- Using system GLEW (GLAD not needed)
+-- Using system nlohmann/json
+-- Using bundled STB image loader
+-- Using bundled tinyobjloader for .obj model loading
+-- Using bundled tinygltf for .gltf/.glb model loading
+-- RmlUi disabled (UI stubs only). Enable with -DUSE_RMLUI=ON
+-- OBJ models archive not found at C:/GIT PROJECTS/NovaForge/cpp_client/../data/ships/obj_models/obj_models.7z
+-- 7z not found - testing model archives will be extracted at runtime by ReferenceModelAnalyzer
+-- Building test suite...
+-- 
+-- Atlas Client Configuration:
+--   C++ Standard: 17
+--   OpenGL: 
+--   Use System Libraries: ON
+--   Build Tests: ON
+--   RmlUi Enabled: OFF
+-- 
+-- Adding C++ Server to solution...
+-- Found ZLIB: optimized;C:/vcpkg/installed/x64-windows/lib/zlib.lib;debug;C:/vcpkg/installed/x64-windows/debug/lib/zlibd.lib (found version "1.3.1")
+CMake Warning at cpp_server/CMakeLists.txt:574 (message):
+  Steamworks SDK not found.  Steam integration will be disabled.
+
+
+CMake Warning at cpp_server/CMakeLists.txt:575 (message):
+  Download SDK from: https://partner.steamgames.com/
+
+
+-- 
+-- Atlas Dedicated Server Configuration:
+--   C++ Standard: 17
+--   Steam Integration: OFF
+--   Build Tests: ON
+-- 
+-- 
+-- Atlas Configuration:
+--   C++ Standard: 17
+--   Atlas Engine:  ON
+--   Atlas Editor:  ON
+--   Atlas Tests:   ON
+--   Game Client:   ON
+--   Game Server:   ON
+-- 
+-- After generation, open the solution file in Visual Studio:
+--   build_vs/Atlas.sln
+-- 
+-- Configuring done (5.2s)
+-- Generating done (0.3s)
+-- Build files have been written to: C:/GIT PROJECTS/NovaForge/build
+
+Building all targets (Engine, Editor, Client, Server, Tests)...
+MSBuild version 17.14.40+3e7442088 for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  test_deferred_rendering.cpp
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/engine/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  test_layout_manager.cpp
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  test_atlas_ui.cpp
+  test_audio_system.cpp
+  test_entity_sync.cpp
+  Engine.cpp
+  test_network.cpp
+  test_model_analyzer.cpp
+  test_asteroid_field.cpp
+  Logger.cpp
+  layout_manager.cpp
+  test_post_processing.cpp
+  window.cpp
+  atlas_renderer.cpp
+  EventBus.cpp
+  shader.cpp
+  window.cpp
+  Generating Code...
+  ECS.cpp
+  audio_manager.cpp
+  reference_model_analyzer.cpp
+  window.cpp
+  atlas_context.cpp
+  GraphVM.cpp
+  shader.cpp
+  entity.cpp
+  tcp_client.cpp
+  GraphCompiler.cpp
+  shader.cpp
+  audio_generator.cpp
+  camera.cpp
+  AssetRegistry.cpp
+  entity_manager.cpp
+  atlas_widgets.cpp
+  procedural_mesh_ops.cpp
+  mesh.cpp
+  Generating Code...
+  atlas_hud.cpp
+  gbuffer.cpp
+  protocol_handler.cpp
+  entity_message_parser.cpp
+  AssetBinary.cpp
+  ship_generation_rules.cpp
+  camera.cpp
+  test_layout_manager.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_layout_manager.exe
+  atlas_console.cpp
+  NetContext.cpp
+  lighting.cpp
+  camera.cpp
+  mesh.cpp
+  NetworkQualityMonitor.cpp
+  atlas_pause_menu.cpp
+  Generating Code...
+  NetworkInterpolationBuffer.cpp
+  lighting.cpp
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  instanced_renderer.cpp
+  test_audio_system.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_audio_system.exe
+  atlas_title_screen.cpp
+  DeltaCompression.cpp
+  input_handler.cpp
+  network_manager.cpp
+  JitterBuffer.cpp
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  post_processing.cpp
+  Generating Code...
+  Generating Code...
+  context_menu.cpp
+  test_server_responses.cpp
+  test_shadow_mapping.cpp
+  LagCompensation.cpp
+  radial_menu.cpp
+  Generating Code...
+  asteroid_field_renderer.cpp
+  tcp_client.cpp
+  TickScheduler.cpp
+  Generating Code...
+  AlertStack.cpp
+  window.cpp
+  AIMinerStateMachine.cpp
+  input_handler.cpp
+  AIHaulerStateMachine.cpp
+  shader.cpp
+  protocol_handler.cpp
+  Generating Code...
+  AIPirateStateMachine.cpp
+  AISecurityStateMachine.cpp
+  Generating Code...
+  Generating Code...
+  camera.cpp
+  network_manager.cpp
+  mesh.cpp
+  test_deferred_rendering.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_deferred_rendering.exe
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  shadow_map.cpp
+  test_model_analyzer.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_model_analyzer.exe
+  test_ship_physics.cpp
+  test_post_processing.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_post_processing.exe
+  lighting.cpp
+  Generating Code...
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_server/CMakeLists.txt
+  ship_physics.cpp
+  input_handler.cpp
+  test_entity_sync.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_entity_sync.exe
+  Generating Code...
+  test_systems.cpp
+  Generating Code...
+  test_asteroid_field.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_asteroid_field.exe
+  Compiling...
+  AIWalletSystem.cpp
+  AITraderStateMachine.cpp
+  AIIndustrialistStateMachine.cpp
+  AdvancedMissionGenerator.cpp
+  test_ship_physics.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_ship_physics.exe
+  UniverseMapSystem.cpp
+  test_server_responses.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_server_responses.exe
+  AIProfileLoader.cpp
+  EconomyRulesLoader.cpp
+  test_shadow_mapping.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_shadow_mapping.exe
+  test_network.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_network.exe
+  PirateSecurityCoordinator.cpp
+  server.cpp
+  CubeSphereLayout.cpp
+  VoxelGridLayout.cpp
+  test_atlas_ui.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\test_atlas_ui.exe
+  PhysicsWorld.cpp
+  InputManager.cpp
+  Camera.cpp
+  game_session.cpp
+  AudioEngine.cpp
+  AnimationGraph.cpp
+  AnimationNodes.cpp
+  game_session_network.cpp
+  PluginSystem.cpp
+  Generating Code...
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_network.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_network.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_network.cpp')
+  
+  game_session_entities.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_entities.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_entities.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_entities.cpp')
+  
+  AtlasEngine.vcxproj -> C:\GIT PROJECTS\NovaForge\build\engine\Release\AtlasEngine.lib
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_client/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/cpp_server/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/atlas_tests/CMakeLists.txt
+  Building Custom Rule C:/GIT PROJECTS/NovaForge/editor/CMakeLists.txt
+  main.cpp
+  main.cpp
+  main.cpp
+  main.cpp
+  game_session_combat.cpp
+  application.cpp
+  test_graphvm.cpp
+  server.cpp
+  test_ecs.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_combat.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_combat.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_combat.cpp')
+  
+  test_components.cpp
+  game_session_utils.cpp
+  application_rendering.cpp
+  test_asset.cpp
+  game_session.cpp
+  game_session_stations.cpp
+  application_input.cpp
+  test_net.cpp
+  game_session_network.cpp
+  application_entities.cpp
+C:\GIT PROJECTS\NovaForge\cpp_client\src\core\application_input.cpp(307,55): error C2039: 'getTag': is not a member of 'atlas::Entity' [C:\GIT PROJECTS\NovaForge\build\cpp_client\atlas_client.vcxproj]
+      C:\GIT PROJECTS\NovaForge\cpp_client\include\ui\entity_picker.h(10,11):
+      see declaration of 'atlas::Entity'
+  
+C:\GIT PROJECTS\NovaForge\cpp_client\src\core\application_input.cpp(307,48): error C2530: 'tag': references must be initialized [C:\GIT PROJECTS\NovaForge\build\cpp_client\atlas_client.vcxproj]
+C:\GIT PROJECTS\NovaForge\cpp_client\src\core\application_input.cpp(339,55): error C2039: 'getName': is not a member of 'atlas::Entity' [C:\GIT PROJECTS\NovaForge\build\cpp_client\atlas_client.vcxproj]
+      C:\GIT PROJECTS\NovaForge\cpp_client\include\ui\entity_picker.h(10,11):
+      see declaration of 'atlas::Entity'
+  
+C:\GIT PROJECTS\NovaForge\cpp_client\src\core\application_input.cpp(339,86): error C2039: 'getName': is not a member of 'atlas::Entity' [C:\GIT PROJECTS\NovaForge\build\cpp_client\atlas_client.vcxproj]
+      C:\GIT PROJECTS\NovaForge\cpp_client\include\ui\entity_picker.h(10,11):
+      see declaration of 'atlas::Entity'
+  
+  test_net_queue.cpp
+  EditorLayout.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_stations.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_stations.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_stations.cpp')
+  
+  test_net_quality.cpp
+  game_session_movement.cpp
+  application_movement.cpp
+  EditorMenuBar.cpp
+  test_world.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_network.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_network.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_network.cpp')
+  
+  ECSInspectorPanel.cpp
+  test_compiler.cpp
+  game_session_entities.cpp
+  application_state.cpp
+  game_session_scanning.cpp
+  NetInspectorPanel.cpp
+  test_engine.cpp
+  ConsolePanel.cpp
+  test_console.cpp
+  game_client.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_entities.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_entities.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_entities.cpp')
+  
+  GamePackagerPanel.cpp
+  test_hud_panels.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_scanning.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_scanning.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_scanning.cpp')
+  
+  PCGPreviewPanel.cpp
+  game_session_combat.cpp
+  game_session_missions.cpp
+  test_hud_control_ring.cpp
+  GenerationStylePanel.cpp
+  embedded_server.cpp
+  test_pcg_preview.cpp
+  session_manager.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_combat.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_combat.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_combat.cpp')
+  
+  test_lowpoly_character.cpp
+  AssetStylePanel.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_missions.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_missions.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_missions.cpp')
+  
+  game_session_utils.cpp
+  test_character_select.cpp
+  tcp_server.cpp
+  ShipArchetypePanel.cpp
+  entity.cpp
+  test_generation_style.cpp
+  game_session_stations.cpp
+  entity_manager.cpp
+  protocol_handler.cpp
+  ViewportPanel.cpp
+  test_viewport.cpp
+  entity_message_parser.cpp
+  server_config.cpp
+  CharacterSelectPanel.cpp
+  test_editor_panels.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_stations.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_stations.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_stations.cpp')
+  
+  steam_auth.cpp
+  game_session_movement.cpp
+  whitelist.cpp
+  PCGOverrideStore.cpp
+  Generating Code...
+  name_generator.cpp
+  file_logger.cpp
+  LiveSceneManager.cpp
+  game_session_scanning.cpp
+  logger.cpp
+  window.cpp
+  GalaxyMapPanel.cpp
+  shader.cpp
+  server_metrics.cpp
+  FleetFormationPanel.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_scanning.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_scanning.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_scanning.cpp')
+  
+  server_console.cpp
+  game_session_missions.cpp
+  camera.cpp
+  Generating Code...
+  renderer.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,44): error C2589: '(': illegal token on right side of '::' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_missions.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,39): error C2062: type 'unknown-type' unexpected [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_missions.cpp')
+  
+C:\GIT PROJECTS\NovaForge\cpp_server\include\components\ship_components.h(722,57): error C2059: syntax error: ')' [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/game_session_missions.cpp')
+  
+  mesh.cpp
+  tcp_server.cpp
+  MissionEditorPanel.cpp
+  model.cpp
+  protocol_handler.cpp
+  server_config.cpp
+  steam_auth.cpp
+  whitelist.cpp
+  name_generator.cpp
+  SceneGraphPanel.cpp
+  DataBrowserPanel.cpp
+  Generating Code...
+  logger.cpp
+  Generating Code...
+  server_metrics.cpp
+  server_console.cpp
+  Generating Code...
+  Compiling...
+  entity.cpp
+  world.cpp
+  movement_system.cpp
+  combat_system.cpp
+  Compiling...
+  ModuleEditorPanel.cpp
+  NPCEditorPanel.cpp
+  AIAggregator.cpp
+  TemplateAIBackend.cpp
+  UndoStack.cpp
+  KeybindManager.cpp
+  pcg_manager.cpp
+  ship_generator.cpp
+  station_generator.cpp
+  interior_generator.cpp
+  interior_budget.cpp
+  ai_system.cpp
+  Compiling...
+  ship_part_library.cpp
+  constraint_solver.cpp
+  pcg_trace.cpp
+  lowpoly_character_generator.cpp
+  ship_generation_rules.cpp
+  generation_style.cpp
+  procedural_mesh_ops.cpp
+  pcg_asset_style.cpp
+  procedural_ship_generator.cpp
+  ship_archetype.cpp
+  targeting_system.cpp
+  Compiling...
+  test_live_scene.cpp
+  spine_hull_generator.cpp
+  reference_model_analyzer.cpp
+  turret_placement_system.cpp
+  turret_generator.cpp
+  test_sim_systems.cpp
+  Generating Code...
+  test_galaxy_map.cpp
+  texture.cpp
+  test_eventbus.cpp
+  particle_system.cpp
+  test_fleet_formation.cpp
+  capacitor_system.cpp
+  healthbar_renderer.cpp
+  visual_effects.cpp
+  warp_effect_renderer.cpp
+  pbr_materials.cpp
+  test_mission_editor.cpp
+  shield_recharge_system.cpp
+  lod_manager.cpp
+  frustum_culler.cpp
+  instanced_renderer.cpp
+  Compiling...
+  galaxy_generator.cpp
+  asteroid_field_renderer.cpp
+  character_mesh_system.cpp
+  test_net_interpolation.cpp
+  weapon_system.cpp
+  station_renderer.cpp
+  window.cpp
+  test_delta_compression.cpp
+  test_jitter_buffer.cpp
+  test_lag_compensation.cpp
+  atlas_renderer.cpp
+  lighting.cpp
+  test_scene_graph.cpp
+  test_keybind_manager.cpp
+  shadow_map.cpp
+  test_alert_stack.cpp
+  atlas_context.cpp
+  test_ai_miner.cpp
+  test_ai_hauler.cpp
+  gbuffer.cpp
+  atlas_widgets.cpp
+  test_ai_pirate.cpp
+  wormhole_system.cpp
+  input_handler.cpp
+  test_ai_security.cpp
+  post_processing.cpp
+  test_ai_wallet.cpp
+  Generating Code...
+  test_ai_trader.cpp
+  Generating Code...
+  test_ai_industrialist.cpp
+  Generating Code...
+  fleet_system.cpp
+  AtlasEditor.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\AtlasEditor.exe
+  Compiling...
+  test_advanced_mission.cpp
+  test_universe_map.cpp
+  test_ai_profile.cpp
+  test_economy_rules.cpp
+  test_pirate_security_coordinator.cpp
+  test_engine_frame_callback.cpp
+  mission_system.cpp
+  test_editor_menubar.cpp
+  test_data_editors.cpp
+  test_warp_performance_budget.cpp
+C:\GIT PROJECTS\NovaForge\cpp_server\test_systems.cpp : fatal  error C1128: number of sections exceeded object file format limit: compile with /bigobj [C:\GIT PROJECTS\NovaForge\build\cpp_server\test_systems.vcxproj]
+  test_fleet_positional_audio.cpp
+  Compiling...
+  tcp_client.cpp
+  ConsolePanel.cpp
+  PCGPreviewPanel.cpp
+  skill_system.cpp
+  protocol_handler.cpp
+  GenerationStylePanel.cpp
+  AssetStylePanel.cpp
+  network_manager.cpp
+  ShipArchetypePanel.cpp
+  module_system.cpp
+  GamePackagerPanel.cpp
+  input_handler.cpp
+  ViewportPanel.cpp
+  entity_picker.cpp
+  PCGOverrideStore.cpp
+  context_menu.cpp
+  LiveSceneManager.cpp
+  radial_menu.cpp
+  inventory_system.cpp
+  atlas_renderer.cpp
+  GalaxyMapPanel.cpp
+  Generating Code...
+  atlas_context.cpp
+  atlas_widgets.cpp
+  atlas_hud.cpp
+  loot_system.cpp
+  atlas_console.cpp
+  atlas_pause_menu.cpp
+  atlas_title_screen.cpp
+  solar_system_scene.cpp
+  ship_physics.cpp
+  Compiling...
+  FleetFormationPanel.cpp
+  insurance_system.cpp
+  character_mesh_system.cpp
+  character_animation_system.cpp
+  fps_hand_system.cpp
+  equipment_attachment_system.cpp
+  Generating Code...
+  captain_personality_system.cpp
+  MissionEditorPanel.cpp
+  corporation_system.cpp
+  SceneGraphPanel.cpp
+  DataBrowserPanel.cpp
+  ModuleEditorPanel.cpp
+  NPCEditorPanel.cpp
+  AIAggregator.cpp
+  bounty_system.cpp
+  TemplateAIBackend.cpp
+  UndoStack.cpp
+  KeybindManager.cpp
+  Compiling...
+  audio_manager.cpp
+  ECSInspectorPanel.cpp
+  audio_generator.cpp
+  NetInspectorPanel.cpp
+  Generating Code...
+  EditorLayout.cpp
+  Generating Code...
+  EditorMenuBar.cpp
+  atlas_renderer.cpp
+  atlas_context.cpp
+  atlas_widgets.cpp
+  atlas_hud.cpp
+  Compiling...
+  market_system.cpp
+  pcg_manager.cpp
+  ship_generator.cpp
+  Generating Code...
+  drone_system.cpp
+  contract_system.cpp
+  Compiling...
+  station_generator.cpp
+  interior_generator.cpp
+  interior_budget.cpp
+  constraint_solver.cpp
+  pcg_trace.cpp
+  lowpoly_character_generator.cpp
+  pi_system.cpp
+  generation_style.cpp
+  pcg_asset_style.cpp
+  ship_archetype.cpp
+  spine_hull_generator.cpp
+  manufacturing_system.cpp
+  turret_placement_system.cpp
+  turret_generator.cpp
+  galaxy_generator.cpp
+  economy_driven_generator.cpp
+  npc_encounter_generator.cpp
+  damage_state_generator.cpp
+  procedural_texture_generator.cpp
+  shield_effect_generator.cpp
+  research_system.cpp
+  test_game_state.cpp
+  camera.cpp
+  Generating Code...
+  chat_system.cpp
+  Compiling...
+  CharacterSelectPanel.cpp
+  character_mesh_system.cpp
+  character_creation_system.cpp
+  Generating Code...
+  AtlasTests.vcxproj -> C:\GIT PROJECTS\NovaForge\build\bin\Release\AtlasTests.exe
+  tournament_system.cpp
+  leaderboard_system.cpp
+  station_system.cpp
+  wreck_salvage_system.cpp
+  fleet_morale_system.cpp
+  fleet_chatter_system.cpp
+  warp_anomaly_system.cpp
+  captain_relationship_system.cpp
+  emotional_arc_system.cpp
+  fleet_cargo_system.cpp
+  tactical_overlay_system.cpp
+  mining_system.cpp
+  Generating Code...
+  Compiling...
+  fleet_formation_system.cpp
+  captain_memory_system.cpp
+  ship_fitting_system.cpp
+  warp_cinematic_system.cpp
+  warp_hud_travel_mode_system.cpp
+  warp_auto_comfort_system.cpp
+  refining_system.cpp
+  anomaly_system.cpp
+  reputation_system.cpp
+  scanner_system.cpp
+  difficulty_scaling_system.cpp
+  mission_template_system.cpp
+  mission_generator_system.cpp
+  lod_system.cpp
+  spatial_hash_system.cpp
+  background_simulation_system.cpp
+  npc_intent_system.cpp
+  npc_behavior_tree_system.cpp
+  combat_threat_system.cpp
+  security_response_system.cpp
+  Generating Code...
+  Compiling...
+  ambient_traffic_system.cpp
+  snapshot_replication_system.cpp
+  interest_management_system.cpp
+  fleet_progression_system.cpp
+  station_deployment_system.cpp
+  fleet_warp_formation_system.cpp
+  warp_meditation_system.cpp
+  rumor_questline_system.cpp
+  captain_departure_system.cpp
+  captain_transfer_system.cpp
+  npc_rerouting_system.cpp
+  local_reputation_system.cpp
+  station_news_system.cpp
+  wreck_persistence_system.cpp
+  fleet_history_system.cpp
+  rig_system.cpp
+  legend_system.cpp
+  ancient_tech_system.cpp
+  docking_system.cpp
+  survival_system.cpp
+  Generating Code...
+  Compiling...
+  menu_system.cpp
+  crew_system.cpp
+  salvage_exploration_system.cpp
+  market_order_system.cpp
+  ai_economic_actor_system.cpp
+  turret_ai_system.cpp
+  titan_assembly_system.cpp
+  alliance_system.cpp
+  sovereignty_system.cpp
+  war_declaration_system.cpp
+  convoy_ambush_system.cpp
+  npc_dialogue_system.cpp
+  station_monument_system.cpp
+  information_propagation_system.cpp
+  crew_activity_system.cpp
+  visual_cue_system.cpp
+  supply_demand_system.cpp
+  black_market_system.cpp
+  price_history_system.cpp
+  propaganda_system.cpp
+  Generating Code...
+  Compiling...
+  rest_station_system.cpp
+  myth_boss_system.cpp
+  ancient_tech_upgrade_system.cpp
+  mod_manifest_system.cpp
+  ancient_ai_remnant_system.cpp
+  character_creation_screen_system.cpp
+  view_mode_transition_system.cpp
+  station_hangar_system.cpp
+  tether_docking_system.cpp
+  fps_spawn_system.cpp
+  interior_door_system.cpp
+  fps_character_controller_system.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244: 'initializing': conversion from '_Ty' to '_Ty1', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:             _Ty1=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,16):
+      the template instantiation context (the oldest one first) is
+          C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(188,18):
+          see reference to function template instantiation 'std::pair<float,float>::pair<int,int,0>(_Other1 &&,_Other2 &&) noexcept' being compiled
+          with
+          [
+              _Other1=int,
+              _Other2=int
+          ]
+              C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(188,18):
+              see the first reference to 'std::pair<float,float>::pair' in 'atlas::systems::FPSCharacterControllerSystem::getLookDirection'
+  
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:             _Ty2=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\utility(250,54): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244: 'initializing': conversion from '_Ty' to '_Ty', possible loss of data [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         with [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:             _Ty=int [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         and [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         [ [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:             _Ty=float [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47): warning C4244:         ] [C:\GIT PROJECTS\NovaForge\build\cpp_server\atlas_dedicated_server.vcxproj]
+  (compiling source file '../../cpp_server/src/systems/fps_character_controller_system.cpp')
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(143,47):
+      the template instantiation context (the oldest one first) is
+          C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(178,18):
+          see reference to function template instantiation 'std::tuple<float,float,float>::tuple<int,int,int,0>(_This2 &&,int &&,int &&) noexcept' being compiled
+          with
+          [
+              _This2=int
+          ]
+              C:\GIT PROJECTS\NovaForge\cpp_server\src\systems\fps_character_controller_system.cpp(178,18):
+              see the first reference to 'std::tuple<float,float,float>::tuple' in 'atlas::systems::FPSCharacterControllerSystem::getPosition'
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(361,16):
+          see reference to function template instantiation 'std::tuple<float,float,float>::tuple<std::_Exact_args_t,_Ty,_Ty,_Ty,0>(_Tag,_This2 &&,_Ty &&,_Ty &&)' being compiled
+          with
+          [
+              _Ty=int,
+              _Tag=std::_Exact_args_t,
+              _This2=int
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\tuple(315,102):
+          see reference to function template instantiation 'std::_Tuple_val<_This>::_Tuple_val<_Ty>(_Other &&)' being compiled
+          with
+          [
+              _This=float,
+              _Ty=int,
+              _Other=int
+          ]
+  
+  eva_airlock_system.cpp
+  fps_interaction_system.cpp
+  fps_combat_system.cpp
+  fps_inventory_system.cpp
+  ship_interior_layout_system.cpp
+  environmental_hazard_system.cpp
+  fps_objective_system.cpp
+  wing_management_system.cpp
+  Generating Code...
+  Compiling...
+  economic_flow_system.cpp
+  resource_production_chain_system.cpp
+  fleet_doctrine_system.cpp
+  player_progression_system.cpp
+  terraforming_system.cpp
+  cloaking_system.cpp
+  food_processor_system.cpp
+  fleet_squad_system.cpp
+  jump_drive_system.cpp
+  cargo_scan_system.cpp
+  commander_disagreement_system.cpp
+  imperfect_information_system.cpp
+  captain_background_system.cpp
+  rover_interior_system.cpp
+  bike_garage_system.cpp
+  visual_rig_system.cpp
+  planetary_traversal_system.cpp
+  solar_panel_system.cpp
+  farming_deck_system.cpp
+  docking_ring_extension_system.cpp
+  Generating Code...
+  Compiling...
+  rover_bay_ramp_system.cpp
+  grid_construction_system.cpp
+  space_planet_transition_system.cpp
+  fleet_hangar_system.cpp
+  hangar_environment_system.cpp
+  dock_node_layout_system.cpp
+  mission_consequence_system.cpp
+  server_performance_monitor_system.cpp
+  atlas_ui_panel_system.cpp
+  keyboard_navigation_system.cpp
+  data_binding_system.cpp
+  entity_stress_test_system.cpp
+  rig_locker_system.cpp
+  visual_coupling_system.cpp
+  fps_salvage_path_system.cpp
+  lavatory_interaction_system.cpp
+  eva_airlock_exit_system.cpp
+  ancient_module_discovery_system.cpp
+  client_prediction_system.cpp
+  ship_template_mod_system.cpp
+  Generating Code...
+  Compiling...
+  database_persistence_system.cpp
+  task_scheduler_system.cpp
+  mod_manager_system.cpp
+  ship_designer_system.cpp
+  warp_performance_budget_system.cpp
+  fleet_positional_audio_system.cpp
+  mission_editor_system.cpp
+  content_validation_system.cpp
+  cloud_deployment_config_system.cpp
+  interest_management_priority_system.cpp
+  visual_feedback_queue_system.cpp
+  mod_doc_generator_system.cpp
+  community_content_repository_system.cpp
+  pvp_toggle_system.cpp
+  dynamic_event_system.cpp
+  fleet_morale_resolution_system.cpp
+  persistence_delta_system.cpp
+  outer_rim_logistics_distortion_system.cpp
+  rumor_propagation_system.cpp
+  galactic_response_curve_system.cpp
+  Generating Code...
+  Compiling...
+  ship_capability_rating_system.cpp
+  module_cascading_failure_system.cpp
+  navigation_bookmark_system.cpp
+  fleet_supply_line_system.cpp
+  crew_training_system.cpp
+  asteroid_belt_system.cpp
+  scan_probe_system.cpp
+  autopilot_system.cpp
+  jump_gate_system.cpp
+  snapshot_replication_system2.cpp
+  procedural_mission_generator_system.cpp
+  ship_database.cpp
+  npc_database.cpp
+  wormhole_database.cpp
+  world_persistence.cpp
+  world_serializer.cpp
+  world_deserializer.cpp
+  persistence_json_utils.cpp
+  world_persistence_compressed.cpp
+  pcg_manager.cpp
+  Generating Code...
+  Compiling...
+  ship_generator.cpp
+  fleet_doctrine.cpp
+  room_graph.cpp
+  deck_graph.cpp
+  elevator_system.cpp
+  hull_mesher.cpp
+  capital_ship_generator.cpp
+  ship_designer.cpp
+  snappable_grid.cpp
+  station_generator.cpp
+  salvage_system.cpp
+  rover_system.cpp
+  collision_manager.cpp
+  asteroid_field_generator.cpp
+  anomaly_generator.cpp
+  npc_encounter_generator.cpp
+  pcg_trace.cpp
+  constraint_solver.cpp
+  weapon_socket.cpp
+  pcg_verify.cpp
+  Generating Code...
+  Compiling...
+  interior_budget.cpp
+  interior_generator.cpp
+  character_mesh_system.cpp
+  lowpoly_character_generator.cpp
+  turret_generator.cpp
+  planet_generator.cpp
+  habitat_generator.cpp
+  grav_bike_generator.cpp
+  spine_hull_generator.cpp
+  terrain_generator.cpp
+  turret_placement_system.cpp
+  damage_state_generator.cpp
+  procedural_texture_generator.cpp
+  shield_effect_generator.cpp
+  economy_driven_generator.cpp
+  star_system_generator.cpp
+  galaxy_generator.cpp
+  generation_style.cpp
+  pcg_asset_style.cpp
+  ship_archetype.cpp
+  Generating Code...
