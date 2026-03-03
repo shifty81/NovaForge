@@ -90,6 +90,24 @@ public:
     void SetSeed(uint64_t seed)     { m_seed = seed; }
     void SetVersion(uint32_t ver)   { m_version = ver; }
 
+    // ── Snapshot / Rollback ──────────────────────────────────────
+
+    /** Capture the current scene overrides as a named snapshot.
+     *  Returns the snapshot index (0-based). */
+    size_t TakeSnapshot(const std::string& label = "");
+
+    /** Rollback to a previously captured snapshot by index.
+     *  Returns true if the rollback succeeded. */
+    bool RollbackToSnapshot(size_t index);
+
+    /** Number of snapshots currently stored. */
+    size_t SnapshotCount() const { return m_snapshots.size(); }
+
+    /** Label of a stored snapshot. */
+    const std::string& SnapshotLabel(size_t index) const {
+        return m_snapshots[index].label;
+    }
+
 private:
     ViewportPanel*    m_viewport;
     PCGPreviewPanel*  m_pcgPreview;
@@ -98,6 +116,15 @@ private:
     bool     m_populated = false;
     uint64_t m_seed      = 42;
     uint32_t m_version   = 1;
+
+    /** A saved scene state for rollback. */
+    struct Snapshot {
+        std::string    label;
+        PCGOverrideStore overrides;
+        uint64_t seed    = 0;
+        uint32_t version = 0;
+    };
+    std::vector<Snapshot> m_snapshots;
 
     std::vector<std::string> m_log;
 

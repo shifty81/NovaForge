@@ -253,6 +253,41 @@ void LiveSceneManager::applyOverridesToViewport() {
     m_viewport->DeselectAll();
 }
 
+// ── Snapshot / Rollback ──────────────────────────────────────────
+
+size_t LiveSceneManager::TakeSnapshot(const std::string& label) {
+    CaptureViewportChanges();
+
+    Snapshot snap;
+    snap.label     = label.empty()
+        ? ("Snapshot " + std::to_string(m_snapshots.size()))
+        : label;
+    snap.overrides = m_overrides;
+    snap.seed      = m_seed;
+    snap.version   = m_version;
+
+    m_snapshots.push_back(std::move(snap));
+
+    log("[LiveScene] Snapshot taken: " + m_snapshots.back().label);
+    return m_snapshots.size() - 1;
+}
+
+bool LiveSceneManager::RollbackToSnapshot(size_t index) {
+    if (index >= m_snapshots.size()) return false;
+
+    const auto& snap = m_snapshots[index];
+    m_overrides = snap.overrides;
+    m_seed      = snap.seed;
+    m_version   = snap.version;
+
+    if (m_populated) {
+        PopulateDefaultScene();
+    }
+
+    log("[LiveScene] Rolled back to: " + snap.label);
+    return true;
+}
+
 void LiveSceneManager::log(const std::string& msg) {
     m_log.push_back(msg);
 }

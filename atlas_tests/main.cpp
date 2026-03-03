@@ -1307,6 +1307,35 @@ void test_env_tool_apply_preset();
 void test_env_tool_apply_preset_undo();
 void test_env_tool_multiple_properties();
 
+// NPCSpawnerTool tests
+void test_npc_spawner_name();
+void test_npc_spawner_activate_deactivate();
+void test_npc_spawner_spawn();
+void test_npc_spawner_spawn_undo();
+void test_npc_spawner_despawn();
+void test_npc_spawner_despawn_dead_entity();
+void test_npc_spawner_set_property();
+void test_npc_spawner_set_property_undo();
+void test_npc_spawner_multiple_spawns();
+
+// ResourceBalancerTool tests
+void test_res_balancer_name();
+void test_res_balancer_activate_deactivate();
+void test_res_balancer_set_property();
+void test_res_balancer_set_property_undo();
+void test_res_balancer_apply_preset();
+void test_res_balancer_apply_preset_undo();
+void test_res_balancer_multiple_properties();
+
+// LiveSceneManager Snapshot/Rollback tests
+void test_snapshot_count_default();
+void test_snapshot_take();
+void test_snapshot_auto_label();
+void test_snapshot_multiple();
+void test_snapshot_rollback();
+void test_snapshot_rollback_out_of_bounds();
+void test_snapshot_preserves_overrides();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1884,6 +1913,38 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_ai_register_null_ignored);
     RUN_TEST(test_ai_single_backend);
     RUN_TEST(test_ai_best_confidence_wins);
+
+    // NPCSpawnerTool
+    log.BeginSection("NPCSpawnerTool");
+    RUN_TEST(test_npc_spawner_name);
+    RUN_TEST(test_npc_spawner_activate_deactivate);
+    RUN_TEST(test_npc_spawner_spawn);
+    RUN_TEST(test_npc_spawner_spawn_undo);
+    RUN_TEST(test_npc_spawner_despawn);
+    RUN_TEST(test_npc_spawner_despawn_dead_entity);
+    RUN_TEST(test_npc_spawner_set_property);
+    RUN_TEST(test_npc_spawner_set_property_undo);
+    RUN_TEST(test_npc_spawner_multiple_spawns);
+
+    // ResourceBalancerTool
+    log.BeginSection("ResourceBalancerTool");
+    RUN_TEST(test_res_balancer_name);
+    RUN_TEST(test_res_balancer_activate_deactivate);
+    RUN_TEST(test_res_balancer_set_property);
+    RUN_TEST(test_res_balancer_set_property_undo);
+    RUN_TEST(test_res_balancer_apply_preset);
+    RUN_TEST(test_res_balancer_apply_preset_undo);
+    RUN_TEST(test_res_balancer_multiple_properties);
+
+    // LiveSceneManager Snapshot/Rollback
+    log.BeginSection("LiveSceneManager Snapshots");
+    RUN_TEST(test_snapshot_count_default);
+    RUN_TEST(test_snapshot_take);
+    RUN_TEST(test_snapshot_auto_label);
+    RUN_TEST(test_snapshot_multiple);
+    RUN_TEST(test_snapshot_rollback);
+    RUN_TEST(test_snapshot_rollback_out_of_bounds);
+    RUN_TEST(test_snapshot_preserves_overrides);
 
     // Dock Layout
     log.BeginSection("Dock Layout");
