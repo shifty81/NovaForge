@@ -1453,6 +1453,39 @@ void test_multi_sel_select_multiple_overlap();
 void test_multi_sel_sorted();
 void test_multi_sel_is_selected();
 
+// FunctionAssignmentTool tests
+void test_fn_assign_name();
+void test_fn_assign_activate_deactivate();
+void test_fn_assign_basic();
+void test_fn_assign_undo();
+void test_fn_remove_basic();
+void test_fn_remove_undo();
+void test_fn_assign_multiple_on_entity();
+void test_fn_assign_multiple_entities();
+
+// EditPropagationTool tests
+void test_edit_prop_name();
+void test_edit_prop_activate_deactivate();
+void test_edit_prop_propagate_property();
+void test_edit_prop_propagate_property_undo();
+void test_edit_prop_propagate_position();
+void test_edit_prop_propagate_position_undo();
+void test_edit_prop_multiple_operations();
+void test_edit_prop_single_entity();
+
+// VisualDiffTool tests
+void test_vdiff_empty_store();
+void test_vdiff_add_object();
+void test_vdiff_remove_object();
+void test_vdiff_move_object();
+void test_vdiff_set_property();
+void test_vdiff_mixed_edits();
+void test_vdiff_total_changes();
+void test_vdiff_affected_entities();
+void test_vdiff_entries_for_entity();
+void test_vdiff_entries_by_type();
+void test_vdiff_descriptions_nonempty();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2188,6 +2221,42 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_multi_sel_select_multiple_overlap);
     RUN_TEST(test_multi_sel_sorted);
     RUN_TEST(test_multi_sel_is_selected);
+
+    // FunctionAssignmentTool
+    log.BeginSection("FunctionAssignmentTool");
+    RUN_TEST(test_fn_assign_name);
+    RUN_TEST(test_fn_assign_activate_deactivate);
+    RUN_TEST(test_fn_assign_basic);
+    RUN_TEST(test_fn_assign_undo);
+    RUN_TEST(test_fn_remove_basic);
+    RUN_TEST(test_fn_remove_undo);
+    RUN_TEST(test_fn_assign_multiple_on_entity);
+    RUN_TEST(test_fn_assign_multiple_entities);
+
+    // EditPropagationTool
+    log.BeginSection("EditPropagationTool");
+    RUN_TEST(test_edit_prop_name);
+    RUN_TEST(test_edit_prop_activate_deactivate);
+    RUN_TEST(test_edit_prop_propagate_property);
+    RUN_TEST(test_edit_prop_propagate_property_undo);
+    RUN_TEST(test_edit_prop_propagate_position);
+    RUN_TEST(test_edit_prop_propagate_position_undo);
+    RUN_TEST(test_edit_prop_multiple_operations);
+    RUN_TEST(test_edit_prop_single_entity);
+
+    // VisualDiffTool
+    log.BeginSection("VisualDiffTool");
+    RUN_TEST(test_vdiff_empty_store);
+    RUN_TEST(test_vdiff_add_object);
+    RUN_TEST(test_vdiff_remove_object);
+    RUN_TEST(test_vdiff_move_object);
+    RUN_TEST(test_vdiff_set_property);
+    RUN_TEST(test_vdiff_mixed_edits);
+    RUN_TEST(test_vdiff_total_changes);
+    RUN_TEST(test_vdiff_affected_entities);
+    RUN_TEST(test_vdiff_entries_for_entity);
+    RUN_TEST(test_vdiff_entries_by_type);
+    RUN_TEST(test_vdiff_descriptions_nonempty);
 
     // Dock Layout
     log.BeginSection("Dock Layout");
