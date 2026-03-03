@@ -117,18 +117,27 @@ static double ReadNumber(const std::string& s, size_t& pos) {
     SkipWhitespace(s, pos);
     size_t start = pos;
     if (pos < s.size() && (s[pos] == '-' || s[pos] == '+')) ++pos;
-    while (pos < s.size() && (std::isdigit(static_cast<unsigned char>(s[pos])) || s[pos] == '.'))
-        ++pos;
+    bool hasDot = false;
+    while (pos < s.size()) {
+        if (std::isdigit(static_cast<unsigned char>(s[pos]))) {
+            ++pos;
+        } else if (s[pos] == '.' && !hasDot) {
+            hasDot = true;
+            ++pos;
+        } else {
+            break;
+        }
+    }
     if (pos == start) return 0.0;
     return std::stod(s.substr(start, pos - start));
 }
 
-static DeltaEditType ParseEditType(const std::string& name) {
-    if (name == "AddObject")    return DeltaEditType::AddObject;
-    if (name == "RemoveObject") return DeltaEditType::RemoveObject;
-    if (name == "MoveObject")   return DeltaEditType::MoveObject;
-    if (name == "SetProperty")  return DeltaEditType::SetProperty;
-    return DeltaEditType::AddObject; // fallback
+static bool ParseEditType(const std::string& name, DeltaEditType& out) {
+    if (name == "AddObject")    { out = DeltaEditType::AddObject;    return true; }
+    if (name == "RemoveObject") { out = DeltaEditType::RemoveObject; return true; }
+    if (name == "MoveObject")   { out = DeltaEditType::MoveObject;   return true; }
+    if (name == "SetProperty")  { out = DeltaEditType::SetProperty;  return true; }
+    return false; // unknown type → reject
 }
 
 bool DeltaEditStore::DeserializeFromJSON(const std::string& json) {
@@ -170,7 +179,9 @@ bool DeltaEditStore::DeserializeFromJSON(const std::string& json) {
                     if (!Expect(json, pos, ':')) return false;
 
                     if (field == "type") {
-                        edit.type = ParseEditType(ReadString(json, pos));
+                        std::string typeName = ReadString(json, pos);
+                        if (!ParseEditType(typeName, edit.type))
+                            return false;
                     } else if (field == "entityID") {
                         edit.entityID = static_cast<uint32_t>(ReadNumber(json, pos));
                     } else if (field == "objectType") {

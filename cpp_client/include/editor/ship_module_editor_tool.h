@@ -81,8 +81,12 @@ public:
     }
 
     void Undo() override {
-        if (m_wasAlive)
+        if (m_wasAlive) {
+            // Note: re-creation may assign a different EntityID.
+            // Full entity-ID restoration requires ECS-level support
+            // (e.g. CreateEntityWithID) which is not yet available.
             m_world.CreateEntity();
+        }
     }
 
     const char* Description() const override { return "Detach Module"; }

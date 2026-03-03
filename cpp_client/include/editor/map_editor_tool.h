@@ -123,7 +123,10 @@ public:
 
     void Undo() override {
         if (m_wasAlive) {
-            m_world.CreateEntity(); // re-create (ID may differ)
+            // Note: re-creation may assign a different EntityID.
+            // Full entity-ID restoration requires ECS-level support
+            // (e.g. CreateEntityWithID) which is not yet available.
+            m_world.CreateEntity();
         }
     }
 
