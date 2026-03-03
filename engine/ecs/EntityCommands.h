@@ -111,4 +111,39 @@ private:
     bool m_hadPrevious = false;
 };
 
+/**
+ * Typed helper to remove a component from an entity.
+ *
+ * On Execute: removes the component and stores the previous value (if any)
+ * so callers can wire undo to re-add it.
+ */
+template<typename T>
+class RemoveComponentCommand : public atlas::editor::ICommand {
+public:
+    RemoveComponentCommand(World& world, EntityID id)
+        : m_world(world), m_entityID(id) {}
+
+    void Execute() override {
+        T* existing = m_world.GetComponent<T>(m_entityID);
+        if (existing) {
+            m_hadComponent = true;
+            m_previousValue = *existing;
+            m_world.RemoveComponent<T>(m_entityID);
+        }
+    }
+
+    const char* Description() const override { return "Remove Component"; }
+
+    /** Whether the entity had the component before Execute. */
+    bool HadComponent() const { return m_hadComponent; }
+    const T& PreviousValue() const { return m_previousValue; }
+    EntityID TargetID() const { return m_entityID; }
+
+private:
+    World& m_world;
+    EntityID m_entityID;
+    T m_previousValue{};
+    bool m_hadComponent = false;
+};
+
 } // namespace atlas::ecs

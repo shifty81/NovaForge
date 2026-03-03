@@ -64,7 +64,11 @@ set(ATLAS_TEST_SOURCES
     test_entity_commands.cpp
     test_game_state_manager.cpp
     test_runtime_bootstrap.cpp
+    test_undoable_command_bus.cpp
+    test_editor_event_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp
