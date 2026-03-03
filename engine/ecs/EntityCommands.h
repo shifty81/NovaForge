@@ -150,6 +150,9 @@ private:
 //
 // These extend IUndoableCommand so the UndoableCommandBus records them
 // in the undo/redo history automatically.
+//
+// Thread safety: Like all ECS commands, these assume single-threaded
+// access to the World.  The ECS World is not thread-safe.
 // ────────────────────────────────────────────────────────────────────
 
 /**
