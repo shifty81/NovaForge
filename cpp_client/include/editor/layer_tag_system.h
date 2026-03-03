@@ -1,7 +1,7 @@
 #pragma once
 /**
  * @file layer_tag_system.h
- * @brief Layer and tag management for categorising scene objects.
+ * @brief Layer and tag management for categorizing scene objects.
  *
  * LayerTagSystem lets the designer organise entities into named layers
  * (e.g. "Ships", "Props", "Hangar", "Characters") and attach arbitrary
