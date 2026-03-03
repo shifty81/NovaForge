@@ -21,11 +21,11 @@ void UndoableCommandBus::ProcessCommands() {
             // Transfer ownership to a shared_ptr so both undo and redo
             // closures can reference the same command.
             std::shared_ptr<ICommand> shared(std::move(cmd));
-            auto* undoPtr = dynamic_cast<IUndoableCommand*>(shared.get());
+            auto* ptr = static_cast<IUndoableCommand*>(shared.get());
             m_undoStack.PushAction(UndoAction{
-                undoPtr->Description(),
-                [shared, undoPtr]() { undoPtr->Undo(); },
-                [shared, undoPtr]() { undoPtr->Execute(); }
+                ptr->Description(),
+                [shared, ptr]() { ptr->Undo(); },
+                [shared, ptr]() { ptr->Execute(); }
             });
         }
     }
