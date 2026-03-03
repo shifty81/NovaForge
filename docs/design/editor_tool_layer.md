@@ -123,6 +123,13 @@ Title Screen (6 pages) → "Enter Hangar" clicked
   → Show "DOCKED" mode indicator
 ```
 
+## Related Documents
+
+- [Extended Tooling Features](extended_tooling_features.md) — Full feature
+  reference with UI panels, hotkeys, and workflow examples.
+- [Master Test Solar System](test_solar_system.md) — Developer-only PCG
+  sandbox for canonical asset editing and procedural generation tuning.
+
 ## Future Work (from editornewfeat.md)
 
 ### Phase 1 — Tool Extensions
