@@ -227,8 +227,7 @@ bool DeltaEditStore::SaveToFile(const std::string& path) const {
     if (!out.is_open()) return false;
 
     out << SerializeToJSON();
-    out.close();
-    return true;
+    return out.good();
 }
 
 bool DeltaEditStore::LoadFromFile(const std::string& path) {
