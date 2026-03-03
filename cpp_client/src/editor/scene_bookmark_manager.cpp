@@ -193,7 +193,8 @@ bool SceneBookmarkManager::SaveToFile(const std::string& path) const {
     if (!out.is_open()) return false;
 
     out << SerializeToJSON();
-    return out.good();
+    out.close();
+    return !out.fail();
 }
 
 bool SceneBookmarkManager::LoadFromFile(const std::string& path) {
