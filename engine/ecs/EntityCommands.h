@@ -114,8 +114,8 @@ private:
 /**
  * Typed helper to remove a component from an entity.
  *
- * On Execute: removes the component and stores the previous value (if any)
- * so callers can wire undo to re-add it.
+ * On Execute: removes the component if present.
+ * Stores the previous value (if any) so callers can wire undo.
  */
 template<typename T>
 class RemoveComponentCommand : public atlas::editor::ICommand {
@@ -126,7 +126,7 @@ public:
     void Execute() override {
         T* existing = m_world.GetComponent<T>(m_entityID);
         if (existing) {
-            m_hadComponent = true;
+            m_hadPrevious = true;
             m_previousValue = *existing;
             m_world.RemoveComponent<T>(m_entityID);
         }
@@ -134,8 +134,7 @@ public:
 
     const char* Description() const override { return "Remove Component"; }
 
-    /** Whether the entity had the component before Execute. */
-    bool HadComponent() const { return m_hadComponent; }
+    bool HadPrevious() const { return m_hadPrevious; }
     const T& PreviousValue() const { return m_previousValue; }
     EntityID TargetID() const { return m_entityID; }
 
@@ -143,7 +142,7 @@ private:
     World& m_world;
     EntityID m_entityID;
     T m_previousValue{};
-    bool m_hadComponent = false;
+    bool m_hadPrevious = false;
 };
 
 } // namespace atlas::ecs

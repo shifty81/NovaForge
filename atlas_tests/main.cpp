@@ -1190,35 +1190,42 @@ void test_gsm_inventory_remove_nonexistent();
 void test_gsm_reset();
 void test_gsm_reset_preserves_callbacks();
 
+// RemoveComponentCommand tests
+void test_remove_component_cmd_removes();
+void test_remove_component_cmd_no_component();
+void test_remove_component_cmd_description();
+void test_remove_component_cmd_via_bus();
+void test_remove_component_cmd_target_id();
+
 // UndoableCommandBus tests
-void test_ucb_empty_by_default();
-void test_ucb_post_increments_count();
-void test_ucb_post_null_ignored();
-void test_ucb_process_plain_no_undo();
-void test_ucb_process_undoable_records();
-void test_ucb_undo_reverts();
-void test_ucb_redo_reapplies();
-void test_ucb_undo_empty_fails();
-void test_ucb_redo_empty_fails();
-void test_ucb_multiple_undo_redo();
-void test_ucb_description();
+void test_ucb_post_and_process();
+void test_ucb_undoable_recorded();
+void test_ucb_plain_not_recorded();
+void test_ucb_undo();
+void test_ucb_redo();
+void test_ucb_undo_redo_counts();
 void test_ucb_clear_history();
-void test_ucb_mixed_plain_and_undoable();
+void test_ucb_undo_description();
+void test_ucb_redo_description();
+void test_ucb_new_command_clears_redo();
+void test_ucb_depth_limit();
+void test_ucb_null_command_ignored();
+void test_ucb_multiple_undo_redo();
 
 // EditorEventBus tests
-void test_evbus_empty_by_default();
-void test_evbus_subscribe_increments_count();
-void test_evbus_subscribe_null_rejected();
-void test_evbus_publish_fires_callback();
-void test_evbus_publish_with_payload();
-void test_evbus_multiple_subscribers();
-void test_evbus_unsubscribe();
-void test_evbus_unsubscribe_invalid_id();
-void test_evbus_publish_no_subscribers_safe();
-void test_evbus_different_events_independent();
-void test_evbus_clear();
-void test_evbus_string_payload();
-void test_evbus_subscription_ids_unique();
+void test_eeb_subscribe_and_publish();
+void test_eeb_multiple_subscribers();
+void test_eeb_different_events_independent();
+void test_eeb_unsubscribe();
+void test_eeb_unsubscribe_unknown();
+void test_eeb_publish_returns_count();
+void test_eeb_publish_no_subscribers();
+void test_eeb_subscriber_count();
+void test_eeb_total_subscriptions();
+void test_eeb_clear();
+void test_eeb_payload_passthrough();
+void test_eeb_dispatch_copies_list();
+void test_eeb_event_name_in_handler();
 
 int main(int argc, char* argv[]) {
     std::string logPath;
@@ -2517,37 +2524,45 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_gsm_reset);
     RUN_TEST(test_gsm_reset_preserves_callbacks);
 
+    // RemoveComponentCommand
+    log.BeginSection("RemoveComponentCommand");
+    RUN_TEST(test_remove_component_cmd_removes);
+    RUN_TEST(test_remove_component_cmd_no_component);
+    RUN_TEST(test_remove_component_cmd_description);
+    RUN_TEST(test_remove_component_cmd_via_bus);
+    RUN_TEST(test_remove_component_cmd_target_id);
+
     // UndoableCommandBus
     log.BeginSection("UndoableCommandBus");
-    RUN_TEST(test_ucb_empty_by_default);
-    RUN_TEST(test_ucb_post_increments_count);
-    RUN_TEST(test_ucb_post_null_ignored);
-    RUN_TEST(test_ucb_process_plain_no_undo);
-    RUN_TEST(test_ucb_process_undoable_records);
-    RUN_TEST(test_ucb_undo_reverts);
-    RUN_TEST(test_ucb_redo_reapplies);
-    RUN_TEST(test_ucb_undo_empty_fails);
-    RUN_TEST(test_ucb_redo_empty_fails);
-    RUN_TEST(test_ucb_multiple_undo_redo);
-    RUN_TEST(test_ucb_description);
+    RUN_TEST(test_ucb_post_and_process);
+    RUN_TEST(test_ucb_undoable_recorded);
+    RUN_TEST(test_ucb_plain_not_recorded);
+    RUN_TEST(test_ucb_undo);
+    RUN_TEST(test_ucb_redo);
+    RUN_TEST(test_ucb_undo_redo_counts);
     RUN_TEST(test_ucb_clear_history);
-    RUN_TEST(test_ucb_mixed_plain_and_undoable);
+    RUN_TEST(test_ucb_undo_description);
+    RUN_TEST(test_ucb_redo_description);
+    RUN_TEST(test_ucb_new_command_clears_redo);
+    RUN_TEST(test_ucb_depth_limit);
+    RUN_TEST(test_ucb_null_command_ignored);
+    RUN_TEST(test_ucb_multiple_undo_redo);
 
     // EditorEventBus
     log.BeginSection("EditorEventBus");
-    RUN_TEST(test_evbus_empty_by_default);
-    RUN_TEST(test_evbus_subscribe_increments_count);
-    RUN_TEST(test_evbus_subscribe_null_rejected);
-    RUN_TEST(test_evbus_publish_fires_callback);
-    RUN_TEST(test_evbus_publish_with_payload);
-    RUN_TEST(test_evbus_multiple_subscribers);
-    RUN_TEST(test_evbus_unsubscribe);
-    RUN_TEST(test_evbus_unsubscribe_invalid_id);
-    RUN_TEST(test_evbus_publish_no_subscribers_safe);
-    RUN_TEST(test_evbus_different_events_independent);
-    RUN_TEST(test_evbus_clear);
-    RUN_TEST(test_evbus_string_payload);
-    RUN_TEST(test_evbus_subscription_ids_unique);
+    RUN_TEST(test_eeb_subscribe_and_publish);
+    RUN_TEST(test_eeb_multiple_subscribers);
+    RUN_TEST(test_eeb_different_events_independent);
+    RUN_TEST(test_eeb_unsubscribe);
+    RUN_TEST(test_eeb_unsubscribe_unknown);
+    RUN_TEST(test_eeb_publish_returns_count);
+    RUN_TEST(test_eeb_publish_no_subscribers);
+    RUN_TEST(test_eeb_subscriber_count);
+    RUN_TEST(test_eeb_total_subscriptions);
+    RUN_TEST(test_eeb_clear);
+    RUN_TEST(test_eeb_payload_passthrough);
+    RUN_TEST(test_eeb_dispatch_copies_list);
+    RUN_TEST(test_eeb_event_name_in_handler);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);

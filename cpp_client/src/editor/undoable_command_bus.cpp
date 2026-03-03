@@ -13,34 +13,60 @@ void UndoableCommandBus::ProcessCommands() {
         auto cmd = std::move(m_queue.front());
         m_queue.pop();
 
-        // Try to cast to IUndoableCommand for undo recording.
-        auto* undoable = dynamic_cast<IUndoableCommand*>(cmd.get());
         cmd->Execute();
 
+        // If the command is undoable, record it in history.
+        auto* undoable = dynamic_cast<IUndoableCommand*>(cmd.get());
         if (undoable) {
-            // Transfer ownership to a shared_ptr so both undo and redo
-            // closures can reference the same command.
-            std::shared_ptr<ICommand> shared(std::move(cmd));
-            auto* ptr = static_cast<IUndoableCommand*>(shared.get());
-            m_undoStack.PushAction(UndoAction{
-                ptr->Description(),
-                [shared, ptr]() { ptr->Undo(); },
-                [shared, ptr]() { ptr->Execute(); }
-            });
+            // Discard any redo future beyond the current position.
+            if (m_undoIndex < m_history.size()) {
+                m_history.erase(
+                    m_history.begin() + static_cast<ptrdiff_t>(m_undoIndex),
+                    m_history.end());
+            }
+
+            // Transfer ownership: release ICommand, re-own as IUndoableCommand.
+            cmd.release();
+            m_history.push_back(
+                std::unique_ptr<IUndoableCommand>(undoable));
+            m_undoIndex = m_history.size();
+
+            // Enforce depth limit (O(1) with deque).
+            if (m_history.size() > m_maxHistory) {
+                m_history.pop_front();
+                --m_undoIndex;
+            }
         }
     }
 }
 
-size_t UndoableCommandBus::PendingCount() const {
-    return m_queue.size();
-}
-
 bool UndoableCommandBus::Undo() {
-    return m_undoStack.Undo();
+    if (m_undoIndex == 0) return false;
+    --m_undoIndex;
+    m_history[m_undoIndex]->Undo();
+    return true;
 }
 
 bool UndoableCommandBus::Redo() {
-    return m_undoStack.Redo();
+    if (m_undoIndex >= m_history.size()) return false;
+    m_history[m_undoIndex]->Execute();
+    ++m_undoIndex;
+    return true;
+}
+
+std::string UndoableCommandBus::UndoDescription() const {
+    if (m_undoIndex == 0) return "";
+    return m_history[m_undoIndex - 1]->Description();
+}
+
+std::string UndoableCommandBus::RedoDescription() const {
+    if (m_undoIndex >= m_history.size()) return "";
+    return m_history[m_undoIndex]->Description();
+}
+
+void UndoableCommandBus::ClearHistory() {
+    m_history.clear();
+    m_undoIndex = 0;
 }
 
 } // namespace atlas::editor

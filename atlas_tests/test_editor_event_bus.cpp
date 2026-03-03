@@ -1,145 +1,149 @@
 /**
- * Tests for EditorEventBus — publish/subscribe event bus for editor panels.
+ * Tests for EditorEventBus.
  *
  * Validates:
  * - Subscribe and receive events
- * - Publish with payload
- * - Unsubscribe by handle
  * - Multiple subscribers on same event
- * - SubscriberCount and TotalSubscriptions
- * - Publish to no subscribers is safe
- * - Clear removes all subscriptions
- * - Null callback rejected
+ * - Different events are independent
+ * - Unsubscribe by handle
+ * - Unsubscribe unknown handle returns false
+ * - Publish returns handler count
+ * - Publish to no subscribers returns 0
+ * - SubscriberCount
+ * - TotalSubscriptions
+ * - Clear removes all
+ * - Payload passes through correctly
+ * - Dispatch copies subscriber list (safe during modification)
+ * - Event name passed to handler
  */
 
 #include "../cpp_client/include/editor/editor_event_bus.h"
 #include <cassert>
-#include <cstdint>
 #include <string>
+#include <vector>
+#include <cstdint>
 
 using namespace atlas::editor;
 
 // ── Tests ───────────────────────────────────────────────────────────
 
-void test_evbus_empty_by_default() {
-    EditorEventBus bus;
-    assert(bus.TotalSubscriptions() == 0);
-    assert(bus.SubscriberCount("any") == 0);
-}
-
-void test_evbus_subscribe_increments_count() {
-    EditorEventBus bus;
-    bus.Subscribe("test", [](auto&, auto&) {});
-    assert(bus.SubscriberCount("test") == 1);
-    assert(bus.TotalSubscriptions() == 1);
-}
-
-void test_evbus_subscribe_null_rejected() {
-    EditorEventBus bus;
-    auto id = bus.Subscribe("test", nullptr);
-    assert(id == 0);
-    assert(bus.TotalSubscriptions() == 0);
-}
-
-void test_evbus_publish_fires_callback() {
+void test_eeb_subscribe_and_publish() {
     EditorEventBus bus;
     int received = 0;
-    bus.Subscribe("ping", [&](const std::string& event, const std::any&) {
-        ++received;
-        assert(event == "ping");
+    bus.Subscribe("test.event", [&](const std::string&, const std::any& p) {
+        received = std::any_cast<int>(p);
     });
-    bus.Publish("ping");
-    assert(received == 1);
+    bus.Publish("test.event", 42);
+    assert(received == 42);
 }
 
-void test_evbus_publish_with_payload() {
-    EditorEventBus bus;
-    uint32_t receivedID = 0;
-    bus.Subscribe("entity.selected", [&](auto&, const std::any& payload) {
-        receivedID = std::any_cast<uint32_t>(payload);
-    });
-    bus.Publish("entity.selected", uint32_t(42));
-    assert(receivedID == 42);
-}
-
-void test_evbus_multiple_subscribers() {
-    EditorEventBus bus;
-    int countA = 0, countB = 0;
-    bus.Subscribe("update", [&](auto&, auto&) { ++countA; });
-    bus.Subscribe("update", [&](auto&, auto&) { ++countB; });
-    assert(bus.SubscriberCount("update") == 2);
-
-    bus.Publish("update");
-    assert(countA == 1);
-    assert(countB == 1);
-}
-
-void test_evbus_unsubscribe() {
+void test_eeb_multiple_subscribers() {
     EditorEventBus bus;
     int count = 0;
-    auto id = bus.Subscribe("test", [&](auto&, auto&) { ++count; });
-    assert(bus.Unsubscribe(id));
-    assert(bus.SubscriberCount("test") == 0);
-
-    bus.Publish("test");
-    assert(count == 0);  // not called after unsubscribe
+    bus.Subscribe("ping", [&](const std::string&, const std::any&) { ++count; });
+    bus.Subscribe("ping", [&](const std::string&, const std::any&) { ++count; });
+    bus.Publish("ping");
+    assert(count == 2);
 }
 
-void test_evbus_unsubscribe_invalid_id() {
+void test_eeb_different_events_independent() {
     EditorEventBus bus;
-    assert(!bus.Unsubscribe(0));
+    int a = 0, b = 0;
+    bus.Subscribe("eventA", [&](const std::string&, const std::any&) { ++a; });
+    bus.Subscribe("eventB", [&](const std::string&, const std::any&) { ++b; });
+    bus.Publish("eventA");
+    assert(a == 1);
+    assert(b == 0);
+}
+
+void test_eeb_unsubscribe() {
+    EditorEventBus bus;
+    int count = 0;
+    auto id = bus.Subscribe("x", [&](const std::string&, const std::any&) { ++count; });
+    bus.Publish("x");
+    assert(count == 1);
+
+    assert(bus.Unsubscribe(id));
+    bus.Publish("x");
+    assert(count == 1);  // handler no longer fires
+}
+
+void test_eeb_unsubscribe_unknown() {
+    EditorEventBus bus;
     assert(!bus.Unsubscribe(999));
 }
 
-void test_evbus_publish_no_subscribers_safe() {
+void test_eeb_publish_returns_count() {
     EditorEventBus bus;
-    bus.Publish("nonexistent");  // should not crash
+    bus.Subscribe("e", [](const std::string&, const std::any&) {});
+    bus.Subscribe("e", [](const std::string&, const std::any&) {});
+    assert(bus.Publish("e") == 2);
 }
 
-void test_evbus_different_events_independent() {
+void test_eeb_publish_no_subscribers() {
     EditorEventBus bus;
-    int alphaCount = 0, betaCount = 0;
-    bus.Subscribe("alpha", [&](auto&, auto&) { ++alphaCount; });
-    bus.Subscribe("beta", [&](auto&, auto&) { ++betaCount; });
-
-    bus.Publish("alpha");
-    assert(alphaCount == 1);
-    assert(betaCount == 0);
-
-    bus.Publish("beta");
-    assert(alphaCount == 1);
-    assert(betaCount == 1);
+    assert(bus.Publish("nobody") == 0);
 }
 
-void test_evbus_clear() {
+void test_eeb_subscriber_count() {
     EditorEventBus bus;
-    bus.Subscribe("a", [](auto&, auto&) {});
-    bus.Subscribe("b", [](auto&, auto&) {});
-    bus.Subscribe("b", [](auto&, auto&) {});
+    assert(bus.SubscriberCount("e") == 0);
+    bus.Subscribe("e", [](const std::string&, const std::any&) {});
+    assert(bus.SubscriberCount("e") == 1);
+    bus.Subscribe("e", [](const std::string&, const std::any&) {});
+    assert(bus.SubscriberCount("e") == 2);
+}
+
+void test_eeb_total_subscriptions() {
+    EditorEventBus bus;
+    assert(bus.TotalSubscriptions() == 0);
+    bus.Subscribe("a", [](const std::string&, const std::any&) {});
+    bus.Subscribe("b", [](const std::string&, const std::any&) {});
+    bus.Subscribe("a", [](const std::string&, const std::any&) {});
     assert(bus.TotalSubscriptions() == 3);
+}
 
+void test_eeb_clear() {
+    EditorEventBus bus;
+    bus.Subscribe("x", [](const std::string&, const std::any&) {});
+    bus.Subscribe("y", [](const std::string&, const std::any&) {});
     bus.Clear();
     assert(bus.TotalSubscriptions() == 0);
-    assert(bus.SubscriberCount("a") == 0);
-    assert(bus.SubscriberCount("b") == 0);
+    assert(bus.Publish("x") == 0);
 }
 
-void test_evbus_string_payload() {
+void test_eeb_payload_passthrough() {
     EditorEventBus bus;
     std::string received;
-    bus.Subscribe("message", [&](auto&, const std::any& payload) {
-        received = std::any_cast<std::string>(payload);
+    bus.Subscribe("msg", [&](const std::string&, const std::any& p) {
+        received = std::any_cast<std::string>(p);
     });
-    bus.Publish("message", std::string("hello"));
+    bus.Publish("msg", std::string("hello"));
     assert(received == "hello");
 }
 
-void test_evbus_subscription_ids_unique() {
+void test_eeb_dispatch_copies_list() {
     EditorEventBus bus;
-    auto id1 = bus.Subscribe("test", [](auto&, auto&) {});
-    auto id2 = bus.Subscribe("test", [](auto&, auto&) {});
-    auto id3 = bus.Subscribe("other", [](auto&, auto&) {});
-    assert(id1 != id2);
-    assert(id2 != id3);
-    assert(id1 != id3);
+    int count = 0;
+    SubscriptionID selfID = 0;
+    // A handler that unsubscribes itself during dispatch.
+    selfID = bus.Subscribe("self", [&](const std::string&, const std::any&) {
+        ++count;
+        bus.Unsubscribe(selfID);
+    });
+    // Should not crash; handler fires once.
+    bus.Publish("self");
+    assert(count == 1);
+    // Second publish should have no subscribers.
+    assert(bus.Publish("self") == 0);
+}
+
+void test_eeb_event_name_in_handler() {
+    EditorEventBus bus;
+    std::string receivedEvent;
+    bus.Subscribe("named.event", [&](const std::string& event, const std::any&) {
+        receivedEvent = event;
+    });
+    bus.Publish("named.event");
+    assert(receivedEvent == "named.event");
 }

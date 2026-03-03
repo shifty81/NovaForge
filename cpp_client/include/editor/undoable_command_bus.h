@@ -1,83 +1,95 @@
 #pragma once
 /**
  * @file undoable_command_bus.h
- * @brief Command bus that automatically records undo/redo for every command.
+ * @brief Command bus with integrated undo/redo support.
  *
- * Wraps EditorCommandBus and UndoStack so that each executed command
- * is automatically pushed onto the undo stack.  Commands must implement
- * both Execute and Undo to participate; commands without Undo are
- * executed but not recorded.
+ * Wraps EditorCommandBus and UndoStack so that commands implementing
+ * IUndoableCommand are automatically recorded for undo/redo, while
+ * plain ICommand instances are executed fire-and-forget.
  */
 
-#include "editor_command_bus.h"
-#include "../../editor/ui/UndoStack.h"
+#include <deque>
 #include <memory>
 #include <queue>
+#include <string>
+#include "editor/editor_command_bus.h"
 
 namespace atlas::editor {
 
 /**
- * Extended command interface that supports undo.
+ * Extension of ICommand that supports undo.
  *
- * Commands that implement this interface get automatic undo/redo
- * recording when processed through UndoableCommandBus.
+ * Any command posted to UndoableCommandBus that derives from this
+ * interface will be recorded in the undo history automatically.
  */
 struct IUndoableCommand : public ICommand {
-    /** Reverse the effect of Execute(). */
+    /** Revert the effect of Execute(). */
     virtual void Undo() = 0;
 };
 
 /**
- * Command bus with integrated undo/redo history.
+ * Command bus that records IUndoableCommand instances for undo/redo.
  *
  * Usage:
  *   UndoableCommandBus bus;
- *   bus.PostCommand(std::make_unique<MyUndoableCmd>(...));
- *   bus.ProcessCommands();  // executes & records in UndoStack
- *   bus.Undo();             // reverts last command
- *   bus.Redo();             // re-applies last undone command
+ *   bus.PostCommand(std::make_unique<MyUndoableCmd>(args...));
+ *   bus.ProcessCommands();  // executes & records
+ *   bus.Undo();             // reverts
+ *   bus.Redo();             // re-applies
+ *
+ * Plain ICommand objects are executed normally but not recorded.
  */
 class UndoableCommandBus {
 public:
-    explicit UndoableCommandBus(size_t maxUndoDepth = 64)
-        : m_undoStack(maxUndoDepth) {}
+    explicit UndoableCommandBus(size_t maxHistory = 64)
+        : m_maxHistory(maxHistory) {}
 
     /** Enqueue a command for deferred execution. */
     void PostCommand(std::unique_ptr<ICommand> cmd);
 
-    /**
-     * Execute and drain all pending commands.
-     * IUndoableCommand instances are recorded in the undo stack.
-     * Plain ICommand instances are executed without recording.
-     */
+    /** Execute and drain all pending commands in FIFO order. */
     void ProcessCommands();
 
     /** Number of commands waiting to be processed. */
-    size_t PendingCount() const;
+    size_t PendingCount() const { return m_queue.size(); }
 
-    /** Undo the most recent undoable command. Returns true on success. */
+    // ── Undo / Redo ─────────────────────────────────────────────────
+
+    /** Undo the most recently executed undoable command. */
     bool Undo();
 
-    /** Redo the most recently undone command. Returns true on success. */
+    /** Redo the most recently undone command. */
     bool Redo();
 
-    bool CanUndo() const { return m_undoStack.CanUndo(); }
-    bool CanRedo() const { return m_undoStack.CanRedo(); }
-    size_t UndoCount() const { return m_undoStack.UndoCount(); }
-    size_t RedoCount() const { return m_undoStack.RedoCount(); }
+    /** Whether Undo() would succeed. */
+    bool CanUndo() const { return m_undoIndex > 0; }
 
-    std::string UndoDescription() const { return m_undoStack.UndoDescription(); }
-    std::string RedoDescription() const { return m_undoStack.RedoDescription(); }
+    /** Whether Redo() would succeed. */
+    bool CanRedo() const { return m_undoIndex < m_history.size(); }
 
-    /** Clear undo/redo history. */
-    void ClearHistory() { m_undoStack.Clear(); }
+    /** Number of undoable actions. */
+    size_t UndoCount() const { return m_undoIndex; }
 
-    /** Access the underlying UndoStack (read-only). */
-    const UndoStack& GetUndoStack() const { return m_undoStack; }
+    /** Number of redoable actions. */
+    size_t RedoCount() const { return m_history.size() - m_undoIndex; }
+
+    /** Description of the next action that Undo() would revert. */
+    std::string UndoDescription() const;
+
+    /** Description of the next action that Redo() would re-apply. */
+    std::string RedoDescription() const;
+
+    /** Clear all undo/redo history. */
+    void ClearHistory();
+
+    /** Maximum undo history depth. */
+    size_t MaxHistory() const { return m_maxHistory; }
 
 private:
     std::queue<std::unique_ptr<ICommand>> m_queue;
-    UndoStack m_undoStack;
+    std::deque<std::unique_ptr<IUndoableCommand>> m_history;
+    size_t m_undoIndex = 0;
+    size_t m_maxHistory = 64;
 };
 
 } // namespace atlas::editor

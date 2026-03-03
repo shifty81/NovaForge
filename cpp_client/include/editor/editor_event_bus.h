@@ -1,14 +1,11 @@
 #pragma once
 /**
  * @file editor_event_bus.h
- * @brief Lightweight publish/subscribe event bus for editor panels.
+ * @brief Lightweight pub/sub event bus for editor panel state sync.
  *
- * Allows editor panels and tools to broadcast state-change notifications
- * without direct coupling.  Subscribers register a callback for a named
- * event; publishers fire events by name with an optional payload.
- *
- * Events are delivered synchronously (immediate dispatch) so that
- * handlers can react within the same frame.
+ * Named events carry std::any payloads and are dispatched synchronously.
+ * Subscribe() returns an opaque handle that can be passed to
+ * Unsubscribe() to detach the listener.
  */
 
 #include <any>
@@ -20,44 +17,46 @@
 
 namespace atlas::editor {
 
-/** Callback type: receives the event name and an optional payload. */
-using EventCallback = std::function<void(const std::string& event, const std::any& payload)>;
+/** Opaque subscription handle returned by Subscribe(). */
+using SubscriptionID = uint64_t;
 
 /**
- * Simple event bus for editor-side communication.
+ * Synchronous pub/sub event bus for the editor.
  *
  * Usage:
- *   EditorEventBus bus;
- *   auto id = bus.Subscribe("entity.selected", [](auto& e, auto& p) {
- *       auto eid = std::any_cast<uint32_t>(p);
- *       // update inspector panel...
- *   });
- *
- *   bus.Publish("entity.selected", entityID);
- *
- *   bus.Unsubscribe(id);
+ *   EditorEventBus events;
+ *   auto id = events.Subscribe("entity.selected",
+ *       [](const std::string& event, const std::any& payload) {
+ *           auto eid = std::any_cast<uint32_t>(payload);
+ *       });
+ *   events.Publish("entity.selected", uint32_t(42));
+ *   events.Unsubscribe(id);
  */
 class EditorEventBus {
 public:
-    /** Opaque subscription handle for unsubscribing. */
-    using SubscriptionID = uint64_t;
+    using Handler = std::function<void(const std::string& event,
+                                       const std::any& payload)>;
+
+    /** Subscribe to a named event.  Returns a handle for Unsubscribe(). */
+    SubscriptionID Subscribe(const std::string& event, Handler handler);
 
     /**
-     * Subscribe to a named event.
-     * @return A handle that can be passed to Unsubscribe().
+     * Remove a subscription by handle.
+     * Returns true if the subscription was found and removed.
      */
-    SubscriptionID Subscribe(const std::string& event, EventCallback callback);
-
-    /** Remove a subscription by handle. Returns true if found and removed. */
     bool Unsubscribe(SubscriptionID id);
 
-    /** Publish an event with an optional payload. Invokes all matching subscribers synchronously. */
-    void Publish(const std::string& event, const std::any& payload = {});
+    /**
+     * Publish an event to all subscribers of @p event.
+     * Dispatch is synchronous; handlers run immediately.
+     * Returns the number of handlers invoked.
+     */
+    size_t Publish(const std::string& event, const std::any& payload = {});
 
-    /** Number of subscribers for a specific event. */
+    /** Number of active subscriptions for a specific event. */
     size_t SubscriberCount(const std::string& event) const;
 
-    /** Total number of active subscriptions. */
+    /** Total number of active subscriptions across all events. */
     size_t TotalSubscriptions() const;
 
     /** Remove all subscriptions. */
@@ -66,11 +65,11 @@ public:
 private:
     struct Subscription {
         SubscriptionID id;
-        EventCallback callback;
+        Handler handler;
     };
 
-    std::unordered_map<std::string, std::vector<Subscription>> m_subscribers;
     SubscriptionID m_nextID = 1;
+    std::unordered_map<std::string, std::vector<Subscription>> m_subs;
 };
 
 } // namespace atlas::editor
