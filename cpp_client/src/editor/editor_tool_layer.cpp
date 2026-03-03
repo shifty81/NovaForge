@@ -25,6 +25,8 @@
 #include "tools/PhysicsTunerPanel.h"
 #include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
+#include "editor/scene_bookmark_manager.h"
+#include "editor/layer_tag_system.h"
 #include "ui/atlas/atlas_context.h"
 
 #include <iostream>
@@ -90,6 +92,10 @@ void EditorToolLayer::init() {
     // ── Live scene manager ───────────────────────────────────────
     m_liveScene = std::make_unique<LiveSceneManager>(
         m_viewport.get(), m_pcgPreview.get());
+
+    // ── Editor utilities ─────────────────────────────────────────
+    m_bookmarkManager = std::make_unique<SceneBookmarkManager>();
+    m_layerTagSystem  = std::make_unique<LayerTagSystem>();
 
     // ── Register panels with layout ──────────────────────────────
     m_layout->RegisterPanel(m_viewport.get());
@@ -202,7 +208,8 @@ void EditorToolLayer::init() {
         m_liveScene->SaveOverrides("data/pcg_overrides.json");
         m_keybinds->SaveToFile("data/editor_keybinds.json");
         m_deltaEditStore.SaveToFile("data/delta_edits.json");
-        std::cout << "[ToolLayer] Layout, overrides, keybinds, and delta edits saved"
+        m_bookmarkManager->SaveToFile("data/editor_bookmarks.json");
+        std::cout << "[ToolLayer] Layout, overrides, keybinds, delta edits, and bookmarks saved"
                   << std::endl;
     });
 
@@ -234,6 +241,12 @@ void EditorToolLayer::init() {
                   << " edits)" << std::endl;
     }
 
+    // ── Load saved bookmarks ─────────────────────────────────────
+    if (m_bookmarkManager->LoadFromFile("data/editor_bookmarks.json")) {
+        std::cout << "[ToolLayer] Bookmarks loaded (" << m_bookmarkManager->Count()
+                  << " bookmarks)" << std::endl;
+    }
+
     m_initialized = true;
 
     std::cout << "[ToolLayer] Initialized with "
@@ -250,6 +263,8 @@ void EditorToolLayer::shutdown() {
     m_layout->SetContext(nullptr);
 
     m_liveScene.reset();
+    m_layerTagSystem.reset();
+    m_bookmarkManager.reset();
     m_physicsTuner.reset();
     m_assetPalette.reset();
     m_fleetFormation.reset();
@@ -330,6 +345,14 @@ void EditorToolLayer::updateTools(float deltaTime) {
 
 size_t EditorToolLayer::panelCount() const {
     return m_layout ? m_layout->Panels().size() : 0;
+}
+
+SceneBookmarkManager& EditorToolLayer::bookmarkManager() {
+    return *m_bookmarkManager;
+}
+
+LayerTagSystem& EditorToolLayer::layerTagSystem() {
+    return *m_layerTagSystem;
 }
 
 } // namespace atlas::editor

@@ -84,6 +84,20 @@ public:
     /** Read-only access to all bookmarks. */
     const std::vector<SceneBookmark>& Bookmarks() const { return m_bookmarks; }
 
+    // ── Serialization ──────────────────────────────────────────────
+    /** Serialize all bookmarks to a JSON string. */
+    std::string SerializeToJSON() const;
+
+    /** Deserialize bookmarks from a JSON string, replacing current contents. */
+    bool DeserializeFromJSON(const std::string& json);
+
+    // ── File I/O ───────────────────────────────────────────────────
+    /** Save all bookmarks to a JSON file. Creates parent dirs. */
+    bool SaveToFile(const std::string& path) const;
+
+    /** Load bookmarks from a JSON file, replacing current contents. */
+    bool LoadFromFile(const std::string& path);
+
 private:
     std::vector<SceneBookmark> m_bookmarks;
 };

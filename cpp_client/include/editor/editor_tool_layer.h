@@ -58,6 +58,8 @@ class LiveSceneManager;
 class PCGOverrideStore;
 class AssetPalettePanel;
 class PhysicsTunerPanel;
+class SceneBookmarkManager;
+class LayerTagSystem;
 
 namespace ai { class AIAggregator; class TemplateAIBackend; }
 
@@ -123,6 +125,12 @@ public:
     /** Access the delta edit store for persistent world edits. */
     atlas::ecs::DeltaEditStore& deltaEditStore() { return m_deltaEditStore; }
 
+    /** Access the scene bookmark manager. */
+    SceneBookmarkManager& bookmarkManager();
+
+    /** Access the layer/tag system. */
+    LayerTagSystem& layerTagSystem();
+
     /** Number of panels registered in the layout. */
     size_t panelCount() const;
 
@@ -165,6 +173,10 @@ private:
 
     // ── Live scene bridge ───────────────────────────────────────────
     std::unique_ptr<LiveSceneManager> m_liveScene;
+
+    // ── Editor utilities ─────────────────────────────────────────────
+    std::unique_ptr<SceneBookmarkManager> m_bookmarkManager;
+    std::unique_ptr<LayerTagSystem>       m_layerTagSystem;
 };
 
 } // namespace atlas::editor

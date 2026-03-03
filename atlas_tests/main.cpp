@@ -1369,6 +1369,9 @@ void test_bookmark_rename();
 void test_bookmark_rename_out_of_bounds();
 void test_bookmark_clear();
 void test_bookmark_selection_preserved();
+void test_bookmark_save_to_file();
+void test_bookmark_load_nonexistent();
+void test_bookmark_save_creates_dirs();
 
 // LayerTagSystem tests
 void test_layer_tag_defaults();
@@ -2204,6 +2207,9 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_bookmark_rename_out_of_bounds);
     RUN_TEST(test_bookmark_clear);
     RUN_TEST(test_bookmark_selection_preserved);
+    RUN_TEST(test_bookmark_save_to_file);
+    RUN_TEST(test_bookmark_load_nonexistent);
+    RUN_TEST(test_bookmark_save_creates_dirs);
 
     // LayerTagSystem
     log.BeginSection("LayerTagSystem");
