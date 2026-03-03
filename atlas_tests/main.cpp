@@ -400,6 +400,15 @@ void test_itool_defaults();
 void test_itool_activate_deactivate();
 void test_itool_update();
 
+// RuntimeBootstrap tests
+void test_bootstrap_not_initialized_by_default();
+void test_bootstrap_initialize_editor();
+void test_bootstrap_initialize_game();
+void test_bootstrap_initialize_server();
+void test_bootstrap_idempotent_initialize();
+void test_bootstrap_engine_runs();
+void test_bootstrap_net_modes();
+
 // Viewport Panel tests
 void test_viewport_defaults();
 void test_viewport_load_ship();
@@ -1750,6 +1759,16 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_itool_defaults);
     RUN_TEST(test_itool_activate_deactivate);
     RUN_TEST(test_itool_update);
+
+    // RuntimeBootstrap
+    log.BeginSection("RuntimeBootstrap");
+    RUN_TEST(test_bootstrap_not_initialized_by_default);
+    RUN_TEST(test_bootstrap_initialize_editor);
+    RUN_TEST(test_bootstrap_initialize_game);
+    RUN_TEST(test_bootstrap_initialize_server);
+    RUN_TEST(test_bootstrap_idempotent_initialize);
+    RUN_TEST(test_bootstrap_engine_runs);
+    RUN_TEST(test_bootstrap_net_modes);
 
     // Mission Editor Panel
     log.BeginSection("Mission Editor Panel");
