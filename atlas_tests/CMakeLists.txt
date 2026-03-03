@@ -68,6 +68,9 @@ set(ATLAS_TEST_SOURCES
     test_undoable_command_bus.cpp
     test_editor_event_bus.cpp
     test_integration.cpp
+    test_delta_edit_store.cpp
+    test_map_editor_tool.cpp
+    test_ship_module_editor_tool.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp

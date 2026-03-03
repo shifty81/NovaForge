@@ -6,6 +6,7 @@ add_library(AtlasEngine STATIC
     core/GameStateManager.cpp
     ecs/ECS.cpp
     ecs/System.cpp
+    ecs/DeltaEditStore.cpp
     graphvm/GraphVM.cpp
     graphvm/GraphCompiler.cpp
     assets/AssetRegistry.cpp
