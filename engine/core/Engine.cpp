@@ -81,55 +81,15 @@ void Engine::Run() {
 }
 
 void Engine::RunEditor() {
-    m_scheduler.SetTickRate(m_config.tickRate);
-    Logger::Info("Running Atlas Editor");
-    while (m_running) {
-        m_net.Poll();
-        float dt = 1.0f / static_cast<float>(m_config.tickRate);
-        m_scheduler.Tick([this](float d) {
-            m_world.Update(d);
-        });
-        if (m_frameCallback) m_frameCallback(dt);
-        m_tickCount++;
-        if (m_config.maxTicks > 0 && m_tickCount >= m_config.maxTicks) {
-            m_running = false;
-        }
-    }
+    Run();
 }
 
 void Engine::RunClient() {
-    m_scheduler.SetTickRate(m_config.tickRate);
-    Logger::Info("Running Atlas Client");
-    while (m_running) {
-        m_net.Poll();
-        float dt = 1.0f / static_cast<float>(m_config.tickRate);
-        m_scheduler.Tick([this](float d) {
-            m_world.Update(d);
-        });
-        if (m_frameCallback) m_frameCallback(dt);
-        m_tickCount++;
-        if (m_config.maxTicks > 0 && m_tickCount >= m_config.maxTicks) {
-            m_running = false;
-        }
-    }
+    Run();
 }
 
 void Engine::RunServer() {
-    m_scheduler.SetTickRate(m_config.tickRate);
-    Logger::Info("Running Atlas Server");
-    while (m_running) {
-        m_net.Poll();
-        float dt = 1.0f / static_cast<float>(m_config.tickRate);
-        m_scheduler.Tick([this](float d) {
-            m_world.Update(d);
-        });
-        if (m_frameCallback) m_frameCallback(dt);
-        m_net.Flush();
-        m_tickCount++;
-        if (m_config.maxTicks > 0 && m_tickCount >= m_config.maxTicks) {
-            m_running = false;
-        }
-    }
+    Run();
 }
 
 bool Engine::Running() const {
