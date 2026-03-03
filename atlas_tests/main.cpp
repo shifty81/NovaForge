@@ -1221,6 +1221,22 @@ void test_eeb_payload_passthrough();
 void test_eeb_dispatch_copies_list();
 void test_eeb_event_name_in_handler();
 
+// Integration tests (Undoable Entity Commands + multi-system)
+void test_uset_cmd_executes_and_records();
+void test_uset_cmd_undo_removes_new();
+void test_uset_cmd_undo_restores_previous();
+void test_uset_cmd_redo();
+void test_uset_cmd_description();
+void test_uremove_cmd_executes_and_records();
+void test_uremove_cmd_undo_restores();
+void test_uremove_cmd_redo();
+void test_uremove_cmd_noop_no_component();
+void test_uremove_cmd_description();
+void test_multi_step_undo_redo();
+void test_undo_set_then_remove();
+void test_gsm_publishes_phase_change_via_event_bus();
+void test_gsm_credits_change_via_event_bus();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2552,6 +2568,25 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_eeb_payload_passthrough);
     RUN_TEST(test_eeb_dispatch_copies_list);
     RUN_TEST(test_eeb_event_name_in_handler);
+
+    // Integration: Undoable Entity Commands + Multi-System
+    log.BeginSection("Undoable Entity Commands");
+    RUN_TEST(test_uset_cmd_executes_and_records);
+    RUN_TEST(test_uset_cmd_undo_removes_new);
+    RUN_TEST(test_uset_cmd_undo_restores_previous);
+    RUN_TEST(test_uset_cmd_redo);
+    RUN_TEST(test_uset_cmd_description);
+    RUN_TEST(test_uremove_cmd_executes_and_records);
+    RUN_TEST(test_uremove_cmd_undo_restores);
+    RUN_TEST(test_uremove_cmd_redo);
+    RUN_TEST(test_uremove_cmd_noop_no_component);
+    RUN_TEST(test_uremove_cmd_description);
+
+    log.BeginSection("Multi-System Integration");
+    RUN_TEST(test_multi_step_undo_redo);
+    RUN_TEST(test_undo_set_then_remove);
+    RUN_TEST(test_gsm_publishes_phase_change_via_event_bus);
+    RUN_TEST(test_gsm_credits_change_via_event_bus);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
