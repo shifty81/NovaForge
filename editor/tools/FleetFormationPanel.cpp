@@ -18,6 +18,7 @@ void FleetFormationPanel::Draw() {
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
+    ApplyDockBounds(m_panelState);
     if (!atlas::panelBeginStateful(ctx, "Fleet Formation", m_panelState)) {
         atlas::panelEnd(ctx);
         return;

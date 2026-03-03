@@ -15,6 +15,7 @@ void ViewportPanel::Draw() {
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
+    ApplyDockBounds(m_viewportPanelState);
     if (!atlas::panelBeginStateful(ctx, "Viewport", m_viewportPanelState)) {
         atlas::panelEnd(ctx);
         return;
@@ -97,7 +98,8 @@ void ViewportPanel::LoadShip(const pcg::GeneratedShip& ship, uint64_t seed) {
     hull.transform.scaleY = hullScale * 0.3f;
     hull.transform.scaleZ = hullScale * 0.5f;
     m_objects.push_back(hull);
-    m_originalTransforms.push_back({hull.id, hull.transform});
+    m_objectIndex[hull.id] = m_objects.size() - 1;
+    m_originalTransforms[hull.id] = hull.transform;
 
     // Create child objects for each turret hardpoint
     for (int i = 0; i < ship.turretSlots; ++i) {
@@ -112,7 +114,8 @@ void ViewportPanel::LoadShip(const pcg::GeneratedShip& ship, uint64_t seed) {
         turret.transform.posX = (t - 0.5f) * hull.transform.scaleX;
         turret.transform.posY = hull.transform.scaleY * 0.5f;
         m_objects.push_back(turret);
-        m_originalTransforms.push_back({turret.id, turret.transform});
+        m_objectIndex[turret.id] = m_objects.size() - 1;
+        m_originalTransforms[turret.id] = turret.transform;
     }
 
     std::ostringstream oss;
@@ -136,7 +139,8 @@ void ViewportPanel::LoadStation(const pcg::GeneratedStation& station, uint64_t s
         obj.transform.scaleY = mod.dimY;
         obj.transform.scaleZ = mod.dimZ;
         m_objects.push_back(obj);
-        m_originalTransforms.push_back({obj.id, obj.transform});
+        m_objectIndex[obj.id] = m_objects.size() - 1;
+        m_originalTransforms[obj.id] = obj.transform;
     }
 
     std::ostringstream oss;
@@ -178,7 +182,8 @@ void ViewportPanel::LoadSpineHull(const pcg::GeneratedSpineHull& hull,
         obj.transform.scaleY = width;
         obj.transform.scaleZ = width * 0.5f;
         m_objects.push_back(obj);
-        m_originalTransforms.push_back({obj.id, obj.transform});
+        m_objectIndex[obj.id] = m_objects.size() - 1;
+        m_originalTransforms[obj.id] = obj.transform;
 
         zoneStart += zoneLen;
     }
@@ -196,7 +201,8 @@ void ViewportPanel::LoadSpineHull(const pcg::GeneratedSpineHull& hull,
             turret.transform.posZ = m.z_offset;
             turret.transform.rotY = m.direction_deg;
             m_objects.push_back(turret);
-            m_originalTransforms.push_back({turret.id, turret.transform});
+            m_objectIndex[turret.id] = m_objects.size() - 1;
+            m_originalTransforms[turret.id] = turret.transform;
         }
     }
 
@@ -229,7 +235,8 @@ void ViewportPanel::LoadCharacter(const pcg::GeneratedLowPolyCharacter& characte
         obj.transform.posY   = part.offsetY;
         obj.transform.posZ   = part.offsetZ;
         m_objects.push_back(obj);
-        m_originalTransforms.push_back({obj.id, obj.transform});
+        m_objectIndex[obj.id] = m_objects.size() - 1;
+        m_originalTransforms[obj.id] = obj.transform;
     }
 
     // Create one object per clothing / accessory item.
@@ -246,7 +253,8 @@ void ViewportPanel::LoadCharacter(const pcg::GeneratedLowPolyCharacter& characte
         obj.transform.posY   = item.offsetY;
         obj.transform.posZ   = item.offsetZ;
         m_objects.push_back(obj);
-        m_originalTransforms.push_back({obj.id, obj.transform});
+        m_objectIndex[obj.id] = m_objects.size() - 1;
+        m_originalTransforms[obj.id] = obj.transform;
     }
 
     std::ostringstream oss;
@@ -258,6 +266,7 @@ void ViewportPanel::LoadCharacter(const pcg::GeneratedLowPolyCharacter& characte
 
 void ViewportPanel::ClearScene() {
     m_objects.clear();
+    m_objectIndex.clear();
     m_originalTransforms.clear();
     m_pendingChanges.clear();
     m_selectedId = 0;
@@ -351,7 +360,7 @@ std::vector<ViewportChange> ViewportPanel::CommitChanges() {
     // Update original transforms to match current state
     m_originalTransforms.clear();
     for (const auto& obj : m_objects) {
-        m_originalTransforms.push_back({obj.id, obj.transform});
+        m_originalTransforms[obj.id] = obj.transform;
     }
 
     if (!committed.empty()) {
@@ -366,11 +375,9 @@ std::vector<ViewportChange> ViewportPanel::CommitChanges() {
 void ViewportPanel::DiscardChanges() {
     // Revert all objects to their original transforms
     for (auto& obj : m_objects) {
-        for (const auto& orig : m_originalTransforms) {
-            if (orig.first == obj.id) {
-                obj.transform = orig.second;
-                break;
-            }
+        auto it = m_originalTransforms.find(obj.id);
+        if (it != m_originalTransforms.end()) {
+            obj.transform = it->second;
         }
     }
     m_pendingChanges.clear();
@@ -380,15 +387,17 @@ void ViewportPanel::DiscardChanges() {
 // ── Private helpers ───────────────────────────────────────────────
 
 ViewportObject* ViewportPanel::findObject(uint32_t id) {
-    for (auto& obj : m_objects) {
-        if (obj.id == id) return &obj;
+    auto it = m_objectIndex.find(id);
+    if (it != m_objectIndex.end() && it->second < m_objects.size()) {
+        return &m_objects[it->second];
     }
     return nullptr;
 }
 
 const ViewportObject* ViewportPanel::findObject(uint32_t id) const {
-    for (const auto& obj : m_objects) {
-        if (obj.id == id) return &obj;
+    auto it = m_objectIndex.find(id);
+    if (it != m_objectIndex.end() && it->second < m_objects.size()) {
+        return &m_objects[it->second];
     }
     return nullptr;
 }

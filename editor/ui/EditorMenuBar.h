@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <unordered_map>
 
 namespace atlas::editor {
 
@@ -69,6 +70,9 @@ private:
     std::vector<EditorPanel*> m_panels;
     std::vector<atlas::Menu>  m_menus;
     atlas::MenuBarState       m_state;
+
+    // Fast panel lookup by name — built once during Build()
+    std::unordered_map<std::string, EditorPanel*> m_panelMap;
 
     // Panel names that belong to the PCG Content menu
     static bool IsPCGPanel(const std::string& name);

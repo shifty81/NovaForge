@@ -372,6 +372,12 @@ void test_ai_best_confidence_wins();
 void test_dock_tab_draw();
 void test_dock_tab_switch();
 void test_dock_register_panels();
+void test_dock_layout_single_panel_bounds();
+void test_dock_layout_horizontal_split_bounds();
+void test_dock_layout_vertical_split_bounds();
+void test_dock_layout_tab_bounds();
+void test_dock_layout_nested_split_bounds();
+void test_dock_set_dock_bounds();
 void test_pkg_settings_target_toggle();
 void test_pkg_settings_mode_cycle();
 void test_pkg_settings_options();
@@ -1692,6 +1698,12 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_dock_tab_draw);
     RUN_TEST(test_dock_tab_switch);
     RUN_TEST(test_dock_register_panels);
+    RUN_TEST(test_dock_layout_single_panel_bounds);
+    RUN_TEST(test_dock_layout_horizontal_split_bounds);
+    RUN_TEST(test_dock_layout_vertical_split_bounds);
+    RUN_TEST(test_dock_layout_tab_bounds);
+    RUN_TEST(test_dock_layout_nested_split_bounds);
+    RUN_TEST(test_dock_set_dock_bounds);
 
     // GamePackager Settings
     log.BeginSection("GamePackager Settings");

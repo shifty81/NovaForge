@@ -9,6 +9,7 @@ namespace atlas::editor {
 
 void EditorLayout::RegisterPanel(EditorPanel* panel) {
     m_panels.push_back(panel);
+    if (panel) m_panelMap[panel->Name()] = panel;
     m_menuBar.RegisterPanel(panel);
 }
 
@@ -25,12 +26,17 @@ void EditorLayout::Draw() {
     // render below it.  In headless mode (no context) this still returns
     // the height so tests can verify the offset.
     float windowW = 1600.0f;
+    float windowH = 900.0f;
     if (m_ctx) {
         windowW = static_cast<float>(m_ctx->input().windowW);
+        windowH = static_cast<float>(m_ctx->input().windowH);
     }
-    m_menuBar.Draw(m_ctx, windowW);
+    float menuH = m_menuBar.Draw(m_ctx, windowW);
 
-    DrawNode(m_root);
+    // Compute the available area below the menu bar and pass it into
+    // the dock tree so every panel receives correct bounds.
+    atlas::Rect dockArea{0.0f, menuH, windowW, windowH - menuH};
+    DrawNode(m_root, dockArea);
 }
 
 void EditorLayout::BroadcastAssetReload(const std::string& assetId,
@@ -40,11 +46,14 @@ void EditorLayout::BroadcastAssetReload(const std::string& assetId,
     }
 }
 
-void EditorLayout::DrawNode(DockNode& node) {
+void EditorLayout::DrawNode(DockNode& node, const atlas::Rect& area) {
+    node.bounds = area;
+
     if (node.split == DockSplit::Tab) {
         if (!node.tabs.empty()) {
             int idx = std::clamp(node.activeTab, 0, static_cast<int>(node.tabs.size()) - 1);
             if (node.tabs[idx] && node.tabs[idx]->IsVisible()) {
+                node.tabs[idx]->SetDockBounds(area);
                 node.tabs[idx]->Draw();
             }
         }
@@ -53,13 +62,26 @@ void EditorLayout::DrawNode(DockNode& node) {
 
     if (node.split == DockSplit::None) {
         if (node.panel && node.panel->IsVisible()) {
+            node.panel->SetDockBounds(area);
             node.panel->Draw();
         }
         return;
     }
 
-    if (node.a) DrawNode(*node.a);
-    if (node.b) DrawNode(*node.b);
+    // Split the available area into two child regions.
+    atlas::Rect areaA, areaB;
+    if (node.split == DockSplit::Horizontal) {
+        float splitX = area.w * node.splitRatio;
+        areaA = {area.x, area.y, splitX, area.h};
+        areaB = {area.x + splitX, area.y, area.w - splitX, area.h};
+    } else { // Vertical
+        float splitY = area.h * node.splitRatio;
+        areaA = {area.x, area.y, area.w, splitY};
+        areaB = {area.x, area.y + splitY, area.w, area.h - splitY};
+    }
+
+    if (node.a) DrawNode(*node.a, areaA);
+    if (node.b) DrawNode(*node.b, areaB);
 }
 
 // ── Serialisation helpers ──────────────────────────────────────────
@@ -117,10 +139,8 @@ std::string EditorLayout::serializeNode(const DockNode& node, int ind) const {
 }
 
 EditorPanel* EditorLayout::findPanelByName(const std::string& name) const {
-    for (auto* p : m_panels) {
-        if (p && name == p->Name()) return p;
-    }
-    return nullptr;
+    auto it = m_panelMap.find(name);
+    return it != m_panelMap.end() ? it->second : nullptr;
 }
 
 std::string EditorLayout::extractString(const std::string& json, const std::string& key,

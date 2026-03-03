@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <unordered_map>
 
 namespace atlas::editor {
 
@@ -205,8 +206,11 @@ private:
     std::vector<ViewportChange> m_pendingChanges;
     std::vector<std::string> m_log;
 
-    // Original transforms for revert
-    std::vector<std::pair<uint32_t, ViewportTransform>> m_originalTransforms;
+    // Original transforms for revert (O(1) lookup by id)
+    std::unordered_map<uint32_t, ViewportTransform> m_originalTransforms;
+
+    // Fast object lookup by id
+    std::unordered_map<uint32_t, size_t> m_objectIndex;
 
     static const ViewportTransform s_defaultTransform;
 

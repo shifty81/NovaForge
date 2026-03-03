@@ -15,6 +15,7 @@ void SceneGraphPanel::Draw() {
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
+    ApplyDockBounds(m_panelState);
     if (!atlas::panelBeginStateful(ctx, "Scene Graph", m_panelState)) {
         atlas::panelEnd(ctx);
         return;

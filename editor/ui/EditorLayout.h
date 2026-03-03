@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 namespace atlas { class AtlasContext; }
 
@@ -48,10 +49,11 @@ public:
 private:
     DockNode m_root;
     std::vector<EditorPanel*> m_panels;
+    std::unordered_map<std::string, EditorPanel*> m_panelMap;
     atlas::AtlasContext* m_ctx = nullptr;
     EditorMenuBar m_menuBar;
 
-    static void DrawNode(DockNode& node);
+    static void DrawNode(DockNode& node, const atlas::Rect& area);
     std::string serializeNode(const DockNode& node, int indent) const;
     void deserializeNode(DockNode& node, const std::string& json, size_t& pos);
     EditorPanel* findPanelByName(const std::string& name) const;

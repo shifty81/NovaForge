@@ -16,6 +16,9 @@ struct DockNode {
     DockSplit split = DockSplit::None;
     float splitRatio = 0.5f;
 
+    /** Computed layout bounds — set each frame by EditorLayout. */
+    atlas::Rect bounds;
+
     std::unique_ptr<DockNode> a;
     std::unique_ptr<DockNode> b;
 

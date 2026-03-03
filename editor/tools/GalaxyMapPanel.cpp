@@ -95,6 +95,7 @@ void GalaxyMapPanel::Draw() {
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
+    ApplyDockBounds(m_panelState);
     if (!atlas::panelBeginStateful(ctx, "Galaxy Map", m_panelState)) {
         atlas::panelEnd(ctx);
         return;

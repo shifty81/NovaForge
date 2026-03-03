@@ -7,6 +7,7 @@ void ConsolePanel::Draw() {
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
+    ApplyDockBounds(m_panelState);
     if (!panelBeginStateful(ctx, "Console", m_panelState))
     {
         panelEnd(ctx);

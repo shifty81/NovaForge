@@ -16,6 +16,7 @@ void MissionEditorPanel::Draw() {
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
+    ApplyDockBounds(m_panelState);
     if (!atlas::panelBeginStateful(ctx, "Mission Editor", m_panelState)) {
         atlas::panelEnd(ctx);
         return;

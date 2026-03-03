@@ -20,6 +20,12 @@ bool EditorMenuBar::IsPCGPanel(const std::string& name) {
 
 void EditorMenuBar::Build() {
     m_menus.clear();
+    m_panelMap.clear();
+
+    // Build name→panel lookup for O(1) per-frame state refresh
+    for (auto* panel : m_panels) {
+        if (panel) m_panelMap[panel->Name()] = panel;
+    }
 
     // ── File menu ────────────────────────────────────────────────
     atlas::Menu fileMenu;
@@ -54,28 +60,21 @@ void EditorMenuBar::Build() {
 }
 
 float EditorMenuBar::Draw(atlas::AtlasContext* ctx, float windowW) {
-    // Rebuild the View and PCG Content menus each frame so that the
-    // checked state stays in sync with panel visibility.
+    // Refresh checked state using O(1) map lookup instead of O(n²) nested loop
     if (m_menus.size() >= 2) {
-        // View menu (index 1): refresh checked state by matching panel name
         auto& viewItems = m_menus[1].items;
         for (auto& item : viewItems) {
-            for (auto* panel : m_panels) {
-                if (panel && item.label == panel->Name()) {
-                    item.checked = panel->IsVisible();
-                    break;
-                }
+            auto it = m_panelMap.find(item.label);
+            if (it != m_panelMap.end()) {
+                item.checked = it->second->IsVisible();
             }
         }
-        // PCG Content menu (index 2 if present)
         if (m_menus.size() >= 3) {
             auto& pcgItems = m_menus[2].items;
             for (auto& item : pcgItems) {
-                for (auto* panel : m_panels) {
-                    if (panel && item.label == panel->Name()) {
-                        item.checked = panel->IsVisible();
-                        break;
-                    }
+                auto it = m_panelMap.find(item.label);
+                if (it != m_panelMap.end()) {
+                    item.checked = it->second->IsVisible();
                 }
             }
         }

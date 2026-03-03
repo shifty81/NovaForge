@@ -20,6 +20,7 @@ void AssetStylePanel::Draw() {
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
+    ApplyDockBounds(m_panelState);
     if (!atlas::panelBeginStateful(ctx, "Asset Style", m_panelState)) {
         atlas::panelEnd(ctx);
         return;

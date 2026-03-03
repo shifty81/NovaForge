@@ -34,6 +34,7 @@ void ECSInspectorPanel::Draw() {
 
     if (ctx) {
         using namespace atlas;
+        ApplyDockBounds(m_panelState);
         const float rowH = ctx->theme().rowHeight;
         const float panelW = m_panelState.bounds.w > 0
                                  ? m_panelState.bounds.w
