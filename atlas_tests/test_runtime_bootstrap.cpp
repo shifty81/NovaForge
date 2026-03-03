@@ -67,16 +67,8 @@ void test_bootstrap_idempotent_initialize() {
 void test_bootstrap_engine_runs() {
     RuntimeBootstrap bootstrap;
     Engine& engine = bootstrap.Initialize(RuntimeMode::Server);
-    engine.Config(); // accessible
 
-    // Set maxTicks so Run() terminates
-    // We access the mutable config through the non-const engine reference
-    // by using the scheduler/tick approach from existing tests
-    int tickCount = 0;
-    engine.GetWorld().SetTickCallback([&](float) { tickCount++; });
-
-    // Manually override maxTicks via a fresh config isn't possible (const ref),
-    // so we just verify the engine is in a runnable state and shut down.
+    // Verify the engine is in a runnable state and can be shut down.
     assert(engine.Running());
     engine.Shutdown();
     assert(!engine.Running());

@@ -28,6 +28,7 @@ Engine& RuntimeBootstrap::Initialize(RuntimeMode mode) {
 }
 
 Engine& RuntimeBootstrap::GetEngine() {
+    // Precondition: Initialize() must be called before GetEngine().
     return *m_engine;
 }
 
@@ -70,8 +71,8 @@ EngineMode RuntimeBootstrap::ToEngineMode(RuntimeMode mode) {
         case RuntimeMode::Editor: return EngineMode::Editor;
         case RuntimeMode::Game:   return EngineMode::Client;
         case RuntimeMode::Server: return EngineMode::Server;
+        default:                  return EngineMode::Client;
     }
-    return EngineMode::Client;
 }
 
 } // namespace atlas
