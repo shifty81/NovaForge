@@ -609,3 +609,176 @@ void test_undo_viewport_transform() {
     float afterRedo = viewport.GetTransform(objId).posX;
     assert(std::abs(afterRedo - newX) < 0.01f);
 }
+
+// ══════════════════════════════════════════════════════════════════
+// Dock layout bounds computation tests
+// ══════════════════════════════════════════════════════════════════
+
+void test_dock_layout_single_panel_bounds() {
+    TrackablePanel a("A");
+
+    EditorLayout layout;
+    layout.RegisterPanel(&a);
+    layout.Root().panel = &a;
+
+    // Draw triggers DrawNode which should assign dock bounds
+    layout.Draw();
+
+    assert(a.HasDockBounds());
+    // Default window is 1600×900; menu bar is 22px high
+    // So dock area is {0, 22, 1600, 878}
+    const auto& b = a.DockBounds();
+    assert(b.x == 0.0f);
+    assert(b.y == 22.0f);
+    assert(b.w == 1600.0f);
+    assert(b.h == 878.0f);
+}
+
+void test_dock_layout_horizontal_split_bounds() {
+    TrackablePanel left("Left");
+    TrackablePanel right("Right");
+
+    EditorLayout layout;
+    layout.RegisterPanel(&left);
+    layout.RegisterPanel(&right);
+
+    auto& root = layout.Root();
+    root.split = DockSplit::Horizontal;
+    root.splitRatio = 0.60f;
+    root.a = std::make_unique<DockNode>();
+    root.b = std::make_unique<DockNode>();
+    root.a->panel = &left;
+    root.b->panel = &right;
+
+    layout.Draw();
+
+    assert(left.HasDockBounds());
+    assert(right.HasDockBounds());
+
+    const auto& lb = left.DockBounds();
+    const auto& rb = right.DockBounds();
+
+    // Left panel: 60% of 1600 = 960 wide
+    assert(lb.x == 0.0f);
+    assert(lb.w == 960.0f);
+    // Right panel: starts at 960, width = 640
+    assert(rb.x == 960.0f);
+    assert(rb.w == 640.0f);
+    // Both full height (below menu bar)
+    assert(lb.h == 878.0f);
+    assert(rb.h == 878.0f);
+}
+
+void test_dock_layout_vertical_split_bounds() {
+    TrackablePanel top("Top");
+    TrackablePanel bottom("Bottom");
+
+    EditorLayout layout;
+    layout.RegisterPanel(&top);
+    layout.RegisterPanel(&bottom);
+
+    auto& root = layout.Root();
+    root.split = DockSplit::Vertical;
+    root.splitRatio = 0.70f;
+    root.a = std::make_unique<DockNode>();
+    root.b = std::make_unique<DockNode>();
+    root.a->panel = &top;
+    root.b->panel = &bottom;
+
+    layout.Draw();
+
+    const auto& tb = top.DockBounds();
+    const auto& bb = bottom.DockBounds();
+
+    // Top panel: 70% of 878 ≈ 614.6
+    assert(std::abs(tb.h - 878.0f * 0.70f) < 0.1f);
+    // Bottom panel: 30% of 878 ≈ 263.4
+    assert(std::abs(bb.h - 878.0f * 0.30f) < 0.1f);
+    // Bottom panel starts after top
+    assert(std::abs(bb.y - (22.0f + 878.0f * 0.70f)) < 0.1f);
+}
+
+void test_dock_layout_tab_bounds() {
+    TrackablePanel a("A");
+    TrackablePanel b("B");
+
+    EditorLayout layout;
+    layout.RegisterPanel(&a);
+    layout.RegisterPanel(&b);
+
+    auto& root = layout.Root();
+    root.split = DockSplit::Tab;
+    root.tabs = {&a, &b};
+    root.activeTab = 0;
+
+    layout.Draw();
+
+    // Active tab should get dock bounds
+    assert(a.HasDockBounds());
+    const auto& ab = a.DockBounds();
+    assert(ab.x == 0.0f);
+    assert(ab.y == 22.0f);
+    assert(ab.w == 1600.0f);
+    assert(ab.h == 878.0f);
+}
+
+void test_dock_layout_nested_split_bounds() {
+    // Mimics the editor layout: Horizontal root, left has vertical split
+    TrackablePanel viewport("Viewport");
+    TrackablePanel console("Console");
+    TrackablePanel tools("Tools");
+
+    EditorLayout layout;
+    layout.RegisterPanel(&viewport);
+    layout.RegisterPanel(&console);
+    layout.RegisterPanel(&tools);
+
+    auto& root = layout.Root();
+    root.split = DockSplit::Horizontal;
+    root.splitRatio = 0.65f;
+
+    root.a = std::make_unique<DockNode>();
+    root.b = std::make_unique<DockNode>();
+
+    // Left: vertical split (viewport on top, console on bottom)
+    root.a->split = DockSplit::Vertical;
+    root.a->splitRatio = 0.70f;
+    root.a->a = std::make_unique<DockNode>();
+    root.a->b = std::make_unique<DockNode>();
+    root.a->a->panel = &viewport;
+    root.a->b->panel = &console;
+
+    // Right: single panel
+    root.b->panel = &tools;
+
+    layout.Draw();
+
+    const auto& vb = viewport.DockBounds();
+    const auto& cb = console.DockBounds();
+    const auto& tb = tools.DockBounds();
+
+    // Left column is 65% of 1600 = 1040
+    assert(std::abs(vb.w - 1040.0f) < 0.1f);
+    assert(std::abs(cb.w - 1040.0f) < 0.1f);
+    // Viewport is 70% of left's height
+    float leftH = 878.0f;
+    assert(std::abs(vb.h - leftH * 0.70f) < 0.1f);
+    // Console is 30% of left's height
+    assert(std::abs(cb.h - leftH * 0.30f) < 0.1f);
+    // Right column starts at x=1040, width=560
+    assert(std::abs(tb.x - 1040.0f) < 0.1f);
+    assert(std::abs(tb.w - 560.0f) < 0.1f);
+    assert(std::abs(tb.h - 878.0f) < 0.1f);
+}
+
+void test_dock_set_dock_bounds() {
+    TrackablePanel a("A");
+    assert(!a.HasDockBounds());
+
+    a.SetDockBounds({100, 200, 300, 400});
+    assert(a.HasDockBounds());
+    assert(a.DockBounds().x == 100.0f);
+    assert(a.DockBounds().y == 200.0f);
+    assert(a.DockBounds().w == 300.0f);
+    assert(a.DockBounds().h == 400.0f);
+}
