@@ -1336,6 +1336,37 @@ void test_snapshot_rollback();
 void test_snapshot_rollback_out_of_bounds();
 void test_snapshot_preserves_overrides();
 
+// EventTimelineTool tests
+void test_event_timeline_name();
+void test_event_timeline_activate_deactivate();
+void test_event_timeline_add_event();
+void test_event_timeline_add_event_undo();
+void test_event_timeline_remove_event();
+void test_event_timeline_remove_event_undo();
+void test_event_timeline_set_property();
+void test_event_timeline_set_property_undo();
+void test_event_timeline_multiple_events();
+
+// BatchOperationsTool tests
+void test_batch_ops_name();
+void test_batch_ops_activate_deactivate();
+void test_batch_ops_set_property();
+void test_batch_ops_set_property_undo();
+void test_batch_ops_transform();
+void test_batch_ops_transform_undo();
+void test_batch_ops_multiple_operations();
+
+// SceneBookmarkManager tests
+void test_bookmark_default_empty();
+void test_bookmark_save_and_get();
+void test_bookmark_multiple();
+void test_bookmark_remove();
+void test_bookmark_remove_out_of_bounds();
+void test_bookmark_rename();
+void test_bookmark_rename_out_of_bounds();
+void test_bookmark_clear();
+void test_bookmark_selection_preserved();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -1945,6 +1976,40 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_snapshot_rollback);
     RUN_TEST(test_snapshot_rollback_out_of_bounds);
     RUN_TEST(test_snapshot_preserves_overrides);
+
+    // EventTimelineTool
+    log.BeginSection("EventTimelineTool");
+    RUN_TEST(test_event_timeline_name);
+    RUN_TEST(test_event_timeline_activate_deactivate);
+    RUN_TEST(test_event_timeline_add_event);
+    RUN_TEST(test_event_timeline_add_event_undo);
+    RUN_TEST(test_event_timeline_remove_event);
+    RUN_TEST(test_event_timeline_remove_event_undo);
+    RUN_TEST(test_event_timeline_set_property);
+    RUN_TEST(test_event_timeline_set_property_undo);
+    RUN_TEST(test_event_timeline_multiple_events);
+
+    // BatchOperationsTool
+    log.BeginSection("BatchOperationsTool");
+    RUN_TEST(test_batch_ops_name);
+    RUN_TEST(test_batch_ops_activate_deactivate);
+    RUN_TEST(test_batch_ops_set_property);
+    RUN_TEST(test_batch_ops_set_property_undo);
+    RUN_TEST(test_batch_ops_transform);
+    RUN_TEST(test_batch_ops_transform_undo);
+    RUN_TEST(test_batch_ops_multiple_operations);
+
+    // SceneBookmarkManager
+    log.BeginSection("SceneBookmarkManager");
+    RUN_TEST(test_bookmark_default_empty);
+    RUN_TEST(test_bookmark_save_and_get);
+    RUN_TEST(test_bookmark_multiple);
+    RUN_TEST(test_bookmark_remove);
+    RUN_TEST(test_bookmark_remove_out_of_bounds);
+    RUN_TEST(test_bookmark_rename);
+    RUN_TEST(test_bookmark_rename_out_of_bounds);
+    RUN_TEST(test_bookmark_clear);
+    RUN_TEST(test_bookmark_selection_preserved);
 
     // Dock Layout
     log.BeginSection("Dock Layout");
