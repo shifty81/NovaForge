@@ -1486,6 +1486,41 @@ void test_vdiff_entries_for_entity();
 void test_vdiff_entries_by_type();
 void test_vdiff_descriptions_nonempty();
 
+// AnimationEditorTool tests
+void test_anim_editor_name();
+void test_anim_editor_activate_deactivate();
+void test_anim_editor_set_keyframe();
+void test_anim_editor_set_keyframe_undo();
+void test_anim_editor_remove_keyframe();
+void test_anim_editor_remove_keyframe_undo();
+void test_anim_editor_set_blend_weight();
+void test_anim_editor_set_blend_weight_undo();
+void test_anim_editor_multiple_keyframes();
+void test_anim_editor_multiple_entities();
+
+// LightingControlTool tests
+void test_light_tool_name();
+void test_light_tool_activate_deactivate();
+void test_light_tool_set_property();
+void test_light_tool_set_property_undo();
+void test_light_tool_apply_preset();
+void test_light_tool_apply_preset_undo();
+void test_light_tool_multiple_properties();
+void test_light_tool_multiple_entities();
+
+// ScriptConsole tests
+void test_sconsole_name();
+void test_sconsole_activate_deactivate();
+void test_sconsole_log();
+void test_sconsole_warn();
+void test_sconsole_error();
+void test_sconsole_clear();
+void test_sconsole_filter();
+void test_sconsole_ring_buffer();
+void test_sconsole_execute_set_property();
+void test_sconsole_execute_set_property_undo();
+void test_sconsole_multiple_commands();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2257,6 +2292,44 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_vdiff_entries_for_entity);
     RUN_TEST(test_vdiff_entries_by_type);
     RUN_TEST(test_vdiff_descriptions_nonempty);
+
+    // AnimationEditorTool
+    log.BeginSection("AnimationEditorTool");
+    RUN_TEST(test_anim_editor_name);
+    RUN_TEST(test_anim_editor_activate_deactivate);
+    RUN_TEST(test_anim_editor_set_keyframe);
+    RUN_TEST(test_anim_editor_set_keyframe_undo);
+    RUN_TEST(test_anim_editor_remove_keyframe);
+    RUN_TEST(test_anim_editor_remove_keyframe_undo);
+    RUN_TEST(test_anim_editor_set_blend_weight);
+    RUN_TEST(test_anim_editor_set_blend_weight_undo);
+    RUN_TEST(test_anim_editor_multiple_keyframes);
+    RUN_TEST(test_anim_editor_multiple_entities);
+
+    // LightingControlTool
+    log.BeginSection("LightingControlTool");
+    RUN_TEST(test_light_tool_name);
+    RUN_TEST(test_light_tool_activate_deactivate);
+    RUN_TEST(test_light_tool_set_property);
+    RUN_TEST(test_light_tool_set_property_undo);
+    RUN_TEST(test_light_tool_apply_preset);
+    RUN_TEST(test_light_tool_apply_preset_undo);
+    RUN_TEST(test_light_tool_multiple_properties);
+    RUN_TEST(test_light_tool_multiple_entities);
+
+    // ScriptConsole
+    log.BeginSection("ScriptConsole");
+    RUN_TEST(test_sconsole_name);
+    RUN_TEST(test_sconsole_activate_deactivate);
+    RUN_TEST(test_sconsole_log);
+    RUN_TEST(test_sconsole_warn);
+    RUN_TEST(test_sconsole_error);
+    RUN_TEST(test_sconsole_clear);
+    RUN_TEST(test_sconsole_filter);
+    RUN_TEST(test_sconsole_ring_buffer);
+    RUN_TEST(test_sconsole_execute_set_property);
+    RUN_TEST(test_sconsole_execute_set_property_undo);
+    RUN_TEST(test_sconsole_multiple_commands);
 
     // Dock Layout
     log.BeginSection("Dock Layout");
