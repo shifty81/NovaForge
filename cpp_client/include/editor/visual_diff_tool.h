@@ -3,7 +3,7 @@
  * @file visual_diff_tool.h
  * @brief Editor-side tool for comparing current DeltaEdits against the PCG baseline.
  *
- * VisualDiffTool analyses the DeltaEditStore and produces a structured
+ * VisualDiffTool analyzes the DeltaEditStore and produces a structured
  * summary of all modifications:  added objects, removed objects, moved
  * objects, and property changes.  This lets the designer see exactly
  * what has been modified since the last PCG generation, enabling
@@ -61,7 +61,7 @@ class VisualDiffTool {
 public:
     /**
      * Compute a diff summary from all edits in the store.
-     * Counts are categorised by DeltaEditType.
+     * Counts are categorized by DeltaEditType.
      */
     DiffSummary ComputeDiff(const atlas::ecs::DeltaEditStore& store) const {
         DiffSummary summary;
