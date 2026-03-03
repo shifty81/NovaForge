@@ -1185,6 +1185,43 @@ void test_gsm_inventory_remove_nonexistent();
 void test_gsm_reset();
 void test_gsm_reset_preserves_callbacks();
 
+// RemoveComponentCommand tests
+void test_remove_component_cmd_removes();
+void test_remove_component_cmd_no_component();
+void test_remove_component_cmd_description();
+void test_remove_component_cmd_via_bus();
+void test_remove_component_cmd_target_id();
+
+// UndoableCommandBus tests
+void test_ucb_post_and_process();
+void test_ucb_undoable_recorded();
+void test_ucb_plain_not_recorded();
+void test_ucb_undo();
+void test_ucb_redo();
+void test_ucb_undo_redo_counts();
+void test_ucb_clear_history();
+void test_ucb_undo_description();
+void test_ucb_redo_description();
+void test_ucb_new_command_clears_redo();
+void test_ucb_depth_limit();
+void test_ucb_null_command_ignored();
+void test_ucb_multiple_undo_redo();
+
+// EditorEventBus tests
+void test_eeb_subscribe_and_publish();
+void test_eeb_multiple_subscribers();
+void test_eeb_different_events_independent();
+void test_eeb_unsubscribe();
+void test_eeb_unsubscribe_unknown();
+void test_eeb_publish_returns_count();
+void test_eeb_publish_no_subscribers();
+void test_eeb_subscriber_count();
+void test_eeb_total_subscriptions();
+void test_eeb_clear();
+void test_eeb_payload_passthrough();
+void test_eeb_dispatch_copies_list();
+void test_eeb_event_name_in_handler();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2476,6 +2513,46 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_gsm_inventory_remove_nonexistent);
     RUN_TEST(test_gsm_reset);
     RUN_TEST(test_gsm_reset_preserves_callbacks);
+
+    // RemoveComponentCommand
+    log.BeginSection("RemoveComponentCommand");
+    RUN_TEST(test_remove_component_cmd_removes);
+    RUN_TEST(test_remove_component_cmd_no_component);
+    RUN_TEST(test_remove_component_cmd_description);
+    RUN_TEST(test_remove_component_cmd_via_bus);
+    RUN_TEST(test_remove_component_cmd_target_id);
+
+    // UndoableCommandBus
+    log.BeginSection("UndoableCommandBus");
+    RUN_TEST(test_ucb_post_and_process);
+    RUN_TEST(test_ucb_undoable_recorded);
+    RUN_TEST(test_ucb_plain_not_recorded);
+    RUN_TEST(test_ucb_undo);
+    RUN_TEST(test_ucb_redo);
+    RUN_TEST(test_ucb_undo_redo_counts);
+    RUN_TEST(test_ucb_clear_history);
+    RUN_TEST(test_ucb_undo_description);
+    RUN_TEST(test_ucb_redo_description);
+    RUN_TEST(test_ucb_new_command_clears_redo);
+    RUN_TEST(test_ucb_depth_limit);
+    RUN_TEST(test_ucb_null_command_ignored);
+    RUN_TEST(test_ucb_multiple_undo_redo);
+
+    // EditorEventBus
+    log.BeginSection("EditorEventBus");
+    RUN_TEST(test_eeb_subscribe_and_publish);
+    RUN_TEST(test_eeb_multiple_subscribers);
+    RUN_TEST(test_eeb_different_events_independent);
+    RUN_TEST(test_eeb_unsubscribe);
+    RUN_TEST(test_eeb_unsubscribe_unknown);
+    RUN_TEST(test_eeb_publish_returns_count);
+    RUN_TEST(test_eeb_publish_no_subscribers);
+    RUN_TEST(test_eeb_subscriber_count);
+    RUN_TEST(test_eeb_total_subscriptions);
+    RUN_TEST(test_eeb_clear);
+    RUN_TEST(test_eeb_payload_passthrough);
+    RUN_TEST(test_eeb_dispatch_copies_list);
+    RUN_TEST(test_eeb_event_name_in_handler);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
