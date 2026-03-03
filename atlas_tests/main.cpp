@@ -1249,6 +1249,9 @@ void test_delta_store_serialize_empty();
 void test_delta_store_roundtrip();
 void test_delta_store_deserialize_invalid();
 void test_delta_store_roundtrip_move();
+void test_delta_store_save_to_file();
+void test_delta_store_load_nonexistent();
+void test_delta_store_save_creates_dirs();
 
 // MapEditorTool tests
 void test_map_tool_name();
@@ -3154,6 +3157,9 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_delta_store_roundtrip);
     RUN_TEST(test_delta_store_deserialize_invalid);
     RUN_TEST(test_delta_store_roundtrip_move);
+    RUN_TEST(test_delta_store_save_to_file);
+    RUN_TEST(test_delta_store_load_nonexistent);
+    RUN_TEST(test_delta_store_save_creates_dirs);
 
     // MapEditorTool
     log.BeginSection("MapEditorTool");

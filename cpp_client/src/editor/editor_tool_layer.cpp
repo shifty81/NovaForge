@@ -21,6 +21,8 @@
 #include "tools/GalaxyMapPanel.h"
 #include "tools/FleetFormationPanel.h"
 #include "tools/LiveSceneManager.h"
+#include "tools/AssetPalettePanel.h"
+#include "tools/PhysicsTunerPanel.h"
 #include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
 #include "ui/atlas/atlas_context.h"
@@ -82,6 +84,8 @@ void EditorToolLayer::init() {
     m_npcEditor       = std::make_unique<NPCEditorPanel>();
     m_galaxyMap       = std::make_unique<GalaxyMapPanel>();
     m_fleetFormation  = std::make_unique<FleetFormationPanel>();
+    m_assetPalette    = std::make_unique<AssetPalettePanel>();
+    m_physicsTuner    = std::make_unique<PhysicsTunerPanel>();
 
     // ── Live scene manager ───────────────────────────────────────
     m_liveScene = std::make_unique<LiveSceneManager>(
@@ -103,6 +107,8 @@ void EditorToolLayer::init() {
     m_layout->RegisterPanel(m_npcEditor.get());
     m_layout->RegisterPanel(m_galaxyMap.get());
     m_layout->RegisterPanel(m_fleetFormation.get());
+    m_layout->RegisterPanel(m_assetPalette.get());
+    m_layout->RegisterPanel(m_physicsTuner.get());
 
     // ── Build dock layout ────────────────────────────────────────
     //
@@ -131,7 +137,8 @@ void EditorToolLayer::init() {
     root.a->b->split = DockSplit::Tab;
     root.a->b->tabs  = {m_sceneGraph.get(), m_dataBrowser.get(),
                          m_moduleEditor.get(), m_npcEditor.get(),
-                         m_fleetFormation.get()};
+                         m_fleetFormation.get(), m_assetPalette.get(),
+                         m_physicsTuner.get()};
     root.a->b->activeTab = 0;
 
     // Right: PCG panels on top, asset style + packager on bottom
@@ -194,7 +201,8 @@ void EditorToolLayer::init() {
         m_liveScene->CaptureViewportChanges();
         m_liveScene->SaveOverrides("data/pcg_overrides.json");
         m_keybinds->SaveToFile("data/editor_keybinds.json");
-        std::cout << "[ToolLayer] Layout, overrides, and keybinds saved"
+        m_deltaEditStore.SaveToFile("data/delta_edits.json");
+        std::cout << "[ToolLayer] Layout, overrides, keybinds, and delta edits saved"
                   << std::endl;
     });
 
@@ -220,6 +228,12 @@ void EditorToolLayer::init() {
     m_liveScene->LoadOverrides("data/pcg_overrides.json");
     m_liveScene->PopulateDefaultScene();
 
+    // ── Load saved delta edits ───────────────────────────────────
+    if (m_deltaEditStore.LoadFromFile("data/delta_edits.json")) {
+        std::cout << "[ToolLayer] Delta edits loaded (" << m_deltaEditStore.Count()
+                  << " edits)" << std::endl;
+    }
+
     m_initialized = true;
 
     std::cout << "[ToolLayer] Initialized with "
@@ -236,6 +250,8 @@ void EditorToolLayer::shutdown() {
     m_layout->SetContext(nullptr);
 
     m_liveScene.reset();
+    m_physicsTuner.reset();
+    m_assetPalette.reset();
     m_fleetFormation.reset();
     m_galaxyMap.reset();
     m_npcEditor.reset();
@@ -274,6 +290,7 @@ void EditorToolLayer::draw(atlas::AtlasContext& ctx) {
 
     // Process any queued commands
     m_commandBus.ProcessCommands();
+    m_undoableCommandBus.ProcessCommands();
 
     // Draw the full editor layout (menu bar + dock tree)
     m_layout->Draw();

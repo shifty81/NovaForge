@@ -1,4 +1,6 @@
 #include "DeltaEditStore.h"
+#include <fstream>
+#include <filesystem>
 #include <sstream>
 
 namespace atlas::ecs {
@@ -211,6 +213,35 @@ bool DeltaEditStore::DeserializeFromJSON(const std::string& json) {
     }
 
     return true;
+}
+
+// ── File I/O ────────────────────────────────────────────────────
+
+bool DeltaEditStore::SaveToFile(const std::string& path) const {
+    std::filesystem::path fspath(path);
+    if (fspath.has_parent_path()) {
+        std::filesystem::create_directories(fspath.parent_path());
+    }
+
+    std::ofstream out(path);
+    if (!out.is_open()) return false;
+
+    out << SerializeToJSON();
+    out.close();
+    return true;
+}
+
+bool DeltaEditStore::LoadFromFile(const std::string& path) {
+    if (!std::filesystem::exists(path)) return false;
+
+    std::ifstream in(path);
+    if (!in.is_open()) return false;
+
+    std::string json((std::istreambuf_iterator<char>(in)),
+                      std::istreambuf_iterator<char>());
+    in.close();
+
+    return DeserializeFromJSON(json);
 }
 
 } // namespace atlas::ecs

@@ -4,10 +4,12 @@
  *   - Seed management
  *   - Clear
  *   - JSON round-trip serialization
+ *   - File I/O persistence
  */
 
 #include <cassert>
 #include <cstring>
+#include <cstdio>
 #include <string>
 #include "../engine/ecs/DeltaEditStore.h"
 
@@ -165,4 +167,72 @@ void test_delta_store_roundtrip_move() {
     float dz = loaded.Edits()[0].position[2] - 12.3f;
     assert(dx > -0.01f && dx < 0.01f);
     assert(dz > -0.01f && dz < 0.01f);
+}
+
+void test_delta_store_save_to_file() {
+    const char* path = "/tmp/test_delta_store_save.json";
+    DeltaEditStore store(42);
+
+    DeltaEdit e1{};
+    e1.type       = DeltaEditType::AddObject;
+    e1.entityID   = 1;
+    e1.objectType = "station";
+    e1.position[0] = 100.0f;
+    e1.position[1] = 200.0f;
+    e1.position[2] = 300.0f;
+    store.Record(e1);
+
+    DeltaEdit e2{};
+    e2.type          = DeltaEditType::SetProperty;
+    e2.entityID      = 2;
+    e2.propertyName  = "name";
+    e2.propertyValue = "Alpha Base";
+    store.Record(e2);
+
+    bool saved = store.SaveToFile(path);
+    assert(saved);
+
+    DeltaEditStore loaded;
+    bool ok = loaded.LoadFromFile(path);
+    assert(ok);
+    assert(loaded.Seed() == 42);
+    assert(loaded.Count() == 2);
+    assert(loaded.Edits()[0].type == DeltaEditType::AddObject);
+    assert(loaded.Edits()[0].entityID == 1);
+    assert(loaded.Edits()[0].objectType == "station");
+    assert(loaded.Edits()[1].type == DeltaEditType::SetProperty);
+    assert(loaded.Edits()[1].propertyName == "name");
+    assert(loaded.Edits()[1].propertyValue == "Alpha Base");
+
+    std::remove(path);
+}
+
+void test_delta_store_load_nonexistent() {
+    DeltaEditStore store;
+    assert(!store.LoadFromFile("/tmp/nonexistent_delta_edits_test.json"));
+    assert(store.Count() == 0);
+}
+
+void test_delta_store_save_creates_dirs() {
+    const char* path = "/tmp/test_delta_subdir/edits.json";
+    DeltaEditStore store(7);
+    DeltaEdit edit{};
+    edit.type     = DeltaEditType::MoveObject;
+    edit.entityID = 10;
+    edit.position[0] = 1.0f;
+    edit.position[1] = 2.0f;
+    edit.position[2] = 3.0f;
+    store.Record(edit);
+
+    bool saved = store.SaveToFile(path);
+    assert(saved);
+
+    DeltaEditStore loaded;
+    assert(loaded.LoadFromFile(path));
+    assert(loaded.Seed() == 7);
+    assert(loaded.Count() == 1);
+    assert(loaded.Edits()[0].entityID == 10);
+
+    std::remove(path);
+    std::remove("/tmp/test_delta_subdir");
 }
