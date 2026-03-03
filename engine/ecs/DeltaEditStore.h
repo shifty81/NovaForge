@@ -83,6 +83,13 @@ public:
     /** Deserialize from a JSON string, replacing current contents. */
     bool DeserializeFromJSON(const std::string& json);
 
+    // ── File I/O ───────────────────────────────────────────────────
+    /** Save the seed + all edits to a JSON file. Creates parent dirs. */
+    bool SaveToFile(const std::string& path) const;
+
+    /** Load seed + edits from a JSON file, replacing current contents. */
+    bool LoadFromFile(const std::string& path);
+
 private:
     uint64_t               m_seed = 0;
     std::vector<DeltaEdit> m_edits;

@@ -25,6 +25,8 @@
 #include <string>
 #include "editor/itool.h"
 #include "editor/editor_command_bus.h"
+#include "editor/undoable_command_bus.h"
+#include "../../engine/ecs/DeltaEditStore.h"
 
 namespace atlas {
 class AtlasContext;
@@ -115,6 +117,12 @@ public:
     /** Access the command bus for posting deferred commands. */
     EditorCommandBus& commandBus() { return m_commandBus; }
 
+    /** Access the undoable command bus for ITool-based operations. */
+    UndoableCommandBus& undoableCommandBus() { return m_undoableCommandBus; }
+
+    /** Access the delta edit store for persistent world edits. */
+    atlas::ecs::DeltaEditStore& deltaEditStore() { return m_deltaEditStore; }
+
     /** Number of panels registered in the layout. */
     size_t panelCount() const;
 
@@ -124,6 +132,8 @@ private:
 
     // ── Sub-systems ─────────────────────────────────────────────────
     EditorCommandBus m_commandBus;
+    UndoableCommandBus m_undoableCommandBus;
+    atlas::ecs::DeltaEditStore m_deltaEditStore;
     std::vector<std::unique_ptr<ITool>> m_tools;
 
     // ── Editor infrastructure (pimpl-style to keep header light) ────
