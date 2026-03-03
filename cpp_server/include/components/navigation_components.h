@@ -447,6 +447,35 @@ public:
     COMPONENT_TYPE(Autopilot)
 };
 
+// ==================== Jump Gate System ====================
+
+class JumpGate : public ecs::Component {
+public:
+    struct Gate {
+        std::string gate_id;
+        std::string destination_system;
+        std::string destination_gate_id;
+        float activation_time = 10.0f;
+        float cooldown_time = 30.0f;
+        float fuel_cost = 50.0f;
+        float security_level = 1.0f;
+        bool online = true;
+        bool in_use = false;
+        float current_cooldown = 0.0f;
+        float activation_progress = 0.0f;
+        int total_jumps = 0;
+    };
+
+    std::string system_id;
+    std::vector<Gate> gates;
+    int max_gates = 10;
+    int total_jumps_processed = 0;
+    int total_activations = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(JumpGate)
+};
+
 } // namespace components
 } // namespace atlas
 
