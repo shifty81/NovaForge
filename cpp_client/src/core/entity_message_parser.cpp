@@ -66,9 +66,13 @@ bool EntityMessageParser::parseSpawnEntity(const std::string& dataJson, EntityMa
         std::string shipType = data.value("ship_type", "");
         std::string shipName = data.value("ship_name", "");
         std::string faction = data.value("faction", "");
+
+        // Extract optional tag and name (for FPS interactable entities)
+        std::string tag = data.value("tag", "");
+        std::string name = data.value("name", "");
         
         // Spawn entity
-        entityManager.spawnEntity(entityId, position, health, capacitor, shipType, shipName, faction);
+        entityManager.spawnEntity(entityId, position, health, capacitor, shipType, shipName, faction, tag, name);
         return true;
         
     } catch (const nlohmann::json::exception& e) {
@@ -165,10 +169,14 @@ bool EntityMessageParser::parseStateUpdate(const std::string& dataJson, EntityMa
             std::string shipType = entityData.value("ship_type", "");
             std::string shipName = entityData.value("ship_name", "");
             std::string faction = entityData.value("faction", "");
+
+            // Extract tag and name (for FPS interactable entities)
+            std::string tag = entityData.value("tag", "");
+            std::string name = entityData.value("name", "");
             
             // Update entity state
             entityManager.updateEntityState(entityId, position, velocity, rotation, health, capacitor,
-                                            shipType, shipName, faction);
+                                            shipType, shipName, faction, tag, name);
         }
         
         // Process state update (remove entities not in update)

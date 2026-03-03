@@ -719,7 +719,7 @@ public:
     }
 
     static double getUpgradeCostForTier(int t) {
-        return 1000.0 * std::pow(2.0, std::max(1, t) - 1);
+        return 1000.0 * std::pow(2.0, (std::max)(1, t) - 1);
     }
 
     static std::string tierToString(int t) {

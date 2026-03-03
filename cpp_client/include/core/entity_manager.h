@@ -29,7 +29,8 @@ public:
     void spawnEntity(const std::string& id, const glm::vec3& position,
                      const Health& health, const Capacitor& capacitor = Capacitor(),
                      const std::string& shipType = "",
-                     const std::string& shipName = "", const std::string& faction = "");
+                     const std::string& shipName = "", const std::string& faction = "",
+                     const std::string& tag = "", const std::string& name = "");
 
     /**
      * Destroy an entity
@@ -46,7 +47,9 @@ public:
                            const Capacitor& capacitor = Capacitor(),
                            const std::string& shipType = "",
                            const std::string& shipName = "",
-                           const std::string& faction = "");
+                           const std::string& faction = "",
+                           const std::string& tag = "",
+                           const std::string& name = "");
 
     /**
      * Process state update message
