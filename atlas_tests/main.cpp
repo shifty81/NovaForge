@@ -1367,6 +1367,49 @@ void test_bookmark_rename_out_of_bounds();
 void test_bookmark_clear();
 void test_bookmark_selection_preserved();
 
+// LayerTagSystem tests
+void test_layer_tag_defaults();
+void test_layer_create_and_count();
+void test_layer_create_duplicate();
+void test_layer_remove();
+void test_layer_assign_entity();
+void test_layer_assign_creates_if_missing();
+void test_layer_remove_entity();
+void test_layer_visibility_default();
+void test_layer_toggle_visibility();
+void test_layer_visible_entities_multi_layer();
+void test_tag_add_and_has();
+void test_tag_remove();
+void test_tag_get_all();
+void test_tag_entities_with_tag();
+void test_layer_tag_clear();
+
+// SnapAlignTool tests
+void test_snap_tool_name();
+void test_snap_tool_activate_deactivate();
+void test_snap_tool_grid_size();
+void test_snap_tool_grid_snap();
+void test_snap_tool_grid_snap_undo();
+void test_snap_tool_surface_snap();
+void test_snap_tool_surface_snap_undo();
+void test_snap_tool_align_entities();
+void test_snap_tool_align_entities_undo();
+void test_snap_tool_multiple_operations();
+
+// AssetStatsPanel tests
+void test_stats_panel_defaults();
+void test_stats_panel_add_and_count();
+void test_stats_panel_get();
+void test_stats_panel_remove();
+void test_stats_panel_update();
+void test_stats_panel_total_memory();
+void test_stats_panel_total_collisions();
+void test_stats_panel_total_physics();
+void test_stats_panel_filter_by_type();
+void test_stats_panel_sorted_by_memory();
+void test_stats_panel_unique_types();
+void test_stats_panel_clear();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2010,6 +2053,52 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_bookmark_rename_out_of_bounds);
     RUN_TEST(test_bookmark_clear);
     RUN_TEST(test_bookmark_selection_preserved);
+
+    // LayerTagSystem
+    log.BeginSection("LayerTagSystem");
+    RUN_TEST(test_layer_tag_defaults);
+    RUN_TEST(test_layer_create_and_count);
+    RUN_TEST(test_layer_create_duplicate);
+    RUN_TEST(test_layer_remove);
+    RUN_TEST(test_layer_assign_entity);
+    RUN_TEST(test_layer_assign_creates_if_missing);
+    RUN_TEST(test_layer_remove_entity);
+    RUN_TEST(test_layer_visibility_default);
+    RUN_TEST(test_layer_toggle_visibility);
+    RUN_TEST(test_layer_visible_entities_multi_layer);
+    RUN_TEST(test_tag_add_and_has);
+    RUN_TEST(test_tag_remove);
+    RUN_TEST(test_tag_get_all);
+    RUN_TEST(test_tag_entities_with_tag);
+    RUN_TEST(test_layer_tag_clear);
+
+    // SnapAlignTool
+    log.BeginSection("SnapAlignTool");
+    RUN_TEST(test_snap_tool_name);
+    RUN_TEST(test_snap_tool_activate_deactivate);
+    RUN_TEST(test_snap_tool_grid_size);
+    RUN_TEST(test_snap_tool_grid_snap);
+    RUN_TEST(test_snap_tool_grid_snap_undo);
+    RUN_TEST(test_snap_tool_surface_snap);
+    RUN_TEST(test_snap_tool_surface_snap_undo);
+    RUN_TEST(test_snap_tool_align_entities);
+    RUN_TEST(test_snap_tool_align_entities_undo);
+    RUN_TEST(test_snap_tool_multiple_operations);
+
+    // AssetStatsPanel
+    log.BeginSection("AssetStatsPanel (Stats)");
+    RUN_TEST(test_stats_panel_defaults);
+    RUN_TEST(test_stats_panel_add_and_count);
+    RUN_TEST(test_stats_panel_get);
+    RUN_TEST(test_stats_panel_remove);
+    RUN_TEST(test_stats_panel_update);
+    RUN_TEST(test_stats_panel_total_memory);
+    RUN_TEST(test_stats_panel_total_collisions);
+    RUN_TEST(test_stats_panel_total_physics);
+    RUN_TEST(test_stats_panel_filter_by_type);
+    RUN_TEST(test_stats_panel_sorted_by_memory);
+    RUN_TEST(test_stats_panel_unique_types);
+    RUN_TEST(test_stats_panel_clear);
 
     // Dock Layout
     log.BeginSection("Dock Layout");
