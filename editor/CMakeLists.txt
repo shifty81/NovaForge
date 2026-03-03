@@ -45,6 +45,8 @@ add_executable(AtlasEditor
     tools/SceneGraphPanel.cpp
     tools/DataBrowserPanel.cpp
     tools/ModuleEditorPanel.cpp
+    tools/AssetPalettePanel.cpp
+    tools/PhysicsTunerPanel.cpp
     tools/NPCEditorPanel.cpp
     ai/AIAggregator.cpp
     ai/TemplateAIBackend.cpp

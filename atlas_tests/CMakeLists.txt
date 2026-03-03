@@ -71,6 +71,9 @@ set(ATLAS_TEST_SOURCES
     test_delta_edit_store.cpp
     test_map_editor_tool.cpp
     test_ship_module_editor_tool.cpp
+    test_asset_palette_panel.cpp
+    test_physics_tuner_panel.cpp
+    test_environment_control_tool.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
@@ -90,6 +93,8 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/DataBrowserPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ModuleEditorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/NPCEditorPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/AssetPalettePanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/PhysicsTunerPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
     ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp
