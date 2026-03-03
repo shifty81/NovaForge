@@ -54,6 +54,8 @@ class GalaxyMapPanel;
 class FleetFormationPanel;
 class LiveSceneManager;
 class PCGOverrideStore;
+class AssetPalettePanel;
+class PhysicsTunerPanel;
 
 namespace ai { class AIAggregator; class TemplateAIBackend; }
 
@@ -148,6 +150,8 @@ private:
     std::unique_ptr<NPCEditorPanel>         m_npcEditor;
     std::unique_ptr<GalaxyMapPanel>         m_galaxyMap;
     std::unique_ptr<FleetFormationPanel>    m_fleetFormation;
+    std::unique_ptr<AssetPalettePanel>      m_assetPalette;
+    std::unique_ptr<PhysicsTunerPanel>      m_physicsTuner;
 
     // ── Live scene bridge ───────────────────────────────────────────
     std::unique_ptr<LiveSceneManager> m_liveScene;

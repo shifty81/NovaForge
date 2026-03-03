@@ -1270,6 +1270,43 @@ void test_ship_tool_attach_undo();
 void test_ship_tool_property_undo();
 void test_ship_tool_multiple_modules();
 
+// AssetPalettePanel tests
+void test_asset_palette_defaults();
+void test_asset_palette_categories_count();
+void test_asset_palette_add_asset();
+void test_asset_palette_remove_asset();
+void test_asset_palette_selection();
+void test_asset_palette_remove_adjusts_selection();
+void test_asset_palette_category_filter();
+void test_asset_palette_search_filter();
+void test_asset_palette_combined_filters();
+void test_asset_palette_prefab();
+void test_asset_palette_export_import_json();
+
+// PhysicsTunerPanel tests
+void test_physics_tuner_defaults();
+void test_physics_tuner_preset_names();
+void test_physics_tuner_preset_values();
+void test_physics_tuner_add_object();
+void test_physics_tuner_remove_object();
+void test_physics_tuner_update_object();
+void test_physics_tuner_selection();
+void test_physics_tuner_type_filter();
+void test_physics_tuner_apply_preset();
+void test_physics_tuner_custom_environment();
+void test_physics_tuner_simulation_controls();
+void test_physics_tuner_cloth_params();
+void test_physics_tuner_export_import_json();
+
+// EnvironmentControlTool tests
+void test_env_tool_name();
+void test_env_tool_activate_deactivate();
+void test_env_tool_set_property();
+void test_env_tool_set_property_undo();
+void test_env_tool_apply_preset();
+void test_env_tool_apply_preset_undo();
+void test_env_tool_multiple_properties();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2656,6 +2693,46 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_ship_tool_attach_undo);
     RUN_TEST(test_ship_tool_property_undo);
     RUN_TEST(test_ship_tool_multiple_modules);
+
+    // AssetPalettePanel
+    log.BeginSection("AssetPalettePanel");
+    RUN_TEST(test_asset_palette_defaults);
+    RUN_TEST(test_asset_palette_categories_count);
+    RUN_TEST(test_asset_palette_add_asset);
+    RUN_TEST(test_asset_palette_remove_asset);
+    RUN_TEST(test_asset_palette_selection);
+    RUN_TEST(test_asset_palette_remove_adjusts_selection);
+    RUN_TEST(test_asset_palette_category_filter);
+    RUN_TEST(test_asset_palette_search_filter);
+    RUN_TEST(test_asset_palette_combined_filters);
+    RUN_TEST(test_asset_palette_prefab);
+    RUN_TEST(test_asset_palette_export_import_json);
+
+    // PhysicsTunerPanel
+    log.BeginSection("PhysicsTunerPanel");
+    RUN_TEST(test_physics_tuner_defaults);
+    RUN_TEST(test_physics_tuner_preset_names);
+    RUN_TEST(test_physics_tuner_preset_values);
+    RUN_TEST(test_physics_tuner_add_object);
+    RUN_TEST(test_physics_tuner_remove_object);
+    RUN_TEST(test_physics_tuner_update_object);
+    RUN_TEST(test_physics_tuner_selection);
+    RUN_TEST(test_physics_tuner_type_filter);
+    RUN_TEST(test_physics_tuner_apply_preset);
+    RUN_TEST(test_physics_tuner_custom_environment);
+    RUN_TEST(test_physics_tuner_simulation_controls);
+    RUN_TEST(test_physics_tuner_cloth_params);
+    RUN_TEST(test_physics_tuner_export_import_json);
+
+    // EnvironmentControlTool
+    log.BeginSection("EnvironmentControlTool");
+    RUN_TEST(test_env_tool_name);
+    RUN_TEST(test_env_tool_activate_deactivate);
+    RUN_TEST(test_env_tool_set_property);
+    RUN_TEST(test_env_tool_set_property_undo);
+    RUN_TEST(test_env_tool_apply_preset);
+    RUN_TEST(test_env_tool_apply_preset_undo);
+    RUN_TEST(test_env_tool_multiple_properties);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
