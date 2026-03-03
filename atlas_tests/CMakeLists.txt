@@ -80,6 +80,9 @@ set(ATLAS_TEST_SOURCES
     test_event_timeline_tool.cpp
     test_batch_operations_tool.cpp
     test_scene_bookmark_manager.cpp
+    test_layer_tag_system.cpp
+    test_snap_align_tool.cpp
+    test_asset_stats_panel.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
