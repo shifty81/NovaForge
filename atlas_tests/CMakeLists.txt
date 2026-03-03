@@ -59,6 +59,8 @@ set(ATLAS_TEST_SOURCES
     test_data_editors.cpp
     test_warp_performance_budget.cpp
     test_fleet_positional_audio.cpp
+    test_editor_tool_layer.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp

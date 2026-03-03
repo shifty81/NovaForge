@@ -18,6 +18,9 @@
 #include "ui/atlas/atlas_console.h"
 #include "ui/atlas/atlas_pause_menu.h"
 #include "ui/atlas/atlas_title_screen.h"
+#ifdef NOVAFORGE_EDITOR_TOOLS
+#include "editor/editor_tool_layer.h"
+#endif
 #include <iostream>
 #include <algorithm>
 
@@ -57,6 +60,10 @@ Application::Application(const std::string& title, int width, int height)
     m_titleScreen = std::make_unique<atlas::AtlasTitleScreen>();
     m_contextMenu = std::make_unique<UI::ContextMenu>();
     m_radialMenu = std::make_unique<UI::RadialMenu>();
+
+#ifdef NOVAFORGE_EDITOR_TOOLS
+    m_editorToolLayer = std::make_unique<atlas::editor::EditorToolLayer>();
+#endif
     
     // Initialize
     initialize();
@@ -188,6 +195,36 @@ void Application::initialize() {
     // Wire title screen callbacks
     m_titleScreen->setPlayCallback([this]() {
         std::cout << "[TitleScreen] Entering game..." << std::endl;
+
+        // ── Spawn player docked at the nearest station ─────────────
+        // The title screen's "Enter Hangar" flow ends here.  Place the
+        // player at a station so they start the game inside the hangar
+        // rather than floating in open space.
+        if (m_solarSystem) {
+            bool docked = false;
+            for (const auto& c : m_solarSystem->getCelestials()) {
+                if (c.type != atlas::Celestial::Type::STATION) continue;
+                m_dockedStationId = c.id;
+                auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
+                if (playerEntity) {
+                    Health currentHealth = playerEntity->getHealth();
+                    m_gameClient->getEntityManager().updateEntityState(
+                        m_localPlayerId, c.position, glm::vec3(0.0f), 0.0f, currentHealth);
+                }
+                // Go directly to Docked state (bypass the normal
+                // InSpace→Docking→Docked transition since we are spawning)
+                m_gameState = GameState::Docked;
+                m_camera->setViewMode(atlas::ViewMode::ORBIT);
+                m_activeModeText = "DOCKED";
+                std::cout << "[Hangar] Player spawned docked at " << c.name << std::endl;
+                docked = true;
+                break;
+            }
+            if (!docked) {
+                std::cerr << "[Hangar] WARNING: No station found in solar system — "
+                             "player remains in space" << std::endl;
+            }
+        }
     });
     m_titleScreen->setQuitCallback([this]() { shutdown(); });
     
@@ -198,6 +235,24 @@ void Application::initialize() {
     // Right-drag: orbit camera around ship
     // Scroll: zoom camera
     m_window->setKeyCallback([this](int key, int, int action, int mods) {
+#ifdef NOVAFORGE_EDITOR_TOOLS
+        // F12 toggles the editor tool overlay
+        if (key == GLFW_KEY_F12 && action == GLFW_PRESS) {
+            if (m_editorToolLayer) {
+                m_editorToolLayer->toggle();
+                std::cout << "[ToolLayer] Editor overlay "
+                          << (m_editorToolLayer->isActive() ? "ON" : "OFF")
+                          << std::endl;
+            }
+            return;
+        }
+
+        // Forward key presses to the editor tool layer when active
+        if (m_editorToolLayer && m_editorToolLayer->isActive() && action == GLFW_PRESS) {
+            m_editorToolLayer->handleKeyPress(key, mods);
+        }
+#endif
+
         // Backtick (`) toggles developer console
         if (key == GLFW_KEY_GRAVE_ACCENT && action == GLFW_PRESS) {
             m_console->toggle();
@@ -301,6 +356,15 @@ void Application::initialize() {
     // Set initial camera to orbit around player
     m_camera->setDistance(DEFAULT_CAMERA_DISTANCE);
     m_camera->rotate(DEFAULT_CAMERA_PITCH, 0.0f);
+
+#ifdef NOVAFORGE_EDITOR_TOOLS
+    // Initialize the editor tool layer (all editor panels as a client overlay)
+    if (m_editorToolLayer) {
+        m_editorToolLayer->init();
+        std::cout << "[ToolLayer] Editor tools available — press F12 to toggle"
+                  << std::endl;
+    }
+#endif
     
     std::cout << "Application initialized successfully" << std::endl;
 }
@@ -660,6 +724,13 @@ void Application::updateTargetListUi(const glm::vec3& /*playerPosition*/) {
 
 void Application::cleanup() {
     std::cout << "Cleaning up application..." << std::endl;
+
+#ifdef NOVAFORGE_EDITOR_TOOLS
+    // Shutdown editor tool layer before UI context
+    if (m_editorToolLayer) {
+        m_editorToolLayer->shutdown();
+    }
+#endif
     
     // Shutdown Atlas UI
     if (m_atlasCtx) {

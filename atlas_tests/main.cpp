@@ -388,6 +388,18 @@ void test_keybind_delete_wiring();
 void test_ecsi_component_types_visible();
 void test_undo_viewport_transform();
 
+// Editor Tool Layer tests — CommandBus & ITool
+void test_cmdbus_empty_by_default();
+void test_cmdbus_post_increments_count();
+void test_cmdbus_process_drains_queue();
+void test_cmdbus_process_empty_is_safe();
+void test_cmdbus_post_null_ignored();
+void test_cmdbus_fifo_order();
+void test_cmdbus_description();
+void test_itool_defaults();
+void test_itool_activate_deactivate();
+void test_itool_update();
+
 // Viewport Panel tests
 void test_viewport_defaults();
 void test_viewport_load_ship();
@@ -1725,6 +1737,19 @@ int main(int argc, char* argv[]) {
     // Undo Integration
     log.BeginSection("Undo Integration");
     RUN_TEST(test_undo_viewport_transform);
+
+    // Editor Tool Layer — CommandBus & ITool
+    log.BeginSection("Editor Tool Layer");
+    RUN_TEST(test_cmdbus_empty_by_default);
+    RUN_TEST(test_cmdbus_post_increments_count);
+    RUN_TEST(test_cmdbus_process_drains_queue);
+    RUN_TEST(test_cmdbus_process_empty_is_safe);
+    RUN_TEST(test_cmdbus_post_null_ignored);
+    RUN_TEST(test_cmdbus_fifo_order);
+    RUN_TEST(test_cmdbus_description);
+    RUN_TEST(test_itool_defaults);
+    RUN_TEST(test_itool_activate_deactivate);
+    RUN_TEST(test_itool_update);
 
     // Mission Editor Panel
     log.BeginSection("Mission Editor Panel");
