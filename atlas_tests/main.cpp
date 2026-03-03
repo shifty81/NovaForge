@@ -1136,6 +1136,55 @@ void test_positional_audio_reverb_in_warp_high_speed();
 void test_positional_audio_reverb_in_warp_mid_speed();
 void test_positional_audio_reverb_clamped_high();
 
+// SystemRegistry tests
+void test_sysreg_empty_by_default();
+void test_sysreg_register_increments_count();
+void test_sysreg_register_null_ignored();
+void test_sysreg_find_by_name();
+void test_sysreg_priority_order();
+void test_sysreg_init_all();
+void test_sysreg_shutdown_all();
+void test_sysreg_disabled_system_skipped();
+void test_sysreg_unregister();
+void test_sysreg_update_passes_dt();
+void test_sysreg_init_idempotent();
+
+// Entity Commands tests
+void test_create_entity_cmd_executes();
+void test_create_entity_cmd_callback();
+void test_create_entity_cmd_description();
+void test_create_entity_cmd_via_bus();
+void test_destroy_entity_cmd_executes();
+void test_destroy_entity_cmd_nonexistent();
+void test_destroy_entity_cmd_description();
+void test_destroy_entity_cmd_via_bus();
+void test_set_component_cmd_adds_new();
+void test_set_component_cmd_replaces_existing();
+void test_set_component_cmd_description();
+void test_set_component_cmd_via_bus();
+void test_set_component_cmd_target_id();
+
+// GameStateManager tests
+void test_gsm_default_phase();
+void test_gsm_set_phase();
+void test_gsm_phase_callback_fires();
+void test_gsm_phase_same_no_callback();
+void test_gsm_phase_names();
+void test_gsm_player_entity();
+void test_gsm_current_system();
+void test_gsm_docked_station();
+void test_gsm_credits_default_zero();
+void test_gsm_credits_add();
+void test_gsm_credits_spend_success();
+void test_gsm_credits_spend_fail();
+void test_gsm_credits_can_afford();
+void test_gsm_inventory_empty();
+void test_gsm_inventory_add_and_has();
+void test_gsm_inventory_remove();
+void test_gsm_inventory_remove_nonexistent();
+void test_gsm_reset();
+void test_gsm_reset_preserves_callbacks();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2375,6 +2424,58 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_positional_audio_reverb_in_warp_high_speed);
     RUN_TEST(test_positional_audio_reverb_in_warp_mid_speed);
     RUN_TEST(test_positional_audio_reverb_clamped_high);
+
+    // System Registry
+    log.BeginSection("System Registry");
+    RUN_TEST(test_sysreg_empty_by_default);
+    RUN_TEST(test_sysreg_register_increments_count);
+    RUN_TEST(test_sysreg_register_null_ignored);
+    RUN_TEST(test_sysreg_find_by_name);
+    RUN_TEST(test_sysreg_priority_order);
+    RUN_TEST(test_sysreg_init_all);
+    RUN_TEST(test_sysreg_shutdown_all);
+    RUN_TEST(test_sysreg_disabled_system_skipped);
+    RUN_TEST(test_sysreg_unregister);
+    RUN_TEST(test_sysreg_update_passes_dt);
+    RUN_TEST(test_sysreg_init_idempotent);
+
+    // Entity Commands
+    log.BeginSection("Entity Commands");
+    RUN_TEST(test_create_entity_cmd_executes);
+    RUN_TEST(test_create_entity_cmd_callback);
+    RUN_TEST(test_create_entity_cmd_description);
+    RUN_TEST(test_create_entity_cmd_via_bus);
+    RUN_TEST(test_destroy_entity_cmd_executes);
+    RUN_TEST(test_destroy_entity_cmd_nonexistent);
+    RUN_TEST(test_destroy_entity_cmd_description);
+    RUN_TEST(test_destroy_entity_cmd_via_bus);
+    RUN_TEST(test_set_component_cmd_adds_new);
+    RUN_TEST(test_set_component_cmd_replaces_existing);
+    RUN_TEST(test_set_component_cmd_description);
+    RUN_TEST(test_set_component_cmd_via_bus);
+    RUN_TEST(test_set_component_cmd_target_id);
+
+    // GameStateManager
+    log.BeginSection("GameStateManager");
+    RUN_TEST(test_gsm_default_phase);
+    RUN_TEST(test_gsm_set_phase);
+    RUN_TEST(test_gsm_phase_callback_fires);
+    RUN_TEST(test_gsm_phase_same_no_callback);
+    RUN_TEST(test_gsm_phase_names);
+    RUN_TEST(test_gsm_player_entity);
+    RUN_TEST(test_gsm_current_system);
+    RUN_TEST(test_gsm_docked_station);
+    RUN_TEST(test_gsm_credits_default_zero);
+    RUN_TEST(test_gsm_credits_add);
+    RUN_TEST(test_gsm_credits_spend_success);
+    RUN_TEST(test_gsm_credits_spend_fail);
+    RUN_TEST(test_gsm_credits_can_afford);
+    RUN_TEST(test_gsm_inventory_empty);
+    RUN_TEST(test_gsm_inventory_add_and_has);
+    RUN_TEST(test_gsm_inventory_remove);
+    RUN_TEST(test_gsm_inventory_remove_nonexistent);
+    RUN_TEST(test_gsm_reset);
+    RUN_TEST(test_gsm_reset_preserves_callbacks);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
