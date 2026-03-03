@@ -77,6 +77,9 @@ set(ATLAS_TEST_SOURCES
     test_npc_spawner_tool.cpp
     test_resource_balancer_tool.cpp
     test_live_scene_snapshot.cpp
+    test_event_timeline_tool.cpp
+    test_batch_operations_tool.cpp
+    test_scene_bookmark_manager.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
