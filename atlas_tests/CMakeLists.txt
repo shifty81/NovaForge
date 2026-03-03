@@ -98,6 +98,7 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/scene_bookmark_manager.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/GenerationStylePanel.cpp

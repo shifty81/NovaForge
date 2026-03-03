@@ -11,6 +11,7 @@
  */
 
 #include <cassert>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include "../cpp_client/include/editor/scene_bookmark_manager.h"
@@ -106,4 +107,59 @@ void test_bookmark_selection_preserved() {
     assert(bm->selectedEntities[0] == 10);
     assert(bm->selectedEntities[1] == 20);
     assert(bm->selectedEntities[2] == 30);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SceneBookmarkManager file persistence tests
+// ══════════════════════════════════════════════════════════════════
+
+void test_bookmark_save_to_file() {
+    const char* path = "/tmp/test_bookmarks_save.json";
+    SceneBookmarkManager mgr;
+    mgr.Save("Bridge view", 10.0f, 20.0f, 30.0f, 0.0f, 0.0f, -1.0f);
+    mgr.Save("Hangar", 40.0f, 50.0f, 60.0f, 1.0f, 0.0f, 0.0f, {5, 10});
+
+    bool saved = mgr.SaveToFile(path);
+    assert(saved);
+
+    SceneBookmarkManager loaded;
+    bool ok = loaded.LoadFromFile(path);
+    assert(ok);
+    assert(loaded.Count() == 2);
+    assert(loaded.Get(0)->label == "Bridge view");
+    assert(loaded.Get(0)->camX == 10.0f);
+    assert(loaded.Get(0)->camY == 20.0f);
+    assert(loaded.Get(0)->camZ == 30.0f);
+    assert(loaded.Get(0)->lookZ == -1.0f);
+    assert(loaded.Get(1)->label == "Hangar");
+    assert(loaded.Get(1)->camX == 40.0f);
+    assert(loaded.Get(1)->selectedEntities.size() == 2);
+    assert(loaded.Get(1)->selectedEntities[0] == 5);
+    assert(loaded.Get(1)->selectedEntities[1] == 10);
+
+    std::remove(path);
+}
+
+void test_bookmark_load_nonexistent() {
+    SceneBookmarkManager mgr;
+    assert(!mgr.LoadFromFile("/tmp/nonexistent_bookmarks_test.json"));
+    assert(mgr.Count() == 0);
+}
+
+void test_bookmark_save_creates_dirs() {
+    const char* path = "/tmp/test_bookmarks_subdir/bookmarks.json";
+    SceneBookmarkManager mgr;
+    mgr.Save("Test", 1.0f, 2.0f, 3.0f, 0.0f, 1.0f, 0.0f);
+
+    bool saved = mgr.SaveToFile(path);
+    assert(saved);
+
+    SceneBookmarkManager loaded;
+    assert(loaded.LoadFromFile(path));
+    assert(loaded.Count() == 1);
+    assert(loaded.Get(0)->label == "Test");
+    assert(loaded.Get(0)->camX == 1.0f);
+
+    std::remove(path);
+    std::remove("/tmp/test_bookmarks_subdir");
 }
