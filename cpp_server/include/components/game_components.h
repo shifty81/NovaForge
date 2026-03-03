@@ -527,6 +527,48 @@ public:
     COMPONENT_TYPE(PersistenceDelta)
 };
 
+// ==================== Snapshot Replication System ====================
+
+class SnapshotReplication : public ecs::Component {
+public:
+    struct EntitySnapshot {
+        std::string entity_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float health = 100.0f;
+        float shield = 100.0f;
+        float velocity = 0.0f;
+        uint32_t frame_number = 0;
+        bool dirty = false;
+    };
+
+    struct SnapshotFrame {
+        uint32_t frame_number = 0;
+        float timestamp = 0.0f;
+        std::vector<EntitySnapshot> entities;
+    };
+
+    std::string server_id;
+    std::vector<SnapshotFrame> history;
+    int max_history = 60;          // keep last 60 frames
+    uint32_t current_frame = 0;
+    float snapshot_interval = 0.05f; // 20 Hz
+    float time_accumulator = 0.0f;
+    int total_snapshots_sent = 0;
+    int total_deltas_sent = 0;
+
+    struct ClientAck {
+        std::string client_id;
+        uint32_t last_acked_frame = 0;
+    };
+    std::vector<ClientAck> client_acks;
+    int max_clients = 20;
+    bool active = true;
+
+    COMPONENT_TYPE(SnapshotReplication)
+};
+
 } // namespace components
 } // namespace atlas
 
