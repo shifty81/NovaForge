@@ -1163,6 +1163,11 @@ void test_set_component_cmd_replaces_existing();
 void test_set_component_cmd_description();
 void test_set_component_cmd_via_bus();
 void test_set_component_cmd_target_id();
+void test_remove_component_cmd_removes();
+void test_remove_component_cmd_nonexistent();
+void test_remove_component_cmd_description();
+void test_remove_component_cmd_via_bus();
+void test_remove_component_cmd_target_id();
 
 // GameStateManager tests
 void test_gsm_default_phase();
@@ -1184,6 +1189,36 @@ void test_gsm_inventory_remove();
 void test_gsm_inventory_remove_nonexistent();
 void test_gsm_reset();
 void test_gsm_reset_preserves_callbacks();
+
+// UndoableCommandBus tests
+void test_ucb_empty_by_default();
+void test_ucb_post_increments_count();
+void test_ucb_post_null_ignored();
+void test_ucb_process_plain_no_undo();
+void test_ucb_process_undoable_records();
+void test_ucb_undo_reverts();
+void test_ucb_redo_reapplies();
+void test_ucb_undo_empty_fails();
+void test_ucb_redo_empty_fails();
+void test_ucb_multiple_undo_redo();
+void test_ucb_description();
+void test_ucb_clear_history();
+void test_ucb_mixed_plain_and_undoable();
+
+// EditorEventBus tests
+void test_evbus_empty_by_default();
+void test_evbus_subscribe_increments_count();
+void test_evbus_subscribe_null_rejected();
+void test_evbus_publish_fires_callback();
+void test_evbus_publish_with_payload();
+void test_evbus_multiple_subscribers();
+void test_evbus_unsubscribe();
+void test_evbus_unsubscribe_invalid_id();
+void test_evbus_publish_no_subscribers_safe();
+void test_evbus_different_events_independent();
+void test_evbus_clear();
+void test_evbus_string_payload();
+void test_evbus_subscription_ids_unique();
 
 int main(int argc, char* argv[]) {
     std::string logPath;
@@ -2454,6 +2489,11 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_set_component_cmd_description);
     RUN_TEST(test_set_component_cmd_via_bus);
     RUN_TEST(test_set_component_cmd_target_id);
+    RUN_TEST(test_remove_component_cmd_removes);
+    RUN_TEST(test_remove_component_cmd_nonexistent);
+    RUN_TEST(test_remove_component_cmd_description);
+    RUN_TEST(test_remove_component_cmd_via_bus);
+    RUN_TEST(test_remove_component_cmd_target_id);
 
     // GameStateManager
     log.BeginSection("GameStateManager");
@@ -2476,6 +2516,38 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_gsm_inventory_remove_nonexistent);
     RUN_TEST(test_gsm_reset);
     RUN_TEST(test_gsm_reset_preserves_callbacks);
+
+    // UndoableCommandBus
+    log.BeginSection("UndoableCommandBus");
+    RUN_TEST(test_ucb_empty_by_default);
+    RUN_TEST(test_ucb_post_increments_count);
+    RUN_TEST(test_ucb_post_null_ignored);
+    RUN_TEST(test_ucb_process_plain_no_undo);
+    RUN_TEST(test_ucb_process_undoable_records);
+    RUN_TEST(test_ucb_undo_reverts);
+    RUN_TEST(test_ucb_redo_reapplies);
+    RUN_TEST(test_ucb_undo_empty_fails);
+    RUN_TEST(test_ucb_redo_empty_fails);
+    RUN_TEST(test_ucb_multiple_undo_redo);
+    RUN_TEST(test_ucb_description);
+    RUN_TEST(test_ucb_clear_history);
+    RUN_TEST(test_ucb_mixed_plain_and_undoable);
+
+    // EditorEventBus
+    log.BeginSection("EditorEventBus");
+    RUN_TEST(test_evbus_empty_by_default);
+    RUN_TEST(test_evbus_subscribe_increments_count);
+    RUN_TEST(test_evbus_subscribe_null_rejected);
+    RUN_TEST(test_evbus_publish_fires_callback);
+    RUN_TEST(test_evbus_publish_with_payload);
+    RUN_TEST(test_evbus_multiple_subscribers);
+    RUN_TEST(test_evbus_unsubscribe);
+    RUN_TEST(test_evbus_unsubscribe_invalid_id);
+    RUN_TEST(test_evbus_publish_no_subscribers_safe);
+    RUN_TEST(test_evbus_different_events_independent);
+    RUN_TEST(test_evbus_clear);
+    RUN_TEST(test_evbus_string_payload);
+    RUN_TEST(test_evbus_subscription_ids_unique);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
