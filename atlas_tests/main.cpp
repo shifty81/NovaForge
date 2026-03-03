@@ -1237,6 +1237,39 @@ void test_undo_set_then_remove();
 void test_gsm_publishes_phase_change_via_event_bus();
 void test_gsm_credits_change_via_event_bus();
 
+// DeltaEditStore tests
+void test_delta_store_empty_by_default();
+void test_delta_store_set_seed();
+void test_delta_store_record_add();
+void test_delta_store_record_multiple();
+void test_delta_store_clear();
+void test_delta_store_set_property();
+void test_delta_type_name();
+void test_delta_store_serialize_empty();
+void test_delta_store_roundtrip();
+void test_delta_store_deserialize_invalid();
+void test_delta_store_roundtrip_move();
+
+// MapEditorTool tests
+void test_map_tool_name();
+void test_map_tool_activate_deactivate();
+void test_map_tool_add_object();
+void test_map_tool_move_object();
+void test_map_tool_remove_object();
+void test_map_tool_add_undo();
+void test_map_tool_remove_noop_dead_entity();
+void test_map_tool_multiple_adds();
+
+// ShipModuleEditorTool tests
+void test_ship_tool_name();
+void test_ship_tool_activate_deactivate();
+void test_ship_tool_attach_module();
+void test_ship_tool_detach_module();
+void test_ship_tool_set_module_property();
+void test_ship_tool_attach_undo();
+void test_ship_tool_property_undo();
+void test_ship_tool_multiple_modules();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -2587,6 +2620,42 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_undo_set_then_remove);
     RUN_TEST(test_gsm_publishes_phase_change_via_event_bus);
     RUN_TEST(test_gsm_credits_change_via_event_bus);
+
+    // DeltaEditStore
+    log.BeginSection("DeltaEditStore");
+    RUN_TEST(test_delta_store_empty_by_default);
+    RUN_TEST(test_delta_store_set_seed);
+    RUN_TEST(test_delta_store_record_add);
+    RUN_TEST(test_delta_store_record_multiple);
+    RUN_TEST(test_delta_store_clear);
+    RUN_TEST(test_delta_store_set_property);
+    RUN_TEST(test_delta_type_name);
+    RUN_TEST(test_delta_store_serialize_empty);
+    RUN_TEST(test_delta_store_roundtrip);
+    RUN_TEST(test_delta_store_deserialize_invalid);
+    RUN_TEST(test_delta_store_roundtrip_move);
+
+    // MapEditorTool
+    log.BeginSection("MapEditorTool");
+    RUN_TEST(test_map_tool_name);
+    RUN_TEST(test_map_tool_activate_deactivate);
+    RUN_TEST(test_map_tool_add_object);
+    RUN_TEST(test_map_tool_move_object);
+    RUN_TEST(test_map_tool_remove_object);
+    RUN_TEST(test_map_tool_add_undo);
+    RUN_TEST(test_map_tool_remove_noop_dead_entity);
+    RUN_TEST(test_map_tool_multiple_adds);
+
+    // ShipModuleEditorTool
+    log.BeginSection("ShipModuleEditorTool");
+    RUN_TEST(test_ship_tool_name);
+    RUN_TEST(test_ship_tool_activate_deactivate);
+    RUN_TEST(test_ship_tool_attach_module);
+    RUN_TEST(test_ship_tool_detach_module);
+    RUN_TEST(test_ship_tool_set_module_property);
+    RUN_TEST(test_ship_tool_attach_undo);
+    RUN_TEST(test_ship_tool_property_undo);
+    RUN_TEST(test_ship_tool_multiple_modules);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
