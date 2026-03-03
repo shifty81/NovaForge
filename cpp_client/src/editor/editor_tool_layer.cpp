@@ -56,7 +56,11 @@ void EditorToolLayer::init() {
     m_undoStack = std::make_unique<UndoStack>();
 
     // Try to load saved keybind overrides
-    m_keybinds->LoadFromFile("data/editor_keybinds.json");
+    if (m_keybinds->LoadFromFile("data/editor_keybinds.json")) {
+        std::cout << "[ToolLayer] Custom keybinds loaded" << std::endl;
+    } else {
+        std::cout << "[ToolLayer] Using default keybinds" << std::endl;
+    }
 
     // ── AI backend ───────────────────────────────────────────────
     m_aiAggregator = std::make_unique<ai::AIAggregator>();
@@ -279,10 +283,13 @@ void EditorToolLayer::handleKeyPress(int key, int mods) {
     if (!m_active || !m_initialized) return;
 
     KeyMod km = KeyMod::None;
-    // GLFW modifier flags: Ctrl=2, Shift=1, Alt=4
-    if (mods & 0x0002) km = km | KeyMod::Ctrl;
-    if (mods & 0x0001) km = km | KeyMod::Shift;
-    if (mods & 0x0004) km = km | KeyMod::Alt;
+    // GLFW modifier bit masks (from glfw3.h)
+    constexpr int GLFW_MOD_SHIFT_BIT   = 0x0001;
+    constexpr int GLFW_MOD_CONTROL_BIT = 0x0002;
+    constexpr int GLFW_MOD_ALT_BIT     = 0x0004;
+    if (mods & GLFW_MOD_CONTROL_BIT) km = km | KeyMod::Ctrl;
+    if (mods & GLFW_MOD_SHIFT_BIT)   km = km | KeyMod::Shift;
+    if (mods & GLFW_MOD_ALT_BIT)     km = km | KeyMod::Alt;
     m_keybinds->HandleKeyPress(key, km);
 }
 

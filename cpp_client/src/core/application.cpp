@@ -201,6 +201,7 @@ void Application::initialize() {
         // player at a station so they start the game inside the hangar
         // rather than floating in open space.
         if (m_solarSystem) {
+            bool docked = false;
             for (const auto& c : m_solarSystem->getCelestials()) {
                 if (c.type != atlas::Celestial::Type::STATION) continue;
                 m_dockedStationId = c.id;
@@ -216,7 +217,12 @@ void Application::initialize() {
                 m_camera->setViewMode(atlas::ViewMode::ORBIT);
                 m_activeModeText = "DOCKED";
                 std::cout << "[Hangar] Player spawned docked at " << c.name << std::endl;
+                docked = true;
                 break;
+            }
+            if (!docked) {
+                std::cerr << "[Hangar] WARNING: No station found in solar system — "
+                             "player remains in space" << std::endl;
             }
         }
     });

@@ -133,5 +133,6 @@ void test_itool_update() {
     tool.Update(0.016f);
     tool.Update(0.016f);
     assert(tool.updateCount == 2);
-    assert(tool.totalDt > 0.03f);
+    // Two updates of 0.016f → ~0.032f; use epsilon for float comparison
+    assert(tool.totalDt > 0.031f && tool.totalDt < 0.033f);
 }
