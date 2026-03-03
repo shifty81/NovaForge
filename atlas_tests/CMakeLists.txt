@@ -92,6 +92,9 @@ set(ATLAS_TEST_SOURCES
     test_animation_editor_tool.cpp
     test_lighting_control_tool.cpp
     test_script_console.cpp
+    test_camera_view_tool.cpp
+    test_material_shader_tool.cpp
+    test_hotkey_action_manager.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
