@@ -3,7 +3,9 @@ add_library(AtlasEngine STATIC
     core/Logger.cpp
     core/EventBus.cpp
     core/RuntimeBootstrap.cpp
+    core/GameStateManager.cpp
     ecs/ECS.cpp
+    ecs/System.cpp
     graphvm/GraphVM.cpp
     graphvm/GraphCompiler.cpp
     assets/AssetRegistry.cpp

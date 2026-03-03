@@ -60,6 +60,9 @@ set(ATLAS_TEST_SOURCES
     test_warp_performance_budget.cpp
     test_fleet_positional_audio.cpp
     test_editor_tool_layer.cpp
+    test_system_registry.cpp
+    test_entity_commands.cpp
+    test_game_state_manager.cpp
     test_runtime_bootstrap.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/editor/panels/ConsolePanel.cpp
