@@ -1564,6 +1564,60 @@ void test_hotkey_rebind();
 void test_hotkey_rebind_undo();
 void test_hotkey_multiple_keys();
 
+// IKRigTool tests
+void test_ik_tool_name();
+void test_ik_tool_activate_deactivate();
+void test_ik_add_chain();
+void test_ik_add_chain_undo();
+void test_ik_remove_chain();
+void test_ik_remove_chain_undo();
+void test_ik_set_target();
+void test_ik_set_target_undo();
+void test_ik_set_constraint();
+void test_ik_set_constraint_undo();
+void test_ik_solver_iterations();
+void test_ik_solver_tolerance();
+
+// PCGSnapshotManager tests
+void test_pcg_snap_name();
+void test_pcg_snap_activate_deactivate();
+void test_pcg_snap_take();
+void test_pcg_snap_take_undo();
+void test_pcg_snap_restore();
+void test_pcg_snap_restore_undo();
+void test_pcg_snap_remove();
+void test_pcg_snap_remove_nonexistent();
+void test_pcg_snap_names_list();
+void test_pcg_snap_get();
+
+// DeltaEditsMergeTool tests
+void test_merge_tool_name();
+void test_merge_tool_activate_deactivate();
+void test_merge_detect_no_conflicts();
+void test_merge_detect_conflicts();
+void test_merge_conflict_count();
+void test_merge_non_conflicting();
+void test_merge_all();
+void test_merge_all_undo();
+void test_merge_resolved_accept_theirs();
+void test_merge_resolved_keep_ours();
+
+// LiveEditMode tests
+void test_live_edit_name();
+void test_live_edit_activate_deactivate();
+void test_live_edit_default_policy();
+void test_live_edit_set_policy();
+void test_live_edit_set_policy_undo();
+void test_live_edit_default_time_scale();
+void test_live_edit_set_time_scale();
+void test_live_edit_set_time_scale_clamp();
+void test_live_edit_begin_end_pause();
+void test_live_edit_begin_end_fullspeed();
+void test_live_edit_effective_scale_pause();
+void test_live_edit_effective_scale_slow();
+void test_live_edit_effective_scale_full();
+void test_live_edit_edit_count();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -3268,6 +3322,64 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_hotkey_rebind);
     RUN_TEST(test_hotkey_rebind_undo);
     RUN_TEST(test_hotkey_multiple_keys);
+
+    // IKRigTool
+    log.BeginSection("IKRigTool");
+    RUN_TEST(test_ik_tool_name);
+    RUN_TEST(test_ik_tool_activate_deactivate);
+    RUN_TEST(test_ik_add_chain);
+    RUN_TEST(test_ik_add_chain_undo);
+    RUN_TEST(test_ik_remove_chain);
+    RUN_TEST(test_ik_remove_chain_undo);
+    RUN_TEST(test_ik_set_target);
+    RUN_TEST(test_ik_set_target_undo);
+    RUN_TEST(test_ik_set_constraint);
+    RUN_TEST(test_ik_set_constraint_undo);
+    RUN_TEST(test_ik_solver_iterations);
+    RUN_TEST(test_ik_solver_tolerance);
+
+    // PCGSnapshotManager
+    log.BeginSection("PCGSnapshotManager");
+    RUN_TEST(test_pcg_snap_name);
+    RUN_TEST(test_pcg_snap_activate_deactivate);
+    RUN_TEST(test_pcg_snap_take);
+    RUN_TEST(test_pcg_snap_take_undo);
+    RUN_TEST(test_pcg_snap_restore);
+    RUN_TEST(test_pcg_snap_restore_undo);
+    RUN_TEST(test_pcg_snap_remove);
+    RUN_TEST(test_pcg_snap_remove_nonexistent);
+    RUN_TEST(test_pcg_snap_names_list);
+    RUN_TEST(test_pcg_snap_get);
+
+    // DeltaEditsMergeTool
+    log.BeginSection("DeltaEditsMergeTool");
+    RUN_TEST(test_merge_tool_name);
+    RUN_TEST(test_merge_tool_activate_deactivate);
+    RUN_TEST(test_merge_detect_no_conflicts);
+    RUN_TEST(test_merge_detect_conflicts);
+    RUN_TEST(test_merge_conflict_count);
+    RUN_TEST(test_merge_non_conflicting);
+    RUN_TEST(test_merge_all);
+    RUN_TEST(test_merge_all_undo);
+    RUN_TEST(test_merge_resolved_accept_theirs);
+    RUN_TEST(test_merge_resolved_keep_ours);
+
+    // LiveEditMode
+    log.BeginSection("LiveEditMode");
+    RUN_TEST(test_live_edit_name);
+    RUN_TEST(test_live_edit_activate_deactivate);
+    RUN_TEST(test_live_edit_default_policy);
+    RUN_TEST(test_live_edit_set_policy);
+    RUN_TEST(test_live_edit_set_policy_undo);
+    RUN_TEST(test_live_edit_default_time_scale);
+    RUN_TEST(test_live_edit_set_time_scale);
+    RUN_TEST(test_live_edit_set_time_scale_clamp);
+    RUN_TEST(test_live_edit_begin_end_pause);
+    RUN_TEST(test_live_edit_begin_end_fullspeed);
+    RUN_TEST(test_live_edit_effective_scale_pause);
+    RUN_TEST(test_live_edit_effective_scale_slow);
+    RUN_TEST(test_live_edit_effective_scale_full);
+    RUN_TEST(test_live_edit_edit_count);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);

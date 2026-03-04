@@ -95,6 +95,10 @@ set(ATLAS_TEST_SOURCES
     test_camera_view_tool.cpp
     test_material_shader_tool.cpp
     test_hotkey_action_manager.cpp
+    test_ik_rig_tool.cpp
+    test_pcg_snapshot_manager.cpp
+    test_delta_edits_merge_tool.cpp
+    test_live_edit_mode.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
