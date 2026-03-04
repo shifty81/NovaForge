@@ -239,6 +239,7 @@ void run_procedural_mission_generator_system_tests();
 void run_incursion_system_tests();
 void run_clone_bay_system_tests();
 void run_loyalty_point_store_system_tests();
+void run_contract_auction_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -475,6 +476,7 @@ int main() {
     run_incursion_system_tests();
     run_clone_bay_system_tests();
     run_loyalty_point_store_system_tests();
+    run_contract_auction_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

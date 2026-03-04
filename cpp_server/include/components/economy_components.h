@@ -660,6 +660,51 @@ public:
     COMPONENT_TYPE(LoyaltyPointStore)
 };
 
+// ==================== Contract Auction ====================
+
+/**
+ * @brief Auction-based contract system for marketplace bidding
+ *
+ * Manages auction listings with bids, buyout prices, time-based expiry,
+ * seller/buyer tracking, and bid history for an in-game marketplace.
+ */
+class ContractAuction : public ecs::Component {
+public:
+    enum class AuctionState { Pending, Active, Sold, Expired, Cancelled };
+
+    struct Bid {
+        std::string bidder_id;
+        float amount = 0.0f;
+        float timestamp = 0.0f;
+    };
+
+    struct AuctionListing {
+        std::string listing_id;
+        std::string seller_id;
+        std::string item_name;
+        std::string category;       // Ship, Module, Blueprint, Material, Misc
+        float starting_price = 0.0f;
+        float buyout_price = 0.0f;  // 0 = no buyout
+        float current_bid = 0.0f;
+        std::string highest_bidder;
+        float duration = 3600.0f;   // seconds
+        float elapsed = 0.0f;
+        AuctionState state = AuctionState::Pending;
+        std::vector<Bid> bid_history;
+        int bid_count = 0;
+    };
+
+    std::vector<AuctionListing> listings;
+    int max_listings = 50;
+    int total_sold = 0;
+    int total_expired = 0;
+    int total_bids = 0;
+    float total_revenue = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ContractAuction)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -241,6 +241,7 @@ set(CORE_SOURCES
     src/systems/incursion_system.cpp
     src/systems/clone_bay_system.cpp
     src/systems/loyalty_point_store_system.cpp
+    src/systems/contract_auction_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -556,6 +557,7 @@ set(SERVER_HEADERS
     include/systems/incursion_system.h
     include/systems/clone_bay_system.h
     include/systems/loyalty_point_store_system.h
+    include/systems/contract_auction_system.h
 )
 
 # Steam SDK configuration
