@@ -158,86 +158,50 @@ From `game_session_internal.h`: Shared constants and utilities are extracted, bu
 
 ## Issue 4: CMakeLists.txt Source Duplication
 
-**Severity**: 🟡 Medium
-**File**: `cpp_server/CMakeLists.txt` (814 lines)
+**Severity**: 🟡 Medium — ✅ **RESOLVED**
+**File**: `cpp_server/CMakeLists.txt` (645 → ~630 lines)
 **Impact**: Every new system requires adding source paths in two places (server binary + test binary)
 
 ### Problem
 
-All ~200 source files are listed explicitly twice in CMakeLists.txt — once for the server executable and once for the test executable. They must be kept in sync manually. Example:
+All ~250 source files were listed explicitly twice in CMakeLists.txt — once for the server executable and once for the test executable. They had to be kept in sync manually.
 
-```cmake
-# Server binary (lines 36-200)
-set(SERVER_SOURCES
-    src/systems/capacitor_system.cpp
-    src/systems/shield_recharge_system.cpp
-    ...200 more...
-)
+### Resolution
 
-# Test binary (lines 700-814) — same files minus main.cpp
-set(TEST_SOURCES
-    src/systems/capacitor_system.cpp
-    src/systems/shield_recharge_system.cpp
-    ...same 200 files again...
-)
-```
+Extracted shared sources into a `novaforge_core` static library. Both `atlas_dedicated_server` and `test_systems` now link against `novaforge_core` instead of compiling sources independently.
 
-### Remediation Plan (Phase 4 — 3–5 days)
-
-| Step | Action | Effort |
-|------|--------|--------|
-| 4.1 | Extract shared sources into a static library target `novaforge_core` | 1 day |
-| 4.2 | Server binary links `novaforge_core` + `src/main.cpp` | 0.5 day |
-| 4.3 | Test binary links `novaforge_core` + `test_systems.cpp` | 0.5 day |
-| 4.4 | Use `file(GLOB_RECURSE)` for system sources (with explicit exclusions) or maintain one list | 1 day |
-| 4.5 | Add subdirectory CMakeLists.txt files for `src/systems/`, `src/data/`, etc. | 1 day |
-
-**Expected outcome**: New systems need to be listed in only one place. CMakeLists.txt drops from 814 to ~200 lines.
+- **Before**: Each source compiled twice (once per target), ~10 min full build
+- **After**: Sources compiled once into `libnovaforge_core.a`, both targets link it
+- New systems only need to be added to `CORE_SOURCES` once
 
 ---
 
 ## Issue 5: Data Layer JSON Parsing Duplication
 
-**Severity**: 🟡 Medium
+**Severity**: 🟡 Medium — ✅ **RESOLVED**
 **Files**: `cpp_server/src/data/ship_database.cpp`, `cpp_server/src/data/npc_database.cpp`, `cpp_server/src/data/wormhole_database.cpp`
 **Impact**: Copy-pasted JSON brace-counting parser logic across 3+ files
 
 ### Problem
 
-Each database class implements its own manual JSON parsing with brace counting:
+Each database class implemented its own manual JSON parsing with brace counting — identical 10–14 line loops duplicated across files.
 
-```cpp
-// Identical pattern in ship_database.cpp and npc_database.cpp:
-int braceDepth = 0;
-for (char c : content) {
-    if (c == '{') braceDepth++;
-    if (c == '}') braceDepth--;
-    // ... brace-counting logic ...
-}
-```
+### Resolution
 
-This is a custom JSON tokenizer duplicated across files instead of using a shared utility or the project's nlohmann-json dependency.
+Added `atlas::json::findBlockEnd()` to `json_helpers.h` — a single reusable function that finds the matching closing delimiter for any `{…}` or `[…]` block, respecting string boundaries. Refactored `extractObject()` and `extractArray()` in json_helpers.h to use it as well.
 
-### Remediation Plan (Phase 5 — 2–3 days)
-
-| Step | Action | Effort |
-|------|--------|--------|
-| 5.1 | Create `src/data/json_parser_utils.h` with shared `parseJsonArray()` and `parseJsonObject()` helpers | 1 day |
-| 5.2 | Refactor `ship_database.cpp` to use shared parser | 0.5 day |
-| 5.3 | Refactor `npc_database.cpp` and `wormhole_database.cpp` to use shared parser | 1 day |
-
-**Expected outcome**: One JSON parsing implementation, used by all database classes.
+All three database files now call `json::findBlockEnd()` instead of inlining the loop. 7 instances of duplicated brace-counting code were replaced.
 
 ---
 
 ## Recommended Execution Order
 
 ```
-Phase 4: CMakeLists.txt cleanup          (3-5 days)  ← Unblocks everything
+Phase 4: CMakeLists.txt cleanup          (3-5 days)  ✅ COMPLETE
     ↓
 Phase 1: Split test file                 (2-3 weeks) ← Biggest daily pain
     ↓
-Phase 5: Data layer dedup               (2-3 days)  ← Quick win
+Phase 5: Data layer dedup               (2-3 days)  ✅ COMPLETE
     ↓
 Phase 2: System template bases          (3-4 weeks) ← Largest code reduction
     ↓
@@ -255,10 +219,10 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 |--------|---------|--------|
 | Largest file (lines) | 31,554 (test_systems.cpp) | < 500 |
 | Test recompile time (single system change) | ~60s+ | < 5s |
-| CMakeLists.txt lines | 814 | < 250 |
-| Source lists to update for new system | 2 | 1 |
+| CMakeLists.txt source lists to update | ✅ 1 (was 2) | 1 |
 | Average system boilerplate (lines) | ~80 | ~20 |
 | GameSession forward declarations | 15+ | 0 |
+| JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
 
 ---
 
@@ -272,4 +236,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 ---
 
 *Audit completed: March 2, 2026*
-*Next review: After Phase 4 (CMakeLists.txt cleanup) completion*
+*Phase 4 & 5 resolved: March 4, 2026*
+*Next review: After Phase 1 (test file split) completion*

@@ -80,20 +80,8 @@ int ShipDatabase::loadFromFile(const std::string& filepath) {
         if (block_start == std::string::npos) break;
 
         // Walk forward counting braces to find the matching '}'
-        int depth = 0;
-        size_t block_end = block_start;
-        bool in_string = false;
-        for (size_t i = block_start; i < content.size(); ++i) {
-            char c = content[i];
-            if (c == '\\' && in_string) { ++i; continue; }
-            if (c == '\"') { in_string = !in_string; continue; }
-            if (in_string) continue;
-            if (c == '{') ++depth;
-            if (c == '}') {
-                --depth;
-                if (depth == 0) { block_end = i; break; }
-            }
-        }
+        size_t block_end = json::findBlockEnd(content, block_start, '{', '}');
+        if (block_end == std::string::npos) break;
 
         std::string block = content.substr(block_start, block_end - block_start + 1);
 

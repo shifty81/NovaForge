@@ -169,6 +169,35 @@ inline bool extractBool(const std::string& json,
     return fallback;
 }
 
+/// Find the position of the closing delimiter that matches the opening
+/// delimiter at @p start.  Handles nested braces/brackets and respects
+/// JSON string boundaries (including escaped quotes).
+///
+/// @param json       Input JSON text.
+/// @param start      Index of the opening '{' or '['.
+/// @param open_char  The opening delimiter ('{' or '[').
+/// @param close_char The matching closing delimiter ('}' or ']').
+/// @return Position of the matching closing delimiter, or
+///         std::string::npos if not found.
+inline size_t findBlockEnd(const std::string& json, size_t start,
+                           char open_char, char close_char) {
+    if (start >= json.size() || json[start] != open_char) return std::string::npos;
+    int depth = 0;
+    bool in_str = false;
+    for (size_t i = start; i < json.size(); ++i) {
+        char c = json[i];
+        if (c == '\\' && in_str) { ++i; continue; }
+        if (c == '\"') { in_str = !in_str; continue; }
+        if (in_str) continue;
+        if (c == open_char) ++depth;
+        else if (c == close_char) {
+            --depth;
+            if (depth == 0) return i;
+        }
+    }
+    return std::string::npos;
+}
+
 /// Extract a nested JSON object for a given key: "key":{...}
 inline std::string extractObject(const std::string& json,
                                  const std::string& key) {
@@ -179,23 +208,9 @@ inline std::string extractObject(const std::string& json,
     pos = json.find('{', pos + search.size());
     if (pos == std::string::npos) return "";
 
-    int depth = 0;
-    bool in_str = false;
-    for (size_t i = pos; i < json.size(); ++i) {
-        char c = json[i];
-        if (c == '\\' && in_str) { ++i; continue; }
-        if (c == '\"') { in_str = !in_str; continue; }
-        if (in_str) continue;
-        if (c == '{') ++depth;
-        else if (c == '}') {
-            --depth;
-            if (depth == 0) {
-                return json.substr(pos, i - pos + 1);
-            }
-        }
-    }
-
-    return "";
+    size_t end = findBlockEnd(json, pos, '{', '}');
+    if (end == std::string::npos) return "";
+    return json.substr(pos, end - pos + 1);
 }
 
 /// Extract a JSON array for a given key: "key":[...]
@@ -208,23 +223,9 @@ inline std::string extractArray(const std::string& json,
     pos = json.find('[', pos + search.size());
     if (pos == std::string::npos) return "";
 
-    int depth = 0;
-    bool in_str = false;
-    for (size_t i = pos; i < json.size(); ++i) {
-        char c = json[i];
-        if (c == '\\' && in_str) { ++i; continue; }
-        if (c == '\"') { in_str = !in_str; continue; }
-        if (in_str) continue;
-        if (c == '[') ++depth;
-        else if (c == ']') {
-            --depth;
-            if (depth == 0) {
-                return json.substr(pos, i - pos + 1);
-            }
-        }
-    }
-
-    return "";
+    size_t end = findBlockEnd(json, pos, '[', ']');
+    if (end == std::string::npos) return "";
+    return json.substr(pos, end - pos + 1);
 }
 
 /// Parse a JSON array of strings: ["a","b","c"]

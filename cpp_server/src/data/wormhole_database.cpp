@@ -74,17 +74,8 @@ int WormholeDatabase::loadClasses(const std::string& filepath) {
         size_t block_start = content.find('{', key_end);
         if (block_start == std::string::npos) break;
 
-        int depth = 0;
-        size_t block_end = block_start;
-        bool in_string = false;
-        for (size_t i = block_start; i < content.size(); ++i) {
-            char c = content[i];
-            if (c == '\\' && in_string) { ++i; continue; }
-            if (c == '\"') { in_string = !in_string; continue; }
-            if (in_string) continue;
-            if (c == '{') ++depth;
-            if (c == '}') { --depth; if (depth == 0) { block_end = i; break; } }
-        }
+        size_t block_end = json::findBlockEnd(content, block_start, '{', '}');
+        if (block_end == std::string::npos) break;
 
         std::string block = content.substr(block_start, block_end - block_start + 1);
         if (key.empty() || block.size() <= 2) { pos = block_end + 1; continue; }
@@ -116,11 +107,8 @@ int WormholeDatabase::loadClasses(const std::string& filepath) {
             while (sp < spawns_arr.size()) {
                 size_t obj_start = spawns_arr.find('{', sp);
                 if (obj_start == std::string::npos) break;
-                int d = 0; size_t obj_end = obj_start;
-                for (size_t i = obj_start; i < spawns_arr.size(); ++i) {
-                    if (spawns_arr[i] == '{') ++d;
-                    if (spawns_arr[i] == '}') { --d; if (d == 0) { obj_end = i; break; } }
-                }
+                size_t obj_end = json::findBlockEnd(spawns_arr, obj_start, '{', '}');
+                if (obj_end == std::string::npos) break;
                 std::string obj = spawns_arr.substr(obj_start, obj_end - obj_start + 1);
 
                 DormantSpawn spawn;
@@ -164,15 +152,8 @@ int WormholeDatabase::loadEffects(const std::string& filepath) {
         size_t block_start = content.find('{', key_end);
         if (block_start == std::string::npos) break;
 
-        int depth = 0; size_t block_end = block_start; bool in_str = false;
-        for (size_t i = block_start; i < content.size(); ++i) {
-            char c = content[i];
-            if (c == '\\' && in_str) { ++i; continue; }
-            if (c == '\"') { in_str = !in_str; continue; }
-            if (in_str) continue;
-            if (c == '{') ++depth;
-            if (c == '}') { --depth; if (depth == 0) { block_end = i; break; } }
-        }
+        size_t block_end = json::findBlockEnd(content, block_start, '{', '}');
+        if (block_end == std::string::npos) break;
 
         std::string block = content.substr(block_start, block_end - block_start + 1);
         if (key.empty() || block.size() <= 2) { pos = block_end + 1; continue; }

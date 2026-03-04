@@ -66,20 +66,8 @@ int NpcDatabase::loadFromFile(const std::string& filepath) {
         if (block_start == std::string::npos) break;
 
         // Walk forward counting braces to find the matching '}'
-        int depth = 0;
-        size_t block_end = block_start;
-        bool in_string = false;
-        for (size_t i = block_start; i < content.size(); ++i) {
-            char c = content[i];
-            if (c == '\\' && in_string) { ++i; continue; }
-            if (c == '\"') { in_string = !in_string; continue; }
-            if (in_string) continue;
-            if (c == '{') ++depth;
-            if (c == '}') {
-                --depth;
-                if (depth == 0) { block_end = i; break; }
-            }
-        }
+        size_t block_end = json::findBlockEnd(content, block_start, '{', '}');
+        if (block_end == std::string::npos) break;
 
         std::string block = content.substr(block_start, block_end - block_start + 1);
 
@@ -157,15 +145,8 @@ bool NpcDatabase::parseNpcEntry(const std::string& id, const std::string& json) 
             size_t arr_start = json.find('[', wpos);
             if (arr_start != std::string::npos) {
                 // Find matching ']'
-                int depth = 0;
-                size_t arr_end = arr_start;
-                for (size_t i = arr_start; i < json.size(); ++i) {
-                    if (json[i] == '[') ++depth;
-                    if (json[i] == ']') {
-                        --depth;
-                        if (depth == 0) { arr_end = i; break; }
-                    }
-                }
+                size_t arr_end = json::findBlockEnd(json, arr_start, '[', ']');
+                if (arr_end == std::string::npos) arr_end = arr_start;
 
                 // Parse individual weapon objects within the array
                 std::string arr_content = json.substr(arr_start + 1, arr_end - arr_start - 1);
@@ -174,20 +155,8 @@ bool NpcDatabase::parseNpcEntry(const std::string& id, const std::string& json) 
                     size_t obj_start = arr_content.find('{', obj_pos);
                     if (obj_start == std::string::npos) break;
 
-                    int d = 0;
-                    size_t obj_end = obj_start;
-                    bool in_str = false;
-                    for (size_t i = obj_start; i < arr_content.size(); ++i) {
-                        char c = arr_content[i];
-                        if (c == '\\' && in_str) { ++i; continue; }
-                        if (c == '\"') { in_str = !in_str; continue; }
-                        if (in_str) continue;
-                        if (c == '{') ++d;
-                        if (c == '}') {
-                            --d;
-                            if (d == 0) { obj_end = i; break; }
-                        }
-                    }
+                    size_t obj_end = json::findBlockEnd(arr_content, obj_start, '{', '}');
+                    if (obj_end == std::string::npos) break;
 
                     std::string wblock = arr_content.substr(obj_start, obj_end - obj_start + 1);
 
