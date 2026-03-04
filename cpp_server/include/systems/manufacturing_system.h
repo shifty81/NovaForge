@@ -56,11 +56,11 @@ public:
      */
     int getTotalRunsCompleted(const std::string& facility_entity_id);
 
-private:
-    int job_counter_ = 0;
-
 protected:
     void updateComponent(ecs::Entity& entity, components::ManufacturingFacility& facility, float delta_time) override;
+
+private:
+    int job_counter_ = 0;
 };
 
 } // namespace systems

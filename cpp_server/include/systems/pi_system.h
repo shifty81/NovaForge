@@ -60,12 +60,12 @@ public:
      */
     int getProcessorCount(const std::string& colony_entity_id);
 
+protected:
+    void updateComponent(ecs::Entity& entity, components::PlanetaryColony& colony, float delta_time) override;
+
 private:
     int extractor_counter_ = 0;
     int processor_counter_ = 0;
-
-protected:
-    void updateComponent(ecs::Entity& entity, components::PlanetaryColony& colony, float delta_time) override;
 };
 
 } // namespace systems
