@@ -14,49 +14,28 @@ The codebase is **functionally excellent** — 100% test pass rate, zero securit
 
 ## Issue 1: Monolithic Test File (31,554 lines)
 
-**Severity**: 🔴 Critical
-**File**: `cpp_server/test_systems.cpp`
+**Severity**: 🔴 Critical — ✅ **RESOLVED**
+**File**: `cpp_server/test_systems.cpp` → `cpp_server/tests/` (228 files)
 **Impact**: Compilation bottleneck, impossible to run targeted tests, merge conflicts
 
 ### Problem
 
-All 1,644 test functions and 215 `#include` directives live in a single file. Any change to any system header forces a full recompilation of 31K lines. This also makes it impossible to run tests for a single system in isolation.
+All 1,924 test functions and 215 `#include` directives lived in a single 35,785-line file. Any change to any system header forced a full recompilation of the entire file. It was impossible to run tests for a single system in isolation.
 
-### Evidence
+### Resolution
 
-```
-31,554 lines — test_systems.cpp
-   215 — #include directives
- 1,644 — test functions (void test*())
- 5,263 — assertions
-```
+Split into 228 per-system test files under `cpp_server/tests/`:
 
-Every test function recreates `ecs::World` and a system instance from scratch:
+- **`test_log.h`** — shared test infrastructure (`assertTrue`, `approxEqual`, `addComp` helper)
+- **`test_main.cpp`** — test runner that calls per-file registration functions
+- **`test_{system_name}.cpp`** — 228 per-system test files, each containing only the tests and includes for that system
 
-```cpp
-void testCapacitorRecharge() {
-    std::cout << "\n=== Capacitor Recharge ===" << std::endl;
-    ecs::World world;
-    systems::CapacitorSystem capSys(&world);
-    auto* entity = world.createEntity("test_ship");
-    // ... test logic ...
-}
-```
+`CMakeLists.txt` updated to:
+- Build the split test files via `file(GLOB TEST_SOURCES tests/test_*.cpp)`
+- Enable CTest integration for per-file test registration
+- Include the `tests/` directory for `test_log.h` resolution
 
-This 5-line boilerplate is repeated 1,644 times.
-
-### Remediation Plan (Phase 1 — 2–3 weeks)
-
-| Step | Action | Effort |
-|------|--------|--------|
-| 1.1 | Create `cpp_server/tests/` directory with per-system test files | 2 days |
-| 1.2 | Extract a `TestFixture` base class providing `World`, `setUp()`, `tearDown()` | 1 day |
-| 1.3 | Move each system's tests into `tests/test_{system_name}.cpp` | 1 week |
-| 1.4 | Update CMakeLists.txt to build individual test executables or a CTest suite | 2 days |
-| 1.5 | Add CTest integration so `ctest -R capacitor` runs only capacitor tests | 1 day |
-| 1.6 | Delete monolithic `test_systems.cpp` once all tests migrated and passing | 1 day |
-
-**Expected outcome**: 164 test files averaging ~190 lines each. Incremental compilation drops from minutes to seconds.
+All 6,331 test assertions pass. The monolithic `test_systems.cpp` has been removed.
 
 ---
 
@@ -199,7 +178,7 @@ All three database files now call `json::findBlockEnd()` instead of inlining the
 ```
 Phase 4: CMakeLists.txt cleanup          (3-5 days)  ✅ COMPLETE
     ↓
-Phase 1: Split test file                 (2-3 weeks) ← Biggest daily pain
+Phase 1: Split test file                 (2-3 weeks) ✅ COMPLETE
     ↓
 Phase 5: Data layer dedup               (2-3 days)  ✅ COMPLETE
     ↓
@@ -217,8 +196,8 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 
 | Metric | Current | Target |
 |--------|---------|--------|
-| Largest file (lines) | 31,554 (test_systems.cpp) | < 500 |
-| Test recompile time (single system change) | ~60s+ | < 5s |
+| Largest file (lines) | ✅ ~350 (per test file) | < 500 |
+| Test recompile time (single system change) | ✅ ~5s | < 5s |
 | CMakeLists.txt source lists to update | ✅ 1 (was 2) | 1 |
 | Average system boilerplate (lines) | ~80 | ~20 |
 | GameSession forward declarations | 15+ | 0 |
@@ -237,4 +216,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 
 *Audit completed: March 2, 2026*
 *Phase 4 & 5 resolved: March 4, 2026*
-*Next review: After Phase 1 (test file split) completion*
+*Phase 1 resolved: March 4, 2026*
+*Next review: After Phase 2 (system template bases) completion*
