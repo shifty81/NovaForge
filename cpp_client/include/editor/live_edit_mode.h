@@ -195,31 +195,15 @@ public:
 
     void BeginEdit() {
         m_editing = true;
-        switch (m_policy) {
-            case LiveEditPolicy::PauseOnEdit:
-                m_simCtrl.Pause();
-                break;
-            case LiveEditPolicy::SlowMotion:
-                SetTimeScale(0.25f);
-                break;
-            case LiveEditPolicy::FullSpeed:
-                break;
-        }
+        if (m_policy == LiveEditPolicy::PauseOnEdit)
+            m_simCtrl.Pause();
         ++m_editCount;
     }
 
     void EndEdit() {
         m_editing = false;
-        switch (m_policy) {
-            case LiveEditPolicy::PauseOnEdit:
-                m_simCtrl.Resume();
-                break;
-            case LiveEditPolicy::SlowMotion:
-                SetTimeScale(1.0f);
-                break;
-            case LiveEditPolicy::FullSpeed:
-                break;
-        }
+        if (m_policy == LiveEditPolicy::PauseOnEdit)
+            m_simCtrl.Resume();
     }
 
     /**
