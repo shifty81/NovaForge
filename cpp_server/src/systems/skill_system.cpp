@@ -10,44 +10,39 @@ namespace systems {
 static constexpr double BASE_SP_PER_LEVEL = 1000.0;
 
 SkillSystem::SkillSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void SkillSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::SkillSet>();
+void SkillSystem::updateComponent(ecs::Entity& /*entity*/, components::SkillSet& skillset, float delta_time) {
+    if (skillset.training_queue.empty()) return;
 
-    for (auto* entity : entities) {
-        auto* skillset = entity->getComponent<components::SkillSet>();
-        if (!skillset || skillset->training_queue.empty()) continue;
+    auto& front = skillset.training_queue.front();
+    front.time_remaining -= delta_time;
 
-        auto& front = skillset->training_queue.front();
-        front.time_remaining -= delta_time;
-
-        if (front.time_remaining <= 0.0f) {
-            // Skill training complete
-            auto it = skillset->skills.find(front.skill_id);
-            if (it != skillset->skills.end()) {
-                if (front.target_level <= it->second.max_level) {
-                    it->second.level = front.target_level;
-                }
-            } else {
-                // New skill
-                components::SkillSet::TrainedSkill skill;
-                skill.skill_id = front.skill_id;
-                skill.level = front.target_level;
-                skillset->skills[front.skill_id] = skill;
+    if (front.time_remaining <= 0.0f) {
+        // Skill training complete
+        auto it = skillset.skills.find(front.skill_id);
+        if (it != skillset.skills.end()) {
+            if (front.target_level <= it->second.max_level) {
+                it->second.level = front.target_level;
             }
-
-            // Award SP (base: 1000 SP per level, scaled by multiplier)
-            double sp_gain = BASE_SP_PER_LEVEL * front.target_level;
-            auto skill_it = skillset->skills.find(front.skill_id);
-            if (skill_it != skillset->skills.end()) {
-                sp_gain *= skill_it->second.training_multiplier;
-            }
-            skillset->total_sp += sp_gain;
-
-            skillset->training_queue.erase(skillset->training_queue.begin());
+        } else {
+            // New skill
+            components::SkillSet::TrainedSkill skill;
+            skill.skill_id = front.skill_id;
+            skill.level = front.target_level;
+            skillset.skills[front.skill_id] = skill;
         }
+
+        // Award SP (base: 1000 SP per level, scaled by multiplier)
+        double sp_gain = BASE_SP_PER_LEVEL * front.target_level;
+        auto skill_it = skillset.skills.find(front.skill_id);
+        if (skill_it != skillset.skills.end()) {
+            sp_gain *= skill_it->second.training_multiplier;
+        }
+        skillset.total_sp += sp_gain;
+
+        skillset.training_queue.erase(skillset.training_queue.begin());
     }
 }
 

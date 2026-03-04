@@ -65,19 +65,15 @@ static const std::vector<std::string>& getPool(const std::string& activity) {
 }
 
 FleetChatterSystem::FleetChatterSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetChatterSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::FleetChatterState>();
-    for (auto* entity : entities) {
-        auto* chatter = entity->getComponent<components::FleetChatterState>();
-        if (chatter && chatter->chatter_cooldown > 0.0f) {
-            chatter->chatter_cooldown -= delta_time;
-            if (chatter->chatter_cooldown <= 0.0f) {
-                chatter->chatter_cooldown = 0.0f;
-                chatter->is_speaking = false;  // speech finished
-            }
+void FleetChatterSystem::updateComponent(ecs::Entity& /*entity*/, components::FleetChatterState& chatter, float delta_time) {
+    if (chatter.chatter_cooldown > 0.0f) {
+        chatter.chatter_cooldown -= delta_time;
+        if (chatter.chatter_cooldown <= 0.0f) {
+            chatter.chatter_cooldown = 0.0f;
+            chatter.is_speaking = false;  // speech finished
         }
     }
 }

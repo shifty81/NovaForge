@@ -1,19 +1,19 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_CARGO_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_CARGO_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <cstdint>
 
 namespace atlas {
 namespace systems {
 
-class FleetCargoSystem : public ecs::System {
+class FleetCargoSystem : public ecs::SingleComponentSystem<components::FleetCargoPool> {
 public:
     explicit FleetCargoSystem(ecs::World* world);
     ~FleetCargoSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetCargoSystem"; }
 
     void addContributor(const std::string& pool_entity_id, const std::string& ship_entity_id);
@@ -43,6 +43,9 @@ public:
                                 float logistics_efficiency,
                                 float captain_skill,
                                 float morale_modifier) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetCargoPool& pool, float delta_time) override;
 };
 
 } // namespace systems

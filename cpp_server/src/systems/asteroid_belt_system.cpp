@@ -26,31 +26,27 @@ const components::AsteroidBelt::Asteroid* findAsteroidConst(
 } // anonymous namespace
 
 AsteroidBeltSystem::AsteroidBeltSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AsteroidBeltSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::AsteroidBelt>();
-    for (auto* entity : entities) {
-        auto* belt = entity->getComponent<components::AsteroidBelt>();
-        if (!belt || !belt->active) continue;
+void AsteroidBeltSystem::updateComponent(ecs::Entity& /*entity*/, components::AsteroidBelt& belt, float delta_time) {
+    if (!belt.active) return;
 
-        // Check for depleted asteroids and manage respawn timer
-        bool has_depleted = false;
-        for (const auto& a : belt->asteroids) {
-            if (a.depleted) { has_depleted = true; break; }
-        }
+    // Check for depleted asteroids and manage respawn timer
+    bool has_depleted = false;
+    for (const auto& a : belt.asteroids) {
+        if (a.depleted) { has_depleted = true; break; }
+    }
 
-        if (has_depleted) {
-            belt->respawn_timer += delta_time;
-            if (belt->respawn_timer >= belt->respawn_interval) {
-                belt->respawn_timer = 0.0f;
-                for (auto& a : belt->asteroids) {
-                    if (a.depleted) {
-                        a.quantity = a.max_quantity;
-                        a.depleted = false;
-                        belt->total_respawned++;
-                    }
+    if (has_depleted) {
+        belt.respawn_timer += delta_time;
+        if (belt.respawn_timer >= belt.respawn_interval) {
+            belt.respawn_timer = 0.0f;
+            for (auto& a : belt.asteroids) {
+                if (a.depleted) {
+                    a.quantity = a.max_quantity;
+                    a.depleted = false;
+                    belt.total_respawned++;
                 }
             }
         }

@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_SKILL_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SKILL_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -15,12 +16,11 @@ namespace systems {
  *  - On completion, levels up the skill and pops from queue
  *  - Accumulates total SP
  */
-class SkillSystem : public ecs::System {
+class SkillSystem : public ecs::SingleComponentSystem<components::SkillSet> {
 public:
     explicit SkillSystem(ecs::World* world);
     ~SkillSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "SkillSystem"; }
 
     /**
@@ -48,6 +48,9 @@ public:
      */
     int getSkillLevel(const std::string& entity_id,
                       const std::string& skill_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::SkillSet& skillset, float delta_time) override;
 };
 
 } // namespace systems

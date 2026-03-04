@@ -8,14 +8,11 @@ namespace atlas {
 namespace systems {
 
 FleetCargoSystem::FleetCargoSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetCargoSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::FleetCargoPool>();
-    for (auto* entity : entities) {
-        recalculate(entity->getId());
-    }
+void FleetCargoSystem::updateComponent(ecs::Entity& entity, components::FleetCargoPool& /*pool*/, float /*delta_time*/) {
+    recalculate(entity.getId());
 }
 
 void FleetCargoSystem::addContributor(const std::string& pool_entity_id, const std::string& ship_entity_id) {

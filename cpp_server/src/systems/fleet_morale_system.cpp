@@ -7,18 +7,11 @@ namespace atlas {
 namespace systems {
 
 FleetMoraleSystem::FleetMoraleSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetMoraleSystem::update(float /*delta_time*/) {
-    // Update morale scores for all entities with a FleetMorale component
-    auto entities = world_->getEntities<components::FleetMorale>();
-    for (auto* entity : entities) {
-        auto* morale = entity->getComponent<components::FleetMorale>();
-        if (morale) {
-            morale->updateMoraleScore();
-        }
-    }
+void FleetMoraleSystem::updateComponent(ecs::Entity& /*entity*/, components::FleetMorale& morale, float /*delta_time*/) {
+    morale.updateMoraleScore();
 }
 
 // ---- Record combat outcomes ----

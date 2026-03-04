@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ANOMALY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ANOMALY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +16,11 @@ namespace systems {
  * relic, gas, and wormhole anomalies.  The difficulty scales with
  * the system's security status (lower sec = harder content).
  */
-class AnomalySystem : public ecs::System {
+class AnomalySystem : public ecs::SingleComponentSystem<components::Anomaly> {
 public:
     explicit AnomalySystem(ecs::World* world);
     ~AnomalySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "AnomalySystem"; }
 
     /**
@@ -69,6 +68,9 @@ public:
      */
     static components::AnomalyVisualCue::CueType cueTypeFromAnomalyType(
         components::Anomaly::Type type);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Anomaly& anom, float delta_time) override;
 
 private:
     int anomaly_counter_ = 0;
