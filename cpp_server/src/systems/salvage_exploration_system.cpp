@@ -5,17 +5,15 @@ namespace atlas {
 namespace systems {
 
 SalvageExplorationSystem::SalvageExplorationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void SalvageExplorationSystem::update(float /*delta_time*/) {
+void SalvageExplorationSystem::updateComponent(ecs::Entity& /*entity*/, components::SalvageSite& /*site*/, float /*delta_time*/) {
     // No per-tick behavior needed for salvage sites
 }
 
 bool SalvageExplorationSystem::discoverNode(const std::string& site_entity_id) {
-    auto* entity = world_->getEntity(site_entity_id);
-    if (!entity) return false;
-    auto* site = entity->getComponent<components::SalvageSite>();
+    auto* site = getComponentFor(site_entity_id);
     if (!site) return false;
     if (site->discovered_nodes >= site->total_loot_nodes) return false;
     site->discovered_nodes++;
@@ -23,9 +21,7 @@ bool SalvageExplorationSystem::discoverNode(const std::string& site_entity_id) {
 }
 
 bool SalvageExplorationSystem::lootNode(const std::string& site_entity_id) {
-    auto* entity = world_->getEntity(site_entity_id);
-    if (!entity) return false;
-    auto* site = entity->getComponent<components::SalvageSite>();
+    auto* site = getComponentFor(site_entity_id);
     if (!site) return false;
     if (site->looted_nodes >= site->discovered_nodes) return false;
     site->looted_nodes++;
@@ -33,41 +29,31 @@ bool SalvageExplorationSystem::lootNode(const std::string& site_entity_id) {
 }
 
 bool SalvageExplorationSystem::isFullyLooted(const std::string& site_entity_id) const {
-    auto* entity = world_->getEntity(site_entity_id);
-    if (!entity) return false;
-    auto* site = entity->getComponent<components::SalvageSite>();
+    const auto* site = getComponentFor(site_entity_id);
     if (!site) return false;
     return site->looted_nodes >= site->total_loot_nodes && site->total_loot_nodes > 0;
 }
 
 int SalvageExplorationSystem::getRemainingNodes(const std::string& site_entity_id) const {
-    auto* entity = world_->getEntity(site_entity_id);
-    if (!entity) return 0;
-    auto* site = entity->getComponent<components::SalvageSite>();
+    const auto* site = getComponentFor(site_entity_id);
     if (!site) return 0;
     return site->total_loot_nodes - site->looted_nodes;
 }
 
 int SalvageExplorationSystem::getDiscoveredNodes(const std::string& site_entity_id) const {
-    auto* entity = world_->getEntity(site_entity_id);
-    if (!entity) return 0;
-    auto* site = entity->getComponent<components::SalvageSite>();
+    const auto* site = getComponentFor(site_entity_id);
     if (!site) return 0;
     return site->discovered_nodes;
 }
 
 bool SalvageExplorationSystem::hasAncientTech(const std::string& site_entity_id) const {
-    auto* entity = world_->getEntity(site_entity_id);
-    if (!entity) return false;
-    auto* site = entity->getComponent<components::SalvageSite>();
+    const auto* site = getComponentFor(site_entity_id);
     if (!site) return false;
     return site->has_ancient_tech;
 }
 
 int SalvageExplorationSystem::generateTrinkets(const std::string& site_entity_id, uint64_t seed) {
-    auto* entity = world_->getEntity(site_entity_id);
-    if (!entity) return 0;
-    auto* site = entity->getComponent<components::SalvageSite>();
+    auto* site = getComponentFor(site_entity_id);
     if (!site) return 0;
 
     // Simple deterministic RNG from seed
