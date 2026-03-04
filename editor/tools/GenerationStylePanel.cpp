@@ -30,21 +30,94 @@ void GenerationStylePanel::Draw() {
     const float rowH    = ctx.theme().rowHeight;
     const atlas::Rect& b = m_panelState.bounds;
     const float headerH = ctx.theme().headerHeight;
+    const float widgetW = b.w - 2.0f * pad;
     float y = b.y + headerH + pad;
 
     // Style name
-    atlas::label(ctx, {b.x + pad, y}, "Style: " + m_style.name, ctx.theme().textPrimary);
+    atlas::label(ctx, {b.x + pad, y}, "Style: " + m_style.name,
+                 ctx.theme().textPrimary);
     y += rowH + pad;
 
-    // Placement count
-    atlas::label(ctx, {b.x + pad, y},
-        "Placements: " + std::to_string(m_style.placements.size()), ctx.theme().textSecondary);
+    // Style type combo box
+    static const std::vector<std::string> typeItems = {
+        "ShipLayout", "StationLayout", "InteriorLayout",
+        "StarSystem", "AsteroidField", "FleetComposition"
+    };
+    int typeIdx = static_cast<int>(m_style.type);
+    if (atlas::comboBox(ctx, "Style Type", {b.x + pad, y, widgetW, rowH + pad},
+                        typeItems, &typeIdx, &m_typeDropdownOpen)) {
+        NewStyle(static_cast<pcg::GenerationStyleType>(typeIdx));
+    }
     y += rowH + pad;
 
-    // Parameter count
+    // Base seed label
     atlas::label(ctx, {b.x + pad, y},
-        "Parameters: " + std::to_string(m_style.parameters.size()), ctx.theme().textSecondary);
+        "Base Seed: " + std::to_string(m_style.baseSeed),
+        ctx.theme().textSecondary);
     y += rowH + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // Placement list
+    atlas::label(ctx, {b.x + pad, y},
+        "Placements: " + std::to_string(m_style.placements.size()),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+    {
+        size_t count = m_style.placements.size();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            const auto& pe = m_style.placements[i];
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "Slot " + std::to_string(pe.slotIndex) + ": " + pe.label,
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // Parameter list with sliders and enabled checkboxes
+    atlas::label(ctx, {b.x + pad, y},
+        "Parameters: " + std::to_string(m_style.parameters.size()),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+    {
+        size_t count = m_style.parameters.size();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            auto& p = m_style.parameters[i];
+            atlas::checkbox(ctx, p.name.c_str(),
+                {b.x + pad, y, widgetW * 0.3f, rowH + pad}, &p.enabled);
+            atlas::slider(ctx, p.name.c_str(),
+                {b.x + pad + widgetW * 0.32f, y, widgetW * 0.68f, rowH + pad},
+                &p.value, p.minValue, p.maxValue, "%.2f");
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more parameters",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
+
+    // Asset style attached indicator
+    atlas::label(ctx, {b.x + pad, y},
+        m_hasAssetStyle ? "Asset Style: Attached" : "Asset Style: None",
+        m_hasAssetStyle ? ctx.theme().success : ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
 
     // Generate button
     const float btnW = 100.0f;
@@ -63,11 +136,11 @@ void GenerationStylePanel::Draw() {
     }
     y += rowH + pad + pad;
 
-    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
     y += pad;
 
     // Log area
-    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::Rect logRect{b.x + pad, y, widgetW, b.y + b.h - y - pad};
     atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
 
     atlas::panelEnd(ctx);

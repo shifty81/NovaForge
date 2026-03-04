@@ -112,6 +112,7 @@ private:
 
     atlas::PanelState m_panelState;
     float m_scrollOffset = 0.0f;
+    bool m_typeDropdownOpen = false;
 
     void log(const std::string& msg);
 };

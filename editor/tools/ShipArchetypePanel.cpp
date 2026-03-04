@@ -30,33 +30,130 @@ void ShipArchetypePanel::Draw() {
     const float rowH    = ctx.theme().rowHeight;
     const atlas::Rect& b = m_panelState.bounds;
     const float headerH = ctx.theme().headerHeight;
+    const float widgetW = b.w - 2.0f * pad;
     float y = b.y + headerH + pad;
 
-    // Hull class label
-    atlas::label(ctx, {b.x + pad, y},
-        "Hull: " + pcg::ShipGenerator::hullClassName(m_archetype.hullClass),
-        ctx.theme().textPrimary);
+    // Hull class combo box
+    static const std::vector<std::string> hullItems = {
+        "Frigate", "Destroyer", "Cruiser", "Battlecruiser", "Battleship", "Capital"
+    };
+    int hullIdx = static_cast<int>(m_archetype.hullClass);
+    if (atlas::comboBox(ctx, "Hull Class", {b.x + pad, y, widgetW, rowH + pad},
+                        hullItems, &hullIdx, &m_hullDropdownOpen)) {
+        SelectHullClass(static_cast<pcg::HullClass>(hullIdx));
+    }
     y += rowH + pad;
 
-    // Room count
+    // Hull control point count
     atlas::label(ctx, {b.x + pad, y},
-        "Rooms: " + std::to_string(m_archetype.rooms.size()), ctx.theme().textSecondary);
+        "Hull Control Points: " + std::to_string(m_archetype.hullShape.controlPoints.size()),
+        ctx.theme().textSecondary);
     y += rowH + pad;
+
+    // Variation bound sliders
+    atlas::slider(ctx, "Shape Variation", {b.x + pad, y, widgetW, rowH + pad},
+                  &m_archetype.shapeVariation, 0.0f, 1.0f, "%.2f");
+    y += rowH + pad;
+    atlas::slider(ctx, "Size Variation", {b.x + pad, y, widgetW, rowH + pad},
+                  &m_archetype.sizeVariation, 0.0f, 1.0f, "%.2f");
+    y += rowH + pad;
+    atlas::slider(ctx, "Detail Variation", {b.x + pad, y, widgetW, rowH + pad},
+                  &m_archetype.detailVariation, 0.0f, 1.0f, "%.2f");
+    y += rowH + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // Room list
+    atlas::label(ctx, {b.x + pad, y},
+        "Rooms: " + std::to_string(m_archetype.rooms.size()),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+    {
+        size_t count = m_archetype.rooms.size();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            const auto& room = m_archetype.rooms[i];
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "Room " + std::to_string(room.roomId) + ": " +
+                pcg::interiorRoomTypeName(room.type),
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
 
     // Door count
     atlas::label(ctx, {b.x + pad, y},
-        "Doors: " + std::to_string(m_archetype.doors.size()), ctx.theme().textSecondary);
+        "Doors: " + std::to_string(m_archetype.doors.size()),
+        ctx.theme().textSecondary);
     y += rowH + pad;
 
-    // Hardpoint count
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // Hardpoint list
     atlas::label(ctx, {b.x + pad, y},
-        "Hardpoints: " + std::to_string(m_archetype.hardpoints.size()), ctx.theme().textSecondary);
+        "Hardpoints: " + std::to_string(m_archetype.hardpoints.size()),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+    {
+        size_t count = m_archetype.hardpoints.size();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            const auto& hp = m_archetype.hardpoints[i];
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "HP " + std::to_string(hp.hardpointId) + " [" + hp.groupTag + "]",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // Subsystem list
+    atlas::label(ctx, {b.x + pad, y},
+        "Subsystems: " + std::to_string(m_archetype.subsystems.size()),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+    {
+        size_t count = m_archetype.subsystems.size();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            const auto& ss = m_archetype.subsystems[i];
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                std::string(pcg::ShipArchetypeEngine::subsystemTypeName(ss.type)),
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
+
+    // Module visual rule count
+    atlas::label(ctx, {b.x + pad, y},
+        "Module Visual Rules: " + std::to_string(m_archetype.moduleVisuals.size()),
+        ctx.theme().textSecondary);
     y += rowH + pad;
 
-    // Subsystem count
-    atlas::label(ctx, {b.x + pad, y},
-        "Subsystems: " + std::to_string(m_archetype.subsystems.size()), ctx.theme().textSecondary);
-    y += rowH + pad;
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
 
     // Generate Preview button
     const float btnW = 130.0f;
@@ -75,11 +172,11 @@ void ShipArchetypePanel::Draw() {
     }
     y += rowH + pad + pad;
 
-    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
     y += pad;
 
     // Log area
-    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::Rect logRect{b.x + pad, y, widgetW, b.y + b.h - y - pad};
     atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
 
     atlas::panelEnd(ctx);
