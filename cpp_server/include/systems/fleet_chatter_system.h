@@ -1,18 +1,18 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_CHATTER_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_CHATTER_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
 namespace systems {
 
-class FleetChatterSystem : public ecs::System {
+class FleetChatterSystem : public ecs::SingleComponentSystem<components::FleetChatterState> {
 public:
     explicit FleetChatterSystem(ecs::World* world);
     ~FleetChatterSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetChatterSystem"; }
 
     void setActivity(const std::string& entity_id, const std::string& activity);
@@ -73,6 +73,9 @@ public:
     float computeDisagreement(const std::string& entity_id,
                               float current_risk,
                               bool task_mismatch) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetChatterState& chatter, float delta_time) override;
 };
 
 } // namespace systems

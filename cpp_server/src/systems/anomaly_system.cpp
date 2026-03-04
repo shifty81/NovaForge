@@ -8,20 +8,15 @@ namespace atlas {
 namespace systems {
 
 AnomalySystem::AnomalySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AnomalySystem::update(float delta_time) {
-    // Tick despawn timers on all anomalies
-    for (auto* entity : world_->getAllEntities()) {
-        auto* anom = entity->getComponent<components::Anomaly>();
-        if (!anom) continue;
-        if (anom->completed) continue;
+void AnomalySystem::updateComponent(ecs::Entity& /*entity*/, components::Anomaly& anom, float delta_time) {
+    if (anom.completed) return;
 
-        anom->despawn_timer -= delta_time;
-        if (anom->despawn_timer <= 0.0f) {
-            anom->completed = true;  // mark for cleanup
-        }
+    anom.despawn_timer -= delta_time;
+    if (anom.despawn_timer <= 0.0f) {
+        anom.completed = true;  // mark for cleanup
     }
 }
 

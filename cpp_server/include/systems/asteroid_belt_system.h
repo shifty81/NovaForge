@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_ASTEROID_BELT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ASTEROID_BELT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/exploration_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * Tracks depletion when mined, respawns depleted asteroids on a timer, and
  * provides ore type queries and belt statistics.
  */
-class AsteroidBeltSystem : public ecs::System {
+class AsteroidBeltSystem : public ecs::SingleComponentSystem<components::AsteroidBelt> {
 public:
     explicit AsteroidBeltSystem(ecs::World* world);
     ~AsteroidBeltSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "AsteroidBeltSystem"; }
 
     bool initializeBelt(const std::string& entity_id, const std::string& belt_id,
@@ -35,6 +35,9 @@ public:
     bool isAsteroidDepleted(const std::string& entity_id, const std::string& asteroid_id) const;
     int getTotalMined(const std::string& entity_id) const;
     int getTotalRespawned(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::AsteroidBelt& belt, float delta_time) override;
 };
 
 } // namespace systems
