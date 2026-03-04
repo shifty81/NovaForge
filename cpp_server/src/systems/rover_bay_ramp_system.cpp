@@ -8,31 +8,25 @@ namespace atlas {
 namespace systems {
 
 RoverBayRampSystem::RoverBayRampSystem(ecs::World* world)
-    : System(world) {
+    : StateMachineSystem(world) {
 }
 
-void RoverBayRampSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::RoverBayRamp>();
-    for (auto* entity : entities) {
-        auto* bay = entity->getComponent<components::RoverBayRamp>();
-        if (!bay) continue;
+void RoverBayRampSystem::updateComponent(ecs::Entity& /*entity*/, components::RoverBayRamp& bay, float delta_time) {
+    if (!bay.is_powered) return;
 
-        if (!bay->is_powered) continue;
-
-        if (bay->state == components::RoverBayRamp::RampState::Opening) {
-            bay->ramp_progress += bay->ramp_speed * delta_time;
-            if (bay->ramp_progress >= 1.0f) {
-                bay->ramp_progress = 1.0f;
-                bay->state = components::RoverBayRamp::RampState::Open;
-                bay->is_pressurized = false;
-            }
-        } else if (bay->state == components::RoverBayRamp::RampState::Closing) {
-            bay->ramp_progress -= bay->ramp_speed * delta_time;
-            if (bay->ramp_progress <= 0.0f) {
-                bay->ramp_progress = 0.0f;
-                bay->state = components::RoverBayRamp::RampState::Closed;
-                bay->is_pressurized = true;
-            }
+    if (bay.state == components::RoverBayRamp::RampState::Opening) {
+        bay.ramp_progress += bay.ramp_speed * delta_time;
+        if (bay.ramp_progress >= 1.0f) {
+            bay.ramp_progress = 1.0f;
+            bay.state = components::RoverBayRamp::RampState::Open;
+            bay.is_pressurized = false;
+        }
+    } else if (bay.state == components::RoverBayRamp::RampState::Closing) {
+        bay.ramp_progress -= bay.ramp_speed * delta_time;
+        if (bay.ramp_progress <= 0.0f) {
+            bay.ramp_progress = 0.0f;
+            bay.state = components::RoverBayRamp::RampState::Closed;
+            bay.is_pressurized = true;
         }
     }
 }
@@ -51,10 +45,7 @@ bool RoverBayRampSystem::initializeBay(const std::string& entity_id, int max_rov
 }
 
 bool RoverBayRampSystem::openRamp(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     if (!bay->is_powered) return false;
@@ -68,10 +59,7 @@ bool RoverBayRampSystem::openRamp(const std::string& entity_id) {
 }
 
 bool RoverBayRampSystem::closeRamp(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     if (bay->state == components::RoverBayRamp::RampState::Open ||
@@ -84,10 +72,7 @@ bool RoverBayRampSystem::closeRamp(const std::string& entity_id) {
 }
 
 bool RoverBayRampSystem::storeRover(const std::string& entity_id, const std::string& rover_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     if (bay->state != components::RoverBayRamp::RampState::Open) return false;
@@ -103,10 +88,7 @@ bool RoverBayRampSystem::storeRover(const std::string& entity_id, const std::str
 }
 
 bool RoverBayRampSystem::deployRover(const std::string& entity_id, const std::string& rover_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     if (bay->state != components::RoverBayRamp::RampState::Open) return false;
@@ -122,10 +104,7 @@ bool RoverBayRampSystem::deployRover(const std::string& entity_id, const std::st
 }
 
 bool RoverBayRampSystem::retrieveRover(const std::string& entity_id, const std::string& rover_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     if (bay->state != components::RoverBayRamp::RampState::Open) return false;
@@ -141,10 +120,7 @@ bool RoverBayRampSystem::retrieveRover(const std::string& entity_id, const std::
 
 bool RoverBayRampSystem::setExternalAtmosphere(const std::string& entity_id,
                                                 components::RoverBayRamp::AtmosphereType atmosphere) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     bay->external_atmosphere = atmosphere;
@@ -152,10 +128,7 @@ bool RoverBayRampSystem::setExternalAtmosphere(const std::string& entity_id,
 }
 
 bool RoverBayRampSystem::setExternalGravity(const std::string& entity_id, float gravity) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     bay->external_gravity = std::max(0.0f, std::min(2.0f, gravity));
@@ -163,10 +136,7 @@ bool RoverBayRampSystem::setExternalGravity(const std::string& entity_id, float 
 }
 
 bool RoverBayRampSystem::setPowerEnabled(const std::string& entity_id, bool enabled) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     bay->is_powered = enabled;
@@ -174,40 +144,28 @@ bool RoverBayRampSystem::setPowerEnabled(const std::string& entity_id, bool enab
 }
 
 std::string RoverBayRampSystem::getRampState(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    const auto* bay = getComponentFor(entity_id);
     if (!bay) return "unknown";
 
     return components::RoverBayRamp::stateToString(bay->state);
 }
 
 float RoverBayRampSystem::getRampProgress(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    const auto* bay = getComponentFor(entity_id);
     if (!bay) return 0.0f;
 
     return bay->ramp_progress;
 }
 
 int RoverBayRampSystem::getStoredCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    const auto* bay = getComponentFor(entity_id);
     if (!bay) return 0;
 
     return static_cast<int>(bay->stored_rover_ids.size());
 }
 
 int RoverBayRampSystem::getDeployedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* bay = entity->getComponent<components::RoverBayRamp>();
+    const auto* bay = getComponentFor(entity_id);
     if (!bay) return 0;
 
     return static_cast<int>(bay->deployed_rover_ids.size());

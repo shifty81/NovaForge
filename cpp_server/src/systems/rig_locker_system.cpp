@@ -9,7 +9,7 @@ namespace systems {
 static constexpr float BASE_MODULE_MASS_KG = 1.5f;
 
 RigLockerSystem::RigLockerSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
 std::string RigLockerSystem::generatePresetId(components::RigLockerPreset* locker) {
@@ -20,7 +20,7 @@ float RigLockerSystem::calculateMass(const std::vector<std::string>& module_ids)
     return static_cast<float>(module_ids.size()) * BASE_MODULE_MASS_KG;
 }
 
-void RigLockerSystem::update(float delta_time) {
+void RigLockerSystem::updateComponent(ecs::Entity& /*entity*/, components::RigLockerPreset& /*locker*/, float /*delta_time*/) {
     // Rig locker is event-driven, no per-tick processing needed
 }
 
@@ -40,10 +40,7 @@ bool RigLockerSystem::initializeLocker(const std::string& entity_id,
 
 bool RigLockerSystem::savePreset(const std::string& entity_id, const std::string& name,
                                   const std::vector<std::string>& module_ids) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    auto* locker = getComponentFor(entity_id);
     if (!locker) return false;
 
     if (static_cast<int>(locker->presets.size()) >= locker->max_presets) return false;
@@ -60,10 +57,7 @@ bool RigLockerSystem::savePreset(const std::string& entity_id, const std::string
 
 bool RigLockerSystem::deletePreset(const std::string& entity_id,
                                     const std::string& preset_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    auto* locker = getComponentFor(entity_id);
     if (!locker) return false;
 
     auto it = std::remove_if(locker->presets.begin(), locker->presets.end(),
@@ -82,10 +76,7 @@ bool RigLockerSystem::deletePreset(const std::string& entity_id,
 bool RigLockerSystem::renamePreset(const std::string& entity_id,
                                     const std::string& preset_id,
                                     const std::string& new_name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    auto* locker = getComponentFor(entity_id);
     if (!locker) return false;
 
     auto* preset = locker->findPreset(preset_id);
@@ -97,10 +88,7 @@ bool RigLockerSystem::renamePreset(const std::string& entity_id,
 
 bool RigLockerSystem::equipPreset(const std::string& entity_id,
                                    const std::string& preset_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    auto* locker = getComponentFor(entity_id);
     if (!locker) return false;
 
     auto* preset = locker->findPreset(preset_id);
@@ -113,10 +101,7 @@ bool RigLockerSystem::equipPreset(const std::string& entity_id,
 
 bool RigLockerSystem::toggleFavorite(const std::string& entity_id,
                                       const std::string& preset_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    auto* locker = getComponentFor(entity_id);
     if (!locker) return false;
 
     auto* preset = locker->findPreset(preset_id);
@@ -127,30 +112,21 @@ bool RigLockerSystem::toggleFavorite(const std::string& entity_id,
 }
 
 int RigLockerSystem::getPresetCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    const auto* locker = getComponentFor(entity_id);
     if (!locker) return 0;
 
     return static_cast<int>(locker->presets.size());
 }
 
 std::string RigLockerSystem::getActivePreset(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    const auto* locker = getComponentFor(entity_id);
     if (!locker) return "";
 
     return locker->active_preset_id;
 }
 
 int RigLockerSystem::getFavoriteCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    const auto* locker = getComponentFor(entity_id);
     if (!locker) return 0;
 
     return locker->favoriteCount();
@@ -158,10 +134,7 @@ int RigLockerSystem::getFavoriteCount(const std::string& entity_id) const {
 
 float RigLockerSystem::getPresetMass(const std::string& entity_id,
                                       const std::string& preset_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* locker = entity->getComponent<components::RigLockerPreset>();
+    const auto* locker = getComponentFor(entity_id);
     if (!locker) return 0.0f;
 
     const auto* preset = locker->findPreset(preset_id);

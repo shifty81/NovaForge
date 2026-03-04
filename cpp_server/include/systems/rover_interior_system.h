@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ROVER_INTERIOR_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ROVER_INTERIOR_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Supports room addition/removal, equipment installation, rig storage,
  * and pressurization state tracking.
  */
-class RoverInteriorSystem : public ecs::System {
+class RoverInteriorSystem : public ecs::SingleComponentSystem<components::RoverInterior> {
 public:
     explicit RoverInteriorSystem(ecs::World* world);
     ~RoverInteriorSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "RoverInteriorSystem"; }
 
     // Interior initialization
@@ -55,6 +54,9 @@ public:
 
     // Query
     float getTotalVolume(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::RoverInterior& interior, float delta_time) override;
 };
 
 } // namespace systems

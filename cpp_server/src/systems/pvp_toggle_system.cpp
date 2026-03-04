@@ -8,18 +8,14 @@ namespace atlas {
 namespace systems {
 
 PvPToggleSystem::PvPToggleSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void PvPToggleSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::PvPState>();
-    for (auto* entity : entities) {
-        auto* ps = entity->getComponent<components::PvPState>();
-        if (!ps || !ps->active) continue;
+void PvPToggleSystem::updateComponent(ecs::Entity& /*entity*/, components::PvPState& ps, float delta_time) {
+    if (!ps.active) return;
 
-        if (ps->aggression_timer > 0.0f) {
-            ps->aggression_timer = std::max(0.0f, ps->aggression_timer - delta_time);
-        }
+    if (ps.aggression_timer > 0.0f) {
+        ps.aggression_timer = std::max(0.0f, ps.aggression_timer - delta_time);
     }
 }
 
@@ -32,9 +28,7 @@ bool PvPToggleSystem::createPvPState(const std::string& entity_id) {
 }
 
 bool PvPToggleSystem::enablePvP(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ps = entity->getComponent<components::PvPState>();
+    auto* ps = getComponentFor(entity_id);
     if (!ps) return false;
     if (ps->safety_level == "HighSec") return false;
     ps->pvp_enabled = true;
@@ -42,9 +36,7 @@ bool PvPToggleSystem::enablePvP(const std::string& entity_id) {
 }
 
 bool PvPToggleSystem::disablePvP(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ps = entity->getComponent<components::PvPState>();
+    auto* ps = getComponentFor(entity_id);
     if (!ps) return false;
     if (ps->aggression_timer > 0.0f) return false;
     if (ps->safety_level == "NullSec" || ps->safety_level == "Wormhole") return false;
@@ -53,9 +45,7 @@ bool PvPToggleSystem::disablePvP(const std::string& entity_id) {
 }
 
 bool PvPToggleSystem::setSafetyLevel(const std::string& entity_id, const std::string& level) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ps = entity->getComponent<components::PvPState>();
+    auto* ps = getComponentFor(entity_id);
     if (!ps) return false;
     if (level != "HighSec" && level != "LowSec" && level != "NullSec" && level != "Wormhole")
         return false;
@@ -70,12 +60,11 @@ bool PvPToggleSystem::setSafetyLevel(const std::string& entity_id, const std::st
 
 bool PvPToggleSystem::canEngage(const std::string& attacker_id,
                                 const std::string& defender_id) const {
-    auto* a_entity = world_->getEntity(attacker_id);
+    const auto* a_ps = getComponentFor(attacker_id);
     auto* d_entity = world_->getEntity(defender_id);
-    if (!a_entity || !d_entity) return false;
-    auto* a_ps = a_entity->getComponent<components::PvPState>();
+    if (!a_ps || !d_entity) return false;
     auto* d_ps = d_entity->getComponent<components::PvPState>();
-    if (!a_ps || !d_ps) return false;
+    if (!d_ps) return false;
     // HighSec: no PvP ever
     if (a_ps->safety_level == "HighSec" || d_ps->safety_level == "HighSec") return false;
     // NullSec / Wormhole: always engageable
@@ -86,12 +75,11 @@ bool PvPToggleSystem::canEngage(const std::string& attacker_id,
 
 bool PvPToggleSystem::recordEngagement(const std::string& attacker_id,
                                        const std::string& defender_id) {
-    auto* a_entity = world_->getEntity(attacker_id);
+    auto* a_ps = getComponentFor(attacker_id);
     auto* d_entity = world_->getEntity(defender_id);
-    if (!a_entity || !d_entity) return false;
-    auto* a_ps = a_entity->getComponent<components::PvPState>();
+    if (!a_ps || !d_entity) return false;
     auto* d_ps = d_entity->getComponent<components::PvPState>();
-    if (!a_ps || !d_ps) return false;
+    if (!d_ps) return false;
     a_ps->aggression_timer = a_ps->engagement_timer;
     d_ps->aggression_timer = d_ps->engagement_timer;
     a_ps->last_target = defender_id;
@@ -100,9 +88,7 @@ bool PvPToggleSystem::recordEngagement(const std::string& attacker_id,
 }
 
 bool PvPToggleSystem::recordKill(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ps = entity->getComponent<components::PvPState>();
+    auto* ps = getComponentFor(entity_id);
     if (!ps) return false;
     ps->kill_count++;
     ps->bounty += 1000.0f;
@@ -111,49 +97,37 @@ bool PvPToggleSystem::recordKill(const std::string& entity_id) {
 }
 
 int PvPToggleSystem::getKillCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ps = entity->getComponent<components::PvPState>();
+    const auto* ps = getComponentFor(entity_id);
     if (!ps) return 0;
     return ps->kill_count;
 }
 
 float PvPToggleSystem::getSecurityStatus(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ps = entity->getComponent<components::PvPState>();
+    const auto* ps = getComponentFor(entity_id);
     if (!ps) return 0.0f;
     return ps->security_status;
 }
 
 float PvPToggleSystem::getAggressionTimer(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ps = entity->getComponent<components::PvPState>();
+    const auto* ps = getComponentFor(entity_id);
     if (!ps) return 0.0f;
     return ps->aggression_timer;
 }
 
 bool PvPToggleSystem::isPvPEnabled(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ps = entity->getComponent<components::PvPState>();
+    const auto* ps = getComponentFor(entity_id);
     if (!ps) return false;
     return ps->pvp_enabled;
 }
 
 std::string PvPToggleSystem::getSafetyLevel(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* ps = entity->getComponent<components::PvPState>();
+    const auto* ps = getComponentFor(entity_id);
     if (!ps) return "";
     return ps->safety_level;
 }
 
 float PvPToggleSystem::getBounty(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ps = entity->getComponent<components::PvPState>();
+    const auto* ps = getComponentFor(entity_id);
     if (!ps) return 0.0f;
     return ps->bounty;
 }

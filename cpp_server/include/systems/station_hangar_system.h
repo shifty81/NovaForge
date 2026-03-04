@@ -1,8 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_STATION_HANGAR_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_STATION_HANGAR_SYSTEM_H
 
-#include "ecs/system.h"
-#include "ecs/entity.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -23,12 +22,11 @@ namespace systems {
  *   - Determine docking method by ship mass (hangar vs tether)
  *   - Provide FPS spawn location for docked players
  */
-class StationHangarSystem : public ecs::System {
+class StationHangarSystem : public ecs::SingleComponentSystem<components::StationHangar> {
 public:
     explicit StationHangarSystem(ecs::World* world);
     ~StationHangarSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "StationHangarSystem"; }
 
     /**
@@ -94,6 +92,9 @@ public:
     static constexpr double UPGRADE_COST_STANDARD = 10000.0;
     static constexpr double UPGRADE_COST_ADVANCED = 50000.0;
     static constexpr double UPGRADE_COST_PREMIUM  = 200000.0;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::StationHangar& hangar, float delta_time) override;
 };
 
 } // namespace systems

@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_CARGO_SCAN_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CARGO_SCAN_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/state_machine_system.h"
 #include "components/ship_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +16,11 @@ namespace systems {
  * detect contraband based on detection_chance, issue fines.
  * Customs scanners at gates/stations can auto-scan passing ships.
  */
-class CargoScanSystem : public ecs::System {
+class CargoScanSystem : public ecs::StateMachineSystem<components::CargoScanState> {
 public:
     explicit CargoScanSystem(ecs::World* world);
     ~CargoScanSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CargoScanSystem"; }
 
     // Commands
@@ -41,6 +40,9 @@ public:
     double getTotalFinesIssued(const std::string& scanner_id) const;
     bool isCustomsScanner(const std::string& scanner_id) const;
     std::vector<std::string> getDetectedTypes(const std::string& scanner_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CargoScanState& scan, float delta_time) override;
 };
 
 } // namespace systems

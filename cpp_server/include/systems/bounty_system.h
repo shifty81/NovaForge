@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_BOUNTY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_BOUNTY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * killer's wallet and records the kill in a BountyLedger component
  * for history tracking.
  */
-class BountySystem : public ecs::System {
+class BountySystem : public ecs::SingleComponentSystem<components::BountyLedger> {
 public:
     explicit BountySystem(ecs::World* world);
     ~BountySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "BountySystem"; }
 
     /**
@@ -41,6 +41,9 @@ public:
      * @brief Get total kills by a player
      */
     int getTotalKills(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::BountyLedger& ledger, float delta_time) override;
 };
 
 } // namespace systems

@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_SHIP_CAPABILITY_RATING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SHIP_CAPABILITY_RATING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/ship_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * Combat, Mining, Exploration, Cargo, Defense, Fabrication.
  * Rating is 0-5 stars based on module counts and stats.
  */
-class ShipCapabilityRatingSystem : public ecs::System {
+class ShipCapabilityRatingSystem : public ecs::SingleComponentSystem<components::ShipCapabilityRating> {
 public:
     explicit ShipCapabilityRatingSystem(ecs::World* world);
     ~ShipCapabilityRatingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ShipCapabilityRatingSystem"; }
 
     bool initializeRating(const std::string& entity_id);
@@ -37,6 +37,9 @@ public:
     float getDefenseRating(const std::string& entity_id) const;
     float getFabricationRating(const std::string& entity_id) const;
     float getOverallRating(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ShipCapabilityRating& scr, float delta_time) override;
 };
 
 } // namespace systems
