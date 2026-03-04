@@ -41,7 +41,7 @@ All 6,331 test assertions pass. The monolithic `test_systems.cpp` has been remov
 
 ## Issue 2: System Boilerplate Duplication
 
-**Severity**: 🟠 High
+**Severity**: 🟠 High — 🔧 **IN PROGRESS**
 **Files**: All 164 files in `cpp_server/src/systems/` and `cpp_server/include/systems/`
 **Impact**: ~60% of system code is structural boilerplate, not unique logic
 
@@ -91,15 +91,46 @@ Specific duplicated patterns:
 - **State machine systems** (`cloaking_system.cpp` lines 25–59 vs `jump_drive_system.cpp` lines 24–57): identical `switch(phase)` + timer tick pattern
 - **FPS systems** (`fps_combat_system.cpp` lines 58–86 vs `fps_interaction_system.cpp` lines 21–49): identical entity creation and query patterns
 
-### Remediation Plan (Phase 2 — 3–4 weeks)
+### Progress
 
-| Step | Action | Effort |
+#### Step 2.1: `SingleComponentSystem<C>` template base ✅
+
+Created `cpp_server/include/ecs/single_component_system.h` — a CRTP-style template that absorbs the entity-query + null-check loop into the base class:
+
+```cpp
+template<typename C>
+class SingleComponentSystem : public System {
+public:
+    explicit SingleComponentSystem(World* world) : System(world) {}
+    void update(float delta_time) override {
+        for (auto* entity : world_->getEntities<C>()) {
+            auto* comp = entity->template getComponent<C>();
+            if (!comp) continue;
+            updateComponent(*entity, *comp, delta_time);
+        }
+    }
+protected:
+    virtual void updateComponent(Entity& entity, C& component, float delta_time) = 0;
+    C* getComponentFor(const std::string& entity_id);
+    const C* getComponentFor(const std::string& entity_id) const;
+};
+```
+
+**Migrated systems:**
+- `CapacitorSystem` → `SingleComponentSystem<components::Capacitor>` (55 → 40 lines)
+- `ShieldRechargeSystem` → `SingleComponentSystem<components::Health>` (39 → 29 lines)
+
+**Tests:** 9 new assertions for the template base, all 6340 tests passing.
+
+### Remaining Remediation Plan
+
+| Step | Action | Status |
 |------|--------|--------|
-| 2.1 | Create `SingleComponentSystem<C>` template base that provides entity query + null check loop | 2 days |
-| 2.2 | Create `StateMachineSystem<C, PhaseEnum>` template for phase-driven systems | 3 days |
-| 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | 1 day |
-| 2.4 | Migrate 20–30 simplest systems (capacitor, shield, etc.) to template bases | 1 week |
-| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 2 weeks |
+| 2.1 | Create `SingleComponentSystem<C>` template base | ✅ Complete |
+| 2.2 | Create `StateMachineSystem<C, PhaseEnum>` template for phase-driven systems | 📋 Planned |
+| 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | 📋 Planned |
+| 2.4 | Migrate 20–30 simplest systems to template bases | 📋 Planned |
+| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 📋 Planned |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
 
@@ -182,7 +213,7 @@ Phase 1: Split test file                 (2-3 weeks) ✅ COMPLETE
     ↓
 Phase 5: Data layer dedup               (2-3 days)  ✅ COMPLETE
     ↓
-Phase 2: System template bases          (3-4 weeks) ← Largest code reduction
+Phase 2: System template bases          (3-4 weeks) 🔧 IN PROGRESS — Step 2.1 done
     ↓
 Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 ```
@@ -199,9 +230,11 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | Largest file (lines) | ✅ ~350 (per test file) | < 500 |
 | Test recompile time (single system change) | ✅ ~5s | < 5s |
 | CMakeLists.txt source lists to update | ✅ 1 (was 2) | 1 |
-| Average system boilerplate (lines) | ~80 | ~20 |
+| Average system boilerplate (lines) | ~80 (🔧 2 systems migrated) | ~20 |
 | GameSession forward declarations | 15+ | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
+| Template base classes | 1 (`SingleComponentSystem<C>`) | 3 |
+| Systems migrated to templates | 2 (`Capacitor`, `ShieldRecharge`) | 164 |
 
 ---
 
@@ -217,4 +250,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Audit completed: March 2, 2026*
 *Phase 4 & 5 resolved: March 4, 2026*
 *Phase 1 resolved: March 4, 2026*
+*Phase 2 step 2.1 completed: March 4, 2026 — SingleComponentSystem<C> template, CapacitorSystem and ShieldRechargeSystem migrated*
 *Next review: After Phase 2 (system template bases) completion*
