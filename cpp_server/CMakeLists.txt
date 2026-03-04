@@ -26,12 +26,6 @@ endif()
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
-# Include directories
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/external
-)
-
 # Core source files shared between server and test binaries
 set(CORE_SOURCES
     src/server.cpp
@@ -298,11 +292,21 @@ set(CORE_SOURCES
     src/pcg/ship_archetype.cpp
 )
 
-# Server binary: main.cpp + all core sources
-set(SERVER_SOURCES
-    src/main.cpp
-    ${CORE_SOURCES}
+# Static library: compile core sources once, link from both server and test binaries
+add_library(novaforge_core STATIC ${CORE_SOURCES})
+target_include_directories(novaforge_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external
 )
+target_link_libraries(novaforge_core PUBLIC Threads::Threads ZLIB::ZLIB)
+if(WIN32)
+    target_link_libraries(novaforge_core PUBLIC ws2_32)
+elseif(UNIX)
+    target_link_libraries(novaforge_core PUBLIC dl)
+endif()
+if(TARGET AtlasEngine)
+    target_link_libraries(novaforge_core PUBLIC AtlasEngine)
+endif()
 
 set(SERVER_HEADERS
     include/server.h
@@ -584,28 +588,11 @@ if(USE_STEAM_SDK)
 endif()
 
 # Main executable
-add_executable(atlas_dedicated_server ${SERVER_SOURCES} ${SERVER_HEADERS})
-
-# Link libraries
-target_link_libraries(atlas_dedicated_server 
-    Threads::Threads
-    ZLIB::ZLIB
-)
-
-# Link Atlas Engine if available
-if(TARGET AtlasEngine)
-    target_link_libraries(atlas_dedicated_server AtlasEngine)
-endif()
+add_executable(atlas_dedicated_server src/main.cpp ${SERVER_HEADERS})
+target_link_libraries(atlas_dedicated_server novaforge_core)
 
 if(USE_STEAM_SDK AND STEAM_LIBRARIES)
     target_link_libraries(atlas_dedicated_server ${STEAM_LIBRARIES})
-endif()
-
-# Platform-specific libraries
-if(WIN32)
-    target_link_libraries(atlas_dedicated_server ws2_32)
-elseif(UNIX)
-    target_link_libraries(atlas_dedicated_server dl)
 endif()
 
 # Installation
@@ -631,14 +618,8 @@ message(STATUS "")
 
 # Test executable
 if(BUILD_TESTS)
-    add_executable(test_systems
-        test_systems.cpp
-        ${CORE_SOURCES}
-    )
-    target_link_libraries(test_systems Threads::Threads ZLIB::ZLIB)
-    if(WIN32)
-        target_link_libraries(test_systems ws2_32)
-    endif()
+    add_executable(test_systems test_systems.cpp)
+    target_link_libraries(test_systems novaforge_core)
     if(MSVC)
         target_compile_options(test_systems PRIVATE /bigobj)
     endif()
