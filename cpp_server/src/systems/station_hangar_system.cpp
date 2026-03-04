@@ -5,22 +5,16 @@ namespace atlas {
 namespace systems {
 
 StationHangarSystem::StationHangarSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void StationHangarSystem::update(float delta_time) {
-    // Accrue rental costs for leased hangars.
+void StationHangarSystem::updateComponent(ecs::Entity& /*entity*/, components::StationHangar& hangar, float delta_time) {
+    if (hangar.type != components::StationHangar::HangarType::Leased) return;
+
     // delta_time is in seconds; convert to fractional days.
     float days = delta_time / 86400.0f;
-
-    for (auto* entity : world_->getEntities<components::StationHangar>()) {
-        auto* hangar = entity->getComponent<components::StationHangar>();
-        if (!hangar) continue;
-        if (hangar->type != components::StationHangar::HangarType::Leased) continue;
-
-        hangar->days_rented += days;
-        hangar->accumulated_rental += hangar->daily_rental_cost * static_cast<double>(days);
-    }
+    hangar.days_rented += days;
+    hangar.accumulated_rental += hangar.daily_rental_cost * static_cast<double>(days);
 }
 
 // ---------------------------------------------------------------------------
@@ -65,10 +59,7 @@ bool StationHangarSystem::createHangar(
 
 bool StationHangarSystem::storeShip(const std::string& hangar_id,
                                      const std::string& ship_id) {
-    auto* entity = world_->getEntity(hangar_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::StationHangar>();
+    auto* hangar = getComponentFor(hangar_id);
     if (!hangar) return false;
     if (!hangar->hasRoom()) return false;
 
@@ -84,10 +75,7 @@ bool StationHangarSystem::storeShip(const std::string& hangar_id,
 
 bool StationHangarSystem::retrieveShip(const std::string& hangar_id,
                                         const std::string& ship_id) {
-    auto* entity = world_->getEntity(hangar_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::StationHangar>();
+    auto* hangar = getComponentFor(hangar_id);
     if (!hangar) return false;
 
     auto& ships = hangar->stored_ship_ids;
@@ -104,10 +92,7 @@ bool StationHangarSystem::retrieveShip(const std::string& hangar_id,
 // ---------------------------------------------------------------------------
 
 double StationHangarSystem::upgradeHangar(const std::string& hangar_id) {
-    auto* entity = world_->getEntity(hangar_id);
-    if (!entity) return 0.0;
-
-    auto* hangar = entity->getComponent<components::StationHangar>();
+    auto* hangar = getComponentFor(hangar_id);
     if (!hangar) return 0.0;
 
     double cost = 0.0;
@@ -160,30 +145,21 @@ bool StationHangarSystem::shouldUseHangar(const std::string& ship_id) const {
 
 std::tuple<float, float, float> StationHangarSystem::getSpawnPosition(
         const std::string& hangar_id) const {
-    auto* entity = world_->getEntity(hangar_id);
-    if (!entity) return {0.0f, 0.0f, 0.0f};
-
-    auto* hangar = entity->getComponent<components::StationHangar>();
+    const auto* hangar = getComponentFor(hangar_id);
     if (!hangar) return {0.0f, 0.0f, 0.0f};
 
     return {hangar->spawn_x, hangar->spawn_y, hangar->spawn_z};
 }
 
 int StationHangarSystem::getStoredShipCount(const std::string& hangar_id) const {
-    auto* entity = world_->getEntity(hangar_id);
-    if (!entity) return 0;
-
-    auto* hangar = entity->getComponent<components::StationHangar>();
+    const auto* hangar = getComponentFor(hangar_id);
     if (!hangar) return 0;
 
     return hangar->occupied_ship_slots;
 }
 
 double StationHangarSystem::getRentalBalance(const std::string& hangar_id) const {
-    auto* entity = world_->getEntity(hangar_id);
-    if (!entity) return 0.0;
-
-    auto* hangar = entity->getComponent<components::StationHangar>();
+    const auto* hangar = getComponentFor(hangar_id);
     if (!hangar) return 0.0;
 
     return hangar->accumulated_rental;

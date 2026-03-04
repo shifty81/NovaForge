@@ -7,10 +7,10 @@ namespace atlas {
 namespace systems {
 
 BountySystem::BountySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void BountySystem::update(float /*delta_time*/) {
+void BountySystem::updateComponent(ecs::Entity& /*entity*/, components::BountyLedger& /*ledger*/, float /*delta_time*/) {
     // Bounty processing is event-driven via processKill()
 }
 
@@ -57,20 +57,14 @@ double BountySystem::processKill(const std::string& killer_id,
 }
 
 double BountySystem::getTotalBounty(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0;
-
-    auto* ledger = entity->getComponent<components::BountyLedger>();
+    auto* ledger = getComponentFor(entity_id);
     if (!ledger) return 0.0;
 
     return ledger->total_bounty_earned;
 }
 
 int BountySystem::getTotalKills(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* ledger = entity->getComponent<components::BountyLedger>();
+    auto* ledger = getComponentFor(entity_id);
     if (!ledger) return 0;
 
     return ledger->total_kills;

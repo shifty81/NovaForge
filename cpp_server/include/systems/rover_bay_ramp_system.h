@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ROVER_BAY_RAMP_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ROVER_BAY_RAMP_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/state_machine_system.h"
 #include "components/ship_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages belly hangar with folding ramp for rover deployment including
  * atmosphere safety checks, bay pressurization, and rover tracking.
  */
-class RoverBayRampSystem : public ecs::System {
+class RoverBayRampSystem : public ecs::StateMachineSystem<components::RoverBayRamp> {
 public:
     explicit RoverBayRampSystem(ecs::World* world);
     ~RoverBayRampSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "RoverBayRampSystem"; }
 
     // Initialization
@@ -45,6 +44,9 @@ public:
     float getRampProgress(const std::string& entity_id) const;
     int getStoredCount(const std::string& entity_id) const;
     int getDeployedCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::RoverBayRamp& bay, float delta_time) override;
 };
 
 } // namespace systems

@@ -7,40 +7,34 @@ namespace atlas {
 namespace systems {
 
 RoverInteriorSystem::RoverInteriorSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void RoverInteriorSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::RoverInterior>();
-    for (auto* entity : entities) {
-        auto* interior = entity->getComponent<components::RoverInterior>();
-        if (!interior) continue;
+void RoverInteriorSystem::updateComponent(ecs::Entity& /*entity*/, components::RoverInterior& interior, float delta_time) {
+    // Calculate total volume from rooms
+    float total_volume = 0.0f;
+    for (const auto& room : interior.rooms) {
+        total_volume += room.size_x * room.size_y * room.size_z;
+    }
+    interior.total_interior_volume = total_volume;
 
-        // Calculate total volume from rooms
-        float total_volume = 0.0f;
-        for (const auto& room : interior->rooms) {
-            total_volume += room.size_x * room.size_y * room.size_z;
+    // Oxygen level decay if not sealed
+    if (!interior.is_sealed && interior.oxygen_level > 0.0f) {
+        interior.oxygen_level -= delta_time * 5.0f; // 5% per second when unsealed
+        if (interior.oxygen_level < 0.0f) {
+            interior.oxygen_level = 0.0f;
         }
-        interior->total_interior_volume = total_volume;
+    }
 
-        // Oxygen level decay if not sealed
-        if (!interior->is_sealed && interior->oxygen_level > 0.0f) {
-            interior->oxygen_level -= delta_time * 5.0f; // 5% per second when unsealed
-            if (interior->oxygen_level < 0.0f) {
-                interior->oxygen_level = 0.0f;
-            }
+    // Check for rig locker and equipment bay presence
+    interior.has_rig_locker = false;
+    interior.has_equipment_bay = false;
+    for (const auto& room : interior.rooms) {
+        if (room.type == components::RoverInterior::RoomType::RigLocker) {
+            interior.has_rig_locker = true;
         }
-
-        // Check for rig locker and equipment bay presence
-        interior->has_rig_locker = false;
-        interior->has_equipment_bay = false;
-        for (const auto& room : interior->rooms) {
-            if (room.type == components::RoverInterior::RoomType::RigLocker) {
-                interior->has_rig_locker = true;
-            }
-            if (room.type == components::RoverInterior::RoomType::EquipmentBay) {
-                interior->has_equipment_bay = true;
-            }
+        if (room.type == components::RoverInterior::RoomType::EquipmentBay) {
+            interior.has_equipment_bay = true;
         }
     }
 }
@@ -75,10 +69,7 @@ bool RoverInteriorSystem::removeInterior(const std::string& entity_id) {
 bool RoverInteriorSystem::addRoom(const std::string& entity_id,
                                    const std::string& room_id,
                                    components::RoverInterior::RoomType type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     if (!interior->canAddRoom()) return false;
@@ -138,10 +129,7 @@ bool RoverInteriorSystem::addRoom(const std::string& entity_id,
 
 bool RoverInteriorSystem::removeRoom(const std::string& entity_id,
                                       const std::string& room_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     auto it = std::find_if(interior->rooms.begin(), interior->rooms.end(),
@@ -155,10 +143,7 @@ bool RoverInteriorSystem::removeRoom(const std::string& entity_id,
 }
 
 int RoverInteriorSystem::getRoomCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return 0;
 
     return interior->getRoomCount();
@@ -166,10 +151,7 @@ int RoverInteriorSystem::getRoomCount(const std::string& entity_id) const {
 
 std::string RoverInteriorSystem::getRoomType(const std::string& entity_id,
                                               const std::string& room_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return "unknown";
 
     for (const auto& room : interior->rooms) {
@@ -183,10 +165,7 @@ std::string RoverInteriorSystem::getRoomType(const std::string& entity_id,
 bool RoverInteriorSystem::installEquipment(const std::string& entity_id,
                                             const std::string& room_id,
                                             const std::string& equipment_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     for (auto& room : interior->rooms) {
@@ -204,10 +183,7 @@ bool RoverInteriorSystem::installEquipment(const std::string& entity_id,
 bool RoverInteriorSystem::removeEquipment(const std::string& entity_id,
                                            const std::string& room_id,
                                            const std::string& equipment_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     for (auto& room : interior->rooms) {
@@ -225,10 +201,7 @@ bool RoverInteriorSystem::removeEquipment(const std::string& entity_id,
 
 int RoverInteriorSystem::getEquipmentCount(const std::string& entity_id,
                                             const std::string& room_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return 0;
 
     for (const auto& room : interior->rooms) {
@@ -241,10 +214,7 @@ int RoverInteriorSystem::getEquipmentCount(const std::string& entity_id,
 
 bool RoverInteriorSystem::storeRig(const std::string& entity_id,
                                     const std::string& rig_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     if (!interior->has_rig_locker) return false;
@@ -265,10 +235,7 @@ bool RoverInteriorSystem::storeRig(const std::string& entity_id,
 
 bool RoverInteriorSystem::retrieveRig(const std::string& entity_id,
                                        const std::string& rig_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     auto it = std::find(interior->stored_rig_ids.begin(),
@@ -280,30 +247,21 @@ bool RoverInteriorSystem::retrieveRig(const std::string& entity_id,
 }
 
 int RoverInteriorSystem::getStoredRigCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return 0;
 
     return static_cast<int>(interior->stored_rig_ids.size());
 }
 
 bool RoverInteriorSystem::hasRigLocker(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     return interior->has_rig_locker;
 }
 
 bool RoverInteriorSystem::setPressurized(const std::string& entity_id, bool pressurized) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     interior->is_sealed = pressurized;
@@ -311,30 +269,21 @@ bool RoverInteriorSystem::setPressurized(const std::string& entity_id, bool pres
 }
 
 bool RoverInteriorSystem::isPressurized(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     return interior->is_sealed;
 }
 
 float RoverInteriorSystem::getOxygenLevel(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return 0.0f;
 
     return interior->oxygen_level;
 }
 
 bool RoverInteriorSystem::setOxygenLevel(const std::string& entity_id, float level) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    auto* interior = getComponentFor(entity_id);
     if (!interior) return false;
 
     interior->oxygen_level = std::max(0.0f, std::min(100.0f, level));
@@ -342,10 +291,7 @@ bool RoverInteriorSystem::setOxygenLevel(const std::string& entity_id, float lev
 }
 
 float RoverInteriorSystem::getTotalVolume(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* interior = entity->getComponent<components::RoverInterior>();
+    const auto* interior = getComponentFor(entity_id);
     if (!interior) return 0.0f;
 
     return interior->total_interior_volume;

@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_PVP_TOGGLE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_PVP_TOGGLE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages PvP toggle state, engagement timers, safety levels, kill tracking,
  * bounty accumulation, and security status impact from PvP kills.
  */
-class PvPToggleSystem : public ecs::System {
+class PvPToggleSystem : public ecs::SingleComponentSystem<components::PvPState> {
 public:
     explicit PvPToggleSystem(ecs::World* world);
     ~PvPToggleSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "PvPToggleSystem"; }
 
     bool createPvPState(const std::string& entity_id);
@@ -34,6 +34,9 @@ public:
     bool isPvPEnabled(const std::string& entity_id) const;
     std::string getSafetyLevel(const std::string& entity_id) const;
     float getBounty(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::PvPState& ps, float delta_time) override;
 };
 
 } // namespace systems
