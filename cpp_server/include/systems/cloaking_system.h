@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_CLOAKING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CLOAKING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/state_machine_system.h"
 #include "components/ship_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Features: activation/deactivation timers, fuel consumption from capacitor,
  * proximity decloak detection, targeting lockout after decloak, CovertOps warp support.
  */
-class CloakingSystem : public ecs::System {
+class CloakingSystem : public ecs::StateMachineSystem<components::CloakingState> {
 public:
     explicit CloakingSystem(ecs::World* world);
     ~CloakingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CloakingSystem"; }
 
     // Commands
@@ -37,6 +36,9 @@ public:
     float getFuelRate(const std::string& entity_id) const;
     bool canWarpCloaked(const std::string& entity_id) const;
     int getDecloakCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CloakingState& cloak, float delta_time) override;
 };
 
 } // namespace systems

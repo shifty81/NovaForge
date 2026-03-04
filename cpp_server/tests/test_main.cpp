@@ -12,6 +12,7 @@ int testsPassed = 0;
 void run_capacitor_system_tests();
 void run_shield_recharge_system_tests();
 void run_single_component_system_tests();
+void run_state_machine_system_tests();
 void run_weapon_system_tests();
 void run_targeting_system_tests();
 void run_ship_database_tests();
@@ -247,6 +248,7 @@ int main() {
     run_capacitor_system_tests();
     run_shield_recharge_system_tests();
     run_single_component_system_tests();
+    run_state_machine_system_tests();
     run_weapon_system_tests();
     run_targeting_system_tests();
     run_ship_database_tests();

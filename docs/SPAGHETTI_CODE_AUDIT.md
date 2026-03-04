@@ -122,14 +122,42 @@ protected:
 
 **Tests:** 9 new assertions for the template base, all 6340 tests passing.
 
+#### Step 2.2: `StateMachineSystem<C>` template base ✅
+
+Created `cpp_server/include/ecs/state_machine_system.h` — extends `SingleComponentSystem<C>` for systems that manage a phase-driven state machine. Provides the entity-iteration loop and `getComponentFor()` helper that eliminates the repeated entity-lookup boilerplate in query/command methods.
+
+```cpp
+template<typename C>
+class StateMachineSystem : public SingleComponentSystem<C> {
+public:
+    explicit StateMachineSystem(World* world) : SingleComponentSystem<C>(world) {}
+};
+```
+
+**Migrated systems:**
+- `CloakingSystem` → `StateMachineSystem<components::CloakingState>` (202 → 152 lines)
+- `JumpDriveSystem` → `StateMachineSystem<components::JumpDriveState>` (232 → 164 lines)
+
+Both systems eliminated the manual entity-query loop in `update()` and replaced 7–9 manual entity lookups in query methods with `getComponentFor()`.
+
+**Tests:** 9 new assertions for the template base, all 6349 tests passing.
+
+#### Step 2.4 (partial): Migrate simple systems to `SingleComponentSystem<C>` ✅
+
+- `AncientTechSystem` → `SingleComponentSystem<components::AncientTechModule>` (65 → 49 lines)
+- `LocalReputationSystem` → `SingleComponentSystem<components::LocalReputation>` (65 → 53 lines)
+- `SurvivalSystem` → `SingleComponentSystem<components::SurvivalNeeds>` (69 → 50 lines)
+
+All 6349 tests passing (6340 original + 9 new).
+
 ### Remaining Remediation Plan
 
 | Step | Action | Status |
 |------|--------|--------|
 | 2.1 | Create `SingleComponentSystem<C>` template base | ✅ Complete |
-| 2.2 | Create `StateMachineSystem<C, PhaseEnum>` template for phase-driven systems | 📋 Planned |
+| 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
 | 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | 📋 Planned |
-| 2.4 | Migrate 20–30 simplest systems to template bases | 📋 Planned |
+| 2.4 | Migrate 20–30 simplest systems to template bases | 🔧 In progress (5 of ~30 done) |
 | 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 📋 Planned |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
@@ -233,8 +261,8 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | Average system boilerplate (lines) | ~80 (🔧 2 systems migrated) | ~20 |
 | GameSession forward declarations | 15+ | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
-| Template base classes | 1 (`SingleComponentSystem<C>`) | 3 |
-| Systems migrated to templates | 2 (`Capacitor`, `ShieldRecharge`) | 164 |
+| Template base classes | 2 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`) | 3 |
+| Systems migrated to templates | 7 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`) | 164 |
 
 ---
 
@@ -251,4 +279,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Phase 4 & 5 resolved: March 4, 2026*
 *Phase 1 resolved: March 4, 2026*
 *Phase 2 step 2.1 completed: March 4, 2026 — SingleComponentSystem<C> template, CapacitorSystem and ShieldRechargeSystem migrated*
+*Phase 2 steps 2.2, 2.4 (partial) completed: March 4, 2026 — StateMachineSystem<C> template, CloakingSystem, JumpDriveSystem, AncientTechSystem, LocalReputationSystem, SurvivalSystem migrated*
 *Next review: After Phase 2 (system template bases) completion*

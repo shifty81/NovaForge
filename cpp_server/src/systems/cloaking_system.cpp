@@ -8,63 +8,54 @@ namespace atlas {
 namespace systems {
 
 CloakingSystem::CloakingSystem(ecs::World* world)
-    : System(world) {
+    : StateMachineSystem(world) {
 }
 
-void CloakingSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::CloakingState>();
-    for (auto* entity : entities) {
-        auto* cloak = entity->getComponent<components::CloakingState>();
-        if (!cloak) continue;
+void CloakingSystem::updateComponent(ecs::Entity& entity, components::CloakingState& cloak, float delta_time) {
+    // Tick targeting lockout
+    if (cloak.targeting_lockout_remaining > 0.0f) {
+        cloak.targeting_lockout_remaining = std::max(0.0f, cloak.targeting_lockout_remaining - delta_time);
+    }
 
-        // Tick targeting lockout
-        if (cloak->targeting_lockout_remaining > 0.0f) {
-            cloak->targeting_lockout_remaining = std::max(0.0f, cloak->targeting_lockout_remaining - delta_time);
+    switch (cloak.phase) {
+        case components::CloakingState::CloakPhase::Activating: {
+            cloak.phase_timer += delta_time;
+            if (cloak.phase_timer >= cloak.activation_time) {
+                cloak.phase = components::CloakingState::CloakPhase::Cloaked;
+                cloak.phase_timer = 0.0f;
+            }
+            break;
         }
-
-        switch (cloak->phase) {
-            case components::CloakingState::CloakPhase::Activating: {
-                cloak->phase_timer += delta_time;
-                if (cloak->phase_timer >= cloak->activation_time) {
-                    cloak->phase = components::CloakingState::CloakPhase::Cloaked;
-                    cloak->phase_timer = 0.0f;
+        case components::CloakingState::CloakPhase::Cloaked: {
+            auto* cap = entity.getComponent<components::Capacitor>();
+            if (cap) {
+                cap->capacitor -= cloak.fuel_per_second * delta_time;
+                if (cap->capacitor <= 0.0f) {
+                    cap->capacitor = 0.0f;
+                    // Force decloak due to capacitor empty
+                    cloak.phase = components::CloakingState::CloakPhase::Deactivating;
+                    cloak.phase_timer = 0.0f;
+                    cloak.decloak_count++;
+                    cloak.targeting_lockout_remaining = cloak.targeting_delay;
                 }
-                break;
             }
-            case components::CloakingState::CloakPhase::Cloaked: {
-                auto* cap = entity->getComponent<components::Capacitor>();
-                if (cap) {
-                    cap->capacitor -= cloak->fuel_per_second * delta_time;
-                    if (cap->capacitor <= 0.0f) {
-                        cap->capacitor = 0.0f;
-                        // Force decloak due to capacitor empty
-                        cloak->phase = components::CloakingState::CloakPhase::Deactivating;
-                        cloak->phase_timer = 0.0f;
-                        cloak->decloak_count++;
-                        cloak->targeting_lockout_remaining = cloak->targeting_delay;
-                    }
-                }
-                break;
-            }
-            case components::CloakingState::CloakPhase::Deactivating: {
-                cloak->phase_timer += delta_time;
-                if (cloak->phase_timer >= cloak->deactivation_time) {
-                    cloak->phase = components::CloakingState::CloakPhase::Inactive;
-                    cloak->phase_timer = 0.0f;
-                }
-                break;
-            }
-            default:
-                break;
+            break;
         }
+        case components::CloakingState::CloakPhase::Deactivating: {
+            cloak.phase_timer += delta_time;
+            if (cloak.phase_timer >= cloak.deactivation_time) {
+                cloak.phase = components::CloakingState::CloakPhase::Inactive;
+                cloak.phase_timer = 0.0f;
+            }
+            break;
+        }
+        default:
+            break;
     }
 }
 
 bool CloakingSystem::activateCloak(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    auto* cloak = getComponentFor(entity_id);
     if (!cloak) return false;
 
     if (cloak->phase != components::CloakingState::CloakPhase::Inactive) return false;
@@ -75,10 +66,7 @@ bool CloakingSystem::activateCloak(const std::string& entity_id) {
 }
 
 bool CloakingSystem::deactivateCloak(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    auto* cloak = getComponentFor(entity_id);
     if (!cloak) return false;
 
     if (cloak->phase != components::CloakingState::CloakPhase::Cloaked &&
@@ -94,10 +82,7 @@ bool CloakingSystem::deactivateCloak(const std::string& entity_id) {
 }
 
 bool CloakingSystem::setProximityRange(const std::string& entity_id, float range) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    auto* cloak = getComponentFor(entity_id);
     if (!cloak) return false;
 
     cloak->proximity_decloak_range = range;
@@ -105,10 +90,7 @@ bool CloakingSystem::setProximityRange(const std::string& entity_id, float range
 }
 
 bool CloakingSystem::proximityDecloak(const std::string& entity_id, float nearest_distance) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    auto* cloak = getComponentFor(entity_id);
     if (!cloak) return false;
 
     if (cloak->phase != components::CloakingState::CloakPhase::Cloaked) return false;
@@ -122,10 +104,7 @@ bool CloakingSystem::proximityDecloak(const std::string& entity_id, float neares
 }
 
 std::string CloakingSystem::getPhase(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    const auto* cloak = getComponentFor(entity_id);
     if (!cloak) return "unknown";
 
     switch (cloak->phase) {
@@ -138,60 +117,42 @@ std::string CloakingSystem::getPhase(const std::string& entity_id) const {
 }
 
 bool CloakingSystem::isCloaked(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    const auto* cloak = getComponentFor(entity_id);
     if (!cloak) return false;
 
     return cloak->phase == components::CloakingState::CloakPhase::Cloaked;
 }
 
 bool CloakingSystem::isTargetingLocked(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    const auto* cloak = getComponentFor(entity_id);
     if (!cloak) return false;
 
     return cloak->targeting_lockout_remaining > 0.0f;
 }
 
 float CloakingSystem::getTargetingLockoutRemaining(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    const auto* cloak = getComponentFor(entity_id);
     if (!cloak) return 0.0f;
 
     return cloak->targeting_lockout_remaining;
 }
 
 float CloakingSystem::getFuelRate(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    const auto* cloak = getComponentFor(entity_id);
     if (!cloak) return 0.0f;
 
     return cloak->fuel_per_second;
 }
 
 bool CloakingSystem::canWarpCloaked(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    const auto* cloak = getComponentFor(entity_id);
     if (!cloak) return false;
 
     return cloak->can_warp_while_cloaked;
 }
 
 int CloakingSystem::getDecloakCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* cloak = entity->getComponent<components::CloakingState>();
+    const auto* cloak = getComponentFor(entity_id);
     if (!cloak) return 0;
 
     return cloak->decloak_count;
