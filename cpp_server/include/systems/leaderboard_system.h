@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_LEADERBOARD_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_LEADERBOARD_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <vector>
 
@@ -15,12 +16,11 @@ namespace systems {
  * defines achievements with unlock conditions, and awards them when
  * thresholds are met.
  */
-class LeaderboardSystem : public ecs::System {
+class LeaderboardSystem : public ecs::SingleComponentSystem<components::Leaderboard> {
 public:
     explicit LeaderboardSystem(ecs::World* world);
     ~LeaderboardSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "LeaderboardSystem"; }
 
     /**
@@ -119,6 +119,9 @@ public:
      * @brief Get ranked player IDs sorted by total kills (descending)
      */
     std::vector<std::string> getRankingByKills(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Leaderboard& board, float delta_time) override;
 
 private:
     /**

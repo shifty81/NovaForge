@@ -7,20 +7,17 @@ namespace atlas {
 namespace systems {
 
 DifficultyScalingSystem::DifficultyScalingSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void DifficultyScalingSystem::update(float /* delta_time */) {
+void DifficultyScalingSystem::updateComponent(ecs::Entity& /*entity*/, components::DifficultyZone& /*zone*/, float /* delta_time */) {
     // Difficulty zones are static once initialized — no per-tick work needed.
     // Future: could dynamically adjust if systems change sovereignty.
 }
 
 bool DifficultyScalingSystem::initializeZone(const std::string& system_id,
                                               float security) {
-    auto* entity = world_->getEntity(system_id);
-    if (!entity) return false;
-
-    auto* zone = entity->getComponent<components::DifficultyZone>();
+    auto* zone = getComponentFor(system_id);
     if (!zone) return false;
 
     float sec = std::clamp(security, 0.0f, 1.0f);

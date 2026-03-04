@@ -7,10 +7,10 @@ namespace atlas {
 namespace systems {
 
 CaptainBackgroundSystem::CaptainBackgroundSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void CaptainBackgroundSystem::update(float /*delta_time*/) {
+void CaptainBackgroundSystem::updateComponent(ecs::Entity& /*entity*/, components::CaptainBackground& /*bg*/, float /*delta_time*/) {
     // Captain backgrounds are static data — no per-tick processing needed
 }
 
@@ -93,10 +93,7 @@ void CaptainBackgroundSystem::applyBackgroundDefaults(components::CaptainBackgro
 
 bool CaptainBackgroundSystem::assignBackground(const std::string& entity_id,
                                                 const std::string& background_type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return false;
 
     bg->background = components::CaptainBackground::stringToType(background_type);
@@ -105,10 +102,7 @@ bool CaptainBackgroundSystem::assignBackground(const std::string& entity_id,
 }
 
 bool CaptainBackgroundSystem::generateBackground(const std::string& entity_id, uint32_t seed) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return false;
 
     // Deterministic background selection from seed
@@ -131,10 +125,7 @@ bool CaptainBackgroundSystem::generateBackground(const std::string& entity_id, u
 
 bool CaptainBackgroundSystem::setOriginSystem(const std::string& entity_id,
                                                const std::string& system_name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return false;
 
     bg->origin_system = system_name;
@@ -142,10 +133,7 @@ bool CaptainBackgroundSystem::setOriginSystem(const std::string& entity_id,
 }
 
 bool CaptainBackgroundSystem::setExperience(const std::string& entity_id, int years) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return false;
 
     bg->years_experience = std::max(0, years);
@@ -153,90 +141,63 @@ bool CaptainBackgroundSystem::setExperience(const std::string& entity_id, int ye
 }
 
 std::string CaptainBackgroundSystem::getBackground(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "Unknown";
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return "Unknown";
 
     return components::CaptainBackground::typeToString(bg->background);
 }
 
 std::string CaptainBackgroundSystem::getPreferredRole(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return "";
 
     return bg->preferred_role;
 }
 
 std::string CaptainBackgroundSystem::getDialogueFlavor(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return "";
 
     return bg->dialogue_flavor;
 }
 
 float CaptainBackgroundSystem::getSkillBonus(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return 0.0f;
 
     return bg->skill_bonus;
 }
 
 std::string CaptainBackgroundSystem::getSkillCategory(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return "";
 
     return bg->skill_category;
 }
 
 float CaptainBackgroundSystem::getAggressionModifier(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return 0.0f;
 
     return bg->aggression_modifier;
 }
 
 float CaptainBackgroundSystem::getLoyaltyModifier(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return 0.0f;
 
     return bg->loyalty_modifier;
 }
 
 int CaptainBackgroundSystem::getExperience(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return 0;
 
     return bg->years_experience;
 }
 
 std::string CaptainBackgroundSystem::getOriginSystem(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* bg = entity->getComponent<components::CaptainBackground>();
+    auto* bg = getComponentFor(entity_id);
     if (!bg) return "";
 
     return bg->origin_system;

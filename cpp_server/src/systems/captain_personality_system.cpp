@@ -10,10 +10,10 @@ namespace atlas {
 namespace systems {
 
 CaptainPersonalitySystem::CaptainPersonalitySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void CaptainPersonalitySystem::update(float /*delta_time*/) {
+void CaptainPersonalitySystem::updateComponent(ecs::Entity& /*entity*/, components::CaptainPersonality& /*personality*/, float /*delta_time*/) {
     // Personality traits are static — nothing to tick.
 }
 
@@ -120,10 +120,7 @@ void CaptainPersonalitySystem::assignPersonality(const std::string& entity_id,
 void CaptainPersonalitySystem::setPersonalityTrait(const std::string& entity_id,
                                                     const std::string& trait,
                                                     float value) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* personality = entity->getComponent<components::CaptainPersonality>();
+    auto* personality = getComponentFor(entity_id);
     if (!personality) return;
 
     float clamped = clamp01(value);
@@ -149,10 +146,7 @@ void CaptainPersonalitySystem::setPersonalityTrait(const std::string& entity_id,
 
 float CaptainPersonalitySystem::getPersonalityTrait(const std::string& entity_id,
                                                      const std::string& trait) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* personality = entity->getComponent<components::CaptainPersonality>();
+    auto* personality = getComponentFor(entity_id);
     if (!personality) return 0.0f;
 
     if (trait == "aggression")      return personality->aggression;
@@ -168,10 +162,7 @@ float CaptainPersonalitySystem::getPersonalityTrait(const std::string& entity_id
 }
 
 std::string CaptainPersonalitySystem::getCaptainFaction(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* personality = entity->getComponent<components::CaptainPersonality>();
+    auto* personality = getComponentFor(entity_id);
     if (!personality) return "";
 
     return personality->faction;

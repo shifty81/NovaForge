@@ -18,10 +18,10 @@ components::NavigationBookmark::Bookmark* findBookmark(
 } // anonymous namespace
 
 NavigationBookmarkSystem::NavigationBookmarkSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void NavigationBookmarkSystem::update(float /*delta_time*/) {
+void NavigationBookmarkSystem::updateComponent(ecs::Entity& /*entity*/, components::NavigationBookmark& /*bookmark*/, float /*delta_time*/) {
     // Bookmarks are passive data; no per-frame processing needed
 }
 
@@ -36,9 +36,7 @@ bool NavigationBookmarkSystem::initializeBookmarks(const std::string& entity_id)
 bool NavigationBookmarkSystem::addBookmark(const std::string& entity_id,
     const std::string& bookmark_id, const std::string& label,
     const std::string& system_id, float x, float y, float z) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return false;
     if (static_cast<int>(nb->bookmarks.size()) >= nb->max_bookmarks) return false;
     if (findBookmark(nb, bookmark_id)) return false; // duplicate
@@ -57,9 +55,7 @@ bool NavigationBookmarkSystem::addBookmark(const std::string& entity_id,
 
 bool NavigationBookmarkSystem::removeBookmark(const std::string& entity_id,
     const std::string& bookmark_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return false;
 
     auto it = std::remove_if(nb->bookmarks.begin(), nb->bookmarks.end(),
@@ -73,9 +69,7 @@ bool NavigationBookmarkSystem::removeBookmark(const std::string& entity_id,
 
 bool NavigationBookmarkSystem::setCategory(const std::string& entity_id,
     const std::string& bookmark_id, const std::string& category) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return false;
     auto* bm = findBookmark(nb, bookmark_id);
     if (!bm) return false;
@@ -85,9 +79,7 @@ bool NavigationBookmarkSystem::setCategory(const std::string& entity_id,
 
 bool NavigationBookmarkSystem::setNotes(const std::string& entity_id,
     const std::string& bookmark_id, const std::string& notes) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return false;
     auto* bm = findBookmark(nb, bookmark_id);
     if (!bm) return false;
@@ -97,9 +89,7 @@ bool NavigationBookmarkSystem::setNotes(const std::string& entity_id,
 
 bool NavigationBookmarkSystem::toggleFavorite(const std::string& entity_id,
     const std::string& bookmark_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return false;
     auto* bm = findBookmark(nb, bookmark_id);
     if (!bm) return false;
@@ -108,17 +98,13 @@ bool NavigationBookmarkSystem::toggleFavorite(const std::string& entity_id,
 }
 
 int NavigationBookmarkSystem::getBookmarkCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return 0;
     return static_cast<int>(nb->bookmarks.size());
 }
 
 int NavigationBookmarkSystem::getFavoriteCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return 0;
     int count = 0;
     for (const auto& b : nb->bookmarks) {
@@ -129,9 +115,7 @@ int NavigationBookmarkSystem::getFavoriteCount(const std::string& entity_id) con
 
 int NavigationBookmarkSystem::getCategoryCount(const std::string& entity_id,
     const std::string& category) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return 0;
     int count = 0;
     for (const auto& b : nb->bookmarks) {
@@ -142,9 +126,7 @@ int NavigationBookmarkSystem::getCategoryCount(const std::string& entity_id,
 
 std::string NavigationBookmarkSystem::getLabel(const std::string& entity_id,
     const std::string& bookmark_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* nb = entity->getComponent<components::NavigationBookmark>();
+    auto* nb = getComponentFor(entity_id);
     if (!nb) return "";
     for (const auto& b : nb->bookmarks) {
         if (b.bookmark_id == bookmark_id) return b.label;

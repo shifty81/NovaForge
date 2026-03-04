@@ -1,8 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_CAPTAIN_DEPARTURE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CAPTAIN_DEPARTURE_SYSTEM_H
 
-#include "ecs/system.h"
-#include "ecs/entity.h"
+#include "ecs/state_machine_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +15,11 @@ namespace systems {
  * Captains accumulate disagreement which causes them to grumble,
  * then formally request departure, and eventually leave.
  */
-class CaptainDepartureSystem : public ecs::System {
+class CaptainDepartureSystem : public ecs::StateMachineSystem<components::CaptainDepartureState> {
 public:
     explicit CaptainDepartureSystem(ecs::World* world);
     ~CaptainDepartureSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CaptainDepartureSystem"; }
 
     // --- API ---
@@ -29,6 +27,9 @@ public:
     components::CaptainDepartureState::DeparturePhase getDeparturePhase(const std::string& entity_id) const;
     void acknowledgeRequest(const std::string& entity_id);
     std::vector<std::string> getDepartingCaptains() const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CaptainDepartureState& state, float delta_time) override;
 };
 
 } // namespace systems

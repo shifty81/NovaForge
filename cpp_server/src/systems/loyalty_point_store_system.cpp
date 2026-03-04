@@ -44,9 +44,9 @@ const LPBalance* findBalanceConst(const LPS* store, const std::string& player_id
 } // anonymous namespace
 
 LoyaltyPointStoreSystem::LoyaltyPointStoreSystem(ecs::World* world)
-    : System(world) {}
+    : SingleComponentSystem(world) {}
 
-void LoyaltyPointStoreSystem::update(float /*delta_time*/) {
+void LoyaltyPointStoreSystem::updateComponent(ecs::Entity& /*entity*/, components::LoyaltyPointStore& /*store*/, float /*delta_time*/) {
     // No per-tick logic needed
 }
 
@@ -64,9 +64,7 @@ bool LoyaltyPointStoreSystem::initialize(const std::string& entity_id,
 bool LoyaltyPointStoreSystem::addItem(const std::string& entity_id,
     const std::string& item_id, const std::string& name, const std::string& category,
     int lp_cost, float isk_cost, int tier) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     if (!store) return false;
     if (static_cast<int>(store->items.size()) >= store->max_items) return false;
     if (findItem(store, item_id)) return false;
@@ -84,9 +82,7 @@ bool LoyaltyPointStoreSystem::addItem(const std::string& entity_id,
 
 bool LoyaltyPointStoreSystem::removeItem(const std::string& entity_id,
     const std::string& item_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     if (!store) return false;
 
     auto it = std::remove_if(store->items.begin(), store->items.end(),
@@ -98,9 +94,7 @@ bool LoyaltyPointStoreSystem::removeItem(const std::string& entity_id,
 
 bool LoyaltyPointStoreSystem::registerPlayer(const std::string& entity_id,
     const std::string& player_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     if (!store) return false;
     if (static_cast<int>(store->balances.size()) >= store->max_players) return false;
     if (findBalance(store, player_id)) return false;
@@ -113,9 +107,7 @@ bool LoyaltyPointStoreSystem::registerPlayer(const std::string& entity_id,
 
 bool LoyaltyPointStoreSystem::earnLP(const std::string& entity_id,
     const std::string& player_id, int amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     if (!store) return false;
 
     auto* bal = findBalance(store, player_id);
@@ -127,9 +119,7 @@ bool LoyaltyPointStoreSystem::earnLP(const std::string& entity_id,
 
 bool LoyaltyPointStoreSystem::purchaseItem(const std::string& entity_id,
     const std::string& player_id, const std::string& item_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     if (!store) return false;
 
     auto* bal = findBalance(store, player_id);
@@ -149,47 +139,35 @@ bool LoyaltyPointStoreSystem::purchaseItem(const std::string& entity_id,
 
 int LoyaltyPointStoreSystem::getBalance(const std::string& entity_id,
     const std::string& player_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     if (!store) return 0;
     auto* bal = findBalanceConst(store, player_id);
     return bal ? bal->balance : 0;
 }
 
 int LoyaltyPointStoreSystem::getItemCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     return store ? static_cast<int>(store->items.size()) : 0;
 }
 
 int LoyaltyPointStoreSystem::getPlayerCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     return store ? static_cast<int>(store->balances.size()) : 0;
 }
 
 int LoyaltyPointStoreSystem::getTotalPurchases(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     return store ? store->total_purchases : 0;
 }
 
 float LoyaltyPointStoreSystem::getTotalISKCollected(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     return store ? store->isk_collected : 0.0f;
 }
 
 int LoyaltyPointStoreSystem::getItemsByCategory(const std::string& entity_id,
     const std::string& category) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* store = entity->getComponent<components::LoyaltyPointStore>();
+    auto* store = getComponentFor(entity_id);
     if (!store) return 0;
 
     int count = 0;

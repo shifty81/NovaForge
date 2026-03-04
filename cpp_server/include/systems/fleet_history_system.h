@@ -1,8 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_HISTORY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_HISTORY_SYSTEM_H
 
-#include "ecs/system.h"
-#include "ecs/entity.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -13,12 +12,11 @@ namespace systems {
 /**
  * @brief Records fleet history events for save-file persistence
  */
-class FleetHistorySystem : public ecs::System {
+class FleetHistorySystem : public ecs::SingleComponentSystem<components::FleetHistory> {
 public:
     explicit FleetHistorySystem(ecs::World* world);
     ~FleetHistorySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetHistorySystem"; }
 
     // --- API ---
@@ -28,6 +26,9 @@ public:
     std::vector<components::FleetHistoryEntry> getHistory(const std::string& fleet_id, int count = 20) const;
     int getEventCount(const std::string& fleet_id) const;
     std::vector<components::FleetHistoryEntry> getEventsByType(const std::string& fleet_id, const std::string& type) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetHistory& history, float delta_time) override;
 };
 
 } // namespace systems
