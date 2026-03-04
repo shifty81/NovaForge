@@ -29,27 +29,25 @@ const Listing* findListingConst(const CA* ca, const std::string& listing_id) {
 } // anonymous namespace
 
 ContractAuctionSystem::ContractAuctionSystem(ecs::World* world)
-    : System(world) {}
+    : SingleComponentSystem(world) {}
 
-void ContractAuctionSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::ContractAuction>();
-    for (auto* entity : entities) {
-        auto* ca = entity->getComponent<components::ContractAuction>();
-        if (!ca || !ca->active) continue;
+void ContractAuctionSystem::updateComponent(ecs::Entity& /*entity*/, components::ContractAuction& ca, float delta_time) {
+    if (!ca.active) return;
 
-        for (auto& listing : ca->listings) {
-            if (listing.state != CA::AuctionState::Active) continue;
+    using CA = components::ContractAuction;
 
-            listing.elapsed += delta_time;
-            if (listing.elapsed >= listing.duration) {
-                if (listing.bid_count > 0) {
-                    listing.state = CA::AuctionState::Sold;
-                    ca->total_sold++;
-                    ca->total_revenue += listing.current_bid;
-                } else {
-                    listing.state = CA::AuctionState::Expired;
-                    ca->total_expired++;
-                }
+    for (auto& listing : ca.listings) {
+        if (listing.state != CA::AuctionState::Active) continue;
+
+        listing.elapsed += delta_time;
+        if (listing.elapsed >= listing.duration) {
+            if (listing.bid_count > 0) {
+                listing.state = CA::AuctionState::Sold;
+                ca.total_sold++;
+                ca.total_revenue += listing.current_bid;
+            } else {
+                listing.state = CA::AuctionState::Expired;
+                ca.total_expired++;
             }
         }
     }
@@ -67,9 +65,7 @@ bool ContractAuctionSystem::createListing(const std::string& entity_id,
     const std::string& listing_id, const std::string& seller_id,
     const std::string& item_name, const std::string& category,
     float starting_price, float buyout_price, float duration) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return false;
     if (static_cast<int>(ca->listings.size()) >= ca->max_listings) return false;
     if (findListing(ca, listing_id)) return false;
@@ -90,9 +86,7 @@ bool ContractAuctionSystem::createListing(const std::string& entity_id,
 
 bool ContractAuctionSystem::activateListing(const std::string& entity_id,
     const std::string& listing_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return false;
 
     auto* listing = findListing(ca, listing_id);
@@ -105,9 +99,7 @@ bool ContractAuctionSystem::activateListing(const std::string& entity_id,
 bool ContractAuctionSystem::placeBid(const std::string& entity_id,
     const std::string& listing_id, const std::string& bidder_id,
     float amount, float timestamp) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return false;
 
     auto* listing = findListing(ca, listing_id);
@@ -130,9 +122,7 @@ bool ContractAuctionSystem::placeBid(const std::string& entity_id,
 
 bool ContractAuctionSystem::buyout(const std::string& entity_id,
     const std::string& listing_id, const std::string& buyer_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return false;
 
     auto* listing = findListing(ca, listing_id);
@@ -150,9 +140,7 @@ bool ContractAuctionSystem::buyout(const std::string& entity_id,
 
 bool ContractAuctionSystem::cancelListing(const std::string& entity_id,
     const std::string& listing_id, const std::string& seller_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return false;
 
     auto* listing = findListing(ca, listing_id);
@@ -167,16 +155,12 @@ bool ContractAuctionSystem::cancelListing(const std::string& entity_id,
 }
 
 int ContractAuctionSystem::getListingCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     return ca ? static_cast<int>(ca->listings.size()) : 0;
 }
 
 int ContractAuctionSystem::getActiveListingCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return 0;
     int count = 0;
     for (const auto& l : ca->listings) {
@@ -187,9 +171,7 @@ int ContractAuctionSystem::getActiveListingCount(const std::string& entity_id) c
 
 int ContractAuctionSystem::getBidCount(const std::string& entity_id,
     const std::string& listing_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return 0;
     const auto* listing = findListingConst(ca, listing_id);
     return listing ? listing->bid_count : 0;
@@ -197,9 +179,7 @@ int ContractAuctionSystem::getBidCount(const std::string& entity_id,
 
 float ContractAuctionSystem::getCurrentBid(const std::string& entity_id,
     const std::string& listing_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return 0.0f;
     const auto* listing = findListingConst(ca, listing_id);
     return listing ? listing->current_bid : 0.0f;
@@ -207,32 +187,24 @@ float ContractAuctionSystem::getCurrentBid(const std::string& entity_id,
 
 int ContractAuctionSystem::getState(const std::string& entity_id,
     const std::string& listing_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     if (!ca) return 0;
     const auto* listing = findListingConst(ca, listing_id);
     return listing ? static_cast<int>(listing->state) : 0;
 }
 
 int ContractAuctionSystem::getTotalSold(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     return ca ? ca->total_sold : 0;
 }
 
 int ContractAuctionSystem::getTotalExpired(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     return ca ? ca->total_expired : 0;
 }
 
 float ContractAuctionSystem::getTotalRevenue(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ca = entity->getComponent<components::ContractAuction>();
+    auto* ca = getComponentFor(entity_id);
     return ca ? ca->total_revenue : 0.0f;
 }
 

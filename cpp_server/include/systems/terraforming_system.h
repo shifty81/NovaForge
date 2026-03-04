@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_TERRAFORMING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_TERRAFORMING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/state_machine_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Planning → Infrastructure → AtmosphereProcessing → TemperatureRegulation → BiomeSeeding → Complete.
  * Each stage takes time_per_stage seconds. Environment parameters move toward targets over the process.
  */
-class TerraformingSystem : public ecs::System {
+class TerraformingSystem : public ecs::StateMachineSystem<components::Terraforming> {
 public:
     explicit TerraformingSystem(ecs::World* world);
     ~TerraformingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "TerraformingSystem"; }
 
     // Commands
@@ -37,6 +36,9 @@ public:
     float getTotalProgress(const std::string& entity_id) const;
     bool isActive(const std::string& entity_id) const;
     double getTotalCreditsSpent(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Terraforming& tf, float delta_time) override;
 };
 
 } // namespace systems

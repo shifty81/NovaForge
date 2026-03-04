@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WARP_ANOMALY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WARP_ANOMALY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <unordered_map>
 
@@ -16,12 +17,11 @@ struct WarpAnomaly {
     float duration = 5.0f;
 };
 
-class WarpAnomalySystem : public ecs::System {
+class WarpAnomalySystem : public ecs::SingleComponentSystem<components::WarpState> {
 public:
     explicit WarpAnomalySystem(ecs::World* world);
     ~WarpAnomalySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WarpAnomalySystem"; }
 
     bool tryTriggerAnomaly(const std::string& entity_id);
@@ -32,6 +32,9 @@ public:
 private:
     std::unordered_map<std::string, WarpAnomaly> last_anomalies_;
     std::unordered_map<std::string, int> anomaly_counts_;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WarpState& warp, float delta_time) override;
 };
 
 } // namespace systems

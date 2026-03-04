@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_DRONE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_DRONE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <cstdint>
 
@@ -15,12 +16,11 @@ namespace systems {
  * and processing their combat actions each tick.  Enforces bandwidth
  * limits and removes destroyed drones.
  */
-class DroneSystem : public ecs::System {
+class DroneSystem : public ecs::SingleComponentSystem<components::DroneBay> {
 public:
     explicit DroneSystem(ecs::World* world);
     ~DroneSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "DroneSystem"; }
 
     /**
@@ -69,6 +69,9 @@ public:
 private:
     uint32_t salvage_seed_ = 42;
     float nextSalvageRandom();
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::DroneBay& bay, float delta_time) override;
 };
 
 } // namespace systems

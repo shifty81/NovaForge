@@ -204,7 +204,7 @@ All 6349 tests passing. Total migrated: 34 systems.
 | 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
 | 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | ✅ Complete |
 | 2.4 | Migrate 20–30 simplest systems to template bases | ✅ Complete (28 of ~30 done) |
-| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (44 total, batch 2 done) |
+| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (54 total, batch 3 done) |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
 
@@ -332,4 +332,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Phase 2 step 2.5 (batch 1) completed: March 4, 2026 — SkillSystem, FleetMoraleSystem, FleetCargoSystem, AsteroidBeltSystem, FleetChatterSystem, AnomalySystem migrated (34 total)*
 *Phase 2 step 2.3 completed: March 4, 2026 — RechargeSystem<C> template created with 6 tests; 6415 assertions passing*
 *Phase 2 step 2.5 (batch 2) completed: March 4, 2026 — AutopilotSystem, CargoScanSystem, PvPToggleSystem, ShipCapabilityRatingSystem, BountySystem, StationNewsSystem, RigLockerSystem, RoverBayRampSystem, RoverInteriorSystem, StationHangarSystem migrated (44 total)*
+*Phase 2 step 2.5 (batch 3) completed: March 4, 2026 — BikeGarageSystem, DroneSystem, ContractAuctionSystem, TerraformingSystem, LavatoryInteractionSystem, ModuleCascadingFailureSystem, RestStationSystem, SpacePlanetTransitionSystem, MythBossSystem, WarpAnomalySystem migrated (54 total)*
 *Next review: After Phase 2 (system template bases) completion*

@@ -7,38 +7,33 @@ namespace atlas {
 namespace systems {
 
 RestStationSystem::RestStationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void RestStationSystem::update(float delta_time) {
-    // Process all entities that are currently resting
-    auto entities = world_->getEntities<components::RestingState>();
-    for (auto* entity : entities) {
-        auto* resting = entity->getComponent<components::RestingState>();
-        if (!resting || !resting->is_resting) continue;
+void RestStationSystem::updateComponent(ecs::Entity& entity, components::RestingState& resting, float delta_time) {
+    if (!resting.is_resting) return;
 
-        auto* needs = entity->getComponent<components::SurvivalNeeds>();
-        if (!needs) continue;
+    auto* needs = entity.getComponent<components::SurvivalNeeds>();
+    if (!needs) return;
 
-        // Get the rest station for quality multiplier
-        auto* station_entity = world_->getEntity(resting->rest_station_id);
-        float quality = 1.0f;
-        if (station_entity) {
-            auto* station = station_entity->getComponent<components::RestStation>();
-            if (station) {
-                quality = station->quality;
-                station->total_rest_time += delta_time;
-            }
+    // Get the rest station for quality multiplier
+    auto* station_entity = world_->getEntity(resting.rest_station_id);
+    float quality = 1.0f;
+    if (station_entity) {
+        auto* station = station_entity->getComponent<components::RestStation>();
+        if (station) {
+            quality = station->quality;
+            station->total_rest_time += delta_time;
         }
+    }
 
-        // Recover fatigue based on rest quality
-        float recovery = base_recovery_rate_ * quality * delta_time;
-        needs->fatigue = std::max(0.0f, needs->fatigue - recovery);
+    // Recover fatigue based on rest quality
+    float recovery = base_recovery_rate_ * quality * delta_time;
+    needs->fatigue = std::max(0.0f, needs->fatigue - recovery);
 
-        // Stop resting automatically when fully rested
-        if (needs->fatigue <= 0.0f) {
-            stopResting(entity->getId());
-        }
+    // Stop resting automatically when fully rested
+    if (needs->fatigue <= 0.0f) {
+        stopResting(entity.getId());
     }
 }
 
@@ -106,10 +101,7 @@ float RestStationSystem::stopResting(const std::string& entity_id) {
 }
 
 bool RestStationSystem::isResting(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* resting = entity->getComponent<components::RestingState>();
+    auto* resting = getComponentFor(entity_id);
     return resting && resting->is_resting;
 }
 

@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_CONTRACT_AUCTION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CONTRACT_AUCTION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/economy_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages auction listings with bids, buyout prices, time-based expiry,
  * seller/buyer tracking, and bid history.
  */
-class ContractAuctionSystem : public ecs::System {
+class ContractAuctionSystem : public ecs::SingleComponentSystem<components::ContractAuction> {
 public:
     explicit ContractAuctionSystem(ecs::World* world);
     ~ContractAuctionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ContractAuctionSystem"; }
 
     bool initialize(const std::string& entity_id);
@@ -42,6 +42,9 @@ public:
     int getTotalSold(const std::string& entity_id) const;
     int getTotalExpired(const std::string& entity_id) const;
     float getTotalRevenue(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ContractAuction& ca, float delta_time) override;
 };
 
 } // namespace systems
