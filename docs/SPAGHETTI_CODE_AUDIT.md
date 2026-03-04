@@ -174,6 +174,17 @@ All 6349 tests passing. Total boilerplate reduction: ~229 lines removed across 1
 
 All 6349 tests passing. Total migrated: 22 systems.
 
+#### Step 2.4 (continued): Migrate 6 more systems to `SingleComponentSystem<C>` ✅
+
+- `InsuranceSystem` → `SingleComponentSystem<components::InsurancePolicy>` (106 → 90 lines)
+- `WreckSalvageSystem` → `SingleComponentSystem<components::Wreck>` (125 → 112 lines)
+- `MiningSystem` → `SingleComponentSystem<components::MiningLaser>` (185 → 170 lines)
+- `ManufacturingSystem` → `SingleComponentSystem<components::ManufacturingFacility>` (134 → 110 lines)
+- `ResearchSystem` → `SingleComponentSystem<components::ResearchLab>` (206 → 175 lines)
+- `PISystem` → `SingleComponentSystem<components::PlanetaryColony>` (191 → 162 lines)
+
+All 6349 tests passing. Total migrated: 28 systems.
+
 ### Remaining Remediation Plan
 
 | Step | Action | Status |
@@ -181,7 +192,7 @@ All 6349 tests passing. Total migrated: 22 systems.
 | 2.1 | Create `SingleComponentSystem<C>` template base | ✅ Complete |
 | 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
 | 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | 📋 Planned |
-| 2.4 | Migrate 20–30 simplest systems to template bases | 🔧 In progress (22 of ~30 done) |
+| 2.4 | Migrate 20–30 simplest systems to template bases | ✅ Complete (28 of ~30 done) |
 | 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 📋 Planned |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
@@ -286,7 +297,7 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | GameSession forward declarations | 15+ | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
 | Template base classes | 2 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`) | 3 |
-| Systems migrated to templates | 22 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`) | 164 |
+| Systems migrated to templates | 28 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`) | 164 |
 
 ---
 
@@ -306,4 +317,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Phase 2 steps 2.2, 2.4 (partial) completed: March 4, 2026 — StateMachineSystem<C> template, CloakingSystem, JumpDriveSystem, AncientTechSystem, LocalReputationSystem, SurvivalSystem migrated*
 *Phase 2 step 2.4 (continued) completed: March 4, 2026 — RigSystem, SolarPanelSystem, ScanProbeSystem, FoodProcessorSystem, FarmingDeckSystem, InteriorDoorSystem, DockingRingExtensionSystem, EVAAirlockSystem migrated (15 total)*
 *Phase 2 step 2.4 (continued) completed: March 4, 2026 — WreckPersistenceSystem, TetherDockingSystem, CloneBaySystem, PlanetaryTraversalSystem, VisualRigSystem, EnvironmentalHazardSystem migrated (22 total)*
+*Phase 2 step 2.4 (continued) completed: March 4, 2026 — InsuranceSystem, WreckSalvageSystem, MiningSystem, ManufacturingSystem, ResearchSystem, PISystem migrated (28 total)*
 *Next review: After Phase 2 (system template bases) completion*

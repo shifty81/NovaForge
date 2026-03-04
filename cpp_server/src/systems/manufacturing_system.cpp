@@ -6,27 +6,22 @@ namespace atlas {
 namespace systems {
 
 ManufacturingSystem::ManufacturingSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ManufacturingSystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* facility = entity->getComponent<components::ManufacturingFacility>();
-        if (!facility) continue;
+void ManufacturingSystem::updateComponent(ecs::Entity& entity, components::ManufacturingFacility& facility, float delta_time) {
+    for (auto& job : facility.jobs) {
+        if (job.status != "active") continue;
 
-        for (auto& job : facility->jobs) {
-            if (job.status != "active") continue;
-
-            job.time_remaining -= delta_time;
-            if (job.time_remaining <= 0.0f) {
-                job.runs_completed++;
-                if (job.runs_completed >= job.runs) {
-                    job.time_remaining = 0.0f;
-                    job.status = "completed";
-                } else {
-                    // Start next run
-                    job.time_remaining = job.time_per_run;
-                }
+        job.time_remaining -= delta_time;
+        if (job.time_remaining <= 0.0f) {
+            job.runs_completed++;
+            if (job.runs_completed >= job.runs) {
+                job.time_remaining = 0.0f;
+                job.status = "completed";
+            } else {
+                // Start next run
+                job.time_remaining = job.time_per_run;
             }
         }
     }
@@ -40,10 +35,7 @@ std::string ManufacturingSystem::startJob(const std::string& facility_entity_id,
                                            int runs,
                                            float time_per_run,
                                            double install_cost) {
-    auto* entity = world_->getEntity(facility_entity_id);
-    if (!entity) return "";
-
-    auto* facility = entity->getComponent<components::ManufacturingFacility>();
+    auto* facility = getComponentFor(facility_entity_id);
     if (!facility) return "";
 
     // Check job slot availability
@@ -78,10 +70,7 @@ std::string ManufacturingSystem::startJob(const std::string& facility_entity_id,
 
 bool ManufacturingSystem::cancelJob(const std::string& facility_entity_id,
                                      const std::string& job_id) {
-    auto* entity = world_->getEntity(facility_entity_id);
-    if (!entity) return false;
-
-    auto* facility = entity->getComponent<components::ManufacturingFacility>();
+    auto* facility = getComponentFor(facility_entity_id);
     if (!facility) return false;
 
     for (auto& job : facility->jobs) {
@@ -94,20 +83,14 @@ bool ManufacturingSystem::cancelJob(const std::string& facility_entity_id,
 }
 
 int ManufacturingSystem::getActiveJobCount(const std::string& facility_entity_id) {
-    auto* entity = world_->getEntity(facility_entity_id);
-    if (!entity) return 0;
-
-    auto* facility = entity->getComponent<components::ManufacturingFacility>();
+    auto* facility = getComponentFor(facility_entity_id);
     if (!facility) return 0;
 
     return facility->activeJobCount();
 }
 
 int ManufacturingSystem::getCompletedJobCount(const std::string& facility_entity_id) {
-    auto* entity = world_->getEntity(facility_entity_id);
-    if (!entity) return 0;
-
-    auto* facility = entity->getComponent<components::ManufacturingFacility>();
+    auto* facility = getComponentFor(facility_entity_id);
     if (!facility) return 0;
 
     int count = 0;
@@ -117,10 +100,7 @@ int ManufacturingSystem::getCompletedJobCount(const std::string& facility_entity
 }
 
 int ManufacturingSystem::getTotalRunsCompleted(const std::string& facility_entity_id) {
-    auto* entity = world_->getEntity(facility_entity_id);
-    if (!entity) return 0;
-
-    auto* facility = entity->getComponent<components::ManufacturingFacility>();
+    auto* facility = getComponentFor(facility_entity_id);
     if (!facility) return 0;
 
     int total = 0;

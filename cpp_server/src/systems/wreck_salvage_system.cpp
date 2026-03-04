@@ -10,23 +10,26 @@ namespace systems {
 static uint32_t s_next_wreck_id = 1;
 
 WreckSalvageSystem::WreckSalvageSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
+}
+
+void WreckSalvageSystem::updateComponent(ecs::Entity& entity, components::Wreck& wreck, float delta_time) {
+    wreck.lifetime_remaining -= delta_time;
 }
 
 void WreckSalvageSystem::update(float delta_time) {
-    // Tick down wreck lifetimes and destroy expired ones
+    // Tick down wreck lifetimes via base class
+    SingleComponentSystem::update(delta_time);
+
+    // Destroy expired wrecks (cannot destroy during iteration above)
     std::vector<std::string> expired;
-
-    for (auto* entity : world_->getAllEntities()) {
+    auto entities = world_->getEntities<components::Wreck>();
+    for (auto* entity : entities) {
         auto* wreck = entity->getComponent<components::Wreck>();
-        if (!wreck) continue;
-
-        wreck->lifetime_remaining -= delta_time;
-        if (wreck->lifetime_remaining <= 0.0f) {
+        if (wreck && wreck->lifetime_remaining <= 0.0f) {
             expired.push_back(entity->getId());
         }
     }
-
     for (const auto& id : expired) {
         world_->destroyEntity(id);
     }
@@ -73,12 +76,12 @@ std::string WreckSalvageSystem::createWreck(const std::string& destroyed_entity_
 bool WreckSalvageSystem::salvageWreck(const std::string& player_entity_id,
                                        const std::string& wreck_entity_id,
                                        float salvage_range) {
+    auto* wreck = getComponentFor(wreck_entity_id);
+    if (!wreck || wreck->salvaged) return false;
+
     auto* player_entity = world_->getEntity(player_entity_id);
     auto* wreck_entity  = world_->getEntity(wreck_entity_id);
     if (!player_entity || !wreck_entity) return false;
-
-    auto* wreck = wreck_entity->getComponent<components::Wreck>();
-    if (!wreck || wreck->salvaged) return false;
 
     // Range check
     auto* player_pos = player_entity->getComponent<components::Position>();
