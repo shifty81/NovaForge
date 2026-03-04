@@ -10,18 +10,19 @@ EntityManager::EntityManager() {
 void EntityManager::spawnEntity(const std::string& id, const glm::vec3& position,
                                 const Health& health, const Capacitor& capacitor,
                                 const std::string& shipType,
-                                const std::string& shipName, const std::string& faction) {
+                                const std::string& shipName, const std::string& faction,
+                                const std::string& tag, const std::string& name) {
     // Check if entity already exists
     auto it = m_entities.find(id);
     if (it != m_entities.end()) {
         std::cerr << "Warning: Entity " << id << " already exists, updating instead" << std::endl;
-        it->second->updateFromSpawn(position, health, capacitor, shipType, shipName, faction);
+        it->second->updateFromSpawn(position, health, capacitor, shipType, shipName, faction, tag, name);
         return;
     }
 
     // Create new entity
     auto entity = std::make_shared<Entity>(id);
-    entity->updateFromSpawn(position, health, capacitor, shipType, shipName, faction);
+    entity->updateFromSpawn(position, health, capacitor, shipType, shipName, faction, tag, name);
     
     // Store entity
     m_entities[id] = entity;
@@ -61,11 +62,13 @@ void EntityManager::updateEntityState(const std::string& id, const glm::vec3& po
                                       const Capacitor& capacitor,
                                       const std::string& shipType,
                                       const std::string& shipName,
-                                      const std::string& faction) {
+                                      const std::string& faction,
+                                      const std::string& tag,
+                                      const std::string& name) {
     auto it = m_entities.find(id);
     if (it == m_entities.end()) {
         // Entity doesn't exist yet, spawn it with ship info
-        spawnEntity(id, position, health, capacitor, shipType, shipName, faction);
+        spawnEntity(id, position, health, capacitor, shipType, shipName, faction, tag, name);
         return;
     }
 
@@ -77,7 +80,7 @@ void EntityManager::updateEntityState(const std::string& id, const glm::vec3& po
         // Preserve current position while updating ship info
         glm::vec3 currentPos = it->second->getPosition();
         it->second->updateFromSpawn(currentPos, health, capacitor,
-                                    shipType, shipName, faction);
+                                    shipType, shipName, faction, tag, name);
     }
     
     // Notify callback

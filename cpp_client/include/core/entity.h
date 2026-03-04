@@ -65,6 +65,10 @@ public:
     const std::string& getShipType() const { return m_shipType; }
     const std::string& getShipName() const { return m_shipName; }
     const std::string& getFaction() const { return m_faction; }
+
+    // Tag and name (for FPS interactable entities)
+    const std::string& getTag() const { return m_tag; }
+    const std::string& getName() const { return m_name; }
     
     // State
     bool isAlive() const { return m_health.hull > 0; }
@@ -79,7 +83,9 @@ public:
                          const Capacitor& capacitor = Capacitor(),
                          const std::string& shipType = "",
                          const std::string& shipName = "",
-                         const std::string& faction = "");
+                         const std::string& faction = "",
+                         const std::string& tag = "",
+                         const std::string& name = "");
 
     /**
      * Update entity from server state update
@@ -140,6 +146,10 @@ private:
     std::string m_shipType;
     std::string m_shipName;
     std::string m_faction;
+
+    // Tag and display name (for FPS interactable entities)
+    std::string m_tag;
+    std::string m_name;
 };
 
 } // namespace atlas
