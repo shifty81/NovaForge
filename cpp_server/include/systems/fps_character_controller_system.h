@@ -1,8 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FPS_CHARACTER_CONTROLLER_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FPS_CHARACTER_CONTROLLER_SYSTEM_H
 
-#include "ecs/system.h"
-#include "ecs/entity.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <tuple>
@@ -17,12 +16,11 @@ namespace systems {
  * in FPS mode inside ships and stations. Enforces movement bounds within
  * an interior volume and handles stamina for sprinting.
  */
-class FPSCharacterControllerSystem : public ecs::System {
+class FPSCharacterControllerSystem : public ecs::SingleComponentSystem<components::FPSCharacterState> {
 public:
     explicit FPSCharacterControllerSystem(ecs::World* world);
     ~FPSCharacterControllerSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FPSCharacterControllerSystem"; }
 
     /**
@@ -101,6 +99,9 @@ public:
      * @brief Get the name of a stance
      */
     static std::string stanceName(int stance);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FPSCharacterState& state, float delta_time) override;
 
 private:
     static constexpr const char* FPS_CHAR_PREFIX = "fpschar_";
