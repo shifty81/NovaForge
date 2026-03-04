@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_VISUAL_RIG_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_VISUAL_RIG_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * properties like thruster configuration, cargo size, and attached items
  * from the RigLoadout component.
  */
-class VisualRigSystem : public ecs::System {
+class VisualRigSystem : public ecs::SingleComponentSystem<components::VisualRigState> {
 public:
     explicit VisualRigSystem(ecs::World* world);
     ~VisualRigSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "VisualRigSystem"; }
 
     // Visual state initialization
@@ -64,6 +63,9 @@ public:
     bool removeTrinket(const std::string& entity_id, const std::string& trinket_id);
     int getTrinketCount(const std::string& entity_id) const;
     bool canAddTrinket(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::VisualRigState& visual, float delta_time) override;
 };
 
 } // namespace systems

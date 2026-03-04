@@ -7,38 +7,33 @@ namespace atlas {
 namespace systems {
 
 TetherDockingSystem::TetherDockingSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void TetherDockingSystem::update(float delta_time) {
-    for (auto* entity : world_->getEntities<components::TetherDockingArm>()) {
-        auto* arm = entity->getComponent<components::TetherDockingArm>();
-        if (!arm) continue;
+void TetherDockingSystem::updateComponent(ecs::Entity& /*entity*/, components::TetherDockingArm& arm, float delta_time) {
+    switch (arm.state) {
+        case components::TetherDockingArm::ArmState::Extending:
+            arm.extend_progress += arm.extend_speed * delta_time;
+            if (arm.extend_progress >= 1.0f) {
+                arm.extend_progress = 1.0f;
+                arm.state = components::TetherDockingArm::ArmState::Locked;
+                arm.crew_transfer_enabled = true;
+            }
+            break;
 
-        switch (arm->state) {
-            case components::TetherDockingArm::ArmState::Extending:
-                arm->extend_progress += arm->extend_speed * delta_time;
-                if (arm->extend_progress >= 1.0f) {
-                    arm->extend_progress = 1.0f;
-                    arm->state = components::TetherDockingArm::ArmState::Locked;
-                    arm->crew_transfer_enabled = true;
-                }
-                break;
+        case components::TetherDockingArm::ArmState::Retracting:
+            arm.extend_progress -= arm.extend_speed * delta_time;
+            if (arm.extend_progress <= 0.0f) {
+                arm.extend_progress = 0.0f;
+                arm.state = components::TetherDockingArm::ArmState::Retracted;
+                arm.tethered_ship_id.clear();
+                arm.crew_transfer_enabled = false;
+                arm.station_shield_active = true;
+            }
+            break;
 
-            case components::TetherDockingArm::ArmState::Retracting:
-                arm->extend_progress -= arm->extend_speed * delta_time;
-                if (arm->extend_progress <= 0.0f) {
-                    arm->extend_progress = 0.0f;
-                    arm->state = components::TetherDockingArm::ArmState::Retracted;
-                    arm->tethered_ship_id.clear();
-                    arm->crew_transfer_enabled = false;
-                    arm->station_shield_active = true;
-                }
-                break;
-
-            default:
-                break;
-        }
+        default:
+            break;
     }
 }
 
@@ -68,10 +63,7 @@ bool TetherDockingSystem::createArm(const std::string& arm_id,
 
 bool TetherDockingSystem::beginTether(const std::string& arm_id,
                                        const std::string& ship_id) {
-    auto* entity = world_->getEntity(arm_id);
-    if (!entity) return false;
-
-    auto* arm = entity->getComponent<components::TetherDockingArm>();
+    auto* arm = getComponentFor(arm_id);
     if (!arm) return false;
     if (arm->isOccupied()) return false;
     if (arm->state != components::TetherDockingArm::ArmState::Retracted) return false;
@@ -84,10 +76,7 @@ bool TetherDockingSystem::beginTether(const std::string& arm_id,
 }
 
 bool TetherDockingSystem::beginUndock(const std::string& arm_id) {
-    auto* entity = world_->getEntity(arm_id);
-    if (!entity) return false;
-
-    auto* arm = entity->getComponent<components::TetherDockingArm>();
+    auto* arm = getComponentFor(arm_id);
     if (!arm) return false;
     if (!arm->isOccupied()) return false;
     if (arm->state != components::TetherDockingArm::ArmState::Locked) return false;
@@ -102,53 +91,33 @@ bool TetherDockingSystem::beginUndock(const std::string& arm_id) {
 // ---------------------------------------------------------------------------
 
 bool TetherDockingSystem::isCrewTransferEnabled(const std::string& arm_id) const {
-    auto* entity = world_->getEntity(arm_id);
-    if (!entity) return false;
-
-    auto* arm = entity->getComponent<components::TetherDockingArm>();
+    const auto* arm = getComponentFor(arm_id);
     if (!arm) return false;
-
     return arm->crew_transfer_enabled;
 }
 
 components::TetherDockingArm::ArmState
 TetherDockingSystem::getArmState(const std::string& arm_id) const {
-    auto* entity = world_->getEntity(arm_id);
-    if (!entity) return components::TetherDockingArm::ArmState::Retracted;
-
-    auto* arm = entity->getComponent<components::TetherDockingArm>();
+    const auto* arm = getComponentFor(arm_id);
     if (!arm) return components::TetherDockingArm::ArmState::Retracted;
-
     return arm->state;
 }
 
 std::string TetherDockingSystem::getTetheredShip(const std::string& arm_id) const {
-    auto* entity = world_->getEntity(arm_id);
-    if (!entity) return "";
-
-    auto* arm = entity->getComponent<components::TetherDockingArm>();
+    const auto* arm = getComponentFor(arm_id);
     if (!arm) return "";
-
     return arm->tethered_ship_id;
 }
 
 bool TetherDockingSystem::isOccupied(const std::string& arm_id) const {
-    auto* entity = world_->getEntity(arm_id);
-    if (!entity) return false;
-
-    auto* arm = entity->getComponent<components::TetherDockingArm>();
+    const auto* arm = getComponentFor(arm_id);
     if (!arm) return false;
-
     return arm->isOccupied();
 }
 
 float TetherDockingSystem::getExtendProgress(const std::string& arm_id) const {
-    auto* entity = world_->getEntity(arm_id);
-    if (!entity) return 0.0f;
-
-    auto* arm = entity->getComponent<components::TetherDockingArm>();
+    const auto* arm = getComponentFor(arm_id);
     if (!arm) return 0.0f;
-
     return arm->extend_progress;
 }
 

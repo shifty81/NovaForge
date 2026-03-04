@@ -1,7 +1,6 @@
 #include "systems/clone_bay_system.h"
 #include "ecs/world.h"
 #include "ecs/entity.h"
-#include "components/fps_components.h"
 #include <algorithm>
 
 namespace atlas {
@@ -45,9 +44,9 @@ int countImplantsInClone(const CB* bay, const std::string& clone_id) {
 } // anonymous namespace
 
 CloneBaySystem::CloneBaySystem(ecs::World* world)
-    : System(world) {}
+    : SingleComponentSystem(world) {}
 
-void CloneBaySystem::update(float /*delta_time*/) {
+void CloneBaySystem::updateComponent(ecs::Entity& /*entity*/, components::CloneBay& /*bay*/, float /*delta_time*/) {
     // No per-tick logic needed
 }
 
@@ -64,9 +63,7 @@ bool CloneBaySystem::initialize(const std::string& entity_id,
 
 bool CloneBaySystem::addClone(const std::string& entity_id,
     const std::string& clone_id, int grade) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
     if (static_cast<int>(bay->clones.size()) >= bay->max_clones) return false;
     if (findClone(bay, clone_id)) return false;
@@ -84,9 +81,7 @@ bool CloneBaySystem::addClone(const std::string& entity_id,
 
 bool CloneBaySystem::removeClone(const std::string& entity_id,
     const std::string& clone_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     auto it = std::remove_if(bay->clones.begin(), bay->clones.end(),
@@ -98,9 +93,7 @@ bool CloneBaySystem::removeClone(const std::string& entity_id,
 
 bool CloneBaySystem::activateClone(const std::string& entity_id,
     const std::string& clone_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     auto* target = findClone(bay, clone_id);
@@ -118,9 +111,7 @@ bool CloneBaySystem::activateClone(const std::string& entity_id,
 bool CloneBaySystem::installImplant(const std::string& entity_id,
     const std::string& implant_id, int slot, const std::string& attribute,
     float bonus, const std::string& clone_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
     if (static_cast<int>(bay->implants.size()) >= bay->max_implants) return false;
     if (findImplant(bay, implant_id)) return false;
@@ -142,9 +133,7 @@ bool CloneBaySystem::installImplant(const std::string& entity_id,
 
 bool CloneBaySystem::removeImplant(const std::string& entity_id,
     const std::string& implant_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return false;
 
     auto it = std::remove_if(bay->implants.begin(), bay->implants.end(),
@@ -155,9 +144,7 @@ bool CloneBaySystem::removeImplant(const std::string& entity_id,
 }
 
 float CloneBaySystem::processDeath(const std::string& entity_id, float skill_points) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    auto* bay = getComponentFor(entity_id);
     if (!bay) return 0.0f;
 
     bay->total_deaths++;
@@ -177,9 +164,7 @@ float CloneBaySystem::processDeath(const std::string& entity_id, float skill_poi
 }
 
 int CloneBaySystem::getActiveClone(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    const auto* bay = getComponentFor(entity_id);
     if (!bay) return 0;
 
     for (const auto& c : bay->clones) {
@@ -189,31 +174,23 @@ int CloneBaySystem::getActiveClone(const std::string& entity_id) const {
 }
 
 int CloneBaySystem::getCloneCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    const auto* bay = getComponentFor(entity_id);
     return bay ? static_cast<int>(bay->clones.size()) : 0;
 }
 
 int CloneBaySystem::getImplantCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    const auto* bay = getComponentFor(entity_id);
     return bay ? static_cast<int>(bay->implants.size()) : 0;
 }
 
 int CloneBaySystem::getTotalDeaths(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    const auto* bay = getComponentFor(entity_id);
     return bay ? bay->total_deaths : 0;
 }
 
 float CloneBaySystem::getSkillPointsAtRisk(const std::string& entity_id,
     float skill_points) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* bay = entity->getComponent<components::CloneBay>();
+    const auto* bay = getComponentFor(entity_id);
     if (!bay) return 0.0f;
 
     float sp_limit = 0.0f;

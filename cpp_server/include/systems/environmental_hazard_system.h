@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ENVIRONMENTAL_HAZARD_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ENVIRONMENTAL_HAZARD_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -23,12 +23,11 @@ namespace systems {
  * Characters with an empty current_room_id are treated as not in
  * any room and will not be affected.
  */
-class EnvironmentalHazardSystem : public ecs::System {
+class EnvironmentalHazardSystem : public ecs::SingleComponentSystem<components::EnvironmentalHazard> {
 public:
     explicit EnvironmentalHazardSystem(ecs::World* world);
     ~EnvironmentalHazardSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "EnvironmentalHazardSystem"; }
 
     // --- Setup ---
@@ -72,6 +71,9 @@ public:
 
     static std::string hazardTypeName(int type);
     static std::string severityName(int sev);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::EnvironmentalHazard& hazard, float delta_time) override;
 
 private:
     float getDPSForSeverity(int severity) const;

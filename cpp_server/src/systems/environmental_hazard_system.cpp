@@ -5,56 +5,53 @@ namespace atlas {
 namespace systems {
 
 EnvironmentalHazardSystem::EnvironmentalHazardSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void EnvironmentalHazardSystem::update(float delta_time) {
-    for (auto* entity : world_->getEntities<components::EnvironmentalHazard>()) {
-        auto* hazard = entity->getComponent<components::EnvironmentalHazard>();
-        if (!hazard || !hazard->is_active) continue;
+void EnvironmentalHazardSystem::updateComponent(ecs::Entity& /*entity*/, components::EnvironmentalHazard& hazard, float delta_time) {
+    if (!hazard.is_active) return;
 
-        // Advance spread timer
-        if (!hazard->is_spreading) {
-            hazard->spread_timer += delta_time;
-            if (hazard->spread_timer >= hazard->spread_interval) {
-                hazard->is_spreading = true;
-            }
+    // Advance spread timer
+    if (!hazard.is_spreading) {
+        hazard.spread_timer += delta_time;
+        if (hazard.spread_timer >= hazard.spread_interval) {
+            hazard.is_spreading = true;
         }
+    }
 
-        // Advance repair
-        if (hazard->is_being_repaired) {
-            hazard->repair_progress += hazard->repair_rate * delta_time;
-            if (hazard->repair_progress >= 1.0f) {
-                hazard->repair_progress = 1.0f;
-                hazard->is_active = false;
-                hazard->is_being_repaired = false;
-                hazard->is_spreading = false;
-            }
+    // Advance repair
+    if (hazard.is_being_repaired) {
+        hazard.repair_progress += hazard.repair_rate * delta_time;
+        if (hazard.repair_progress >= 1.0f) {
+            hazard.repair_progress = 1.0f;
+            hazard.is_active = false;
+            hazard.is_being_repaired = false;
+            hazard.is_spreading = false;
         }
+    }
 
-        // Apply damage to FPS characters in the same room.
-        // Characters are matched by interior_id AND current_room_id so
-        // that only those physically present in the hazard's room take
-        // damage.  Characters without a current_room_id are unaffected.
-        for (auto* charEntity : world_->getEntities<components::FPSCharacterState>()) {
-            auto* cs = charEntity->getComponent<components::FPSCharacterState>();
-            if (!cs || cs->interior_id != hazard->interior_id) continue;
-            if (cs->current_room_id.empty() || cs->current_room_id != hazard->room_id) continue;
+    // Apply damage to FPS characters in the same room.
+    // Characters are matched by interior_id AND current_room_id so
+    // that only those physically present in the hazard's room take
+    // damage.  Characters without a current_room_id are unaffected.
+    for (auto* charEntity : world_->getEntities<components::FPSCharacterState>()) {
+        auto* cs = charEntity->getComponent<components::FPSCharacterState>();
+        if (!cs || cs->interior_id != hazard.interior_id) continue;
+        if (cs->current_room_id.empty() || cs->current_room_id != hazard.room_id) continue;
 
-            auto* health = charEntity->getComponent<components::FPSHealth>();
-            if (health && health->is_alive) {
-                float dmg = hazard->damage_per_second * delta_time;
-                if (health->shield > 0.0f) {
-                    float absorbed = std::min(health->shield, dmg);
-                    health->shield -= absorbed;
-                    dmg -= absorbed;
-                }
-                if (dmg > 0.0f) {
-                    health->health -= dmg;
-                    if (health->health <= 0.0f) {
-                        health->health = 0.0f;
-                        health->is_alive = false;
-                    }
+        auto* health = charEntity->getComponent<components::FPSHealth>();
+        if (health && health->is_alive) {
+            float dmg = hazard.damage_per_second * delta_time;
+            if (health->shield > 0.0f) {
+                float absorbed = std::min(health->shield, dmg);
+                health->shield -= absorbed;
+                dmg -= absorbed;
+            }
+            if (dmg > 0.0f) {
+                health->health -= dmg;
+                if (health->health <= 0.0f) {
+                    health->health = 0.0f;
+                    health->is_alive = false;
                 }
             }
         }
@@ -93,11 +90,9 @@ bool EnvironmentalHazardSystem::createHazard(
 }
 
 bool EnvironmentalHazardSystem::removeHazard(const std::string& hazard_id) {
-    auto* entity = world_->getEntity(hazard_id);
-    if (!entity) return false;
-    auto* hazard = entity->getComponent<components::EnvironmentalHazard>();
-    if (!hazard) return false;
-    hazard->is_active = false;
+    auto* h = getComponentFor(hazard_id);
+    if (!h) return false;
+    h->is_active = false;
     return true;
 }
 
@@ -146,18 +141,14 @@ float EnvironmentalHazardSystem::getRoomDPS(const std::string& room_id) const {
 // ---------------------------------------------------------------------------
 
 bool EnvironmentalHazardSystem::startRepair(const std::string& hazard_id) {
-    auto* entity = world_->getEntity(hazard_id);
-    if (!entity) return false;
-    auto* h = entity->getComponent<components::EnvironmentalHazard>();
+    auto* h = getComponentFor(hazard_id);
     if (!h || !h->is_active) return false;
     h->is_being_repaired = true;
     return true;
 }
 
 bool EnvironmentalHazardSystem::stopRepair(const std::string& hazard_id) {
-    auto* entity = world_->getEntity(hazard_id);
-    if (!entity) return false;
-    auto* h = entity->getComponent<components::EnvironmentalHazard>();
+    auto* h = getComponentFor(hazard_id);
     if (!h) return false;
     h->is_being_repaired = false;
     return true;
@@ -165,9 +156,7 @@ bool EnvironmentalHazardSystem::stopRepair(const std::string& hazard_id) {
 
 float EnvironmentalHazardSystem::getRepairProgress(
         const std::string& hazard_id) const {
-    auto* entity = world_->getEntity(hazard_id);
-    if (!entity) return 0.0f;
-    auto* h = entity->getComponent<components::EnvironmentalHazard>();
+    const auto* h = getComponentFor(hazard_id);
     if (!h) return 0.0f;
     return h->repair_progress;
 }
