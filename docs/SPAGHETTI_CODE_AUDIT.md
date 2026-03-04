@@ -202,9 +202,9 @@ All 6349 tests passing. Total migrated: 34 systems.
 |------|--------|--------|
 | 2.1 | Create `SingleComponentSystem<C>` template base | ✅ Complete |
 | 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
-| 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | 📋 Planned |
+| 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | ✅ Complete |
 | 2.4 | Migrate 20–30 simplest systems to template bases | ✅ Complete (28 of ~30 done) |
-| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (34 total, batch 1 done) |
+| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (44 total, batch 2 done) |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
 
@@ -307,8 +307,8 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | Average system boilerplate (lines) | ~80 (🔧 2 systems migrated) | ~20 |
 | GameSession forward declarations | 15+ | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
-| Template base classes | 2 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`) | 3 |
-| Systems migrated to templates | 34 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`, `Skill`, `FleetMorale`, `FleetCargo`, `AsteroidBelt`, `FleetChatter`, `Anomaly`) | 164 |
+| Template base classes | 3 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`, `RechargeSystem<C>`) | 3 |
+| Systems migrated to templates | 44 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`, `Skill`, `FleetMorale`, `FleetCargo`, `AsteroidBelt`, `FleetChatter`, `Anomaly`, `Autopilot`, `CargoScan`, `PvPToggle`, `ShipCapabilityRating`, `Bounty`, `StationNews`, `RigLocker`, `RoverBayRamp`, `RoverInterior`, `StationHangar`) | 164 |
 
 ---
 
@@ -330,4 +330,6 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Phase 2 step 2.4 (continued) completed: March 4, 2026 — WreckPersistenceSystem, TetherDockingSystem, CloneBaySystem, PlanetaryTraversalSystem, VisualRigSystem, EnvironmentalHazardSystem migrated (22 total)*
 *Phase 2 step 2.4 (continued) completed: March 4, 2026 — InsuranceSystem, WreckSalvageSystem, MiningSystem, ManufacturingSystem, ResearchSystem, PISystem migrated (28 total)*
 *Phase 2 step 2.5 (batch 1) completed: March 4, 2026 — SkillSystem, FleetMoraleSystem, FleetCargoSystem, AsteroidBeltSystem, FleetChatterSystem, AnomalySystem migrated (34 total)*
+*Phase 2 step 2.3 completed: March 4, 2026 — RechargeSystem<C> template created with 6 tests; 6415 assertions passing*
+*Phase 2 step 2.5 (batch 2) completed: March 4, 2026 — AutopilotSystem, CargoScanSystem, PvPToggleSystem, ShipCapabilityRatingSystem, BountySystem, StationNewsSystem, RigLockerSystem, RoverBayRampSystem, RoverInteriorSystem, StationHangarSystem migrated (44 total)*
 *Next review: After Phase 2 (system template bases) completion*
