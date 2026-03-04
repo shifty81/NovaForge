@@ -8,28 +8,22 @@ namespace atlas {
 namespace systems {
 
 VisualRigSystem::VisualRigSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void VisualRigSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::VisualRigState>();
-    for (auto* entity : entities) {
-        auto* visual = entity->getComponent<components::VisualRigState>();
-        if (!visual) continue;
+void VisualRigSystem::updateComponent(ecs::Entity& entity, components::VisualRigState& visual, float /*delta_time*/) {
+    // Auto-update visual state from RigLoadout if present
+    auto* loadout = entity.getComponent<components::RigLoadout>();
+    if (loadout) {
+        // Calculate total bulk from loadout stats
+        float bulk = 1.0f;
+        bulk += loadout->total_cargo / 500.0f;  // cargo adds bulk
+        bulk += loadout->total_shield / 50.0f;  // shields add bulk
+        bulk += loadout->jetpack_fuel / 100.0f; // jetpack tanks add bulk
+        visual.total_bulk = std::min(3.0f, bulk);
 
-        // Auto-update visual state from RigLoadout if present
-        auto* loadout = entity->getComponent<components::RigLoadout>();
-        if (loadout) {
-            // Calculate total bulk from loadout stats
-            float bulk = 1.0f;
-            bulk += loadout->total_cargo / 500.0f;  // cargo adds bulk
-            bulk += loadout->total_shield / 50.0f;  // shields add bulk
-            bulk += loadout->jetpack_fuel / 100.0f; // jetpack tanks add bulk
-            visual->total_bulk = std::min(3.0f, bulk);
-
-            // Glow intensity from power
-            visual->glow_intensity = std::min(1.0f, loadout->total_power / 100.0f);
-        }
+        // Glow intensity from power
+        visual.glow_intensity = std::min(1.0f, loadout->total_power / 100.0f);
     }
 }
 
@@ -64,12 +58,10 @@ bool VisualRigSystem::removeVisualState(const std::string& entity_id) {
 }
 
 bool VisualRigSystem::updateFromLoadout(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
 
+    auto* entity = world_->getEntity(entity_id);
     auto* loadout = entity->getComponent<components::RigLoadout>();
     if (!loadout) return false;
 
@@ -155,154 +147,94 @@ bool VisualRigSystem::updateFromLoadout(const std::string& entity_id) {
 }
 
 std::string VisualRigSystem::getThrusterConfig(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return "unknown";
-
     return components::VisualRigState::thrusterConfigToString(visual->thruster_config);
 }
 
 bool VisualRigSystem::setThrusterScale(const std::string& entity_id, float scale) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     visual->thruster_scale = std::max(0.1f, std::min(3.0f, scale));
     return true;
 }
 
 float VisualRigSystem::getThrusterScale(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 1.0f;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return 1.0f;
-
     return visual->thruster_scale;
 }
 
 std::string VisualRigSystem::getCargoSize(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return "unknown";
-
     return components::VisualRigState::cargoSizeToString(visual->cargo_size);
 }
 
 bool VisualRigSystem::setCargoScale(const std::string& entity_id, float scale) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     visual->cargo_scale = std::max(0.1f, std::min(3.0f, scale));
     return true;
 }
 
 float VisualRigSystem::getCargoScale(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 1.0f;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return 1.0f;
-
     return visual->cargo_scale;
 }
 
 bool VisualRigSystem::hasShieldEmitter(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     return visual->has_shield_emitter;
 }
 
 bool VisualRigSystem::hasAntenna(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     return visual->has_antenna;
 }
 
 bool VisualRigSystem::hasSolarPanels(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     return visual->has_solar_panels;
 }
 
 bool VisualRigSystem::hasDroneBay(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     return visual->has_drone_bay;
 }
 
 int VisualRigSystem::getWeaponMountCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return 0;
-
     return visual->weapon_mount_count;
 }
 
 int VisualRigSystem::getToolMountCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return 0;
-
     return visual->tool_mount_count;
 }
 
 float VisualRigSystem::getTotalBulk(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 1.0f;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return 1.0f;
-
     return visual->total_bulk;
 }
 
 float VisualRigSystem::getGlowIntensity(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return 0.0f;
-
     return visual->glow_intensity;
 }
 
 bool VisualRigSystem::setGlowIntensity(const std::string& entity_id, float intensity) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     visual->glow_intensity = std::max(0.0f, std::min(1.0f, intensity));
     return true;
 }
@@ -310,45 +242,29 @@ bool VisualRigSystem::setGlowIntensity(const std::string& entity_id, float inten
 bool VisualRigSystem::setColors(const std::string& entity_id,
                                  const std::string& primary,
                                  const std::string& secondary) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     visual->primary_color = primary;
     visual->secondary_color = secondary;
     return true;
 }
 
 std::string VisualRigSystem::getPrimaryColor(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return "";
-
     return visual->primary_color;
 }
 
 std::string VisualRigSystem::getSecondaryColor(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return "";
-
     return visual->secondary_color;
 }
 
 bool VisualRigSystem::addTrinket(const std::string& entity_id,
                                   const std::string& trinket_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     if (!visual->canAddTrinket()) return false;
 
     // Check for duplicate
@@ -363,10 +279,7 @@ bool VisualRigSystem::addTrinket(const std::string& entity_id,
 
 bool VisualRigSystem::removeTrinket(const std::string& entity_id,
                                      const std::string& trinket_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
 
     auto it = std::find(visual->trinket_ids.begin(), visual->trinket_ids.end(), trinket_id);
@@ -377,22 +290,14 @@ bool VisualRigSystem::removeTrinket(const std::string& entity_id,
 }
 
 int VisualRigSystem::getTrinketCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return 0;
-
     return static_cast<int>(visual->trinket_ids.size());
 }
 
 bool VisualRigSystem::canAddTrinket(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* visual = entity->getComponent<components::VisualRigState>();
+    const auto* visual = getComponentFor(entity_id);
     if (!visual) return false;
-
     return visual->canAddTrinket();
 }
 

@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_PLANETARY_TRAVERSAL_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_PLANETARY_TRAVERSAL_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages surface movement across planetary terrain with vehicle support,
  * terrain speed modifiers, and waypoint-based navigation.
  */
-class PlanetaryTraversalSystem : public ecs::System {
+class PlanetaryTraversalSystem : public ecs::SingleComponentSystem<components::PlanetaryTraversal> {
 public:
     explicit PlanetaryTraversalSystem(ecs::World* world);
     ~PlanetaryTraversalSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "PlanetaryTraversalSystem"; }
 
     // Initialization
@@ -46,6 +45,9 @@ public:
     bool isTraversing(const std::string& entity_id) const;
     float getDistanceToDestination(const std::string& entity_id) const;
     std::string getTerrainTypeStr(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::PlanetaryTraversal& trav, float delta_time) override;
 };
 
 } // namespace systems

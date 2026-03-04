@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_TETHER_DOCKING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_TETHER_DOCKING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -25,12 +25,11 @@ namespace systems {
  *
  * While tethered the ship receives station shield protection.
  */
-class TetherDockingSystem : public ecs::System {
+class TetherDockingSystem : public ecs::SingleComponentSystem<components::TetherDockingArm> {
 public:
     explicit TetherDockingSystem(ecs::World* world);
     ~TetherDockingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "TetherDockingSystem"; }
 
     /**
@@ -80,6 +79,9 @@ public:
      * @brief Get the extend progress (0.0 = retracted, 1.0 = fully extended)
      */
     float getExtendProgress(const std::string& arm_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::TetherDockingArm& arm, float delta_time) override;
 };
 
 } // namespace systems

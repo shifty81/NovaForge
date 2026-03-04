@@ -8,47 +8,41 @@ namespace atlas {
 namespace systems {
 
 PlanetaryTraversalSystem::PlanetaryTraversalSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void PlanetaryTraversalSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::PlanetaryTraversal>();
-    for (auto* entity : entities) {
-        auto* trav = entity->getComponent<components::PlanetaryTraversal>();
-        if (!trav) continue;
+void PlanetaryTraversalSystem::updateComponent(ecs::Entity& /*entity*/, components::PlanetaryTraversal& trav, float delta_time) {
+    if (trav.has_destination && trav.is_traversing) {
+        float dx = trav.destination_x - trav.position_x;
+        float dy = trav.destination_y - trav.position_y;
+        float dist = std::sqrt(dx * dx + dy * dy);
 
-        if (trav->has_destination && trav->is_traversing) {
-            float dx = trav->destination_x - trav->position_x;
-            float dy = trav->destination_y - trav->position_y;
-            float dist = std::sqrt(dx * dx + dy * dy);
+        if (dist <= 1.0f) {
+            // Arrived at destination
+            trav.position_x = trav.destination_x;
+            trav.position_y = trav.destination_y;
+            trav.is_traversing = false;
+            trav.has_destination = false;
+            trav.speed = 0.0f;
+        } else {
+            // Move toward destination
+            float effective_speed = trav.max_speed * trav.terrain_speed_modifier;
+            float move_dist = effective_speed * delta_time;
+            trav.speed = effective_speed;
 
-            if (dist <= 1.0f) {
-                // Arrived at destination
-                trav->position_x = trav->destination_x;
-                trav->position_y = trav->destination_y;
-                trav->is_traversing = false;
-                trav->has_destination = false;
-                trav->speed = 0.0f;
+            if (move_dist >= dist) {
+                trav.position_x = trav.destination_x;
+                trav.position_y = trav.destination_y;
+                trav.distance_traveled += dist;
+                trav.is_traversing = false;
+                trav.has_destination = false;
+                trav.speed = 0.0f;
             } else {
-                // Move toward destination
-                float effective_speed = trav->max_speed * trav->terrain_speed_modifier;
-                float move_dist = effective_speed * delta_time;
-                trav->speed = effective_speed;
-
-                if (move_dist >= dist) {
-                    trav->position_x = trav->destination_x;
-                    trav->position_y = trav->destination_y;
-                    trav->distance_traveled += dist;
-                    trav->is_traversing = false;
-                    trav->has_destination = false;
-                    trav->speed = 0.0f;
-                } else {
-                    float nx = dx / dist;
-                    float ny = dy / dist;
-                    trav->position_x += nx * move_dist;
-                    trav->position_y += ny * move_dist;
-                    trav->distance_traveled += move_dist;
-                }
+                float nx = dx / dist;
+                float ny = dy / dist;
+                trav.position_x += nx * move_dist;
+                trav.position_y += ny * move_dist;
+                trav.distance_traveled += move_dist;
             }
         }
     }
@@ -84,10 +78,7 @@ bool PlanetaryTraversalSystem::removeTraversal(const std::string& entity_id) {
 
 bool PlanetaryTraversalSystem::setDestination(const std::string& entity_id,
                                                float dest_x, float dest_y) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    auto* trav = getComponentFor(entity_id);
     if (!trav) return false;
 
     trav->destination_x = dest_x;
@@ -98,10 +89,7 @@ bool PlanetaryTraversalSystem::setDestination(const std::string& entity_id,
 }
 
 bool PlanetaryTraversalSystem::clearDestination(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    auto* trav = getComponentFor(entity_id);
     if (!trav) return false;
 
     trav->has_destination = false;
@@ -113,10 +101,7 @@ bool PlanetaryTraversalSystem::clearDestination(const std::string& entity_id) {
 bool PlanetaryTraversalSystem::setVehicle(const std::string& entity_id,
                                            const std::string& vehicle_id,
                                            float max_speed) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    auto* trav = getComponentFor(entity_id);
     if (!trav) return false;
 
     trav->vehicle_id = vehicle_id;
@@ -125,10 +110,7 @@ bool PlanetaryTraversalSystem::setVehicle(const std::string& entity_id,
 }
 
 bool PlanetaryTraversalSystem::dismountVehicle(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    auto* trav = getComponentFor(entity_id);
     if (!trav) return false;
 
     trav->vehicle_id.clear();
@@ -138,10 +120,7 @@ bool PlanetaryTraversalSystem::dismountVehicle(const std::string& entity_id) {
 
 bool PlanetaryTraversalSystem::setTerrainType(const std::string& entity_id,
                                                components::PlanetaryTraversal::TerrainType type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    auto* trav = getComponentFor(entity_id);
     if (!trav) return false;
 
     trav->terrain = type;
@@ -150,60 +129,37 @@ bool PlanetaryTraversalSystem::setTerrainType(const std::string& entity_id,
 }
 
 float PlanetaryTraversalSystem::getPositionX(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    const auto* trav = getComponentFor(entity_id);
     if (!trav) return 0.0f;
-
     return trav->position_x;
 }
 
 float PlanetaryTraversalSystem::getPositionY(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    const auto* trav = getComponentFor(entity_id);
     if (!trav) return 0.0f;
-
     return trav->position_y;
 }
 
 float PlanetaryTraversalSystem::getSpeed(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    const auto* trav = getComponentFor(entity_id);
     if (!trav) return 0.0f;
-
     return trav->speed;
 }
 
 float PlanetaryTraversalSystem::getDistanceTraveled(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    const auto* trav = getComponentFor(entity_id);
     if (!trav) return 0.0f;
-
     return trav->distance_traveled;
 }
 
 bool PlanetaryTraversalSystem::isTraversing(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    const auto* trav = getComponentFor(entity_id);
     if (!trav) return false;
-
     return trav->is_traversing;
 }
 
 float PlanetaryTraversalSystem::getDistanceToDestination(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    const auto* trav = getComponentFor(entity_id);
     if (!trav) return 0.0f;
 
     if (!trav->has_destination) return 0.0f;
@@ -214,12 +170,8 @@ float PlanetaryTraversalSystem::getDistanceToDestination(const std::string& enti
 }
 
 std::string PlanetaryTraversalSystem::getTerrainTypeStr(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* trav = entity->getComponent<components::PlanetaryTraversal>();
+    const auto* trav = getComponentFor(entity_id);
     if (!trav) return "unknown";
-
     return components::PlanetaryTraversal::terrainTypeToString(trav->terrain);
 }
 
