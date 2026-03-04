@@ -91,14 +91,15 @@ Nova Forge/
 │   └── world/              #   World layouts (cube-sphere, voxel grid)
 │
 ├── editor/                 # ★ Atlas Editor (will move to Atlas repo)
-│   ├── ui/                 #   Docking, layout, panel system
+│   ├── ui/                 #   Docking, layout, panel system, keybinds, undo
 │   ├── panels/             #   ECS Inspector, Net Inspector, Console
-│   ├── tools/              #   Game Packager, Asset Cooker
+│   ├── tools/              #   17 editor panels (Viewport, PCG, Ship, etc.)
 │   └── ai/                 #   AI Aggregator for asset generation
 │
-├── atlas_tests/            # ★ Atlas Engine unit tests
+├── atlas_tests/            # ★ Atlas Engine unit tests (374+ assertions)
 │
 ├── cpp_client/             # Nova Forge game client (stays here)
+│   └── include/editor/     #   32 header-only editor tools + core interfaces
 ├── cpp_server/             # Nova Forge game server (stays here)
 ├── data/                   # Game data — moddable JSON (stays here)
 ├── docs/                   # Documentation (stays here)
@@ -141,6 +142,32 @@ make build
 | `BUILD_ATLAS_TESTS` | `ON` | Build and register Atlas Engine tests |
 | `BUILD_CLIENT` | `ON` | Build the Nova Forge game client |
 | `BUILD_SERVER` | `ON` | Build the Nova Forge game server |
+| `NOVAFORGE_EDITOR_TOOLS` | `OFF` | Embed editor tool layer in game client (F12 toggle) |
+
+## Embedded Editor Tools (EditorToolLayer)
+
+The **EditorToolLayer** embeds all editor panels as a toggleable overlay
+inside the game client. Press **F12** to activate; press again to hide.
+For release builds, set `NOVAFORGE_EDITOR_TOOLS=OFF` to compile out all
+editor code — zero overhead in the shipping binary.
+
+The tool infrastructure includes:
+
+| Component | Purpose |
+|-----------|---------|
+| **ITool** | Base interface for editor tools (Activate / Deactivate / Update) |
+| **EditorCommandBus** | Decoupled FIFO command queue for fire-and-forget actions |
+| **UndoableCommandBus** | Command bus with full undo/redo support |
+| **EditorEventBus** | Publish/subscribe event system for editor notifications |
+| **DeltaEditStore** | Records and persists property edits across PCG regeneration |
+| **SceneBookmarkManager** | Save/restore camera and scene state checkpoints |
+| **LayerTagSystem** | Entity categorization and visibility filtering |
+
+32 header-only tools are implemented in `cpp_client/include/editor/` covering
+animation editing, physics tuning, IK rigging, material/shader editing,
+PCG snapshot/rollback, NPC spawning, batch operations, and more.
+
+**→ [Full Editor Tools Reference](EDITOR_TOOLS.md)** · [Design Document](design/editor_tool_layer.md)
 
 ## Atlas Engine Design Principles
 
@@ -207,8 +234,10 @@ Once the split is complete, this will be replaced with a git submodule or CMake 
 
 - [Atlas Engine README](https://github.com/shifty81/Atlas/blob/main/README.md)
 - [Atlas Development Roadmap](https://github.com/shifty81/Atlas/blob/main/docs/09_DEVELOPMENT_ROADMAP.md)
-- [Atlas Future Plans](https://github.com/shifty81/EVEOFFLINE/commit/033f2f8e222e7bfa0f853123ed902c23d98c307a) — Detailed design discussion covering WorldGraph APIs, API cleanup, editor tools, and documentation tracks
 - [Atlas Contributing Guide](https://github.com/shifty81/Atlas/blob/main/CONTRIBUTING.md)
-- [Nova Forge Roadmap](docs/ROADMAP.md)
-- [Nova Forge Modding Guide](docs/MODDING_GUIDE.md)
-- [Nova Forge Development Guidance](docs/DEVELOPMENT_GUIDANCE.md)
+- [Editor Tools Reference](EDITOR_TOOLS.md) — Full developer reference for the 32+ editor tools
+- [Editor Tool Layer Design](design/editor_tool_layer.md) — Architecture and lifecycle
+- [Extended Tooling Features](design/extended_tooling_features.md) — Feature categories and workflows
+- [Nova Forge Roadmap](ROADMAP.md)
+- [Nova Forge Modding Guide](MODDING_GUIDE.md)
+- [Nova Forge Development Guidance](DEVELOPMENT_GUIDANCE.md)

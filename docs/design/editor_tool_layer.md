@@ -130,7 +130,10 @@ Title Screen (6 pages) → "Enter Hangar" clicked
 - [Master Test Solar System](test_solar_system.md) — Developer-only PCG
   sandbox for canonical asset editing and procedural generation tuning.
 
-## Future Work (from editornewfeat.md)
+## Future Work
+
+These enhancements are tracked in the
+[Extended Tooling Features](extended_tooling_features.md) document.
 
 ### Phase 1 — Tool Extensions
 - Multi-selection & group editing
