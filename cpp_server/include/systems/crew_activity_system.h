@@ -1,8 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_CREW_ACTIVITY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CREW_ACTIVITY_SYSTEM_H
 
-#include "ecs/system.h"
-#include "ecs/entity.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -16,14 +15,17 @@ namespace systems {
  * Crew members transition between activities: Working, Walking, Resting,
  * Eating, Repairing, Manning based on fatigue, hunger, and ship damage.
  */
-class CrewActivitySystem : public ecs::System {
+class CrewActivitySystem : public ecs::SingleComponentSystem<components::CrewActivity> {
 public:
     explicit CrewActivitySystem(ecs::World* world);
     ~CrewActivitySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CrewActivitySystem"; }
 
+protected:
+    void updateComponent(ecs::Entity& entity, components::CrewActivity& crew, float delta_time) override;
+
+public:
     // --- API ---
     void assignRoom(const std::string& crew_entity_id, const std::string& room_id);
     void setShipDamaged(const std::string& crew_entity_id, bool damaged);
