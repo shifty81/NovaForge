@@ -8,74 +8,68 @@ namespace atlas {
 namespace systems {
 
 HangarEnvironmentSystem::HangarEnvironmentSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void HangarEnvironmentSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::HangarEnvironment>();
-    for (auto* entity : entities) {
-        auto* env = entity->getComponent<components::HangarEnvironment>();
-        if (!env) continue;
+void HangarEnvironmentSystem::updateComponent(ecs::Entity& entity, components::HangarEnvironment& comp, float delta_time) {
+    using AT = components::HangarEnvironment::AtmosphereType;
 
-        using AT = components::HangarEnvironment::AtmosphereType;
+    if (comp.is_hangar_open) {
+        comp.total_exposure_time += delta_time;
 
-        if (env->is_hangar_open) {
-            env->total_exposure_time += delta_time;
+        // Mix external atmosphere based on type
+        switch (comp.atmosphere_type) {
+            case AT::Toxic:
+                comp.current_toxicity += comp.atmosphere_mix_rate * delta_time;
+                comp.current_toxicity = std::min(1.0f, comp.current_toxicity);
+                break;
+            case AT::Corrosive:
+                comp.current_corrosion += comp.atmosphere_mix_rate * delta_time;
+                comp.current_corrosion = std::min(1.0f, comp.current_corrosion);
+                break;
+            case AT::Extreme:
+                comp.current_toxicity += comp.atmosphere_mix_rate * delta_time;
+                comp.current_toxicity = std::min(1.0f, comp.current_toxicity);
+                comp.current_corrosion += comp.atmosphere_mix_rate * delta_time;
+                comp.current_corrosion = std::min(1.0f, comp.current_corrosion);
+                break;
+            case AT::None:
+                // Rapid depressurization
+                comp.internal_pressure -= comp.atmosphere_mix_rate * delta_time * 2.0f;
+                comp.internal_pressure = std::max(0.0f, comp.internal_pressure);
+                break;
+            case AT::Breathable:
+            default:
+                break;
+        }
 
-            // Mix external atmosphere based on type
-            switch (env->atmosphere_type) {
-                case AT::Toxic:
-                    env->current_toxicity += env->atmosphere_mix_rate * delta_time;
-                    env->current_toxicity = std::min(1.0f, env->current_toxicity);
-                    break;
-                case AT::Corrosive:
-                    env->current_corrosion += env->atmosphere_mix_rate * delta_time;
-                    env->current_corrosion = std::min(1.0f, env->current_corrosion);
-                    break;
-                case AT::Extreme:
-                    env->current_toxicity += env->atmosphere_mix_rate * delta_time;
-                    env->current_toxicity = std::min(1.0f, env->current_toxicity);
-                    env->current_corrosion += env->atmosphere_mix_rate * delta_time;
-                    env->current_corrosion = std::min(1.0f, env->current_corrosion);
-                    break;
-                case AT::None:
-                    // Rapid depressurization
-                    env->internal_pressure -= env->atmosphere_mix_rate * delta_time * 2.0f;
-                    env->internal_pressure = std::max(0.0f, env->internal_pressure);
-                    break;
-                case AT::Breathable:
-                default:
-                    break;
-            }
+        // Temperature shifts toward external
+        float temp_diff = comp.external_temperature - comp.internal_temperature;
+        comp.internal_temperature += temp_diff * comp.atmosphere_mix_rate * delta_time * 0.5f;
 
-            // Temperature shifts toward external
-            float temp_diff = env->external_temperature - env->internal_temperature;
-            env->internal_temperature += temp_diff * env->atmosphere_mix_rate * delta_time * 0.5f;
+        // Alarm activates when toxicity > 0.3 or corrosion > 0.3
+        comp.is_alarm_active = (comp.current_toxicity > 0.3f || comp.current_corrosion > 0.3f);
 
-            // Alarm activates when toxicity > 0.3 or corrosion > 0.3
-            env->is_alarm_active = (env->current_toxicity > 0.3f || env->current_corrosion > 0.3f);
+    } else {
+        // Recovery when closed
+        float recovery_rate = 0.05f;
 
-        } else {
-            // Recovery when closed
-            float recovery_rate = 0.05f;
+        comp.current_toxicity = std::max(0.0f, comp.current_toxicity - recovery_rate * delta_time);
+        comp.current_corrosion = std::max(0.0f, comp.current_corrosion - recovery_rate * delta_time);
 
-            env->current_toxicity = std::max(0.0f, env->current_toxicity - recovery_rate * delta_time);
-            env->current_corrosion = std::max(0.0f, env->current_corrosion - recovery_rate * delta_time);
+        // Temperature returns toward 22.0
+        float temp_diff = 22.0f - comp.internal_temperature;
+        comp.internal_temperature += temp_diff * recovery_rate * delta_time;
 
-            // Temperature returns toward 22.0
-            float temp_diff = 22.0f - env->internal_temperature;
-            env->internal_temperature += temp_diff * recovery_rate * delta_time;
+        // Pressure recovery
+        if (comp.internal_pressure < 1.0f) {
+            comp.internal_pressure += recovery_rate * delta_time;
+            comp.internal_pressure = std::min(1.0f, comp.internal_pressure);
+        }
 
-            // Pressure recovery
-            if (env->internal_pressure < 1.0f) {
-                env->internal_pressure += recovery_rate * delta_time;
-                env->internal_pressure = std::min(1.0f, env->internal_pressure);
-            }
-
-            // Alarm deactivates when toxicity < 0.1 and corrosion < 0.1
-            if (env->current_toxicity < 0.1f && env->current_corrosion < 0.1f) {
-                env->is_alarm_active = false;
-            }
+        // Alarm deactivates when toxicity < 0.1 and corrosion < 0.1
+        if (comp.current_toxicity < 0.1f && comp.current_corrosion < 0.1f) {
+            comp.is_alarm_active = false;
         }
     }
 }
@@ -100,10 +94,7 @@ bool HangarEnvironmentSystem::initializeEnvironment(
 }
 
 bool HangarEnvironmentSystem::openHangar(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    auto* env = getComponentFor(entity_id);
     if (!env) return false;
 
     env->is_hangar_open = true;
@@ -111,10 +102,7 @@ bool HangarEnvironmentSystem::openHangar(const std::string& entity_id) {
 }
 
 bool HangarEnvironmentSystem::closeHangar(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    auto* env = getComponentFor(entity_id);
     if (!env) return false;
 
     env->is_hangar_open = false;
@@ -124,10 +112,7 @@ bool HangarEnvironmentSystem::closeHangar(const std::string& entity_id) {
 bool HangarEnvironmentSystem::addOccupant(const std::string& entity_id,
                                            const std::string& occupant_id,
                                            bool has_suit, float suit_rating) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    auto* env = getComponentFor(entity_id);
     if (!env) return false;
 
     // Check not already present
@@ -145,10 +130,7 @@ bool HangarEnvironmentSystem::addOccupant(const std::string& entity_id,
 
 bool HangarEnvironmentSystem::removeOccupant(const std::string& entity_id,
                                               const std::string& occupant_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    auto* env = getComponentFor(entity_id);
     if (!env) return false;
 
     for (auto it = env->occupants.begin(); it != env->occupants.end(); ++it) {
@@ -162,10 +144,7 @@ bool HangarEnvironmentSystem::removeOccupant(const std::string& entity_id,
 
 bool HangarEnvironmentSystem::setAtmosphere(const std::string& entity_id,
                                              components::HangarEnvironment::AtmosphereType atmosphere_type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    auto* env = getComponentFor(entity_id);
     if (!env) return false;
 
     env->atmosphere_type = atmosphere_type;
@@ -174,10 +153,7 @@ bool HangarEnvironmentSystem::setAtmosphere(const std::string& entity_id,
 
 float HangarEnvironmentSystem::getOccupantDamage(const std::string& entity_id,
                                                    const std::string& occupant_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    const auto* env = getComponentFor(entity_id);
     if (!env) return 0.0f;
 
     for (const auto& o : env->occupants) {
@@ -194,30 +170,21 @@ float HangarEnvironmentSystem::getOccupantDamage(const std::string& entity_id,
 }
 
 float HangarEnvironmentSystem::getToxicity(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    const auto* env = getComponentFor(entity_id);
     if (!env) return 0.0f;
 
     return env->current_toxicity;
 }
 
 bool HangarEnvironmentSystem::isAlarmActive(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    const auto* env = getComponentFor(entity_id);
     if (!env) return false;
 
     return env->is_alarm_active;
 }
 
 int HangarEnvironmentSystem::getOccupantCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* env = entity->getComponent<components::HangarEnvironment>();
+    const auto* env = getComponentFor(entity_id);
     if (!env) return 0;
 
     return static_cast<int>(env->occupants.size());

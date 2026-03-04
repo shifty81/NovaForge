@@ -1,18 +1,18 @@
 #ifndef NOVAFORGE_SYSTEMS_EMOTIONAL_ARC_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_EMOTIONAL_ARC_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
 namespace systems {
 
-class EmotionalArcSystem : public ecs::System {
+class EmotionalArcSystem : public ecs::SingleComponentSystem<components::EmotionalState> {
 public:
     explicit EmotionalArcSystem(ecs::World* world);
     ~EmotionalArcSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "EmotionalArcSystem"; }
 
     void onCombatVictory(const std::string& entity_id);
@@ -25,6 +25,9 @@ public:
     float getTrust(const std::string& entity_id) const;
     float getFatigue(const std::string& entity_id) const;
     float getHope(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::EmotionalState& comp, float delta_time) override;
 };
 
 } // namespace systems

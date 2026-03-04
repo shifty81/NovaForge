@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_CREW_TRAINING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CREW_TRAINING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/crew_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages trainee enrollment, skill progress advancement, completion
  * tracking, and XP bonus multipliers for training rate.
  */
-class CrewTrainingSystem : public ecs::System {
+class CrewTrainingSystem : public ecs::SingleComponentSystem<components::CrewTraining> {
 public:
     explicit CrewTrainingSystem(ecs::World* world);
     ~CrewTrainingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CrewTrainingSystem"; }
 
     bool initializeTraining(const std::string& entity_id);
@@ -32,6 +32,9 @@ public:
     bool setXpBonus(const std::string& entity_id, float bonus);
     float getXpBonus(const std::string& entity_id) const;
     std::string getSkillName(const std::string& entity_id, const std::string& trainee_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CrewTraining& comp, float delta_time) override;
 };
 
 } // namespace systems
