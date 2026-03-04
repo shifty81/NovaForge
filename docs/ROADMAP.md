@@ -41,7 +41,8 @@ If it fails any one → it doesn't ship.
 | **Networking** | TCP Client/Server, Interpolation, Delta Compression, Snapshot Replication | ✅ Complete |
 | **Rendering** | OpenGL, Deferred Pipeline, Shadow Mapping, Post-Processing | ✅ Complete |
 | **Atlas UI** | Widgets, Panels, Docking (DockNode tree), Photon Dark Theme | ✅ Complete |
-| **Atlas Editor** | 16+ Panels, PCG Tools, Dock Layout, Debug Console | ✅ Complete |
+| **Atlas Editor** | 17 Panels, PCG Tools, Dock Layout, Debug Console | ✅ Complete |
+| **Editor Tool Layer** | 32 ITool implementations, EditorCommandBus, UndoableCommandBus, DeltaEditStore | ✅ Complete |
 | **Ship HUD** | Control Ring (shield/armor/hull arcs), Capacitor Bar, Module Rack, Target Brackets | ✅ Complete |
 | **PCG Ship Generation** | Spine-based Hulls, Turrets, Faction Shape Language, Procedural Materials | ✅ Complete |
 | **PCG Content** | Stations, Interiors, Characters, Galaxy Generation | ✅ Complete |
@@ -115,6 +116,7 @@ If it fails any one → it doesn't ship.
 | **Engine Baseline** | ✅ Done | ECS, rendering, audio, physics, networking, UI framework |
 | **All Server Systems** | ✅ Done | 6300+ test assertions passing across 80+ ECS systems |
 | **Atlas Engine Modules** | ✅ Done | 915 engine test assertions (input, camera, audio, animation, plugin) |
+| **Editor Tool Layer** | ✅ Done | 32 tools, 17 panels, EditorCommandBus, UndoableCommandBus, DeltaEditStore, 374+ test assertions |
 | **Vertical Slice** | In Progress | One star system fully playable end-to-end |
 | **Alpha** | TBD | 2–4 players, smooth networking, core gameplay loop |
 | **Beta** | TBD | 8+ players, full UI, content variety, performance targets met |

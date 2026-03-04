@@ -114,26 +114,27 @@ cmake --build . --config Release
 NovaForge/
 ├── engine/                # ★ Atlas Engine — generic, game-agnostic core
 │   ├── core/              #   Engine bootstrap, logging, config
-│   ├── ecs/               #   Entity/Component/System framework
+│   ├── ecs/               #   Entity/Component/System framework + DeltaEditStore
 │   ├── graphvm/           #   Deterministic Graph VM + compiler
 │   ├── assets/            #   Asset registry, binary format, hot reload
 │   ├── net/               #   Networking (CS + P2P + lockstep/rollback)
 │   ├── sim/               #   Tick scheduler, deterministic simulation
 │   └── world/             #   World layouts (cube-sphere, voxel grid)
 ├── editor/                # ★ Atlas Editor — authoring tool
-│   ├── ui/                #   Docking, layout, panel system
+│   ├── ui/                #   Docking, layout, keybinds, undo stack
 │   ├── panels/            #   ECS Inspector, Net Inspector, Console
-│   ├── tools/             #   Game Packager, Asset Cooker
+│   ├── tools/             #   17 editor panels (Viewport, PCG, Ship, etc.)
 │   └── ai/                #   AI Aggregator for asset generation
-├── atlas_tests/           # Atlas Engine unit tests
+├── atlas_tests/           # Atlas Engine unit tests (374+ assertions)
 ├── cpp_client/            # C++ OpenGL game client
 │   ├── src/               #   Source (core, rendering, network, ui, audio)
 │   ├── include/           #   Headers
-│   │   └── ui/atlas/      #   ★ Atlas UI framework headers
+│   │   ├── ui/atlas/      #   ★ Atlas UI framework headers
+│   │   └── editor/        #   ★ 32 editor tools + EditorToolLayer (F12 toggle)
 │   ├── shaders/           #   GLSL shaders
 │   └── assets/            #   Models, textures
 ├── cpp_server/            # C++ dedicated game server
-│   ├── src/               #   Server source (ECS, network, systems)
+│   ├── src/               #   Server source (ECS, network, systems, PCG)
 │   └── config/            #   Server configuration
 ├── data/                  # Game data — fully moddable JSON
 │   ├── ships/             #   102+ ship definitions
@@ -149,12 +150,13 @@ NovaForge/
 ├── assets/                # Raw reference models & archives (.blend, .zip)
 ├── docs/                  # Documentation
 │   ├── ATLAS_INTEGRATION.md # ★ Atlas Engine integration guide
+│   ├── EDITOR_TOOLS.md    #   ★ Editor tool layer reference (32 tools)
 │   ├── atlas-ui/          #   ★ Atlas UI framework docs
+│   ├── design/            #   System design documents
 │   ├── guides/            #   Build & setup guides
 │   ├── images/            #   Concept art & project images
 │   ├── screenshots/       #   Development screenshots
-│   ├── notes/             #   Design notes & chat logs
-│   └── ...                #   Design, features, development notes
+│   └── archive/           #   Historical session logs & phase records
 ├── tools/                 # Utilities (ship creator, JSON validator, Blender addon)
 │   └── BlenderSpaceshipGenerator/  # AtlasForge Generator — procedural ship/station/asteroid generation
 ├── archive/               # Legacy code & deprecated files
@@ -355,10 +357,11 @@ See the [Modding Guide](docs/MODDING_GUIDE.md) for details.
 | **Get Started** | [Tutorial](docs/TUTORIAL.md) · [Build Guides](docs/guides/) |
 | **Atlas Engine** | [Integration Guide](docs/ATLAS_INTEGRATION.md) · [Atlas Repo](https://github.com/shifty81/Atlas) |
 | **Atlas UI** | [Atlas UI Docs](docs/atlas-ui/README.md) · [Widget Reference](docs/atlas-ui/WIDGETS.md) |
-| **Development** | [Roadmap](docs/ROADMAP.md) · [Contributing](docs/CONTRIBUTING.md) |
+| **Editor Tools** | [Editor Tools Reference](docs/EDITOR_TOOLS.md) · [Tool Layer Design](docs/design/editor_tool_layer.md) · [Extended Features](docs/design/extended_tooling_features.md) |
+| **Development** | [Roadmap](docs/ROADMAP.md) · [Contributing](docs/CONTRIBUTING.md) · [Coding Guidelines](docs/CODING_GUIDELINES.md) |
 | **Design** | [Design Bible](docs/design/MASTER_DESIGN_BIBLE.md) · [Game Design](docs/design/DESIGN.md) · [Ship Modeling](docs/SHIP_MODELING.md) |
-| **Systems** | [Procedural Pipeline](docs/design/PROCEDURAL_SYSTEMS.md) · [Vehicles & Equipment](docs/design/VEHICLES_AND_EQUIPMENT.md) · [Salvage & Legends](docs/design/SALVAGE_AND_LEGENDS.md) |
-| **Technical** | [C++ Client](docs/cpp_client/) · [Networking](docs/cpp_client/) |
+| **Systems** | [Procedural Pipeline](docs/design/PROCEDURAL_SYSTEMS.md) · [PCG Framework](docs/design/pcg_framework.md) · [Vehicles & Equipment](docs/design/VEHICLES_AND_EQUIPMENT.md) |
+| **Technical** | [C++ Client](docs/cpp_client/) · [Spaghetti Code Audit](docs/SPAGHETTI_CODE_AUDIT.md) · [Refactoring Plan](docs/REFACTORING_PLAN.md) |
 
 ---
 
