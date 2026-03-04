@@ -8,87 +8,81 @@ namespace atlas {
 namespace systems {
 
 EVAAirlockSystem::EVAAirlockSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void EVAAirlockSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::EVAAirlockState>();
-    for (auto* entity : entities) {
-        auto* state = entity->getComponent<components::EVAAirlockState>();
-        if (!state) continue;
+void EVAAirlockSystem::updateComponent(ecs::Entity& /*entity*/, components::EVAAirlockState& state, float delta_time) {
+    using P = components::EVAAirlockState::Phase;
+    int phase = state.phase;
 
-        using P = components::EVAAirlockState::Phase;
-        int phase = state->phase;
+    // Idle or EVAActive or Complete — no progression needed
+    if (phase == static_cast<int>(P::Idle) ||
+        phase == static_cast<int>(P::EVAActive) ||
+        phase == static_cast<int>(P::Complete)) {
+        return;
+    }
 
-        // Idle or EVAActive or Complete — no progression needed
-        if (phase == static_cast<int>(P::Idle) ||
-            phase == static_cast<int>(P::EVAActive) ||
-            phase == static_cast<int>(P::Complete)) {
-            continue;
+    // Handle abort
+    if (state.abort_requested) {
+        // Can abort up to and including Depressurize (before outer door opens)
+        if (phase <= static_cast<int>(P::Depressurize)) {
+            state.phase = static_cast<int>(P::Idle);
+            state.phase_progress = 0.0f;
+            state.chamber_pressure = 1.0f;
+            state.inner_door_open = false;
+            state.outer_door_open = false;
+            state.player_id.clear();
+            state.abort_requested = false;
+            return;
         }
+        state.abort_requested = false;  // Can't abort after outer door open
+    }
 
-        // Handle abort
-        if (state->abort_requested) {
-            // Can abort up to and including Depressurize (before outer door opens)
-            if (phase <= static_cast<int>(P::Depressurize)) {
-                state->phase = static_cast<int>(P::Idle);
-                state->phase_progress = 0.0f;
-                state->chamber_pressure = 1.0f;
-                state->inner_door_open = false;
-                state->outer_door_open = false;
-                state->player_id.clear();
-                state->abort_requested = false;
-                continue;
-            }
-            state->abort_requested = false;  // Can't abort after outer door open
-        }
+    // Advance phase progress
+    float duration = std::max(0.01f, state.phase_duration);
+    state.phase_progress += delta_time / duration;
 
-        // Advance phase progress
-        float duration = std::max(0.01f, state->phase_duration);
-        state->phase_progress += delta_time / duration;
+    if (state.phase_progress < 1.0f) {
+        // Update pressure interpolation during depressurize/repressurize
+        if (phase == static_cast<int>(P::Depressurize)) {
+            state.chamber_pressure = 1.0f - state.phase_progress;
+        } else if (phase == static_cast<int>(P::Repressurize)) {
+            state.chamber_pressure = state.phase_progress;
+        }
+        return;
+    }
 
-        if (state->phase_progress < 1.0f) {
-            // Update pressure interpolation during depressurize/repressurize
-            if (phase == static_cast<int>(P::Depressurize)) {
-                state->chamber_pressure = 1.0f - state->phase_progress;
-            } else if (phase == static_cast<int>(P::Repressurize)) {
-                state->chamber_pressure = state->phase_progress;
-            }
-            continue;
-        }
+    // Phase complete — advance to next
+    state.phase_progress = 0.0f;
 
-        // Phase complete — advance to next
-        state->phase_progress = 0.0f;
-
-        if (phase == static_cast<int>(P::EnterChamber)) {
-            state->inner_door_open = false;
-            state->phase = static_cast<int>(P::InnerSeal);
-        }
-        else if (phase == static_cast<int>(P::InnerSeal)) {
-            state->phase = static_cast<int>(P::Depressurize);
-        }
-        else if (phase == static_cast<int>(P::Depressurize)) {
-            state->chamber_pressure = 0.0f;
-            state->outer_door_open = true;
-            state->phase = static_cast<int>(P::OuterOpen);
-        }
-        else if (phase == static_cast<int>(P::OuterOpen)) {
-            state->phase = static_cast<int>(P::EVAActive);
-        }
-        // Re-entry phases
-        else if (phase == static_cast<int>(P::OuterSeal)) {
-            state->outer_door_open = false;
-            state->phase = static_cast<int>(P::Repressurize);
-        }
-        else if (phase == static_cast<int>(P::Repressurize)) {
-            state->chamber_pressure = 1.0f;
-            state->inner_door_open = true;
-            state->phase = static_cast<int>(P::InnerOpen);
-        }
-        else if (phase == static_cast<int>(P::InnerOpen)) {
-            state->phase = static_cast<int>(P::Complete);
-            state->inner_door_open = false;
-        }
+    if (phase == static_cast<int>(P::EnterChamber)) {
+        state.inner_door_open = false;
+        state.phase = static_cast<int>(P::InnerSeal);
+    }
+    else if (phase == static_cast<int>(P::InnerSeal)) {
+        state.phase = static_cast<int>(P::Depressurize);
+    }
+    else if (phase == static_cast<int>(P::Depressurize)) {
+        state.chamber_pressure = 0.0f;
+        state.outer_door_open = true;
+        state.phase = static_cast<int>(P::OuterOpen);
+    }
+    else if (phase == static_cast<int>(P::OuterOpen)) {
+        state.phase = static_cast<int>(P::EVAActive);
+    }
+    // Re-entry phases
+    else if (phase == static_cast<int>(P::OuterSeal)) {
+        state.outer_door_open = false;
+        state.phase = static_cast<int>(P::Repressurize);
+    }
+    else if (phase == static_cast<int>(P::Repressurize)) {
+        state.chamber_pressure = 1.0f;
+        state.inner_door_open = true;
+        state.phase = static_cast<int>(P::InnerOpen);
+    }
+    else if (phase == static_cast<int>(P::InnerOpen)) {
+        state.phase = static_cast<int>(P::Complete);
+        state.inner_door_open = false;
     }
 }
 
@@ -111,95 +105,81 @@ bool EVAAirlockSystem::createAirlock(const std::string& airlock_id,
 bool EVAAirlockSystem::beginEVA(const std::string& airlock_id,
                                  const std::string& player_id,
                                  float suit_oxygen) {
-    auto* entity = world_->getEntity(airlock_id);
-    if (!entity) return false;
-    auto* state = entity->getComponent<components::EVAAirlockState>();
-    if (!state) return false;
+    auto* st = getComponentFor(airlock_id);
+    if (!st) return false;
 
     using P = components::EVAAirlockState::Phase;
 
     // Must be idle
-    if (state->phase != static_cast<int>(P::Idle)) return false;
+    if (st->phase != static_cast<int>(P::Idle)) return false;
 
     // Check suit oxygen
-    if (suit_oxygen < state->min_suit_oxygen) {
-        state->suit_check_passed = false;
+    if (suit_oxygen < st->min_suit_oxygen) {
+        st->suit_check_passed = false;
         return false;
     }
 
-    state->suit_check_passed = true;
-    state->player_id = player_id;
-    state->inner_door_open = true;
-    state->phase = static_cast<int>(P::EnterChamber);
-    state->phase_progress = 0.0f;
-    state->abort_requested = false;
+    st->suit_check_passed = true;
+    st->player_id = player_id;
+    st->inner_door_open = true;
+    st->phase = static_cast<int>(P::EnterChamber);
+    st->phase_progress = 0.0f;
+    st->abort_requested = false;
     return true;
 }
 
 bool EVAAirlockSystem::beginReentry(const std::string& airlock_id,
                                      const std::string& player_id) {
-    auto* entity = world_->getEntity(airlock_id);
-    if (!entity) return false;
-    auto* state = entity->getComponent<components::EVAAirlockState>();
-    if (!state) return false;
+    auto* st = getComponentFor(airlock_id);
+    if (!st) return false;
 
     using P = components::EVAAirlockState::Phase;
 
     // Must be in EVA
-    if (state->phase != static_cast<int>(P::EVAActive)) return false;
+    if (st->phase != static_cast<int>(P::EVAActive)) return false;
     // Must be the same player
-    if (state->player_id != player_id) return false;
+    if (st->player_id != player_id) return false;
 
-    state->phase = static_cast<int>(P::OuterSeal);
-    state->phase_progress = 0.0f;
+    st->phase = static_cast<int>(P::OuterSeal);
+    st->phase_progress = 0.0f;
     return true;
 }
 
 bool EVAAirlockSystem::abortSequence(const std::string& airlock_id) {
-    auto* entity = world_->getEntity(airlock_id);
-    if (!entity) return false;
-    auto* state = entity->getComponent<components::EVAAirlockState>();
-    if (!state) return false;
+    auto* st = getComponentFor(airlock_id);
+    if (!st) return false;
 
     using P = components::EVAAirlockState::Phase;
 
     // Can only abort during pre-EVA phases
-    if (state->phase == static_cast<int>(P::Idle) ||
-        state->phase >= static_cast<int>(P::EVAActive)) {
+    if (st->phase == static_cast<int>(P::Idle) ||
+        st->phase >= static_cast<int>(P::EVAActive)) {
         return false;
     }
 
-    state->abort_requested = true;
+    st->abort_requested = true;
     return true;
 }
 
 int EVAAirlockSystem::getPhase(const std::string& airlock_id) const {
-    auto* entity = world_->getEntity(airlock_id);
-    if (!entity) return -1;
-    auto* state = entity->getComponent<components::EVAAirlockState>();
-    return state ? state->phase : -1;
+    const auto* st = getComponentFor(airlock_id);
+    return st ? st->phase : -1;
 }
 
 float EVAAirlockSystem::getPhaseProgress(const std::string& airlock_id) const {
-    auto* entity = world_->getEntity(airlock_id);
-    if (!entity) return 0.0f;
-    auto* state = entity->getComponent<components::EVAAirlockState>();
-    return state ? state->phase_progress : 0.0f;
+    const auto* st = getComponentFor(airlock_id);
+    return st ? st->phase_progress : 0.0f;
 }
 
 float EVAAirlockSystem::getChamberPressure(const std::string& airlock_id) const {
-    auto* entity = world_->getEntity(airlock_id);
-    if (!entity) return 0.0f;
-    auto* state = entity->getComponent<components::EVAAirlockState>();
-    return state ? state->chamber_pressure : 0.0f;
+    const auto* st = getComponentFor(airlock_id);
+    return st ? st->chamber_pressure : 0.0f;
 }
 
 bool EVAAirlockSystem::isInEVA(const std::string& airlock_id) const {
-    auto* entity = world_->getEntity(airlock_id);
-    if (!entity) return false;
-    auto* state = entity->getComponent<components::EVAAirlockState>();
-    if (!state) return false;
-    return state->phase == static_cast<int>(components::EVAAirlockState::Phase::EVAActive);
+    const auto* st = getComponentFor(airlock_id);
+    if (!st) return false;
+    return st->phase == static_cast<int>(components::EVAAirlockState::Phase::EVAActive);
 }
 
 std::string EVAAirlockSystem::phaseName(int phase) {

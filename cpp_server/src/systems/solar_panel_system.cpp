@@ -8,41 +8,35 @@ namespace atlas {
 namespace systems {
 
 SolarPanelSystem::SolarPanelSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void SolarPanelSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::SolarPanel>();
-    for (auto* entity : entities) {
-        auto* panel = entity->getComponent<components::SolarPanel>();
-        if (!panel) continue;
-
-        if (panel->is_deployed) {
-            // Advance day cycle
-            panel->day_cycle_position += panel->day_cycle_speed * delta_time;
-            if (panel->day_cycle_position >= 1.0f) {
-                panel->day_cycle_position -= 1.0f;
-            }
-
-            // Calculate energy output
-            float sunlight = panel->getSunlightFactor();
-            panel->total_energy_output = panel->panel_count * panel->energy_per_panel
-                * panel->panel_efficiency * panel->maintenance_level * sunlight;
-
-            // Degrade efficiency
-            panel->panel_efficiency -= panel->degradation_rate * delta_time;
-            if (panel->panel_efficiency < 0.0f) {
-                panel->panel_efficiency = 0.0f;
-            }
-
-            // Store energy
-            panel->energy_stored += panel->total_energy_output * delta_time;
-            if (panel->energy_stored > panel->max_energy_storage) {
-                panel->energy_stored = panel->max_energy_storage;
-            }
-        } else {
-            panel->total_energy_output = 0.0f;
+void SolarPanelSystem::updateComponent(ecs::Entity& /*entity*/, components::SolarPanel& panel, float delta_time) {
+    if (panel.is_deployed) {
+        // Advance day cycle
+        panel.day_cycle_position += panel.day_cycle_speed * delta_time;
+        if (panel.day_cycle_position >= 1.0f) {
+            panel.day_cycle_position -= 1.0f;
         }
+
+        // Calculate energy output
+        float sunlight = panel.getSunlightFactor();
+        panel.total_energy_output = panel.panel_count * panel.energy_per_panel
+            * panel.panel_efficiency * panel.maintenance_level * sunlight;
+
+        // Degrade efficiency
+        panel.panel_efficiency -= panel.degradation_rate * delta_time;
+        if (panel.panel_efficiency < 0.0f) {
+            panel.panel_efficiency = 0.0f;
+        }
+
+        // Store energy
+        panel.energy_stored += panel.total_energy_output * delta_time;
+        if (panel.energy_stored > panel.max_energy_storage) {
+            panel.energy_stored = panel.max_energy_storage;
+        }
+    } else {
+        panel.total_energy_output = 0.0f;
     }
 }
 
@@ -74,10 +68,7 @@ bool SolarPanelSystem::removePanels(const std::string& entity_id) {
 }
 
 bool SolarPanelSystem::deployPanels(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->is_deployed = true;
@@ -85,10 +76,7 @@ bool SolarPanelSystem::deployPanels(const std::string& entity_id) {
 }
 
 bool SolarPanelSystem::retractPanels(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->is_deployed = false;
@@ -97,10 +85,7 @@ bool SolarPanelSystem::retractPanels(const std::string& entity_id) {
 }
 
 bool SolarPanelSystem::addPanel(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     if (panel->panel_count >= panel->max_panels) return false;
@@ -110,10 +95,7 @@ bool SolarPanelSystem::addPanel(const std::string& entity_id) {
 }
 
 bool SolarPanelSystem::removePanel(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     if (panel->panel_count <= 0) return false;
@@ -123,10 +105,7 @@ bool SolarPanelSystem::removePanel(const std::string& entity_id) {
 }
 
 bool SolarPanelSystem::setDayCyclePosition(const std::string& entity_id, float position) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->day_cycle_position = std::max(0.0f, std::min(1.0f, position));
@@ -134,10 +113,7 @@ bool SolarPanelSystem::setDayCyclePosition(const std::string& entity_id, float p
 }
 
 bool SolarPanelSystem::performMaintenance(const std::string& entity_id, float amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->panel_efficiency += amount;
@@ -148,60 +124,42 @@ bool SolarPanelSystem::performMaintenance(const std::string& entity_id, float am
 }
 
 float SolarPanelSystem::getEnergyOutput(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return 0.0f;
 
     return panel->total_energy_output;
 }
 
 float SolarPanelSystem::getEnergyStored(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return 0.0f;
 
     return panel->energy_stored;
 }
 
 int SolarPanelSystem::getPanelCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return 0;
 
     return panel->panel_count;
 }
 
 float SolarPanelSystem::getEfficiency(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return 0.0f;
 
     return panel->panel_efficiency;
 }
 
 bool SolarPanelSystem::isDeployed(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     return panel->is_deployed;
 }
 
 bool SolarPanelSystem::isDaytime(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::SolarPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     return panel->getSunlightFactor() > 0.0f;

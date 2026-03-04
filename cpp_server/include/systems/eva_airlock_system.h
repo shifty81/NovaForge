@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_EVA_AIRLOCK_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_EVA_AIRLOCK_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -16,12 +16,11 @@ namespace systems {
  * inner seal → depressurize → outer open → EVA, and the reverse
  * for re-entry. Checks suit oxygen before allowing EVA.
  */
-class EVAAirlockSystem : public ecs::System {
+class EVAAirlockSystem : public ecs::SingleComponentSystem<components::EVAAirlockState> {
 public:
     explicit EVAAirlockSystem(ecs::World* world);
     ~EVAAirlockSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "EVAAirlockSystem"; }
 
     /**
@@ -75,6 +74,9 @@ public:
      * @brief Get the name of an EVA phase
      */
     static std::string phaseName(int phase);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::EVAAirlockState& state, float delta_time) override;
 };
 
 } // namespace systems

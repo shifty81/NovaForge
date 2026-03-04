@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_INTERIOR_DOOR_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_INTERIOR_DOOR_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -16,12 +16,11 @@ namespace systems {
  * (access-restricted). Doors animate between open/closed states, support
  * locking/unlocking, and airlocks check pressure differential before opening.
  */
-class InteriorDoorSystem : public ecs::System {
+class InteriorDoorSystem : public ecs::SingleComponentSystem<components::InteriorDoor> {
 public:
     explicit InteriorDoorSystem(ecs::World* world);
     ~InteriorDoorSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "InteriorDoorSystem"; }
 
     /**
@@ -90,6 +89,9 @@ public:
      * @brief Get the name of a door type
      */
     static std::string typeName(int type);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::InteriorDoor& door, float delta_time) override;
 };
 
 } // namespace systems

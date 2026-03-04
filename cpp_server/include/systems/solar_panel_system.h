@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_SOLAR_PANEL_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SOLAR_PANEL_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages solar energy generation with day/night cycle, panel degradation,
  * maintenance, and energy storage in batteries.
  */
-class SolarPanelSystem : public ecs::System {
+class SolarPanelSystem : public ecs::SingleComponentSystem<components::SolarPanel> {
 public:
     explicit SolarPanelSystem(ecs::World* world);
     ~SolarPanelSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "SolarPanelSystem"; }
 
     // Initialization
@@ -45,6 +44,9 @@ public:
     float getEfficiency(const std::string& entity_id) const;
     bool isDeployed(const std::string& entity_id) const;
     bool isDaytime(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::SolarPanel& panel, float delta_time) override;
 };
 
 } // namespace systems
