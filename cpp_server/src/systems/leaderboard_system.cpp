@@ -8,20 +8,17 @@ namespace atlas {
 namespace systems {
 
 LeaderboardSystem::LeaderboardSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void LeaderboardSystem::update(float /*delta_time*/) {
+void LeaderboardSystem::updateComponent(ecs::Entity& /*entity*/, components::Leaderboard& /*board*/, float /*delta_time*/) {
     // Leaderboard updates are event-driven via record* methods
 }
 
 int LeaderboardSystem::findOrCreateEntry(const std::string& entity_id,
                                           const std::string& player_id,
                                           const std::string& player_name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return -1;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return -1;
 
     for (int i = 0; i < static_cast<int>(board->entries.size()); ++i) {
@@ -41,8 +38,7 @@ void LeaderboardSystem::recordKill(const std::string& entity_id,
     int idx = findOrCreateEntry(entity_id, player_id, player_name);
     if (idx < 0) return;
 
-    auto* entity = world_->getEntity(entity_id);
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     board->entries[idx].total_kills++;
 }
 
@@ -53,8 +49,7 @@ void LeaderboardSystem::recordIskEarned(const std::string& entity_id,
     int idx = findOrCreateEntry(entity_id, player_id, player_name);
     if (idx < 0) return;
 
-    auto* entity = world_->getEntity(entity_id);
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     board->entries[idx].total_isk_earned += amount;
 }
 
@@ -64,8 +59,7 @@ void LeaderboardSystem::recordMissionComplete(const std::string& entity_id,
     int idx = findOrCreateEntry(entity_id, player_id, player_name);
     if (idx < 0) return;
 
-    auto* entity = world_->getEntity(entity_id);
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     board->entries[idx].missions_completed++;
 }
 
@@ -75,8 +69,7 @@ void LeaderboardSystem::recordTournamentWin(const std::string& entity_id,
     int idx = findOrCreateEntry(entity_id, player_id, player_name);
     if (idx < 0) return;
 
-    auto* entity = world_->getEntity(entity_id);
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     board->entries[idx].tournaments_won++;
 }
 
@@ -87,17 +80,13 @@ void LeaderboardSystem::recordDamageDealt(const std::string& entity_id,
     int idx = findOrCreateEntry(entity_id, player_id, player_name);
     if (idx < 0) return;
 
-    auto* entity = world_->getEntity(entity_id);
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     board->entries[idx].total_damage_dealt += amount;
 }
 
 int LeaderboardSystem::getPlayerKills(const std::string& entity_id,
                                        const std::string& player_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return 0;
 
     for (const auto& e : board->entries) {
@@ -108,10 +97,7 @@ int LeaderboardSystem::getPlayerKills(const std::string& entity_id,
 
 double LeaderboardSystem::getPlayerIskEarned(const std::string& entity_id,
                                               const std::string& player_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return 0.0;
 
     for (const auto& e : board->entries) {
@@ -122,10 +108,7 @@ double LeaderboardSystem::getPlayerIskEarned(const std::string& entity_id,
 
 int LeaderboardSystem::getPlayerMissions(const std::string& entity_id,
                                           const std::string& player_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return 0;
 
     for (const auto& e : board->entries) {
@@ -141,10 +124,7 @@ void LeaderboardSystem::defineAchievement(const std::string& entity_id,
                                            const std::string& category,
                                            const std::string& stat_key,
                                            int requirement) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return;
 
     components::Leaderboard::Achievement ach;
@@ -160,10 +140,7 @@ void LeaderboardSystem::defineAchievement(const std::string& entity_id,
 int LeaderboardSystem::checkAchievements(const std::string& entity_id,
                                           const std::string& player_id,
                                           float current_time) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return 0;
 
     // Find player entry
@@ -211,10 +188,7 @@ int LeaderboardSystem::checkAchievements(const std::string& entity_id,
 bool LeaderboardSystem::hasAchievement(const std::string& entity_id,
                                         const std::string& player_id,
                                         const std::string& achievement_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return false;
 
     for (const auto& u : board->unlocked) {
@@ -225,10 +199,7 @@ bool LeaderboardSystem::hasAchievement(const std::string& entity_id,
 
 int LeaderboardSystem::getPlayerAchievementCount(const std::string& entity_id,
                                                   const std::string& player_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return 0;
 
     int count = 0;
@@ -239,20 +210,14 @@ int LeaderboardSystem::getPlayerAchievementCount(const std::string& entity_id,
 }
 
 int LeaderboardSystem::getEntryCount(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return 0;
 
     return static_cast<int>(board->entries.size());
 }
 
 std::vector<std::string> LeaderboardSystem::getRankingByKills(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return {};
-
-    auto* board = entity->getComponent<components::Leaderboard>();
+    auto* board = getComponentFor(entity_id);
     if (!board) return {};
 
     // Copy entries, sort by kills descending

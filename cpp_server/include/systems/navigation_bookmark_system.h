@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_NAVIGATION_BOOKMARK_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_NAVIGATION_BOOKMARK_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/navigation_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Handles bookmark creation, removal, categorization, favorites,
  * and notes for saved navigation waypoints.
  */
-class NavigationBookmarkSystem : public ecs::System {
+class NavigationBookmarkSystem : public ecs::SingleComponentSystem<components::NavigationBookmark> {
 public:
     explicit NavigationBookmarkSystem(ecs::World* world);
     ~NavigationBookmarkSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "NavigationBookmarkSystem"; }
 
     bool initializeBookmarks(const std::string& entity_id);
@@ -35,6 +35,9 @@ public:
     int getFavoriteCount(const std::string& entity_id) const;
     int getCategoryCount(const std::string& entity_id, const std::string& category) const;
     std::string getLabel(const std::string& entity_id, const std::string& bookmark_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::NavigationBookmark& bookmark, float delta_time) override;
 };
 
 } // namespace systems

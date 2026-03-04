@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_CAPTAIN_MEMORY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CAPTAIN_MEMORY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * Other systems (chatter, morale, relationship) query memories to
  * drive contextual behaviour.
  */
-class CaptainMemorySystem : public ecs::System {
+class CaptainMemorySystem : public ecs::SingleComponentSystem<components::CaptainMemory> {
 public:
     explicit CaptainMemorySystem(ecs::World* world);
     ~CaptainMemorySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CaptainMemorySystem"; }
 
     /**
@@ -56,6 +56,9 @@ public:
      * @brief Get the most recent memory's event_type (or "")
      */
     std::string mostRecentEvent(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CaptainMemory& memory, float delta_time) override;
 };
 
 } // namespace systems

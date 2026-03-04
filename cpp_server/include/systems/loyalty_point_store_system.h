@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_LOYALTY_POINT_STORE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_LOYALTY_POINT_STORE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/economy_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages LP earning from missions, store inventory, and purchasing
  * unique faction items with LP and ISK costs.
  */
-class LoyaltyPointStoreSystem : public ecs::System {
+class LoyaltyPointStoreSystem : public ecs::SingleComponentSystem<components::LoyaltyPointStore> {
 public:
     explicit LoyaltyPointStoreSystem(ecs::World* world);
     ~LoyaltyPointStoreSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "LoyaltyPointStoreSystem"; }
 
     bool initialize(const std::string& entity_id, const std::string& store_id,
@@ -37,6 +37,9 @@ public:
     int getTotalPurchases(const std::string& entity_id) const;
     float getTotalISKCollected(const std::string& entity_id) const;
     int getItemsByCategory(const std::string& entity_id, const std::string& category) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::LoyaltyPointStore& store, float delta_time) override;
 };
 
 } // namespace systems

@@ -6,10 +6,10 @@ namespace atlas {
 namespace systems {
 
 FleetHistorySystem::FleetHistorySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetHistorySystem::update(float /*delta_time*/) {
+void FleetHistorySystem::updateComponent(ecs::Entity& /*entity*/, components::FleetHistory& /*history*/, float /*delta_time*/) {
     // History system is event-driven via recordEvent
 }
 
@@ -18,18 +18,14 @@ void FleetHistorySystem::recordEvent(const std::string& fleet_id,
                                       const std::string& desc,
                                       float timestamp,
                                       const std::string& entity_id) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return;
-    auto* history = entity->getComponent<components::FleetHistory>();
+    auto* history = getComponentFor(fleet_id);
     if (!history) return;
     history->addEvent(type, desc, timestamp, entity_id);
 }
 
 std::vector<components::FleetHistoryEntry>
 FleetHistorySystem::getHistory(const std::string& fleet_id, int count) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return {};
-    auto* history = entity->getComponent<components::FleetHistory>();
+    auto* history = getComponentFor(fleet_id);
     if (!history) return {};
 
     int n = std::min(count, static_cast<int>(history->events.size()));
@@ -38,9 +34,7 @@ FleetHistorySystem::getHistory(const std::string& fleet_id, int count) const {
 }
 
 int FleetHistorySystem::getEventCount(const std::string& fleet_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0;
-    auto* history = entity->getComponent<components::FleetHistory>();
+    auto* history = getComponentFor(fleet_id);
     if (!history) return 0;
     return static_cast<int>(history->events.size());
 }
@@ -48,9 +42,7 @@ int FleetHistorySystem::getEventCount(const std::string& fleet_id) const {
 std::vector<components::FleetHistoryEntry>
 FleetHistorySystem::getEventsByType(const std::string& fleet_id,
                                      const std::string& type) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return {};
-    auto* history = entity->getComponent<components::FleetHistory>();
+    auto* history = getComponentFor(fleet_id);
     if (!history) return {};
 
     std::vector<components::FleetHistoryEntry> result;

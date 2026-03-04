@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_DIFFICULTY_SCALING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_DIFFICULTY_SCALING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * this system recalculates the multipliers so that lower-security
  * systems have tougher NPCs but better rewards.
  */
-class DifficultyScalingSystem : public ecs::System {
+class DifficultyScalingSystem : public ecs::SingleComponentSystem<components::DifficultyZone> {
 public:
     explicit DifficultyScalingSystem(ecs::World* world);
     ~DifficultyScalingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "DifficultyScalingSystem"; }
 
     /**
@@ -68,6 +67,9 @@ public:
      * @brief Get the max NPC tier for a security level
      */
     static int maxTierFromSecurity(float security);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::DifficultyZone& zone, float delta_time) override;
 };
 
 } // namespace systems

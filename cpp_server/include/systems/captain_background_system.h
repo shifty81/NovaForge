@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_CAPTAIN_BACKGROUND_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CAPTAIN_BACKGROUND_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/fleet_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * personality modifiers, preferred fleet roles, skill bonuses, and
  * dialogue flavor. Supports deterministic generation from seed.
  */
-class CaptainBackgroundSystem : public ecs::System {
+class CaptainBackgroundSystem : public ecs::SingleComponentSystem<components::CaptainBackground> {
 public:
     explicit CaptainBackgroundSystem(ecs::World* world);
     ~CaptainBackgroundSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CaptainBackgroundSystem"; }
 
     // Commands
@@ -39,6 +38,9 @@ public:
     float getLoyaltyModifier(const std::string& entity_id) const;
     int getExperience(const std::string& entity_id) const;
     std::string getOriginSystem(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CaptainBackground& bg, float delta_time) override;
 
 private:
     void applyBackgroundDefaults(components::CaptainBackground* bg);

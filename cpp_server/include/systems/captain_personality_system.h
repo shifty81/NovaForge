@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_CAPTAIN_PERSONALITY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CAPTAIN_PERSONALITY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * optimism, professionalism) whose baseline values are influenced
  * by the captain's faction culture with a small random variation.
  */
-class CaptainPersonalitySystem : public ecs::System {
+class CaptainPersonalitySystem : public ecs::SingleComponentSystem<components::CaptainPersonality> {
 public:
     explicit CaptainPersonalitySystem(ecs::World* world);
     ~CaptainPersonalitySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CaptainPersonalitySystem"; }
 
     /**
@@ -61,6 +61,9 @@ public:
      * @return Faction name or empty string if not found
      */
     std::string getCaptainFaction(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CaptainPersonality& personality, float delta_time) override;
 };
 
 } // namespace systems
