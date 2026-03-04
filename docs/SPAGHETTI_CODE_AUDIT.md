@@ -150,6 +150,19 @@ Both systems eliminated the manual entity-query loop in `update()` and replaced 
 
 All 6349 tests passing (6340 original + 9 new).
 
+#### Step 2.4 (continued): Migrate 8 more systems to `SingleComponentSystem<C>` ✅
+
+- `RigSystem` → `SingleComponentSystem<components::RigLoadout>` (95 → 81 lines)
+- `SolarPanelSystem` → `SingleComponentSystem<components::SolarPanel>` (212 → 165 lines)
+- `ScanProbeSystem` → `SingleComponentSystem<components::ScanProbe>` (208 → 175 lines)
+- `FoodProcessorSystem` → `SingleComponentSystem<components::FoodProcessor>` (190 → 158 lines)
+- `FarmingDeckSystem` → `SingleComponentSystem<components::FarmingDeck>` (287 → 238 lines)
+- `InteriorDoorSystem` → `SingleComponentSystem<components::InteriorDoor>` (221 → 198 lines)
+- `DockingRingExtensionSystem` → `SingleComponentSystem<components::DockingRingExtension>` (231 → 184 lines)
+- `EVAAirlockSystem` → `SingleComponentSystem<components::EVAAirlockState>` (224 → 199 lines)
+
+All 6349 tests passing. Total boilerplate reduction: ~229 lines removed across 16 files.
+
 ### Remaining Remediation Plan
 
 | Step | Action | Status |
@@ -157,7 +170,7 @@ All 6349 tests passing (6340 original + 9 new).
 | 2.1 | Create `SingleComponentSystem<C>` template base | ✅ Complete |
 | 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
 | 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | 📋 Planned |
-| 2.4 | Migrate 20–30 simplest systems to template bases | 🔧 In progress (5 of ~30 done) |
+| 2.4 | Migrate 20–30 simplest systems to template bases | 🔧 In progress (15 of ~30 done) |
 | 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 📋 Planned |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
@@ -262,7 +275,7 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | GameSession forward declarations | 15+ | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
 | Template base classes | 2 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`) | 3 |
-| Systems migrated to templates | 7 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`) | 164 |
+| Systems migrated to templates | 15 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`) | 164 |
 
 ---
 
@@ -280,4 +293,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Phase 1 resolved: March 4, 2026*
 *Phase 2 step 2.1 completed: March 4, 2026 — SingleComponentSystem<C> template, CapacitorSystem and ShieldRechargeSystem migrated*
 *Phase 2 steps 2.2, 2.4 (partial) completed: March 4, 2026 — StateMachineSystem<C> template, CloakingSystem, JumpDriveSystem, AncientTechSystem, LocalReputationSystem, SurvivalSystem migrated*
+*Phase 2 step 2.4 (continued) completed: March 4, 2026 — RigSystem, SolarPanelSystem, ScanProbeSystem, FoodProcessorSystem, FarmingDeckSystem, InteriorDoorSystem, DockingRingExtensionSystem, EVAAirlockSystem migrated (15 total)*
 *Next review: After Phase 2 (system template bases) completion*
