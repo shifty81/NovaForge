@@ -616,11 +616,27 @@ message(STATUS "  Steam Integration: ${USE_STEAM_SDK}")
 message(STATUS "  Build Tests: ${BUILD_TESTS}")
 message(STATUS "")
 
-# Test executable
+# Test executable — split per-system test files
 if(BUILD_TESTS)
-    add_executable(test_systems test_systems.cpp)
+    file(GLOB TEST_SOURCES tests/test_*.cpp)
+    list(APPEND TEST_SOURCES tests/test_main.cpp)
+    list(REMOVE_DUPLICATES TEST_SOURCES)
+    add_executable(test_systems ${TEST_SOURCES})
+    target_include_directories(test_systems PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
     target_link_libraries(test_systems novaforge_core)
     if(MSVC)
         target_compile_options(test_systems PRIVATE /bigobj)
     endif()
+
+    # CTest integration — one test per source file
+    enable_testing()
+    foreach(TEST_SRC ${TEST_SOURCES})
+        get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
+        if(NOT TEST_NAME STREQUAL "test_main")
+            # Register as a CTest so `ctest -R capacitor` works
+            add_test(NAME ${TEST_NAME} COMMAND test_systems)
+        endif()
+    endforeach()
 endif()
