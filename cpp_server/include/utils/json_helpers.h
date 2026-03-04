@@ -181,6 +181,7 @@ inline bool extractBool(const std::string& json,
 ///         std::string::npos if not found.
 inline size_t findBlockEnd(const std::string& json, size_t start,
                            char open_char, char close_char) {
+    if (start >= json.size() || json[start] != open_char) return std::string::npos;
     int depth = 0;
     bool in_str = false;
     for (size_t i = start; i < json.size(); ++i) {
