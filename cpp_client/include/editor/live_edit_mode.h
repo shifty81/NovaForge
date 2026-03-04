@@ -191,6 +191,7 @@ public:
 
     // ── Edit session ────────────────────────────────────────────────
 
+    /** Whether the tool is active and in an editing session. */
     bool IsEditing() const { return m_active && m_editing; }
 
     void BeginEdit() {

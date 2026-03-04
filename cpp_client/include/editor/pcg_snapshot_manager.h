@@ -26,7 +26,7 @@ namespace atlas::editor {
 struct PCGSnapshot {
     std::string name;
     std::string json;       ///< Serialized DeltaEditStore state.
-    uint64_t    timestamp = 0;
+    uint64_t    timestamp = 0; ///< Monotonic counter from NextTimestamp(), used for ordering snapshots.
 };
 
 // Forward declaration so commands can reference the manager.

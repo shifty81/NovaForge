@@ -59,7 +59,7 @@ public:
         // re-recording only the edits that existed prior.
         const auto& all = m_store.Edits();
         std::vector<atlas::ecs::DeltaEdit> keep(all.begin(),
-                                                  all.begin() + static_cast<std::ptrdiff_t>(m_countBefore));
+                                                  all.begin() + m_countBefore);
         m_store.Clear();
         for (const auto& edit : keep) {
             m_store.Record(edit);
