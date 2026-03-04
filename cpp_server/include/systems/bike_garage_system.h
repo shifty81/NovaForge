@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_BIKE_GARAGE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_BIKE_GARAGE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages grav bike storage in rovers and ships. Supports store/retrieve
  * operations with capacity limits, door state management, and power requirements.
  */
-class BikeGarageSystem : public ecs::System {
+class BikeGarageSystem : public ecs::SingleComponentSystem<components::BikeGarage> {
 public:
     explicit BikeGarageSystem(ecs::World* world);
     ~BikeGarageSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "BikeGarageSystem"; }
 
     // Garage initialization
@@ -53,6 +52,9 @@ public:
     // Power management
     bool setPowerEnabled(const std::string& entity_id, bool enabled);
     bool isPowerEnabled(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::BikeGarage& garage, float delta_time) override;
 };
 
 } // namespace systems

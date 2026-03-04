@@ -7,27 +7,21 @@ namespace atlas {
 namespace systems {
 
 BikeGarageSystem::BikeGarageSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void BikeGarageSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::BikeGarage>();
-    for (auto* entity : entities) {
-        auto* garage = entity->getComponent<components::BikeGarage>();
-        if (!garage) continue;
-
-        // Door animation - only move if powered
-        if (garage->power_enabled) {
-            if (garage->is_open && garage->bay_door_progress < 1.0f) {
-                garage->bay_door_progress += delta_time * garage->door_speed;
-                if (garage->bay_door_progress > 1.0f) {
-                    garage->bay_door_progress = 1.0f;
-                }
-            } else if (!garage->is_open && garage->bay_door_progress > 0.0f) {
-                garage->bay_door_progress -= delta_time * garage->door_speed;
-                if (garage->bay_door_progress < 0.0f) {
-                    garage->bay_door_progress = 0.0f;
-                }
+void BikeGarageSystem::updateComponent(ecs::Entity& /*entity*/, components::BikeGarage& garage, float delta_time) {
+    // Door animation - only move if powered
+    if (garage.power_enabled) {
+        if (garage.is_open && garage.bay_door_progress < 1.0f) {
+            garage.bay_door_progress += delta_time * garage.door_speed;
+            if (garage.bay_door_progress > 1.0f) {
+                garage.bay_door_progress = 1.0f;
+            }
+        } else if (!garage.is_open && garage.bay_door_progress > 0.0f) {
+            garage.bay_door_progress -= delta_time * garage.door_speed;
+            if (garage.bay_door_progress < 0.0f) {
+                garage.bay_door_progress = 0.0f;
             }
         }
     }
@@ -67,10 +61,7 @@ bool BikeGarageSystem::storeBike(const std::string& entity_id,
                                   const std::string& bike_id,
                                   uint64_t bike_seed,
                                   const std::string& faction_style) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     if (!garage->canStoreBike()) return false;
@@ -92,10 +83,7 @@ bool BikeGarageSystem::storeBike(const std::string& entity_id,
 
 bool BikeGarageSystem::retrieveBike(const std::string& entity_id,
                                      const std::string& bike_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     auto it = std::find_if(garage->stored_bikes.begin(), garage->stored_bikes.end(),
@@ -114,40 +102,28 @@ bool BikeGarageSystem::retrieveBike(const std::string& entity_id,
 
 bool BikeGarageSystem::hasBike(const std::string& entity_id,
                                 const std::string& bike_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     return garage->hasBike(bike_id);
 }
 
 int BikeGarageSystem::getBikeCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return 0;
 
     return garage->getBikeCount();
 }
 
 int BikeGarageSystem::getCapacity(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return 0;
 
     return garage->max_capacity;
 }
 
 bool BikeGarageSystem::isFull(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return true;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return true;
 
     return garage->isFull();
@@ -156,10 +132,7 @@ bool BikeGarageSystem::isFull(const std::string& entity_id) const {
 bool BikeGarageSystem::setBikeFuel(const std::string& entity_id,
                                     const std::string& bike_id,
                                     float fuel_percent) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     for (auto& bike : garage->stored_bikes) {
@@ -174,10 +147,7 @@ bool BikeGarageSystem::setBikeFuel(const std::string& entity_id,
 bool BikeGarageSystem::setBikeHullIntegrity(const std::string& entity_id,
                                              const std::string& bike_id,
                                              float integrity) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     for (auto& bike : garage->stored_bikes) {
@@ -191,10 +161,7 @@ bool BikeGarageSystem::setBikeHullIntegrity(const std::string& entity_id,
 
 bool BikeGarageSystem::lockBike(const std::string& entity_id,
                                  const std::string& bike_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     for (auto& bike : garage->stored_bikes) {
@@ -208,10 +175,7 @@ bool BikeGarageSystem::lockBike(const std::string& entity_id,
 
 bool BikeGarageSystem::unlockBike(const std::string& entity_id,
                                    const std::string& bike_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     for (auto& bike : garage->stored_bikes) {
@@ -225,10 +189,7 @@ bool BikeGarageSystem::unlockBike(const std::string& entity_id,
 
 bool BikeGarageSystem::isBikeLocked(const std::string& entity_id,
                                      const std::string& bike_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     for (const auto& bike : garage->stored_bikes) {
@@ -241,10 +202,7 @@ bool BikeGarageSystem::isBikeLocked(const std::string& entity_id,
 
 float BikeGarageSystem::getBikeFuel(const std::string& entity_id,
                                      const std::string& bike_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return 0.0f;
 
     for (const auto& bike : garage->stored_bikes) {
@@ -257,10 +215,7 @@ float BikeGarageSystem::getBikeFuel(const std::string& entity_id,
 
 float BikeGarageSystem::getBikeHullIntegrity(const std::string& entity_id,
                                               const std::string& bike_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return 0.0f;
 
     for (const auto& bike : garage->stored_bikes) {
@@ -272,10 +227,7 @@ float BikeGarageSystem::getBikeHullIntegrity(const std::string& entity_id,
 }
 
 bool BikeGarageSystem::openDoor(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     if (!garage->power_enabled) return false;
@@ -285,10 +237,7 @@ bool BikeGarageSystem::openDoor(const std::string& entity_id) {
 }
 
 bool BikeGarageSystem::closeDoor(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     if (!garage->power_enabled) return false;
@@ -298,30 +247,21 @@ bool BikeGarageSystem::closeDoor(const std::string& entity_id) {
 }
 
 bool BikeGarageSystem::isDoorOpen(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     return garage->is_open;
 }
 
 float BikeGarageSystem::getDoorProgress(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return 0.0f;
 
     return garage->bay_door_progress;
 }
 
 bool BikeGarageSystem::setPowerEnabled(const std::string& entity_id, bool enabled) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     garage->power_enabled = enabled;
@@ -329,10 +269,7 @@ bool BikeGarageSystem::setPowerEnabled(const std::string& entity_id, bool enable
 }
 
 bool BikeGarageSystem::isPowerEnabled(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* garage = entity->getComponent<components::BikeGarage>();
+    auto* garage = getComponentFor(entity_id);
     if (!garage) return false;
 
     return garage->power_enabled;

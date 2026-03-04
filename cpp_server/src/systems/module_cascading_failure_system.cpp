@@ -26,30 +26,26 @@ const components::ModuleCascadingFailure::ModuleState* findModuleConst(
 } // anonymous namespace
 
 ModuleCascadingFailureSystem::ModuleCascadingFailureSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ModuleCascadingFailureSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::ModuleCascadingFailure>();
-    for (auto* entity : entities) {
-        auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
-        if (!mcf || !mcf->active) continue;
+void ModuleCascadingFailureSystem::updateComponent(ecs::Entity& /*entity*/, components::ModuleCascadingFailure& mcf, float /*delta_time*/) {
+    if (!mcf.active) return;
 
-        // Propagate cascading failures: if a dependency is destroyed/offline,
-        // the dependent module goes offline too
-        bool changed = true;
-        while (changed) {
-            changed = false;
-            for (auto& mod : mcf->modules) {
-                if (mod.destroyed || !mod.online) continue;
-                for (const auto& dep_id : mod.depends_on) {
-                    auto* dep = findModule(mcf, dep_id);
-                    if (dep && (dep->destroyed || !dep->online)) {
-                        mod.online = false;
-                        mcf->cascade_events++;
-                        changed = true;
-                        break;
-                    }
+    // Propagate cascading failures: if a dependency is destroyed/offline,
+    // the dependent module goes offline too
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        for (auto& mod : mcf.modules) {
+            if (mod.destroyed || !mod.online) continue;
+            for (const auto& dep_id : mod.depends_on) {
+                auto* dep = findModule(&mcf, dep_id);
+                if (dep && (dep->destroyed || !dep->online)) {
+                    mod.online = false;
+                    mcf.cascade_events++;
+                    changed = true;
+                    break;
                 }
             }
         }
@@ -66,9 +62,7 @@ bool ModuleCascadingFailureSystem::initializeShip(const std::string& entity_id) 
 
 bool ModuleCascadingFailureSystem::addModule(const std::string& entity_id,
     const std::string& module_id, const std::string& module_type, float max_hp) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return false;
     if (static_cast<int>(mcf->modules.size()) >= mcf->max_modules) return false;
     if (findModule(mcf, module_id)) return false; // duplicate
@@ -84,9 +78,7 @@ bool ModuleCascadingFailureSystem::addModule(const std::string& entity_id,
 
 bool ModuleCascadingFailureSystem::addDependency(const std::string& entity_id,
     const std::string& module_id, const std::string& depends_on_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return false;
     auto* mod = findModule(mcf, module_id);
     if (!mod) return false;
@@ -102,9 +94,7 @@ bool ModuleCascadingFailureSystem::addDependency(const std::string& entity_id,
 
 bool ModuleCascadingFailureSystem::damageModule(const std::string& entity_id,
     const std::string& module_id, float damage) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return false;
     auto* mod = findModule(mcf, module_id);
     if (!mod || mod->destroyed) return false;
@@ -120,9 +110,7 @@ bool ModuleCascadingFailureSystem::damageModule(const std::string& entity_id,
 
 bool ModuleCascadingFailureSystem::repairModule(const std::string& entity_id,
     const std::string& module_id, float amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return false;
     auto* mod = findModule(mcf, module_id);
     if (!mod) return false;
@@ -137,9 +125,7 @@ bool ModuleCascadingFailureSystem::repairModule(const std::string& entity_id,
 
 bool ModuleCascadingFailureSystem::isModuleOnline(const std::string& entity_id,
     const std::string& module_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return false;
     auto* mod = findModuleConst(mcf, module_id);
     if (!mod) return false;
@@ -148,9 +134,7 @@ bool ModuleCascadingFailureSystem::isModuleOnline(const std::string& entity_id,
 
 bool ModuleCascadingFailureSystem::isModuleDestroyed(const std::string& entity_id,
     const std::string& module_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return false;
     auto* mod = findModuleConst(mcf, module_id);
     if (!mod) return false;
@@ -159,9 +143,7 @@ bool ModuleCascadingFailureSystem::isModuleDestroyed(const std::string& entity_i
 
 float ModuleCascadingFailureSystem::getModuleHP(const std::string& entity_id,
     const std::string& module_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return 0.0f;
     auto* mod = findModuleConst(mcf, module_id);
     if (!mod) return 0.0f;
@@ -169,9 +151,7 @@ float ModuleCascadingFailureSystem::getModuleHP(const std::string& entity_id,
 }
 
 int ModuleCascadingFailureSystem::getOnlineModuleCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return 0;
     int count = 0;
     for (const auto& m : mcf->modules) {
@@ -181,25 +161,19 @@ int ModuleCascadingFailureSystem::getOnlineModuleCount(const std::string& entity
 }
 
 int ModuleCascadingFailureSystem::getTotalFailures(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return 0;
     return mcf->total_failures;
 }
 
 int ModuleCascadingFailureSystem::getCascadeEvents(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return 0;
     return mcf->cascade_events;
 }
 
 int ModuleCascadingFailureSystem::getModuleCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* mcf = entity->getComponent<components::ModuleCascadingFailure>();
+    auto* mcf = getComponentFor(entity_id);
     if (!mcf) return 0;
     return static_cast<int>(mcf->modules.size());
 }

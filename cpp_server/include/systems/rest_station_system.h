@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_REST_STATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_REST_STATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -16,12 +16,11 @@ namespace systems {
  * rest facilities to recover fatigue. Supports quality levels affecting
  * recovery rate and comfort bonuses.
  */
-class RestStationSystem : public ecs::System {
+class RestStationSystem : public ecs::SingleComponentSystem<components::RestingState> {
 public:
     explicit RestStationSystem(ecs::World* world);
     ~RestStationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "RestStationSystem"; }
 
     /**
@@ -79,6 +78,9 @@ public:
 private:
     // Base fatigue recovery rate per second (at quality 1.0)
     float base_recovery_rate_ = 1.0f;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::RestingState& resting, float delta_time) override;
 };
 
 } // namespace systems

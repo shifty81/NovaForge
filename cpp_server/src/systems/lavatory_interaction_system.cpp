@@ -7,69 +7,65 @@ namespace atlas {
 namespace systems {
 
 LavatoryInteractionSystem::LavatoryInteractionSystem(ecs::World* world)
-    : System(world) {
+    : StateMachineSystem(world) {
 }
 
-void LavatoryInteractionSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::LavatoryInteraction>();
-    for (auto* entity : entities) {
-        auto* lav = entity->getComponent<components::LavatoryInteraction>();
-        if (!lav || lav->phase == 0) continue; // Idle, skip
+void LavatoryInteractionSystem::updateComponent(ecs::Entity& /*entity*/, components::LavatoryInteraction& lav, float delta_time) {
+    if (lav.phase == 0) return; // Idle, skip
 
-        using Phase = components::LavatoryInteraction::InteractionPhase;
-        auto currentPhase = static_cast<Phase>(lav->phase);
+    using Phase = components::LavatoryInteraction::InteractionPhase;
+    auto currentPhase = static_cast<Phase>(lav.phase);
 
-        if (currentPhase == Phase::UsingFacility) {
-            // Special: use_timer counts up to use_duration
-            lav->use_timer += delta_time;
-            float safe_duration = (lav->use_duration > 0.0f) ? lav->use_duration : 1.0f;
-            lav->phase_progress = lav->use_timer / safe_duration;
-            if (lav->use_timer >= lav->use_duration) {
-                lav->phase_progress = 1.0f;
-                lav->use_timer = lav->use_duration;
-                lav->phase = static_cast<int>(Phase::TransitionToFirstPerson);
-                lav->phase_progress = 0.0f;
-                lav->in_third_person = false;
+    if (currentPhase == Phase::UsingFacility) {
+        // Special: use_timer counts up to use_duration
+        lav.use_timer += delta_time;
+        float safe_duration = (lav.use_duration > 0.0f) ? lav.use_duration : 1.0f;
+        lav.phase_progress = lav.use_timer / safe_duration;
+        if (lav.use_timer >= lav.use_duration) {
+            lav.phase_progress = 1.0f;
+            lav.use_timer = lav.use_duration;
+            lav.phase = static_cast<int>(Phase::TransitionToFirstPerson);
+            lav.phase_progress = 0.0f;
+            lav.in_third_person = false;
+        }
+    } else if (currentPhase != Phase::Idle && currentPhase != Phase::Complete) {
+        lav.phase_progress += delta_time / std::max(lav.phase_duration, 0.001f);
+        if (lav.phase_progress >= 1.0f) {
+            lav.phase_progress = 1.0f;
+            // Advance to next phase
+            int next = lav.phase + 1;
+            if (next > static_cast<int>(Phase::Complete)) {
+                next = static_cast<int>(Phase::Complete);
             }
-        } else if (currentPhase != Phase::Idle && currentPhase != Phase::Complete) {
-            lav->phase_progress += delta_time / std::max(lav->phase_duration, 0.001f);
-            if (lav->phase_progress >= 1.0f) {
-                lav->phase_progress = 1.0f;
-                // Advance to next phase
-                int next = lav->phase + 1;
-                if (next > static_cast<int>(Phase::Complete)) {
-                    next = static_cast<int>(Phase::Complete);
-                }
-                lav->phase = next;
-                lav->phase_progress = 0.0f;
+            lav.phase = next;
+            lav.phase_progress = 0.0f;
 
-                // Apply side effects on phase entry
-                auto newPhase = static_cast<Phase>(lav->phase);
-                switch (newPhase) {
-                    case Phase::DoorOpening:
-                        lav->door_open = true;
-                        lav->audio_playing = true;
-                        break;
-                    case Phase::TransitionToThirdPerson:
-                        lav->in_third_person = true;
-                        break;
-                    case Phase::UsingFacility:
-                        lav->use_timer = 0.0f;
-                        break;
-                    case Phase::TransitionToFirstPerson:
-                        lav->in_third_person = false;
-                        break;
-                    case Phase::DoorClosing:
-                        lav->door_open = false;
-                        break;
-                    case Phase::Complete:
-                        lav->occupied = false;
-                        lav->audio_playing = false;
-                        lav->user_id.clear();
-                        break;
-                    default:
-                        break;
-                }
+            // Apply side effects on phase entry
+            auto newPhase = static_cast<Phase>(lav.phase);
+            switch (newPhase) {
+                case Phase::DoorOpening:
+                    lav.door_open = true;
+                    lav.audio_playing = true;
+                    break;
+                case Phase::TransitionToThirdPerson:
+                    lav.in_third_person = true;
+                    break;
+                case Phase::UsingFacility:
+                    lav.use_timer = 0.0f;
+                    break;
+                case Phase::TransitionToFirstPerson:
+                    lav.in_third_person = false;
+                    break;
+                case Phase::DoorClosing:
+                    lav.door_open = false;
+                    break;
+                case Phase::Complete:
+                    lav.occupied = false;
+                    lav.audio_playing = false;
+                    lav.user_id.clear();
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -95,10 +91,7 @@ bool LavatoryInteractionSystem::createLavatory(const std::string& entity_id,
 
 bool LavatoryInteractionSystem::beginInteraction(const std::string& entity_id,
                                                   const std::string& user_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return false;
     if (lav->occupied) return false;
     if (lav->phase != 0) return false;
@@ -111,10 +104,7 @@ bool LavatoryInteractionSystem::beginInteraction(const std::string& entity_id,
 }
 
 bool LavatoryInteractionSystem::cancelInteraction(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return false;
     if (lav->phase == 0) return false;
 
@@ -130,57 +120,43 @@ bool LavatoryInteractionSystem::cancelInteraction(const std::string& entity_id) 
 }
 
 int LavatoryInteractionSystem::getPhase(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return 0;
     return lav->phase;
 }
 
 float LavatoryInteractionSystem::getPhaseProgress(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return 0.0f;
     return lav->phase_progress;
 }
 
 bool LavatoryInteractionSystem::isOccupied(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return false;
     return lav->occupied;
 }
 
 bool LavatoryInteractionSystem::isDoorOpen(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return false;
     return lav->door_open;
 }
 
 bool LavatoryInteractionSystem::isInThirdPerson(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return false;
     return lav->in_third_person;
 }
 
 bool LavatoryInteractionSystem::isAudioPlaying(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return false;
     return lav->audio_playing;
 }
 
 float LavatoryInteractionSystem::getHygieneBonus(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* lav = entity->getComponent<components::LavatoryInteraction>();
+    auto* lav = getComponentFor(entity_id);
     if (!lav) return 0.0f;
     return lav->hygiene_bonus;
 }

@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_MYTH_BOSS_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MYTH_BOSS_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -17,12 +17,11 @@ namespace systems {
  * ancient sites manifest as boss encounters reflecting the myth.
  * Boss type is derived from the myth type (Heroic → Guardian, etc.).
  */
-class MythBossSystem : public ecs::System {
+class MythBossSystem : public ecs::SingleComponentSystem<components::MythBossEncounter> {
 public:
     explicit MythBossSystem(ecs::World* world);
     ~MythBossSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "MythBossSystem"; }
 
     /**
@@ -68,6 +67,9 @@ public:
 
 private:
     int encounter_counter_ = 0;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::MythBossEncounter& enc, float delta_time) override;
 };
 
 } // namespace systems

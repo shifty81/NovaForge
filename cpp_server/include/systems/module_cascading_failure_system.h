@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_MODULE_CASCADING_FAILURE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MODULE_CASCADING_FAILURE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/ship_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Tracks individual module HP and dependencies. When a module is destroyed,
  * dependent modules go offline. Power loss cascades to all connected modules.
  */
-class ModuleCascadingFailureSystem : public ecs::System {
+class ModuleCascadingFailureSystem : public ecs::SingleComponentSystem<components::ModuleCascadingFailure> {
 public:
     explicit ModuleCascadingFailureSystem(ecs::World* world);
     ~ModuleCascadingFailureSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ModuleCascadingFailureSystem"; }
 
     bool initializeShip(const std::string& entity_id);
@@ -35,6 +35,9 @@ public:
     int getTotalFailures(const std::string& entity_id) const;
     int getCascadeEvents(const std::string& entity_id) const;
     int getModuleCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ModuleCascadingFailure& mcf, float delta_time) override;
 };
 
 } // namespace systems

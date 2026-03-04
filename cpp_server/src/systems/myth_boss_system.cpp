@@ -16,20 +16,16 @@ static constexpr float BASE_DROP_CHANCE = 0.3f;
 static constexpr float DIFFICULTY_DROP_BONUS = 0.1f;
 
 MythBossSystem::MythBossSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void MythBossSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::MythBossEncounter>();
-    for (auto* entity : entities) {
-        auto* enc = entity->getComponent<components::MythBossEncounter>();
-        if (!enc || !enc->active) continue;
+void MythBossSystem::updateComponent(ecs::Entity& /*entity*/, components::MythBossEncounter& enc, float delta_time) {
+    if (!enc.active) return;
 
-        enc->active_time += delta_time;
+    enc.active_time += delta_time;
 
-        if (enc->isExpired()) {
-            enc->active = false;
-        }
+    if (enc.isExpired()) {
+        enc.active = false;
     }
 }
 
@@ -103,18 +99,12 @@ std::string MythBossSystem::generateEncounter(const std::string& myth_id,
 }
 
 bool MythBossSystem::isEncounterActive(const std::string& encounter_id) const {
-    auto* entity = world_->getEntity(encounter_id);
-    if (!entity) return false;
-
-    auto* enc = entity->getComponent<components::MythBossEncounter>();
+    auto* enc = getComponentFor(encounter_id);
     return enc && enc->isActive();
 }
 
 bool MythBossSystem::completeEncounter(const std::string& encounter_id, bool success) {
-    auto* entity = world_->getEntity(encounter_id);
-    if (!entity) return false;
-
-    auto* enc = entity->getComponent<components::MythBossEncounter>();
+    auto* enc = getComponentFor(encounter_id);
     if (!enc) return false;
 
     enc->active = false;
@@ -133,18 +123,12 @@ int MythBossSystem::getActiveBossCount() const {
 }
 
 float MythBossSystem::getBossDifficulty(const std::string& encounter_id) const {
-    auto* entity = world_->getEntity(encounter_id);
-    if (!entity) return 1.0f;
-
-    auto* enc = entity->getComponent<components::MythBossEncounter>();
+    auto* enc = getComponentFor(encounter_id);
     return enc ? enc->difficulty : 1.0f;
 }
 
 std::string MythBossSystem::getEncounterMythId(const std::string& encounter_id) const {
-    auto* entity = world_->getEntity(encounter_id);
-    if (!entity) return "";
-
-    auto* enc = entity->getComponent<components::MythBossEncounter>();
+    auto* enc = getComponentFor(encounter_id);
     return enc ? enc->myth_id : "";
 }
 

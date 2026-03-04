@@ -39,16 +39,12 @@ static const std::array<AnomalyTemplate, 1> legendary_anomalies = {{
 }};
 
 WarpAnomalySystem::WarpAnomalySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void WarpAnomalySystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::WarpState>();
-    for (auto* entity : entities) {
-        auto* warp = entity->getComponent<components::WarpState>();
-        if (warp && warp->phase == components::WarpState::WarpPhase::Cruise) {
-            tryTriggerAnomaly(entity->getId());
-        }
+void WarpAnomalySystem::updateComponent(ecs::Entity& entity, components::WarpState& warp, float /*delta_time*/) {
+    if (warp.phase == components::WarpState::WarpPhase::Cruise) {
+        tryTriggerAnomaly(entity.getId());
     }
 }
 

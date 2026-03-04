@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_LAVATORY_INTERACTION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_LAVATORY_INTERACTION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/state_machine_system.h"
 #include "components/fps_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Handles the multi-phase interaction: approach, door open, camera switch,
  * use facility, camera return, door close.
  */
-class LavatoryInteractionSystem : public ecs::System {
+class LavatoryInteractionSystem : public ecs::StateMachineSystem<components::LavatoryInteraction> {
 public:
     explicit LavatoryInteractionSystem(ecs::World* world);
     ~LavatoryInteractionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "LavatoryInteractionSystem"; }
 
     // Initialization
@@ -41,6 +40,9 @@ public:
     float getHygieneBonus(const std::string& entity_id) const;
 
     static std::string phaseName(int phase);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::LavatoryInteraction& lav, float delta_time) override;
 };
 
 } // namespace systems
