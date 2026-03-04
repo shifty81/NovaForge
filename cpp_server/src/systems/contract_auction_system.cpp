@@ -113,8 +113,8 @@ bool ContractAuctionSystem::placeBid(const std::string& entity_id,
     auto* listing = findListing(ca, listing_id);
     if (!listing) return false;
     if (listing->state != CA::AuctionState::Active) return false;
-    if (amount <= listing->current_bid) return false;
     if (amount < listing->starting_price) return false;
+    if (amount <= listing->current_bid) return false;
 
     CA::Bid bid;
     bid.bidder_id = bidder_id;

@@ -4,7 +4,6 @@
 #include "components/economy_components.h"
 #include "ecs/system.h"
 #include "systems/contract_auction_system.h"
-#include <sys/stat.h>
 
 using namespace atlas;
 
