@@ -151,6 +151,8 @@ private:
     atlas::PanelState m_panelState;
     bool m_modeDropdownOpen = false;
     float m_scrollOffset = 0.0f;
+    bool m_hullDropdownOpen = false;
+    bool m_archetypeDropdownOpen = false;
 
     void generateShip();
     void generateStation();

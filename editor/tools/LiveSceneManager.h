@@ -133,6 +133,8 @@ private:
 
     atlas::PanelState m_panelState;
     float m_scrollOffset = 0.0f;
+    atlas::TextInputState m_snapshotLabelInput;
+    int m_selectedSnapshotIndex = -1;
 
     /** Apply stored overrides to matching viewport objects. */
     void applyOverridesToViewport();

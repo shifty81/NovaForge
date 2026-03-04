@@ -157,6 +157,10 @@ private:
 
     atlas::PanelState m_panelState;
     float m_scrollOffset = 0.0f;
+    bool m_targetTypeDropdownOpen = false;
+    bool m_treatmentDropdownOpen = false;
+    int m_selectedColorIndex = -1;
+    int m_selectedMaterialIndex = -1;
 
     void log(const std::string& msg);
 };

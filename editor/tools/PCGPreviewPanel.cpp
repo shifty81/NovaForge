@@ -39,7 +39,6 @@ PCGPreviewPanel::PCGPreviewPanel() {
 // ── Draw (stub – real UI rendered via Atlas UI in editor) ───────────
 
 void PCGPreviewPanel::Draw() {
-    // In headless / test mode this is a no-op.
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
@@ -53,6 +52,7 @@ void PCGPreviewPanel::Draw() {
     const float rowH    = ctx.theme().rowHeight;
     const atlas::Rect& b = m_panelState.bounds;
     const float headerH = ctx.theme().headerHeight;
+    const float widgetW = b.w - 2.0f * pad;
     float y = b.y + headerH + pad;
 
     // Mode selector
@@ -60,35 +60,176 @@ void PCGPreviewPanel::Draw() {
         "Ship", "Station", "Interior", "Character", "SpineHull", "TurretPlacement"
     };
     int modeIdx = static_cast<int>(m_settings.mode);
-    atlas::Rect comboRect{b.x + pad, y, b.w - 2.0f * pad, rowH + pad};
-    if (atlas::comboBox(ctx, "Mode", comboRect, modeItems, &modeIdx, &m_modeDropdownOpen)) {
+    if (atlas::comboBox(ctx, "Mode", {b.x + pad, y, widgetW, rowH + pad},
+                        modeItems, &modeIdx, &m_modeDropdownOpen)) {
         m_settings.mode = static_cast<PCGPreviewMode>(modeIdx);
     }
-    y += rowH + pad + pad;
+    y += rowH + pad;
 
     // Seed label
     atlas::label(ctx, {b.x + pad, y},
         "Seed: " + std::to_string(m_settings.seed), ctx.theme().textPrimary);
     y += rowH + pad;
 
-    // Randomize button
+    // Version label
+    atlas::label(ctx, {b.x + pad, y},
+        "Version: " + std::to_string(m_settings.version),
+        ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // ── Per-mode parameters ────────────────────────────────────────
+    static const std::vector<std::string> hullItems = {
+        "Frigate", "Destroyer", "Cruiser", "Battlecruiser", "Battleship", "Capital"
+    };
+
+    switch (m_settings.mode) {
+    case PCGPreviewMode::Ship: {
+        atlas::checkbox(ctx, "Override Hull",
+            {b.x + pad, y, widgetW, rowH + pad}, &m_settings.overrideHull);
+        y += rowH + pad;
+        if (m_settings.overrideHull) {
+            int hullIdx = static_cast<int>(m_settings.hullClass);
+            if (atlas::comboBox(ctx, "Hull Class",
+                    {b.x + pad, y, widgetW, rowH + pad},
+                    hullItems, &hullIdx, &m_hullDropdownOpen)) {
+                m_settings.hullClass = static_cast<pcg::HullClass>(hullIdx);
+            }
+            y += rowH + pad;
+        }
+        break;
+    }
+    case PCGPreviewMode::Station: {
+        atlas::checkbox(ctx, "Override Module Count",
+            {b.x + pad, y, widgetW, rowH + pad},
+            &m_settings.overrideModuleCount);
+        y += rowH + pad;
+        if (m_settings.overrideModuleCount) {
+            float mc = static_cast<float>(m_settings.moduleCount);
+            if (atlas::slider(ctx, "Module Count",
+                    {b.x + pad, y, widgetW, rowH + pad},
+                    &mc, 1.0f, 20.0f, "%.0f")) {
+                m_settings.moduleCount = static_cast<int>(mc);
+            }
+            y += rowH + pad;
+        }
+        break;
+    }
+    case PCGPreviewMode::Interior: {
+        float sc = static_cast<float>(m_settings.shipClass);
+        if (atlas::slider(ctx, "Ship Class",
+                {b.x + pad, y, widgetW, rowH + pad},
+                &sc, 0.0f, 5.0f, "%.0f")) {
+            m_settings.shipClass = static_cast<int>(sc);
+        }
+        y += rowH + pad;
+        break;
+    }
+    case PCGPreviewMode::Character: {
+        atlas::checkbox(ctx, "Override Archetype",
+            {b.x + pad, y, widgetW, rowH + pad},
+            &m_settings.overrideArchetype);
+        y += rowH + pad;
+        if (m_settings.overrideArchetype) {
+            static const std::vector<std::string> archItems = {
+                "Survivor", "Militia", "Civilian", "Scavenger", "Medic"
+            };
+            int archIdx = static_cast<int>(m_settings.characterArchetype);
+            if (atlas::comboBox(ctx, "Archetype",
+                    {b.x + pad, y, widgetW, rowH + pad},
+                    archItems, &archIdx, &m_archetypeDropdownOpen)) {
+                m_settings.characterArchetype =
+                    static_cast<pcg::CharacterArchetype>(archIdx);
+            }
+            y += rowH + pad;
+        }
+        atlas::checkbox(ctx, "Override Gender",
+            {b.x + pad, y, widgetW, rowH + pad}, &m_settings.overrideGender);
+        y += rowH + pad;
+        if (m_settings.overrideGender) {
+            if (atlas::button(ctx,
+                    m_settings.characterIsMale ? "Male" : "Female",
+                    {b.x + pad, y, widgetW * 0.4f, rowH + pad})) {
+                m_settings.characterIsMale = !m_settings.characterIsMale;
+            }
+            y += rowH + pad;
+        }
+        break;
+    }
+    case PCGPreviewMode::SpineHull: {
+        atlas::checkbox(ctx, "Override Hull",
+            {b.x + pad, y, widgetW, rowH + pad}, &m_settings.overrideHull);
+        y += rowH + pad;
+        if (m_settings.overrideHull) {
+            int hullIdx = static_cast<int>(m_settings.hullClass);
+            if (atlas::comboBox(ctx, "Hull Class",
+                    {b.x + pad, y, widgetW, rowH + pad},
+                    hullItems, &hullIdx, &m_hullDropdownOpen)) {
+                m_settings.hullClass = static_cast<pcg::HullClass>(hullIdx);
+            }
+            y += rowH + pad;
+        }
+        atlas::checkbox(ctx, "Override Faction",
+            {b.x + pad, y, widgetW, rowH + pad},
+            &m_settings.overrideFaction);
+        y += rowH + pad;
+        break;
+    }
+    case PCGPreviewMode::TurretPlacement: {
+        atlas::checkbox(ctx, "Override Hull",
+            {b.x + pad, y, widgetW, rowH + pad}, &m_settings.overrideHull);
+        y += rowH + pad;
+        if (m_settings.overrideHull) {
+            int hullIdx = static_cast<int>(m_settings.hullClass);
+            if (atlas::comboBox(ctx, "Hull Class",
+                    {b.x + pad, y, widgetW, rowH + pad},
+                    hullItems, &hullIdx, &m_hullDropdownOpen)) {
+                m_settings.hullClass = static_cast<pcg::HullClass>(hullIdx);
+            }
+            y += rowH + pad;
+        }
+        atlas::checkbox(ctx, "Override Turret Slots",
+            {b.x + pad, y, widgetW, rowH + pad},
+            &m_settings.overrideTurretSlots);
+        y += rowH + pad;
+        if (m_settings.overrideTurretSlots) {
+            float ts = static_cast<float>(m_settings.turretSlots);
+            if (atlas::slider(ctx, "Turret Slots",
+                    {b.x + pad, y, widgetW, rowH + pad},
+                    &ts, 1.0f, 10.0f, "%.0f")) {
+                m_settings.turretSlots = static_cast<int>(ts);
+            }
+            y += rowH + pad;
+        }
+        atlas::checkbox(ctx, "Override Faction",
+            {b.x + pad, y, widgetW, rowH + pad},
+            &m_settings.overrideFaction);
+        y += rowH + pad;
+        break;
+    }
+    }
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // Randomize / Generate buttons
     const float btnW = 100.0f;
     if (atlas::button(ctx, "Randomize", {b.x + pad, y, btnW, rowH + pad})) {
         Randomize();
     }
-    y += rowH + pad + pad;
-
-    // Generate button
-    if (atlas::button(ctx, "Generate", {b.x + pad, y, btnW, rowH + pad})) {
+    if (atlas::button(ctx, "Generate",
+            {b.x + 2.0f * pad + btnW, y, btnW, rowH + pad})) {
         Generate();
     }
     y += rowH + pad + pad;
 
-    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
     y += pad;
 
     // Log area
-    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::Rect logRect{b.x + pad, y, widgetW, b.y + b.h - y - pad};
     atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
 
     atlas::panelEnd(ctx);

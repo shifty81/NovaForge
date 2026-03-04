@@ -30,29 +30,130 @@ void AssetStylePanel::Draw() {
     const float rowH    = ctx.theme().rowHeight;
     const atlas::Rect& b = m_panelState.bounds;
     const float headerH = ctx.theme().headerHeight;
+    const float widgetW = b.w - 2.0f * pad;
     float y = b.y + headerH + pad;
 
     // Style name
-    atlas::label(ctx, {b.x + pad, y}, "Style: " + m_currentStyle.name, ctx.theme().textPrimary);
+    atlas::label(ctx, {b.x + pad, y}, "Style: " + m_currentStyle.name,
+                 ctx.theme().textPrimary);
     y += rowH + pad;
 
-    // Control point count
-    atlas::label(ctx, {b.x + pad, y},
+    // Target type combo box
+    static const std::vector<std::string> typeItems = {
+        "ShipLayout", "StationLayout", "InteriorLayout",
+        "StarSystem", "AsteroidField", "FleetComposition"
+    };
+    int typeIdx = static_cast<int>(m_currentStyle.targetType);
+    if (atlas::comboBox(ctx, "Target Type", {b.x + pad, y, widgetW, rowH + pad},
+                        typeItems, &typeIdx, &m_targetTypeDropdownOpen)) {
+        m_currentStyle.targetType = static_cast<pcg::GenerationStyleType>(typeIdx);
+    }
+    y += rowH + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // ── Shape Profile section ──────────────────────────────────────
+    atlas::label(ctx, {b.x + pad, y}, "Shape Profile",
+                 ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    atlas::label(ctx, {b.x + 2.0f * pad, y},
+        "Name: " + m_currentStyle.shape.name, ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    atlas::checkbox(ctx, "Mirror X",
+        {b.x + pad, y, widgetW * 0.45f, rowH + pad},
+        &m_currentStyle.shape.mirrorX);
+    atlas::checkbox(ctx, "Mirror Y",
+        {b.x + pad + widgetW * 0.5f, y, widgetW * 0.45f, rowH + pad},
+        &m_currentStyle.shape.mirrorY);
+    y += rowH + pad;
+
+    atlas::slider(ctx, "Smoothing", {b.x + pad, y, widgetW, rowH + pad},
+                  &m_currentStyle.shape.smoothing, 0.0f, 1.0f, "%.2f");
+    y += rowH + pad;
+
+    atlas::label(ctx, {b.x + 2.0f * pad, y},
         "Control Points: " + std::to_string(m_currentStyle.shape.controlPoints.size()),
         ctx.theme().textSecondary);
     y += rowH + pad;
 
-    // Color count
-    atlas::label(ctx, {b.x + pad, y},
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // ── Palette section ────────────────────────────────────────────
+    atlas::label(ctx, {b.x + pad, y}, "Palette", ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    atlas::label(ctx, {b.x + 2.0f * pad, y},
+        "Name: " + m_currentStyle.palette.name, ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Surface treatment combo box
+    static const std::vector<std::string> treatmentItems = {
+        "None", "PanelLines", "Greeble", "Weathered", "BattleScarred", "Pristine"
+    };
+    int treatIdx = static_cast<int>(m_currentStyle.palette.surfaceTreatment);
+    if (atlas::comboBox(ctx, "Surface Treatment",
+                        {b.x + pad, y, widgetW, rowH + pad},
+                        treatmentItems, &treatIdx, &m_treatmentDropdownOpen)) {
+        m_currentStyle.palette.surfaceTreatment =
+            static_cast<pcg::SurfaceTreatment>(treatIdx);
+    }
+    y += rowH + pad;
+
+    // Detail level slider
+    atlas::slider(ctx, "Detail Level", {b.x + pad, y, widgetW, rowH + pad},
+                  &m_currentStyle.palette.detailLevel, 0.0f, 1.0f, "%.2f");
+    y += rowH + pad;
+
+    // Color list
+    atlas::label(ctx, {b.x + 2.0f * pad, y},
         "Colors: " + std::to_string(m_currentStyle.palette.colors.size()),
         ctx.theme().textSecondary);
     y += rowH + pad;
+    {
+        size_t count = m_currentStyle.palette.colors.size();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            const auto& c = m_currentStyle.palette.colors[i];
+            atlas::label(ctx, {b.x + 3.0f * pad, y},
+                c.regionName, ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 3.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
 
-    // Material count
-    atlas::label(ctx, {b.x + pad, y},
+    // Material list
+    atlas::label(ctx, {b.x + 2.0f * pad, y},
         "Materials: " + std::to_string(m_currentStyle.palette.materials.size()),
         ctx.theme().textSecondary);
     y += rowH + pad;
+    {
+        size_t count = m_currentStyle.palette.materials.size();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            const auto& m = m_currentStyle.palette.materials[i];
+            atlas::label(ctx, {b.x + 3.0f * pad, y},
+                m.name, ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 3.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
 
     // Apply & Preview button
     const float btnW = 130.0f;
@@ -67,11 +168,11 @@ void AssetStylePanel::Draw() {
     }
     y += rowH + pad + pad;
 
-    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
     y += pad;
 
     // Log area
-    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::Rect logRect{b.x + pad, y, widgetW, b.y + b.h - y - pad};
     atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
 
     atlas::panelEnd(ctx);

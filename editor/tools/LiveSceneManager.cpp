@@ -13,7 +13,6 @@ LiveSceneManager::LiveSceneManager(ViewportPanel* viewport,
 // ── Draw (stub — real UI rendered via the editor dock layout) ────
 
 void LiveSceneManager::Draw() {
-    // The LiveSceneManager's Draw() is a no-op when headless.
     if (!GetContext()) return;
 
     auto& ctx = *GetContext();
@@ -27,6 +26,7 @@ void LiveSceneManager::Draw() {
     const float rowH    = ctx.theme().rowHeight;
     const atlas::Rect& b = m_panelState.bounds;
     const float headerH = ctx.theme().headerHeight;
+    const float widgetW = b.w - 2.0f * pad;
     float y = b.y + headerH + pad;
 
     // Scene status
@@ -35,9 +35,13 @@ void LiveSceneManager::Draw() {
         m_populated ? ctx.theme().success : ctx.theme().textSecondary);
     y += rowH + pad;
 
-    // Seed and version
+    // Seed and version labels
     atlas::label(ctx, {b.x + pad, y},
-        "Seed: " + std::to_string(m_seed) + "  Version: " + std::to_string(m_version),
+        "Seed: " + std::to_string(m_seed),
+        ctx.theme().textPrimary);
+    y += rowH + pad;
+    atlas::label(ctx, {b.x + pad, y},
+        "Version: " + std::to_string(m_version),
         ctx.theme().textPrimary);
     y += rowH + pad;
 
@@ -49,31 +53,96 @@ void LiveSceneManager::Draw() {
 
     // Unsaved changes indicator
     if (m_overrides.IsDirty()) {
-        atlas::label(ctx, {b.x + pad, y}, "* Unsaved changes", ctx.theme().warning);
+        atlas::label(ctx, {b.x + pad, y}, "* Unsaved changes",
+                     ctx.theme().warning);
         y += rowH + pad;
     }
 
-    // Save / Load Overrides buttons
+    // Populate / Regenerate buttons
     const float btnW = 130.0f;
-    if (atlas::button(ctx, "Save Overrides", {b.x + pad, y, btnW, rowH + pad})) {
-        SaveOverrides();
+    float halfW = (widgetW - pad) * 0.5f;
+    if (atlas::button(ctx, "Populate", {b.x + pad, y, halfW, rowH + pad})) {
+        PopulateDefaultScene();
     }
-    if (atlas::button(ctx, "Load Overrides", {b.x + 2.0f * pad + btnW, y, btnW, rowH + pad})) {
-        LoadOverrides();
-    }
-    y += rowH + pad + pad;
-
-    // Regenerate button
-    if (atlas::button(ctx, "Regenerate", {b.x + pad, y, 100.0f, rowH + pad})) {
+    if (atlas::button(ctx, "Regenerate",
+            {b.x + 2.0f * pad + halfW, y, halfW, rowH + pad})) {
         RegenerateScene();
     }
     y += rowH + pad + pad;
 
-    atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
+    // Capture Changes button
+    if (atlas::button(ctx, "Capture Changes",
+            {b.x + pad, y, btnW, rowH + pad})) {
+        CaptureViewportChanges();
+    }
+    y += rowH + pad + pad;
+
+    // Save / Load Overrides buttons
+    if (atlas::button(ctx, "Save Overrides",
+            {b.x + pad, y, halfW, rowH + pad})) {
+        SaveOverrides();
+    }
+    if (atlas::button(ctx, "Load Overrides",
+            {b.x + 2.0f * pad + halfW, y, halfW, rowH + pad})) {
+        LoadOverrides();
+    }
+    y += rowH + pad + pad;
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
+    y += pad;
+
+    // ── Snapshot section ───────────────────────────────────────────
+    atlas::label(ctx, {b.x + pad, y}, "Snapshots",
+                 ctx.theme().textPrimary);
+    y += rowH + pad;
+
+    atlas::label(ctx, {b.x + pad, y},
+        "Count: " + std::to_string(SnapshotCount()),
+        ctx.theme().textSecondary);
+    y += rowH + pad;
+
+    // Text input for snapshot label
+    atlas::textInput(ctx, "Label",
+        {b.x + pad, y, widgetW, rowH + pad},
+        m_snapshotLabelInput, "Snapshot label...");
+    y += rowH + pad;
+
+    // Take Snapshot button
+    if (atlas::button(ctx, "Take Snapshot",
+            {b.x + pad, y, btnW, rowH + pad})) {
+        TakeSnapshot(m_snapshotLabelInput.text);
+        m_snapshotLabelInput.text.clear();
+        m_snapshotLabelInput.cursorPos = 0;
+    }
+    y += rowH + pad + pad;
+
+    // Snapshot list with rollback buttons
+    {
+        size_t count = SnapshotCount();
+        size_t show = std::min(count, size_t(8));
+        for (size_t i = 0; i < show; ++i) {
+            float labelW = widgetW - 80.0f - pad;
+            atlas::label(ctx, {b.x + pad, y},
+                SnapshotLabel(i), ctx.theme().textSecondary);
+            if (atlas::button(ctx, "Rollback",
+                    {b.x + pad + labelW + pad, y, 80.0f, rowH + pad})) {
+                RollbackToSnapshot(i);
+            }
+            y += rowH + pad;
+        }
+        if (count > 8) {
+            atlas::label(ctx, {b.x + 2.0f * pad, y},
+                "... " + std::to_string(count - 8) + " more",
+                ctx.theme().textSecondary);
+            y += rowH + pad;
+        }
+    }
+
+    atlas::separator(ctx, {b.x + pad, y}, widgetW);
     y += pad;
 
     // Log area
-    atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
+    atlas::Rect logRect{b.x + pad, y, widgetW, b.y + b.h - y - pad};
     atlas::combatLogWidget(ctx, logRect, m_log, m_scrollOffset);
 
     atlas::panelEnd(ctx);

@@ -171,6 +171,9 @@ private:
     atlas::PanelState m_panelState;
     bool m_hullDropdownOpen = false;
     float m_scrollOffset = 0.0f;
+    int m_selectedRoomIndex = -1;
+    int m_selectedHardpointIndex = -1;
+    int m_selectedSubsystemIndex = -1;
 
     void log(const std::string& msg);
 };
