@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_RESEARCH_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_RESEARCH_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -12,12 +13,11 @@ namespace systems {
  *
  * Manages research jobs: ME research, TE research, and T2 invention.
  */
-class ResearchSystem : public ecs::System {
+class ResearchSystem : public ecs::SingleComponentSystem<components::ResearchLab> {
 public:
     explicit ResearchSystem(ecs::World* world);
     ~ResearchSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ResearchSystem"; }
 
     /**
@@ -78,6 +78,9 @@ private:
     // Uses a simple LCG to keep results predictable in tests
     unsigned int rng_state_ = 42;
     float nextRandom();
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ResearchLab& lab, float delta_time) override;
 };
 
 } // namespace systems

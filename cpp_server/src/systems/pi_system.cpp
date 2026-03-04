@@ -6,88 +6,83 @@ namespace atlas {
 namespace systems {
 
 PISystem::PISystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void PISystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* colony = entity->getComponent<components::PlanetaryColony>();
-        if (!colony) continue;
+void PISystem::updateComponent(ecs::Entity& entity, components::PlanetaryColony& colony, float delta_time) {
+    // Tick extractors
+    for (auto& ext : colony.extractors) {
+        if (!ext.active) continue;
+        ext.cycle_progress += delta_time;
+        while (ext.cycle_progress >= ext.cycle_time) {
+            ext.cycle_progress -= ext.cycle_time;
 
-        // Tick extractors
-        for (auto& ext : colony->extractors) {
-            if (!ext.active) continue;
-            ext.cycle_progress += delta_time;
-            while (ext.cycle_progress >= ext.cycle_time) {
-                ext.cycle_progress -= ext.cycle_time;
+            // Check storage capacity
+            if (colony.totalStored() + ext.quantity_per_cycle > static_cast<int>(colony.storage_capacity))
+                continue;
 
-                // Check storage capacity
-                if (colony->totalStored() + ext.quantity_per_cycle > static_cast<int>(colony->storage_capacity))
-                    continue;
-
-                // Add extracted resource to storage
-                bool found = false;
-                for (auto& s : colony->storage) {
-                    if (s.resource_type == ext.resource_type) {
-                        s.quantity += ext.quantity_per_cycle;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    components::PlanetaryColony::StoredResource sr;
-                    sr.resource_type = ext.resource_type;
-                    sr.quantity = ext.quantity_per_cycle;
-                    colony->storage.push_back(sr);
+            // Add extracted resource to storage
+            bool found = false;
+            for (auto& s : colony.storage) {
+                if (s.resource_type == ext.resource_type) {
+                    s.quantity += ext.quantity_per_cycle;
+                    found = true;
+                    break;
                 }
             }
+            if (!found) {
+                components::PlanetaryColony::StoredResource sr;
+                sr.resource_type = ext.resource_type;
+                sr.quantity = ext.quantity_per_cycle;
+                colony.storage.push_back(sr);
+            }
         }
+    }
 
-        // Tick processors
-        for (auto& proc : colony->processors) {
-            if (!proc.active) continue;
-            proc.cycle_progress += delta_time;
-            while (proc.cycle_progress >= proc.cycle_time) {
-                proc.cycle_progress -= proc.cycle_time;
+    // Tick processors
+    for (auto& proc : colony.processors) {
+        if (!proc.active) continue;
+        proc.cycle_progress += delta_time;
+        while (proc.cycle_progress >= proc.cycle_time) {
+            proc.cycle_progress -= proc.cycle_time;
 
-                // Check input availability
-                int available_input = 0;
-                for (const auto& s : colony->storage) {
-                    if (s.resource_type == proc.input_type) {
-                        available_input = s.quantity;
-                        break;
-                    }
+            // Check input availability
+            int available_input = 0;
+            for (const auto& s : colony.storage) {
+                if (s.resource_type == proc.input_type) {
+                    available_input = s.quantity;
+                    break;
                 }
-                if (available_input < proc.input_quantity) continue;
+            }
+            if (available_input < proc.input_quantity) continue;
 
-                // Check output storage capacity
-                if (colony->totalStored() - proc.input_quantity + proc.output_quantity
-                    > static_cast<int>(colony->storage_capacity))
-                    continue;
+            // Check output storage capacity
+            if (colony.totalStored() - proc.input_quantity + proc.output_quantity
+                > static_cast<int>(colony.storage_capacity))
+                continue;
 
-                // Consume input
-                for (auto& s : colony->storage) {
-                    if (s.resource_type == proc.input_type) {
-                        s.quantity -= proc.input_quantity;
-                        break;
-                    }
+            // Consume input
+            for (auto& s : colony.storage) {
+                if (s.resource_type == proc.input_type) {
+                    s.quantity -= proc.input_quantity;
+                    break;
                 }
+            }
 
-                // Produce output
-                bool found = false;
-                for (auto& s : colony->storage) {
-                    if (s.resource_type == proc.output_type) {
-                        s.quantity += proc.output_quantity;
-                        found = true;
-                        break;
-                    }
+            // Produce output
+            bool found = false;
+            for (auto& s : colony.storage) {
+                if (s.resource_type == proc.output_type) {
+                    s.quantity += proc.output_quantity;
+                    found = true;
+                    break;
                 }
-                if (!found) {
-                    components::PlanetaryColony::StoredResource sr;
-                    sr.resource_type = proc.output_type;
-                    sr.quantity = proc.output_quantity;
-                    colony->storage.push_back(sr);
-                }
+            }
+            if (!found) {
+                components::PlanetaryColony::StoredResource sr;
+                sr.resource_type = proc.output_type;
+                sr.quantity = proc.output_quantity;
+                colony.storage.push_back(sr);
             }
         }
     }
@@ -96,10 +91,7 @@ void PISystem::update(float delta_time) {
 bool PISystem::installExtractor(const std::string& colony_entity_id,
                                 const std::string& resource_type,
                                 int quantity_per_cycle) {
-    auto* entity = world_->getEntity(colony_entity_id);
-    if (!entity) return false;
-
-    auto* colony = entity->getComponent<components::PlanetaryColony>();
+    auto* colony = getComponentFor(colony_entity_id);
     if (!colony) return false;
 
     components::PlanetaryColony::Extractor ext;
@@ -120,10 +112,7 @@ bool PISystem::installProcessor(const std::string& colony_entity_id,
                                 const std::string& output_type,
                                 int input_qty,
                                 int output_qty) {
-    auto* entity = world_->getEntity(colony_entity_id);
-    if (!entity) return false;
-
-    auto* colony = entity->getComponent<components::PlanetaryColony>();
+    auto* colony = getComponentFor(colony_entity_id);
     if (!colony) return false;
 
     components::PlanetaryColony::Processor proc;
@@ -143,10 +132,7 @@ bool PISystem::installProcessor(const std::string& colony_entity_id,
 
 int PISystem::getStoredResource(const std::string& colony_entity_id,
                                 const std::string& resource_type) {
-    auto* entity = world_->getEntity(colony_entity_id);
-    if (!entity) return 0;
-
-    auto* colony = entity->getComponent<components::PlanetaryColony>();
+    auto* colony = getComponentFor(colony_entity_id);
     if (!colony) return 0;
 
     for (const auto& s : colony->storage) {
@@ -157,30 +143,21 @@ int PISystem::getStoredResource(const std::string& colony_entity_id,
 }
 
 int PISystem::getTotalStored(const std::string& colony_entity_id) {
-    auto* entity = world_->getEntity(colony_entity_id);
-    if (!entity) return 0;
-
-    auto* colony = entity->getComponent<components::PlanetaryColony>();
+    auto* colony = getComponentFor(colony_entity_id);
     if (!colony) return 0;
 
     return colony->totalStored();
 }
 
 int PISystem::getExtractorCount(const std::string& colony_entity_id) {
-    auto* entity = world_->getEntity(colony_entity_id);
-    if (!entity) return 0;
-
-    auto* colony = entity->getComponent<components::PlanetaryColony>();
+    auto* colony = getComponentFor(colony_entity_id);
     if (!colony) return 0;
 
     return static_cast<int>(colony->extractors.size());
 }
 
 int PISystem::getProcessorCount(const std::string& colony_entity_id) {
-    auto* entity = world_->getEntity(colony_entity_id);
-    if (!entity) return 0;
-
-    auto* colony = entity->getComponent<components::PlanetaryColony>();
+    auto* colony = getComponentFor(colony_entity_id);
     if (!colony) return 0;
 
     return static_cast<int>(colony->processors.size());

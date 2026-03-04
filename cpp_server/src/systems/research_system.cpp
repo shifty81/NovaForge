@@ -6,7 +6,7 @@ namespace atlas {
 namespace systems {
 
 ResearchSystem::ResearchSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
 float ResearchSystem::nextRandom() {
@@ -15,30 +15,25 @@ float ResearchSystem::nextRandom() {
     return static_cast<float>((rng_state_ >> 16) & 0x7FFF) / 32767.0f;
 }
 
-void ResearchSystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* lab = entity->getComponent<components::ResearchLab>();
-        if (!lab) continue;
+void ResearchSystem::updateComponent(ecs::Entity& entity, components::ResearchLab& lab, float delta_time) {
+    for (auto& job : lab.jobs) {
+        if (job.status != "active") continue;
 
-        for (auto& job : lab->jobs) {
-            if (job.status != "active") continue;
+        job.time_remaining -= delta_time;
+        if (job.time_remaining <= 0.0f) {
+            job.time_remaining = 0.0f;
 
-            job.time_remaining -= delta_time;
-            if (job.time_remaining <= 0.0f) {
-                job.time_remaining = 0.0f;
-
-                if (job.research_type == "invention") {
-                    // Roll for success
-                    float roll = nextRandom();
-                    if (roll <= job.success_chance) {
-                        job.status = "completed";
-                    } else {
-                        job.status = "failed";
-                    }
-                } else {
-                    // ME/TE research always succeeds
+            if (job.research_type == "invention") {
+                // Roll for success
+                float roll = nextRandom();
+                if (roll <= job.success_chance) {
                     job.status = "completed";
+                } else {
+                    job.status = "failed";
                 }
+            } else {
+                // ME/TE research always succeeds
+                job.status = "completed";
             }
         }
     }
@@ -50,10 +45,7 @@ std::string ResearchSystem::startMEResearch(const std::string& lab_entity_id,
                                              int target_level,
                                              float total_time,
                                              double install_cost) {
-    auto* entity = world_->getEntity(lab_entity_id);
-    if (!entity) return "";
-
-    auto* lab = entity->getComponent<components::ResearchLab>();
+    auto* lab = getComponentFor(lab_entity_id);
     if (!lab) return "";
 
     if (lab->activeJobCount() >= lab->max_jobs) return "";
@@ -89,10 +81,7 @@ std::string ResearchSystem::startTEResearch(const std::string& lab_entity_id,
                                              int target_level,
                                              float total_time,
                                              double install_cost) {
-    auto* entity = world_->getEntity(lab_entity_id);
-    if (!entity) return "";
-
-    auto* lab = entity->getComponent<components::ResearchLab>();
+    auto* lab = getComponentFor(lab_entity_id);
     if (!lab) return "";
 
     if (lab->activeJobCount() >= lab->max_jobs) return "";
@@ -130,10 +119,7 @@ std::string ResearchSystem::startInvention(const std::string& lab_entity_id,
                                             float success_chance,
                                             float total_time,
                                             double install_cost) {
-    auto* entity = world_->getEntity(lab_entity_id);
-    if (!entity) return "";
-
-    auto* lab = entity->getComponent<components::ResearchLab>();
+    auto* lab = getComponentFor(lab_entity_id);
     if (!lab) return "";
 
     if (lab->activeJobCount() >= lab->max_jobs) return "";
@@ -166,20 +152,14 @@ std::string ResearchSystem::startInvention(const std::string& lab_entity_id,
 }
 
 int ResearchSystem::getActiveJobCount(const std::string& lab_entity_id) {
-    auto* entity = world_->getEntity(lab_entity_id);
-    if (!entity) return 0;
-
-    auto* lab = entity->getComponent<components::ResearchLab>();
+    auto* lab = getComponentFor(lab_entity_id);
     if (!lab) return 0;
 
     return lab->activeJobCount();
 }
 
 int ResearchSystem::getCompletedJobCount(const std::string& lab_entity_id) {
-    auto* entity = world_->getEntity(lab_entity_id);
-    if (!entity) return 0;
-
-    auto* lab = entity->getComponent<components::ResearchLab>();
+    auto* lab = getComponentFor(lab_entity_id);
     if (!lab) return 0;
 
     int count = 0;
@@ -189,10 +169,7 @@ int ResearchSystem::getCompletedJobCount(const std::string& lab_entity_id) {
 }
 
 int ResearchSystem::getFailedJobCount(const std::string& lab_entity_id) {
-    auto* entity = world_->getEntity(lab_entity_id);
-    if (!entity) return 0;
-
-    auto* lab = entity->getComponent<components::ResearchLab>();
+    auto* lab = getComponentFor(lab_entity_id);
     if (!lab) return 0;
 
     int count = 0;

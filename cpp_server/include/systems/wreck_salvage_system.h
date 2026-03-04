@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WRECK_SALVAGE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WRECK_SALVAGE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -18,13 +19,13 @@ namespace systems {
  * Players can salvage wrecks to collect items and Credits.  Salvage
  * requires proximity (within salvage range) and takes one cycle.
  */
-class WreckSalvageSystem : public ecs::System {
+class WreckSalvageSystem : public ecs::SingleComponentSystem<components::Wreck> {
 public:
     explicit WreckSalvageSystem(ecs::World* world);
     ~WreckSalvageSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WreckSalvageSystem"; }
+    void update(float delta_time) override;
 
     /**
      * @brief Create a wreck entity from a destroyed ship
@@ -52,6 +53,9 @@ public:
      * @brief Get the number of active wrecks in the world
      */
     int getActiveWreckCount() const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Wreck& wreck, float delta_time) override;
 };
 
 } // namespace systems

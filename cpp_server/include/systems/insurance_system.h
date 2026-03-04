@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_INSURANCE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_INSURANCE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * destroyed the player can claim the policy for an Credits payout
  * proportional to the ship value and the tier purchased.
  */
-class InsuranceSystem : public ecs::System {
+class InsuranceSystem : public ecs::SingleComponentSystem<components::InsurancePolicy> {
 public:
     explicit InsuranceSystem(ecs::World* world);
     ~InsuranceSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "InsuranceSystem"; }
 
     /**
@@ -44,6 +44,9 @@ public:
      * @brief Check if an entity has an active, unclaimed policy
      */
     bool hasActivePolicy(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::InsurancePolicy& policy, float delta_time) override;
 };
 
 } // namespace systems

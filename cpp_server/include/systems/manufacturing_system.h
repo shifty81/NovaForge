@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_MANUFACTURING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MANUFACTURING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages manufacturing jobs: starting jobs, ticking time,
  * completing runs, and delivering output.
  */
-class ManufacturingSystem : public ecs::System {
+class ManufacturingSystem : public ecs::SingleComponentSystem<components::ManufacturingFacility> {
 public:
     explicit ManufacturingSystem(ecs::World* world);
     ~ManufacturingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ManufacturingSystem"; }
 
     /**
@@ -58,6 +58,9 @@ public:
 
 private:
     int job_counter_ = 0;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ManufacturingFacility& facility, float delta_time) override;
 };
 
 } // namespace systems

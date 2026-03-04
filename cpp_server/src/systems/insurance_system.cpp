@@ -6,21 +6,17 @@ namespace atlas {
 namespace systems {
 
 InsuranceSystem::InsuranceSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void InsuranceSystem::update(float delta_time) {
-    // Tick down duration on all InsurancePolicy components
-    for (auto* entity : world_->getAllEntities()) {
-        auto* policy = entity->getComponent<components::InsurancePolicy>();
-        if (!policy || !policy->active) continue;
+void InsuranceSystem::updateComponent(ecs::Entity& entity, components::InsurancePolicy& policy, float delta_time) {
+    if (!policy.active) return;
 
-        if (policy->duration_remaining > 0.0f) {
-            policy->duration_remaining -= delta_time;
-            if (policy->duration_remaining <= 0.0f) {
-                policy->duration_remaining = 0.0f;
-                policy->active = false;
-            }
+    if (policy.duration_remaining > 0.0f) {
+        policy.duration_remaining -= delta_time;
+        if (policy.duration_remaining <= 0.0f) {
+            policy.duration_remaining = 0.0f;
+            policy.active = false;
         }
     }
 }
@@ -73,13 +69,11 @@ bool InsuranceSystem::purchaseInsurance(const std::string& entity_id,
 }
 
 double InsuranceSystem::claimInsurance(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0;
-
-    auto* policy = entity->getComponent<components::InsurancePolicy>();
+    auto* policy = getComponentFor(entity_id);
     if (!policy || !policy->active || policy->claimed) return 0.0;
 
-    auto* player = entity->getComponent<components::Player>();
+    auto* entity = world_->getEntity(entity_id);
+    auto* player = entity ? entity->getComponent<components::Player>() : nullptr;
 
     double payout = policy->payout_value;
     policy->claimed = true;
@@ -92,10 +86,7 @@ double InsuranceSystem::claimInsurance(const std::string& entity_id) {
 }
 
 bool InsuranceSystem::hasActivePolicy(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* policy = entity->getComponent<components::InsurancePolicy>();
+    const auto* policy = getComponentFor(entity_id);
     if (!policy) return false;
 
     return policy->active && !policy->claimed;

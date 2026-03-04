@@ -1,8 +1,9 @@
 #ifndef NOVAFORGE_SYSTEMS_MINING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MINING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -16,12 +17,11 @@ namespace systems {
  * ore is transferred from the deposit into the miner's Inventory
  * (respecting cargo capacity).
  */
-class MiningSystem : public ecs::System {
+class MiningSystem : public ecs::SingleComponentSystem<components::MiningLaser> {
 public:
     explicit MiningSystem(ecs::World* world);
     ~MiningSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "MiningSystem"; }
 
     /**
@@ -61,6 +61,9 @@ private:
      * @brief Complete one mining cycle: transfer ore to miner inventory
      */
     void completeCycle(ecs::Entity* miner, ecs::Entity* deposit);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::MiningLaser& laser, float delta_time) override;
 };
 
 } // namespace systems

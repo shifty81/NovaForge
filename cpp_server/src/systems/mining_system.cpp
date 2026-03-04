@@ -9,37 +9,34 @@ namespace atlas {
 namespace systems {
 
 MiningSystem::MiningSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void MiningSystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* laser = entity->getComponent<components::MiningLaser>();
-        if (!laser || !laser->active) continue;
+void MiningSystem::updateComponent(ecs::Entity& entity, components::MiningLaser& laser, float delta_time) {
+    if (!laser.active) return;
 
-        auto* deposit_entity = world_->getEntity(laser->target_deposit_id);
-        if (!deposit_entity) {
-            // Deposit gone — stop mining
-            laser->active = false;
-            laser->cycle_progress = 0.0f;
-            continue;
-        }
+    auto* deposit_entity = world_->getEntity(laser.target_deposit_id);
+    if (!deposit_entity) {
+        // Deposit gone — stop mining
+        laser.active = false;
+        laser.cycle_progress = 0.0f;
+        return;
+    }
 
-        auto* deposit = deposit_entity->getComponent<components::MineralDeposit>();
-        if (!deposit || deposit->isDepleted()) {
-            laser->active = false;
-            laser->cycle_progress = 0.0f;
-            continue;
-        }
+    auto* deposit = deposit_entity->getComponent<components::MineralDeposit>();
+    if (!deposit || deposit->isDepleted()) {
+        laser.active = false;
+        laser.cycle_progress = 0.0f;
+        return;
+    }
 
-        laser->cycle_progress += delta_time;
-        if (laser->cycle_progress >= laser->cycle_time) {
-            completeCycle(entity, deposit_entity);
-            laser->cycle_progress = 0.0f;
-            // If deposit depleted, stop
-            if (deposit->isDepleted()) {
-                laser->active = false;
-            }
+    laser.cycle_progress += delta_time;
+    if (laser.cycle_progress >= laser.cycle_time) {
+        completeCycle(&entity, deposit_entity);
+        laser.cycle_progress = 0.0f;
+        // If deposit depleted, stop
+        if (deposit->isDepleted()) {
+            laser.active = false;
         }
     }
 }
@@ -79,10 +76,7 @@ bool MiningSystem::startMining(const std::string& miner_id,
 }
 
 bool MiningSystem::stopMining(const std::string& miner_id) {
-    auto* miner = world_->getEntity(miner_id);
-    if (!miner) return false;
-
-    auto* laser = miner->getComponent<components::MiningLaser>();
+    auto* laser = getComponentFor(miner_id);
     if (!laser || !laser->active) return false;
 
     laser->active = false;
