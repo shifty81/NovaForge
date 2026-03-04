@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_JUMP_DRIVE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_JUMP_DRIVE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/state_machine_system.h"
 #include "components/navigation_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Features: spool-up timer, fuel consumption per light-year, jump fatigue accumulation
  * and decay, cynosural field targeting, jump range validation.
  */
-class JumpDriveSystem : public ecs::System {
+class JumpDriveSystem : public ecs::StateMachineSystem<components::JumpDriveState> {
 public:
     explicit JumpDriveSystem(ecs::World* world);
     ~JumpDriveSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "JumpDriveSystem"; }
 
     // Commands
@@ -39,6 +38,9 @@ public:
     bool canJump(const std::string& entity_id, float distance_ly) const;
     int getTotalJumps(const std::string& entity_id) const;
     float getCooldownRemaining(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::JumpDriveState& jd, float delta_time) override;
 };
 
 } // namespace systems
