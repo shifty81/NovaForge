@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_DOCKING_RING_EXTENSION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_DOCKING_RING_EXTENSION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/ship_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages visual docking ring modules for ship-to-ship docking with
  * extension state machine, alignment tracking, and pressure sealing.
  */
-class DockingRingExtensionSystem : public ecs::System {
+class DockingRingExtensionSystem : public ecs::SingleComponentSystem<components::DockingRingExtension> {
 public:
     explicit DockingRingExtensionSystem(ecs::World* world);
     ~DockingRingExtensionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "DockingRingExtensionSystem"; }
 
     // Initialization
@@ -44,6 +43,9 @@ public:
     float getProgress(const std::string& entity_id) const;
     bool isConnected(const std::string& entity_id) const;
     float getIntegrity(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::DockingRingExtension& ring, float delta_time) override;
 };
 
 } // namespace systems

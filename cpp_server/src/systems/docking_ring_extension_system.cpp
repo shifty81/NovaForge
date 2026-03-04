@@ -8,36 +8,30 @@ namespace atlas {
 namespace systems {
 
 DockingRingExtensionSystem::DockingRingExtensionSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void DockingRingExtensionSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::DockingRingExtension>();
-    for (auto* entity : entities) {
-        auto* ring = entity->getComponent<components::DockingRingExtension>();
-        if (!ring) continue;
+void DockingRingExtensionSystem::updateComponent(ecs::Entity& /*entity*/, components::DockingRingExtension& ring, float delta_time) {
+    if (!ring.is_powered) return;
 
-        if (!ring->is_powered) continue;
-
-        if (ring->state == components::DockingRingExtension::RingState::Extending) {
-            ring->extension_progress += ring->extension_speed * delta_time;
-            if (ring->extension_progress >= 1.0f) {
-                ring->extension_progress = 1.0f;
-                ring->state = components::DockingRingExtension::RingState::Extended;
-            }
-        } else if (ring->state == components::DockingRingExtension::RingState::Retracting) {
-            ring->extension_progress -= ring->extension_speed * delta_time;
-            if (ring->extension_progress <= 0.0f) {
-                ring->extension_progress = 0.0f;
-                ring->state = components::DockingRingExtension::RingState::Retracted;
-            }
+    if (ring.state == components::DockingRingExtension::RingState::Extending) {
+        ring.extension_progress += ring.extension_speed * delta_time;
+        if (ring.extension_progress >= 1.0f) {
+            ring.extension_progress = 1.0f;
+            ring.state = components::DockingRingExtension::RingState::Extended;
         }
-
-        // Degrade integrity when connected
-        if (ring->is_connected) {
-            ring->ring_integrity -= 0.001f * delta_time;
-            ring->ring_integrity = std::max(0.0f, ring->ring_integrity);
+    } else if (ring.state == components::DockingRingExtension::RingState::Retracting) {
+        ring.extension_progress -= ring.extension_speed * delta_time;
+        if (ring.extension_progress <= 0.0f) {
+            ring.extension_progress = 0.0f;
+            ring.state = components::DockingRingExtension::RingState::Retracted;
         }
+    }
+
+    // Degrade integrity when connected
+    if (ring.is_connected) {
+        ring.ring_integrity -= 0.001f * delta_time;
+        ring.ring_integrity = std::max(0.0f, ring.ring_integrity);
     }
 }
 
@@ -55,10 +49,7 @@ bool DockingRingExtensionSystem::initializeRing(const std::string& entity_id, fl
 }
 
 bool DockingRingExtensionSystem::extendRing(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     if (!ring->is_powered) return false;
@@ -69,10 +60,7 @@ bool DockingRingExtensionSystem::extendRing(const std::string& entity_id) {
 }
 
 bool DockingRingExtensionSystem::retractRing(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     // Disconnect first if connected
@@ -94,10 +82,7 @@ bool DockingRingExtensionSystem::retractRing(const std::string& entity_id) {
 bool DockingRingExtensionSystem::connectRing(const std::string& entity_id,
                                               const std::string& target_entity_id,
                                               components::DockingRingExtension::ConnectionType connection_type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     if (ring->state != components::DockingRingExtension::RingState::Extended) return false;
@@ -112,10 +97,7 @@ bool DockingRingExtensionSystem::connectRing(const std::string& entity_id,
 }
 
 bool DockingRingExtensionSystem::disconnectRing(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     if (!ring->is_connected) return false;
@@ -127,10 +109,7 @@ bool DockingRingExtensionSystem::disconnectRing(const std::string& entity_id) {
 }
 
 bool DockingRingExtensionSystem::sealPressure(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     if (ring->state != components::DockingRingExtension::RingState::Extended) return false;
@@ -141,10 +120,7 @@ bool DockingRingExtensionSystem::sealPressure(const std::string& entity_id) {
 }
 
 bool DockingRingExtensionSystem::unsealPressure(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     if (!ring->pressure_sealed) return false;
@@ -154,10 +130,7 @@ bool DockingRingExtensionSystem::unsealPressure(const std::string& entity_id) {
 }
 
 bool DockingRingExtensionSystem::setAlignment(const std::string& entity_id, float angle) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     ring->alignment_angle = std::max(0.0f, angle);
@@ -165,10 +138,7 @@ bool DockingRingExtensionSystem::setAlignment(const std::string& entity_id, floa
 }
 
 bool DockingRingExtensionSystem::setPowerEnabled(const std::string& entity_id, bool enabled) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     ring->is_powered = enabled;
@@ -176,10 +146,7 @@ bool DockingRingExtensionSystem::setPowerEnabled(const std::string& entity_id, b
 }
 
 bool DockingRingExtensionSystem::repairRing(const std::string& entity_id, float amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     ring->ring_integrity = std::min(1.0f, ring->ring_integrity + amount);
@@ -187,40 +154,28 @@ bool DockingRingExtensionSystem::repairRing(const std::string& entity_id, float 
 }
 
 std::string DockingRingExtensionSystem::getState(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    const auto* ring = getComponentFor(entity_id);
     if (!ring) return "unknown";
 
     return components::DockingRingExtension::stateToString(ring->state);
 }
 
 float DockingRingExtensionSystem::getProgress(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    const auto* ring = getComponentFor(entity_id);
     if (!ring) return 0.0f;
 
     return ring->extension_progress;
 }
 
 bool DockingRingExtensionSystem::isConnected(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    const auto* ring = getComponentFor(entity_id);
     if (!ring) return false;
 
     return ring->is_connected;
 }
 
 float DockingRingExtensionSystem::getIntegrity(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* ring = entity->getComponent<components::DockingRingExtension>();
+    const auto* ring = getComponentFor(entity_id);
     if (!ring) return 0.0f;
 
     return ring->ring_integrity;

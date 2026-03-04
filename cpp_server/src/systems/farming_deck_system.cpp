@@ -8,47 +8,41 @@ namespace atlas {
 namespace systems {
 
 FarmingDeckSystem::FarmingDeckSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FarmingDeckSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::FarmingDeck>();
-    for (auto* entity : entities) {
-        auto* deck = entity->getComponent<components::FarmingDeck>();
-        if (!deck) continue;
+void FarmingDeckSystem::updateComponent(ecs::Entity& /*entity*/, components::FarmingDeck& deck, float delta_time) {
+    if (!deck.is_powered) return;
 
-        if (!deck->is_powered) continue;
+    for (auto& plot : deck.plots) {
+        if (plot.stage == components::FarmingDeck::GrowthStage::Empty ||
+            plot.stage == components::FarmingDeck::GrowthStage::Harvestable ||
+            plot.stage == components::FarmingDeck::GrowthStage::Withered) {
+            continue;
+        }
 
-        for (auto& plot : deck->plots) {
-            if (plot.stage == components::FarmingDeck::GrowthStage::Empty ||
-                plot.stage == components::FarmingDeck::GrowthStage::Harvestable ||
-                plot.stage == components::FarmingDeck::GrowthStage::Withered) {
-                continue;
-            }
+        // Consume water and nutrients
+        plot.water_level -= plot.water_consumption * delta_time;
+        plot.nutrient_level -= plot.nutrient_consumption * delta_time;
 
-            // Consume water and nutrients
-            plot.water_level -= plot.water_consumption * delta_time;
-            plot.nutrient_level -= plot.nutrient_consumption * delta_time;
+        if (plot.water_level <= 0.0f || plot.nutrient_level <= 0.0f) {
+            plot.water_level = std::max(0.0f, plot.water_level);
+            plot.nutrient_level = std::max(0.0f, plot.nutrient_level);
+            plot.stage = components::FarmingDeck::GrowthStage::Withered;
+            continue;
+        }
 
-            if (plot.water_level <= 0.0f || plot.nutrient_level <= 0.0f) {
-                plot.water_level = std::max(0.0f, plot.water_level);
-                plot.nutrient_level = std::max(0.0f, plot.nutrient_level);
-                plot.stage = components::FarmingDeck::GrowthStage::Withered;
-                continue;
-            }
+        // Grow
+        float temp_factor = (deck.temperature >= 18.0f && deck.temperature <= 28.0f) ? 1.0f : 0.5f;
+        plot.growth_progress += plot.growth_rate * deck.light_level * temp_factor * delta_time;
 
-            // Grow
-            float temp_factor = (deck->temperature >= 18.0f && deck->temperature <= 28.0f) ? 1.0f : 0.5f;
-            plot.growth_progress += plot.growth_rate * deck->light_level * temp_factor * delta_time;
-
-            if (plot.growth_progress >= 1.0f) {
-                plot.growth_progress = 1.0f;
-                plot.stage = components::FarmingDeck::GrowthStage::Harvestable;
-            } else if (plot.growth_progress >= 0.7f) {
-                plot.stage = components::FarmingDeck::GrowthStage::Mature;
-            } else if (plot.growth_progress >= 0.3f) {
-                plot.stage = components::FarmingDeck::GrowthStage::Growing;
-            }
+        if (plot.growth_progress >= 1.0f) {
+            plot.growth_progress = 1.0f;
+            plot.stage = components::FarmingDeck::GrowthStage::Harvestable;
+        } else if (plot.growth_progress >= 0.7f) {
+            plot.stage = components::FarmingDeck::GrowthStage::Mature;
+        } else if (plot.growth_progress >= 0.3f) {
+            plot.stage = components::FarmingDeck::GrowthStage::Growing;
         }
     }
 }
@@ -83,10 +77,7 @@ bool FarmingDeckSystem::removeDeck(const std::string& entity_id) {
 bool FarmingDeckSystem::plantCrop(const std::string& entity_id,
                                    const std::string& plot_id,
                                    components::FarmingDeck::CropType crop_type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return false;
 
     // Check if plot already exists
@@ -118,10 +109,7 @@ bool FarmingDeckSystem::plantCrop(const std::string& entity_id,
 
 float FarmingDeckSystem::harvestCrop(const std::string& entity_id,
                                       const std::string& plot_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return 0.0f;
 
     for (auto& plot : deck->plots) {
@@ -144,10 +132,7 @@ float FarmingDeckSystem::harvestCrop(const std::string& entity_id,
 bool FarmingDeckSystem::waterPlot(const std::string& entity_id,
                                    const std::string& plot_id,
                                    float amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return false;
 
     for (auto& plot : deck->plots) {
@@ -162,10 +147,7 @@ bool FarmingDeckSystem::waterPlot(const std::string& entity_id,
 bool FarmingDeckSystem::fertilizePlot(const std::string& entity_id,
                                        const std::string& plot_id,
                                        float amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return false;
 
     for (auto& plot : deck->plots) {
@@ -179,10 +161,7 @@ bool FarmingDeckSystem::fertilizePlot(const std::string& entity_id,
 
 bool FarmingDeckSystem::removeCrop(const std::string& entity_id,
                                     const std::string& plot_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return false;
 
     for (auto& plot : deck->plots) {
@@ -198,10 +177,7 @@ bool FarmingDeckSystem::removeCrop(const std::string& entity_id,
 }
 
 int FarmingDeckSystem::getPlotCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    const auto* deck = getComponentFor(entity_id);
     if (!deck) return 0;
 
     return deck->getPlotCount();
@@ -209,10 +185,7 @@ int FarmingDeckSystem::getPlotCount(const std::string& entity_id) const {
 
 std::string FarmingDeckSystem::getGrowthStage(const std::string& entity_id,
                                                const std::string& plot_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    const auto* deck = getComponentFor(entity_id);
     if (!deck) return "unknown";
 
     for (const auto& plot : deck->plots) {
@@ -225,10 +198,7 @@ std::string FarmingDeckSystem::getGrowthStage(const std::string& entity_id,
 
 float FarmingDeckSystem::getGrowthProgress(const std::string& entity_id,
                                             const std::string& plot_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    const auto* deck = getComponentFor(entity_id);
     if (!deck) return 0.0f;
 
     for (const auto& plot : deck->plots) {
@@ -240,20 +210,14 @@ float FarmingDeckSystem::getGrowthProgress(const std::string& entity_id,
 }
 
 float FarmingDeckSystem::getTotalFoodProduced(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    const auto* deck = getComponentFor(entity_id);
     if (!deck) return 0.0f;
 
     return deck->total_food_produced;
 }
 
 bool FarmingDeckSystem::setPowerEnabled(const std::string& entity_id, bool enabled) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return false;
 
     deck->is_powered = enabled;
@@ -261,10 +225,7 @@ bool FarmingDeckSystem::setPowerEnabled(const std::string& entity_id, bool enabl
 }
 
 bool FarmingDeckSystem::setLightLevel(const std::string& entity_id, float level) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return false;
 
     deck->light_level = std::max(0.0f, std::min(1.0f, level));
@@ -272,10 +233,7 @@ bool FarmingDeckSystem::setLightLevel(const std::string& entity_id, float level)
 }
 
 bool FarmingDeckSystem::setTemperature(const std::string& entity_id, float temp) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* deck = entity->getComponent<components::FarmingDeck>();
+    auto* deck = getComponentFor(entity_id);
     if (!deck) return false;
 
     deck->temperature = temp;

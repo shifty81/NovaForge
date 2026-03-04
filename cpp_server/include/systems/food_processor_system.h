@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FOOD_PROCESSOR_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FOOD_PROCESSOR_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/fps_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +16,11 @@ namespace systems {
  * Manages food processors that craft nutrition items from ingredient recipes.
  * Supports concurrent crafting jobs, power toggling, and efficiency multipliers.
  */
-class FoodProcessorSystem : public ecs::System {
+class FoodProcessorSystem : public ecs::SingleComponentSystem<components::FoodProcessor> {
 public:
     explicit FoodProcessorSystem(ecs::World* world);
     ~FoodProcessorSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FoodProcessorSystem"; }
 
     // Commands
@@ -41,6 +40,9 @@ public:
     bool isJobComplete(const std::string& entity_id, const std::string& owner_id) const;
     bool isPowered(const std::string& entity_id) const;
     float getEfficiency(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FoodProcessor& fp, float delta_time) override;
 };
 
 } // namespace systems

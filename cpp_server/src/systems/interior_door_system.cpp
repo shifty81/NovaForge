@@ -8,46 +8,40 @@ namespace atlas {
 namespace systems {
 
 InteriorDoorSystem::InteriorDoorSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void InteriorDoorSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::InteriorDoor>();
-    for (auto* entity : entities) {
-        auto* door = entity->getComponent<components::InteriorDoor>();
-        if (!door) continue;
+void InteriorDoorSystem::updateComponent(ecs::Entity& /*entity*/, components::InteriorDoor& door, float delta_time) {
+    using DS = components::InteriorDoor::DoorState;
 
-        using DS = components::InteriorDoor::DoorState;
+    // Update pressure warning
+    float diff = std::fabs(door.pressure_a - door.pressure_b);
+    door.pressure_warning = (diff > door.pressure_threshold);
 
-        // Update pressure warning
-        float diff = std::fabs(door->pressure_a - door->pressure_b);
-        door->pressure_warning = (diff > door->pressure_threshold);
+    int state = door.door_state;
 
-        int state = door->door_state;
-
-        if (state == static_cast<int>(DS::Opening)) {
-            float step = delta_time / std::max(0.01f, door->open_speed);
-            door->open_progress = std::min(1.0f, door->open_progress + step);
-            if (door->open_progress >= 1.0f) {
-                door->door_state = static_cast<int>(DS::Open);
-                door->auto_close_timer = door->auto_close_delay;
-            }
+    if (state == static_cast<int>(DS::Opening)) {
+        float step = delta_time / std::max(0.01f, door.open_speed);
+        door.open_progress = std::min(1.0f, door.open_progress + step);
+        if (door.open_progress >= 1.0f) {
+            door.door_state = static_cast<int>(DS::Open);
+            door.auto_close_timer = door.auto_close_delay;
         }
-        else if (state == static_cast<int>(DS::Closing)) {
-            float step = delta_time / std::max(0.01f, door->open_speed);
-            door->open_progress = std::max(0.0f, door->open_progress - step);
-            if (door->open_progress <= 0.0f) {
-                door->door_state = static_cast<int>(DS::Closed);
-            }
+    }
+    else if (state == static_cast<int>(DS::Closing)) {
+        float step = delta_time / std::max(0.01f, door.open_speed);
+        door.open_progress = std::max(0.0f, door.open_progress - step);
+        if (door.open_progress <= 0.0f) {
+            door.door_state = static_cast<int>(DS::Closed);
         }
-        else if (state == static_cast<int>(DS::Open)) {
-            // Auto-close countdown
-            if (door->auto_close_delay > 0.0f) {
-                door->auto_close_timer -= delta_time;
-                if (door->auto_close_timer <= 0.0f) {
-                    door->door_state = static_cast<int>(DS::Closing);
-                    door->auto_close_timer = 0.0f;
-                }
+    }
+    else if (state == static_cast<int>(DS::Open)) {
+        // Auto-close countdown
+        if (door.auto_close_delay > 0.0f) {
+            door.auto_close_timer -= delta_time;
+            if (door.auto_close_timer <= 0.0f) {
+                door.door_state = static_cast<int>(DS::Closing);
+                door.auto_close_timer = 0.0f;
             }
         }
     }
@@ -77,9 +71,7 @@ bool InteriorDoorSystem::createDoor(
 
 bool InteriorDoorSystem::requestOpen(const std::string& door_id,
                                       const std::string& player_access) {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return false;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    auto* door = getComponentFor(door_id);
     if (!door) return false;
 
     using DS = components::InteriorDoor::DoorState;
@@ -111,9 +103,7 @@ bool InteriorDoorSystem::requestOpen(const std::string& door_id,
 }
 
 bool InteriorDoorSystem::requestClose(const std::string& door_id) {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return false;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    auto* door = getComponentFor(door_id);
     if (!door) return false;
 
     using DS = components::InteriorDoor::DoorState;
@@ -126,9 +116,7 @@ bool InteriorDoorSystem::requestClose(const std::string& door_id) {
 }
 
 bool InteriorDoorSystem::lockDoor(const std::string& door_id) {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return false;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    auto* door = getComponentFor(door_id);
     if (!door) return false;
 
     // Can only lock when closed
@@ -141,9 +129,7 @@ bool InteriorDoorSystem::lockDoor(const std::string& door_id) {
 }
 
 bool InteriorDoorSystem::unlockDoor(const std::string& door_id) {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return false;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    auto* door = getComponentFor(door_id);
     if (!door) return false;
 
     using DS = components::InteriorDoor::DoorState;
@@ -156,9 +142,7 @@ bool InteriorDoorSystem::unlockDoor(const std::string& door_id) {
 
 bool InteriorDoorSystem::setPressure(const std::string& door_id,
                                       float pressure_a, float pressure_b) {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return false;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    auto* door = getComponentFor(door_id);
     if (!door) return false;
 
     door->pressure_a = std::max(0.0f, pressure_a);
@@ -167,30 +151,22 @@ bool InteriorDoorSystem::setPressure(const std::string& door_id,
 }
 
 int InteriorDoorSystem::getDoorState(const std::string& door_id) const {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return -1;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    const auto* door = getComponentFor(door_id);
     return door ? door->door_state : -1;
 }
 
 float InteriorDoorSystem::getOpenProgress(const std::string& door_id) const {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return 0.0f;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    const auto* door = getComponentFor(door_id);
     return door ? door->open_progress : 0.0f;
 }
 
 bool InteriorDoorSystem::hasPressureWarning(const std::string& door_id) const {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return false;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    const auto* door = getComponentFor(door_id);
     return door ? door->pressure_warning : false;
 }
 
 bool InteriorDoorSystem::isLocked(const std::string& door_id) const {
-    auto* entity = world_->getEntity(door_id);
-    if (!entity) return false;
-    auto* door = entity->getComponent<components::InteriorDoor>();
+    const auto* door = getComponentFor(door_id);
     return door ? door->is_locked : false;
 }
 

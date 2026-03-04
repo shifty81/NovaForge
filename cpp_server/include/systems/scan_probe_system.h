@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_SCAN_PROBE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SCAN_PROBE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/exploration_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * Probes have scan time, radius, and lifetime. Results accumulate as signal
  * strength increases with successive scans.
  */
-class ScanProbeSystem : public ecs::System {
+class ScanProbeSystem : public ecs::SingleComponentSystem<components::ScanProbe> {
 public:
     explicit ScanProbeSystem(ecs::World* world);
     ~ScanProbeSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ScanProbeSystem"; }
 
     bool initializeProbes(const std::string& entity_id, const std::string& owner_id);
@@ -35,6 +35,9 @@ public:
     int getResultCount(const std::string& entity_id) const;
     int getTotalScansCompleted(const std::string& entity_id) const;
     int getTotalSitesFound(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ScanProbe& sp, float delta_time) override;
 };
 
 } // namespace systems

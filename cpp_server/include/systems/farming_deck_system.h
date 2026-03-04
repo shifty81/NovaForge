@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FARMING_DECK_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FARMING_DECK_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages crop growth lifecycle with planting, watering, fertilizing,
  * and harvesting. Supports multiple crop plots with environmental controls.
  */
-class FarmingDeckSystem : public ecs::System {
+class FarmingDeckSystem : public ecs::SingleComponentSystem<components::FarmingDeck> {
 public:
     explicit FarmingDeckSystem(ecs::World* world);
     ~FarmingDeckSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FarmingDeckSystem"; }
 
     // Initialization
@@ -44,6 +43,9 @@ public:
     bool setPowerEnabled(const std::string& entity_id, bool enabled);
     bool setLightLevel(const std::string& entity_id, float level);
     bool setTemperature(const std::string& entity_id, float temp);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FarmingDeck& deck, float delta_time) override;
 };
 
 } // namespace systems

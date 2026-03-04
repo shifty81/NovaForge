@@ -7,22 +7,18 @@ namespace atlas {
 namespace systems {
 
 FoodProcessorSystem::FoodProcessorSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FoodProcessorSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::FoodProcessor>();
-    for (auto* entity : entities) {
-        auto* fp = entity->getComponent<components::FoodProcessor>();
-        if (!fp || !fp->powered) continue;
+void FoodProcessorSystem::updateComponent(ecs::Entity& /*entity*/, components::FoodProcessor& fp, float delta_time) {
+    if (!fp.powered) return;
 
-        for (auto& job : fp->active_jobs) {
-            if (job.completed) continue;
-            job.time_remaining -= delta_time * fp->efficiency;
-            if (job.time_remaining <= 0.0f) {
-                job.time_remaining = 0.0f;
-                job.completed = true;
-            }
+    for (auto& job : fp.active_jobs) {
+        if (job.completed) continue;
+        job.time_remaining -= delta_time * fp.efficiency;
+        if (job.time_remaining <= 0.0f) {
+            job.time_remaining = 0.0f;
+            job.completed = true;
         }
     }
 }
@@ -31,10 +27,7 @@ bool FoodProcessorSystem::addRecipe(const std::string& entity_id, const std::str
                                      const std::string& output_item, int output_quantity,
                                      const std::vector<std::pair<std::string, int>>& ingredients,
                                      float craft_time, float nutrition_value) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    auto* fp = getComponentFor(entity_id);
     if (!fp) return false;
 
     // Check for duplicate recipe
@@ -55,10 +48,7 @@ bool FoodProcessorSystem::addRecipe(const std::string& entity_id, const std::str
 
 bool FoodProcessorSystem::startCrafting(const std::string& entity_id, const std::string& recipe_id,
                                          const std::string& owner_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    auto* fp = getComponentFor(entity_id);
     if (!fp) return false;
 
     if (!fp->powered) return false;
@@ -91,10 +81,7 @@ bool FoodProcessorSystem::startCrafting(const std::string& entity_id, const std:
 }
 
 bool FoodProcessorSystem::cancelCrafting(const std::string& entity_id, const std::string& owner_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    auto* fp = getComponentFor(entity_id);
     if (!fp) return false;
 
     for (auto it = fp->active_jobs.begin(); it != fp->active_jobs.end(); ++it) {
@@ -107,10 +94,7 @@ bool FoodProcessorSystem::cancelCrafting(const std::string& entity_id, const std
 }
 
 bool FoodProcessorSystem::setPowered(const std::string& entity_id, bool powered) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    auto* fp = getComponentFor(entity_id);
     if (!fp) return false;
 
     fp->powered = powered;
@@ -118,10 +102,7 @@ bool FoodProcessorSystem::setPowered(const std::string& entity_id, bool powered)
 }
 
 bool FoodProcessorSystem::setEfficiency(const std::string& entity_id, float efficiency) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    auto* fp = getComponentFor(entity_id);
     if (!fp) return false;
 
     fp->efficiency = efficiency;
@@ -129,20 +110,14 @@ bool FoodProcessorSystem::setEfficiency(const std::string& entity_id, float effi
 }
 
 int FoodProcessorSystem::getRecipeCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    const auto* fp = getComponentFor(entity_id);
     if (!fp) return 0;
 
     return static_cast<int>(fp->available_recipes.size());
 }
 
 int FoodProcessorSystem::getActiveJobCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    const auto* fp = getComponentFor(entity_id);
     if (!fp) return 0;
 
     int count = 0;
@@ -153,10 +128,7 @@ int FoodProcessorSystem::getActiveJobCount(const std::string& entity_id) const {
 }
 
 bool FoodProcessorSystem::isJobComplete(const std::string& entity_id, const std::string& owner_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    const auto* fp = getComponentFor(entity_id);
     if (!fp) return false;
 
     for (const auto& j : fp->active_jobs) {
@@ -166,20 +138,14 @@ bool FoodProcessorSystem::isJobComplete(const std::string& entity_id, const std:
 }
 
 bool FoodProcessorSystem::isPowered(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    const auto* fp = getComponentFor(entity_id);
     if (!fp) return false;
 
     return fp->powered;
 }
 
 float FoodProcessorSystem::getEfficiency(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* fp = entity->getComponent<components::FoodProcessor>();
+    const auto* fp = getComponentFor(entity_id);
     if (!fp) return 0.0f;
 
     return fp->efficiency;
