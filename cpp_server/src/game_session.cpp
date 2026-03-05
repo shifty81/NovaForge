@@ -1,5 +1,10 @@
 #include "game_session.h"
 #include "game_session_internal.h"
+#include "handlers/combat_handler.h"
+#include "handlers/station_handler.h"
+#include "handlers/movement_handler.h"
+#include "handlers/scanner_handler.h"
+#include "handlers/mission_handler.h"
 #include "systems/snapshot_replication_system.h"
 #include "utils/logger.h"
 #include <sstream>
@@ -17,6 +22,75 @@ GameSession::GameSession(ecs::World* world, network::TCPServer* tcp_server,
     , tcp_server_(tcp_server) {
     // Load ship data from JSON
     ship_db_.loadFromDirectory(data_path);
+
+    // Entity lookup callback shared by all handlers
+    auto lookup = [this](int fd) -> std::string {
+        std::lock_guard<std::mutex> lock(players_mutex_);
+        auto it = players_.find(fd);
+        return (it != players_.end()) ? it->second.entity_id : "";
+    };
+
+    // Create domain handlers
+    auto combat = std::make_unique<handlers::CombatHandler>(
+        world_, tcp_server_, &protocol_, lookup);
+    combat_handler_ = combat.get();
+    handlers_.push_back(std::move(combat));
+
+    auto station = std::make_unique<handlers::StationHandler>(
+        world_, tcp_server_, &protocol_, lookup);
+    station_handler_ = station.get();
+    handlers_.push_back(std::move(station));
+
+    auto movement = std::make_unique<handlers::MovementHandler>(
+        tcp_server_, &protocol_, lookup);
+    movement_handler_ = movement.get();
+    handlers_.push_back(std::move(movement));
+
+    auto scanner = std::make_unique<handlers::ScannerHandler>(
+        tcp_server_, &protocol_, lookup);
+    scanner_handler_ = scanner.get();
+    handlers_.push_back(std::move(scanner));
+
+    auto mission = std::make_unique<handlers::MissionHandler>(
+        tcp_server_, &protocol_, lookup);
+    mission_handler_ = mission.get();
+    handlers_.push_back(std::move(mission));
+}
+
+// ---------------------------------------------------------------------------
+// System injection — forwarded to domain handlers
+// ---------------------------------------------------------------------------
+
+void GameSession::setTargetingSystem(systems::TargetingSystem* ts) {
+    combat_handler_->setTargetingSystem(ts);
+}
+
+void GameSession::setStationSystem(systems::StationSystem* ss) {
+    station_handler_->setStationSystem(ss);
+}
+
+void GameSession::setMovementSystem(systems::MovementSystem* ms) {
+    movement_handler_->setMovementSystem(ms);
+}
+
+void GameSession::setCombatSystem(systems::CombatSystem* cs) {
+    combat_handler_->setCombatSystem(cs);
+}
+
+void GameSession::setScannerSystem(systems::ScannerSystem* ss) {
+    scanner_handler_->setScannerSystem(ss);
+}
+
+void GameSession::setAnomalySystem(systems::AnomalySystem* as) {
+    scanner_handler_->setAnomalySystem(as);
+}
+
+void GameSession::setMissionSystem(systems::MissionSystem* ms) {
+    mission_handler_->setMissionSystem(ms);
+}
+
+void GameSession::setMissionGeneratorSystem(systems::MissionGeneratorSystem* mg) {
+    mission_handler_->setMissionGeneratorSystem(mg);
 }
 
 void GameSession::initialize() {
@@ -107,74 +181,29 @@ void GameSession::onClientMessage(const network::ClientConnection& client,
     }
 
     switch (type) {
+        // Core session messages handled directly
         case network::MessageType::CONNECT:
             handleConnect(client, data);
-            break;
+            return;
         case network::MessageType::DISCONNECT:
             handleDisconnect(client);
-            break;
+            return;
         case network::MessageType::INPUT_MOVE:
             handleInputMove(client, data);
-            break;
+            return;
         case network::MessageType::CHAT:
             handleChat(client, data);
-            break;
-        case network::MessageType::TARGET_LOCK:
-            handleTargetLock(client, data);
-            break;
-        case network::MessageType::TARGET_UNLOCK:
-            handleTargetUnlock(client, data);
-            break;
-        case network::MessageType::MODULE_ACTIVATE:
-            handleModuleActivate(client, data);
-            break;
-        case network::MessageType::MODULE_DEACTIVATE:
-            handleModuleDeactivate(client, data);
-            break;
-        case network::MessageType::DOCK_REQUEST:
-            handleDockRequest(client, data);
-            break;
-        case network::MessageType::UNDOCK_REQUEST:
-            handleUndockRequest(client, data);
-            break;
-        case network::MessageType::REPAIR_REQUEST:
-            handleRepairRequest(client, data);
-            break;
-        case network::MessageType::WARP_REQUEST:
-            handleWarpRequest(client, data);
-            break;
-        case network::MessageType::APPROACH:
-            handleApproach(client, data);
-            break;
-        case network::MessageType::ORBIT:
-            handleOrbit(client, data);
-            break;
-        case network::MessageType::STOP:
-            handleStop(client, data);
-            break;
-        case network::MessageType::SCAN_START:
-            handleScanStart(client, data);
-            break;
-        case network::MessageType::SCAN_STOP:
-            handleScanStop(client, data);
-            break;
-        case network::MessageType::ANOMALY_LIST:
-            handleAnomalyList(client, data);
-            break;
-        case network::MessageType::MISSION_LIST:
-            handleMissionList(client, data);
-            break;
-        case network::MessageType::ACCEPT_MISSION:
-            handleAcceptMission(client, data);
-            break;
-        case network::MessageType::ABANDON_MISSION:
-            handleAbandonMission(client, data);
-            break;
-        case network::MessageType::MISSION_PROGRESS:
-            handleMissionProgress(client, data);
-            break;
+            return;
         default:
             break;
+    }
+
+    // Delegate to domain handlers
+    for (auto& handler : handlers_) {
+        if (handler->canHandle(type)) {
+            handler->handle(type, client, data);
+            return;
+        }
     }
 }
 

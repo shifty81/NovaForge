@@ -5,14 +5,17 @@
 #include "network/tcp_server.h"
 #include "network/protocol_handler.h"
 #include "data/ship_database.h"
+#include "handlers/message_handler.h"
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <mutex>
 #include <atomic>
+#include <memory>
 
 namespace atlas {
 
-// Forward declarations
+// Forward declarations — systems
 namespace pcg { class PCGManager; }
 namespace systems { 
     class TargetingSystem;
@@ -25,6 +28,15 @@ namespace systems {
     class MissionGeneratorSystem;
     class SnapshotReplicationSystem;
     class InterestManagementSystem;
+}
+
+// Forward declarations — domain handlers
+namespace handlers {
+    class CombatHandler;
+    class StationHandler;
+    class MovementHandler;
+    class ScannerHandler;
+    class MissionHandler;
 }
 
 /**
@@ -58,29 +70,15 @@ public:
     /// Kick a player by character name. Returns true if found and removed.
     bool kickPlayer(const std::string& character_name);
 
-    /// Set pointer to the TargetingSystem for lock/unlock handling
-    void setTargetingSystem(systems::TargetingSystem* ts) { targeting_system_ = ts; }
-
-    /// Set pointer to the StationSystem for docking/repair handling
-    void setStationSystem(systems::StationSystem* ss) { station_system_ = ss; }
-
-    /// Set pointer to the MovementSystem for warp/approach/orbit/stop handling
-    void setMovementSystem(systems::MovementSystem* ms) { movement_system_ = ms; }
-
-    /// Set pointer to the CombatSystem for weapon firing
-    void setCombatSystem(systems::CombatSystem* cs) { combat_system_ = cs; }
-
-    /// Set pointer to the ScannerSystem for probe scanning
-    void setScannerSystem(systems::ScannerSystem* ss) { scanner_system_ = ss; }
-
-    /// Set pointer to the AnomalySystem for anomaly queries
-    void setAnomalySystem(systems::AnomalySystem* as) { anomaly_system_ = as; }
-
-    /// Set pointer to the MissionSystem for mission tracking
-    void setMissionSystem(systems::MissionSystem* ms) { mission_system_ = ms; }
-
-    /// Set pointer to the MissionGeneratorSystem for mission offers
-    void setMissionGeneratorSystem(systems::MissionGeneratorSystem* mg) { mission_generator_ = mg; }
+    /// System injection — forwarded to domain handlers
+    void setTargetingSystem(systems::TargetingSystem* ts);
+    void setStationSystem(systems::StationSystem* ss);
+    void setMovementSystem(systems::MovementSystem* ms);
+    void setCombatSystem(systems::CombatSystem* cs);
+    void setScannerSystem(systems::ScannerSystem* ss);
+    void setAnomalySystem(systems::AnomalySystem* as);
+    void setMissionSystem(systems::MissionSystem* ms);
+    void setMissionGeneratorSystem(systems::MissionGeneratorSystem* mg);
 
     /// Set pointer to the SnapshotReplicationSystem for delta state updates
     void setSnapshotReplicationSystem(systems::SnapshotReplicationSystem* srs) { snapshot_replication_ = srs; }
@@ -144,171 +142,6 @@ private:
      * @param data JSON message data with message content
      */
     void handleChat(const network::ClientConnection& client, const std::string& data);
-    
-    /**
-     * Handle target lock request
-     * 
-     * Attempts to lock the specified target entity.
-     * Expected format: {"type":"target_lock","target_id":"entity_123"}
-     * 
-     * @param client Client connection info
-     * @param data JSON message data with target_id
-     */
-    void handleTargetLock(const network::ClientConnection& client, const std::string& data);
-    
-    /**
-     * Handle target unlock request
-     * 
-     * Clears the current target lock.
-     * Expected format: {"type":"target_unlock"}
-     * 
-     * @param client Client connection info
-     * @param data JSON message data
-     */
-    void handleTargetUnlock(const network::ClientConnection& client, const std::string& data);
-    
-    /**
-     * Handle module activation
-     * 
-     * Activates a ship module (weapon, shield booster, etc.).
-     * Expected format: {"type":"module_activate","slot":0}
-     * 
-     * @param client Client connection info
-     * @param data JSON message data with slot number
-     */
-    void handleModuleActivate(const network::ClientConnection& client, const std::string& data);
-    
-    /**
-     * Handle module deactivation
-     * 
-     * Deactivates a ship module.
-     * Expected format: {"type":"module_deactivate","slot":0}
-     * 
-     * @param client Client connection info
-     * @param data JSON message data with slot number
-     */
-    void handleModuleDeactivate(const network::ClientConnection& client, const std::string& data);
-    
-    /**
-     * Handle dock request
-     * 
-     * Attempts to dock player at specified station.
-     * Expected format: {"type":"dock_request","station_id":"station_jita4"}
-     * 
-     * @param client Client connection info
-     * @param data JSON message data with station_id
-     */
-    void handleDockRequest(const network::ClientConnection& client, const std::string& data);
-    
-    /**
-     * Handle undock request
-     * 
-     * Undocks player from current station.
-     * Expected format: {"type":"undock_request"}
-     * 
-     * @param client Client connection info
-     * @param data JSON message data
-     */
-    void handleUndockRequest(const network::ClientConnection& client, const std::string& data);
-    
-    /**
-     * Handle repair request
-     * 
-     * Repairs player ship at current station.
-     * Expected format: {"type":"repair_request"}
-     * 
-     * @param client Client connection info
-     * @param data JSON message data
-     */
-    void handleRepairRequest(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle warp request
-     *
-     * Initiates warp to a destination position.
-     * Expected format: {"type":"warp_request","dest_x":1000,"dest_y":0,"dest_z":5000}
-     */
-    void handleWarpRequest(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle approach command
-     *
-     * Commands the player's ship to approach a target entity.
-     * Expected format: {"type":"approach","target_id":"entity_123"}
-     */
-    void handleApproach(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle orbit command
-     *
-     * Commands the player's ship to orbit a target entity at a given distance.
-     * Expected format: {"type":"orbit","target_id":"entity_123","distance":5000}
-     */
-    void handleOrbit(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle stop command
-     *
-     * Commands the player's ship to stop all movement.
-     * Expected format: {"type":"stop"}
-     */
-    void handleStop(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle scan start request
-     *
-     * Begins scanning the current solar system for anomalies.
-     * Expected format: {"type":"scan_start","system_id":"system_01"}
-     */
-    void handleScanStart(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle scan stop request
-     *
-     * Stops an active scan.
-     * Expected format: {"type":"scan_stop"}
-     */
-    void handleScanStop(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle anomaly list request
-     *
-     * Returns a list of anomalies in the current system.
-     * Expected format: {"type":"anomaly_list","system_id":"system_01"}
-     */
-    void handleAnomalyList(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle mission list request
-     *
-     * Returns available missions for the current system.
-     * Expected format: {"type":"mission_list","system_id":"system_01"}
-     */
-    void handleMissionList(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle accept mission request
-     *
-     * Accepts an offered mission by index.
-     * Expected format: {"type":"accept_mission","system_id":"system_01","mission_index":0}
-     */
-    void handleAcceptMission(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle abandon mission request
-     *
-     * Abandons an active mission.
-     * Expected format: {"type":"abandon_mission","mission_id":"mission_001"}
-     */
-    void handleAbandonMission(const network::ClientConnection& client, const std::string& data);
-
-    /**
-     * Handle mission progress report
-     *
-     * Records objective progress for an active mission.
-     * Expected format: {"type":"mission_progress","mission_id":"mission_001","objective_type":"destroy","target":"pirate","count":1}
-     */
-    void handleMissionProgress(const network::ClientConnection& client, const std::string& data);
 
     // --- State broadcast ---
     /**
@@ -376,17 +209,19 @@ private:
     network::TCPServer* tcp_server_;
     network::ProtocolHandler protocol_;
     data::ShipDatabase ship_db_;
-    systems::TargetingSystem* targeting_system_ = nullptr;
-    systems::StationSystem* station_system_ = nullptr;
-    systems::MovementSystem* movement_system_ = nullptr;
-    systems::CombatSystem* combat_system_ = nullptr;
-    systems::ScannerSystem* scanner_system_ = nullptr;
-    systems::AnomalySystem* anomaly_system_ = nullptr;
-    systems::MissionSystem* mission_system_ = nullptr;
-    systems::MissionGeneratorSystem* mission_generator_ = nullptr;
+
+    // Systems kept on GameSession (used in core connect/disconnect/update)
     systems::SnapshotReplicationSystem* snapshot_replication_ = nullptr;
     systems::InterestManagementSystem* interest_management_ = nullptr;
     pcg::PCGManager* pcg_manager_ = nullptr;
+
+    // Domain message handlers
+    std::vector<std::unique_ptr<handlers::IMessageHandler>> handlers_;
+    handlers::CombatHandler* combat_handler_ = nullptr;
+    handlers::StationHandler* station_handler_ = nullptr;
+    handlers::MovementHandler* movement_handler_ = nullptr;
+    handlers::ScannerHandler* scanner_handler_ = nullptr;
+    handlers::MissionHandler* mission_handler_ = nullptr;
 
     // Map socket → entity_id for connected players
     struct PlayerInfo {
