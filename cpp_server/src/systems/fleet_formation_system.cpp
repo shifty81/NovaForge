@@ -54,6 +54,8 @@ FleetFormationSystem::getFormation(const std::string& entity_id) const {
 }
 
 void FleetFormationSystem::computeOffsets() {
+    // Delegates to update() which iterates all FleetFormation entities
+    // via the SingleComponentSystem base; delta_time is unused by updateComponent
     update(0.0f);
 }
 

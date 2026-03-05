@@ -10,7 +10,6 @@ FleetProgressionSystem::FleetProgressionSystem(ecs::World* world)
 }
 
 void FleetProgressionSystem::updateComponent(ecs::Entity& entity, components::FleetProgression& prog, float /*delta_time*/) {
-    auto prev_stage = prog.stage;
     prog.updateStage();
 
     // Auto-unlock wing roles on stage transition
