@@ -7,43 +7,36 @@ namespace atlas {
 namespace systems {
 
 TargetingSystem::TargetingSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void TargetingSystem::update(float delta_time) {
-    // Get all entities with targeting capability
-    auto entities = world_->getEntities<components::Target, components::Ship>();
+void TargetingSystem::updateComponent(ecs::Entity& entity, components::Target& target_comp, float delta_time) {
+    auto* ship = entity.getComponent<components::Ship>();
+    if (!ship) return;
     
-    for (auto* entity : entities) {
-        auto* target_comp = entity->getComponent<components::Target>();
-        auto* ship = entity->getComponent<components::Ship>();
+    // Process locking targets
+    std::vector<std::string> completed_locks;
+    
+    for (auto& [target_id, progress] : target_comp.locking_targets) {
+        // Lock time based on scan resolution (simplified)
+        // Higher scan resolution = faster locking
+        float lock_time = 1000.0f / ship->scan_resolution;  // seconds
+        progress += delta_time / lock_time;
         
-        if (!target_comp || !ship) continue;
-        
-        // Process locking targets
-        std::vector<std::string> completed_locks;
-        
-        for (auto& [target_id, progress] : target_comp->locking_targets) {
-            // Lock time based on scan resolution (simplified)
-            // Higher scan resolution = faster locking
-            float lock_time = 1000.0f / ship->scan_resolution;  // seconds
-            progress += delta_time / lock_time;
-            
-            // Check if lock is complete
-            if (progress >= 1.0f) {
-                completed_locks.push_back(target_id);
-            }
+        // Check if lock is complete
+        if (progress >= 1.0f) {
+            completed_locks.push_back(target_id);
         }
-        
-        // Complete locks
-        for (const auto& target_id : completed_locks) {
-            // Check if we have room for more locked targets
-            if (target_comp->locked_targets.size() < static_cast<size_t>(ship->max_locked_targets)) {
-                target_comp->locked_targets.push_back(target_id);
-            }
-            // Remove from locking map
-            target_comp->locking_targets.erase(target_id);
+    }
+    
+    // Complete locks
+    for (const auto& target_id : completed_locks) {
+        // Check if we have room for more locked targets
+        if (target_comp.locked_targets.size() < static_cast<size_t>(ship->max_locked_targets)) {
+            target_comp.locked_targets.push_back(target_id);
         }
+        // Remove from locking map
+        target_comp.locking_targets.erase(target_id);
     }
 }
 
@@ -51,7 +44,7 @@ bool TargetingSystem::startLock(const std::string& entity_id, const std::string&
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
     
-    auto* target_comp = entity->getComponent<components::Target>();
+    auto* target_comp = getComponentFor(entity_id);
     auto* ship = entity->getComponent<components::Ship>();
     
     if (!target_comp || !ship) return false;
@@ -85,10 +78,7 @@ bool TargetingSystem::startLock(const std::string& entity_id, const std::string&
 }
 
 void TargetingSystem::unlockTarget(const std::string& entity_id, const std::string& target_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-    
-    auto* target_comp = entity->getComponent<components::Target>();
+    auto* target_comp = getComponentFor(entity_id);
     if (!target_comp) return;
     
     // Remove from locked targets
@@ -104,10 +94,7 @@ void TargetingSystem::unlockTarget(const std::string& entity_id, const std::stri
 }
 
 bool TargetingSystem::isTargetLocked(const std::string& entity_id, const std::string& target_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    
-    auto* target_comp = entity->getComponent<components::Target>();
+    const auto* target_comp = getComponentFor(entity_id);
     if (!target_comp) return false;
     
     auto it = std::find(target_comp->locked_targets.begin(), 

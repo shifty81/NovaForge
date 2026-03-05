@@ -10,40 +10,37 @@ namespace atlas {
 namespace systems {
 
 AISystem::AISystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AISystem::update(float delta_time) {
-    // Get all entities with AI component
-    auto entities = world_->getEntities<components::AI, components::Position, components::Velocity>();
+void AISystem::updateComponent(ecs::Entity& entity, components::AI& ai, float /*delta_time*/) {
+    // Require Position and Velocity (same filter as original multi-component query)
+    if (!entity.getComponent<components::Position>()) return;
+    if (!entity.getComponent<components::Velocity>()) return;
     
-    for (auto* entity : entities) {
-        auto* ai = entity->getComponent<components::AI>();
-        
-        // Execute behavior based on current state
-        switch (ai->state) {
-            case components::AI::State::Idle:
-                idleBehavior(entity);
-                break;
-            case components::AI::State::Approaching:
-                approachBehavior(entity);
-                break;
-            case components::AI::State::Orbiting:
-                orbitBehavior(entity);
-                break;
-            case components::AI::State::Attacking:
-                attackBehavior(entity);
-                break;
-            case components::AI::State::Fleeing:
-                fleeBehavior(entity);
-                break;
-            case components::AI::State::Mining:
-                miningBehavior(entity);
-                break;
-            case components::AI::State::Hauling:
-                haulingBehavior(entity);
-                break;
-        }
+    // Execute behavior based on current state
+    switch (ai.state) {
+        case components::AI::State::Idle:
+            idleBehavior(&entity);
+            break;
+        case components::AI::State::Approaching:
+            approachBehavior(&entity);
+            break;
+        case components::AI::State::Orbiting:
+            orbitBehavior(&entity);
+            break;
+        case components::AI::State::Attacking:
+            attackBehavior(&entity);
+            break;
+        case components::AI::State::Fleeing:
+            fleeBehavior(&entity);
+            break;
+        case components::AI::State::Mining:
+            miningBehavior(&entity);
+            break;
+        case components::AI::State::Hauling:
+            haulingBehavior(&entity);
+            break;
     }
 }
 

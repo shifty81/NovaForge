@@ -7,34 +7,28 @@ namespace atlas {
 namespace systems {
 
 AncientTechUpgradeSystem::AncientTechUpgradeSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AncientTechUpgradeSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::AncientTechModule>();
-    for (auto* entity : entities) {
-        auto* tech = entity->getComponent<components::AncientTechModule>();
-        if (!tech) continue;
+void AncientTechUpgradeSystem::updateComponent(ecs::Entity& entity, components::AncientTechModule& tech, float delta_time) {
+    auto* upg = entity.getComponent<components::AncientTechUpgradeState>();
+    if (!upg || !upg->upgrading) return;
+    if (upg->upgrade_cost <= 0.0f) return;
 
-        auto* upg = entity->getComponent<components::AncientTechUpgradeState>();
-        if (!upg || !upg->upgrading) continue;
-        if (upg->upgrade_cost <= 0.0f) continue;
-
-        upg->upgrade_progress = std::min(1.0f, upg->upgrade_progress + delta_time / upg->upgrade_cost);
-        if (upg->upgrade_progress >= 1.0f) {
-            upg->upgrade_progress = 1.0f;
-            upg->upgrading = false;
-            tech->state = components::AncientTechModule::TechState::Upgraded;
-            upg->bonus_type = tech->tech_type;
-            upg->bonus_magnitude = tech->power_multiplier;
-        }
+    upg->upgrade_progress = std::min(1.0f, upg->upgrade_progress + delta_time / upg->upgrade_cost);
+    if (upg->upgrade_progress >= 1.0f) {
+        upg->upgrade_progress = 1.0f;
+        upg->upgrading = false;
+        tech.state = components::AncientTechModule::TechState::Upgraded;
+        upg->bonus_type = tech.tech_type;
+        upg->bonus_magnitude = tech.power_multiplier;
     }
 }
 
 bool AncientTechUpgradeSystem::startUpgrade(const std::string& entity_id) {
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
-    auto* tech = entity->getComponent<components::AncientTechModule>();
+    auto* tech = getComponentFor(entity_id);
     if (!tech) return false;
     if (tech->state != components::AncientTechModule::TechState::Repaired) return false;
 
@@ -58,17 +52,13 @@ float AncientTechUpgradeSystem::getUpgradeProgress(const std::string& entity_id)
 }
 
 bool AncientTechUpgradeSystem::hasRuleBreakingBonuses(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* tech = entity->getComponent<components::AncientTechModule>();
+    const auto* tech = getComponentFor(entity_id);
     if (!tech) return false;
     return tech->state == components::AncientTechModule::TechState::Upgraded;
 }
 
 float AncientTechUpgradeSystem::getStatMultiplier(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 1.0f;
-    auto* tech = entity->getComponent<components::AncientTechModule>();
+    const auto* tech = getComponentFor(entity_id);
     if (!tech) return 1.0f;
     if (tech->state == components::AncientTechModule::TechState::Upgraded) {
         return tech->power_multiplier;
@@ -101,9 +91,7 @@ int AncientTechUpgradeSystem::getUpgradedCount() const {
 }
 
 std::string AncientTechUpgradeSystem::getBonusDescription(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* tech = entity->getComponent<components::AncientTechModule>();
+    const auto* tech = getComponentFor(entity_id);
     if (!tech) return "";
     if (tech->state != components::AncientTechModule::TechState::Upgraded) return "";
 
@@ -119,7 +107,7 @@ bool AncientTechUpgradeSystem::cancelUpgrade(const std::string& entity_id) {
     if (!entity) return false;
     auto* upg = entity->getComponent<components::AncientTechUpgradeState>();
     if (!upg || !upg->upgrading) return false;
-    auto* tech = entity->getComponent<components::AncientTechModule>();
+    auto* tech = getComponentFor(entity_id);
     if (tech) {
         tech->state = components::AncientTechModule::TechState::Repaired;
     }

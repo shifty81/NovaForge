@@ -1,12 +1,17 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_POSITIONAL_AUDIO_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_POSITIONAL_AUDIO_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include <string>
 #include <algorithm>
 #include <cmath>
 
 namespace atlas {
+
+namespace components {
+struct PositionalAudioSource;
+}
+
 namespace systems {
 
 /**
@@ -24,12 +29,11 @@ namespace systems {
  *     the enclosed warp tunnel environment.
  *   - Attenuation follows inverse-distance with a min/max range.
  */
-class FleetPositionalAudioSystem : public ecs::System {
+class FleetPositionalAudioSystem : public ecs::SingleComponentSystem<components::PositionalAudioSource> {
 public:
     explicit FleetPositionalAudioSystem(ecs::World* world);
     ~FleetPositionalAudioSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetPositionalAudioSystem"; }
 
     /**
@@ -81,6 +85,9 @@ public:
         wet_mix = std::clamp(wet_mix, 0.0f, 1.0f);
         decay   = std::max(decay, 0.0f);
     }
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::PositionalAudioSource& audio, float delta_time) override;
 };
 
 } // namespace systems
