@@ -1,8 +1,9 @@
 #ifndef NOVAFORGE_SYSTEMS_AI_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_AI_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * Implements NPC AI states: idle, approaching, orbiting, attacking, fleeing.
  * NPCs can detect players, approach them, orbit at preferred distance, and attack.
  */
-class AISystem : public ecs::System {
+class AISystem : public ecs::SingleComponentSystem<components::AI> {
 public:
     explicit AISystem(ecs::World* world);
     ~AISystem() override = default;
     
-    void update(float delta_time) override;
     std::string getName() const override { return "AISystem"; }
     
     /**
@@ -88,6 +88,9 @@ public:
      */
     ecs::Entity* findAttackerOfFriendly(ecs::Entity* entity);
     
+protected:
+    void updateComponent(ecs::Entity& entity, components::AI& ai, float delta_time) override;
+
 private:
     /**
      * Idle behavior state

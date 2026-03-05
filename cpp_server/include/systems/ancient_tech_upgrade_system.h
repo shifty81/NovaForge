@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ANCIENT_TECH_UPGRADE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ANCIENT_TECH_UPGRADE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -17,12 +17,11 @@ namespace systems {
  * to the "Upgraded" state. Upgraded ancient tech provides stat bonuses that
  * exceed the normal caps of modern modules (rule-breaking).
  */
-class AncientTechUpgradeSystem : public ecs::System {
+class AncientTechUpgradeSystem : public ecs::SingleComponentSystem<components::AncientTechModule> {
 public:
     explicit AncientTechUpgradeSystem(ecs::World* world);
     ~AncientTechUpgradeSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "AncientTechUpgradeSystem"; }
 
     /**
@@ -67,6 +66,9 @@ public:
      * @return true if cancellation succeeded
      */
     bool cancelUpgrade(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::AncientTechModule& tech, float delta_time) override;
 };
 
 } // namespace systems

@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_LOD_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_LOD_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <vector>
 
@@ -26,7 +27,7 @@ namespace systems {
  *
  * Entities with force_visible == true always keep priority >= 2.0.
  */
-class LODSystem : public ecs::System {
+class LODSystem : public ecs::SingleComponentSystem<components::LODPriority> {
 public:
     explicit LODSystem(ecs::World* world);
     ~LODSystem() override = default;
@@ -78,6 +79,9 @@ private:
     int reduced_count_     = 0;
     int merged_count_      = 0;
     int impostor_count_    = 0;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::LODPriority& lod, float delta_time) override;
 };
 
 } // namespace systems

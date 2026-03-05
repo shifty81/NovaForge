@@ -1,8 +1,9 @@
 #ifndef NOVAFORGE_SYSTEMS_TARGETING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_TARGETING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * Implements Astralis's target locking system where targets must be
  * locked before they can be attacked. Lock time depends on scan resolution.
  */
-class TargetingSystem : public ecs::System {
+class TargetingSystem : public ecs::SingleComponentSystem<components::Target> {
 public:
     explicit TargetingSystem(ecs::World* world);
     ~TargetingSystem() override = default;
     
-    void update(float delta_time) override;
     std::string getName() const override { return "TargetingSystem"; }
     
     /**
@@ -44,6 +44,9 @@ public:
      * @return true if target is locked, false otherwise
      */
     bool isTargetLocked(const std::string& entity_id, const std::string& target_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Target& target_comp, float delta_time) override;
 };
 
 } // namespace systems
