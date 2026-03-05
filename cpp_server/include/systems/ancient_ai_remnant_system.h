@@ -1,8 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ANCIENT_AI_REMNANT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ANCIENT_AI_REMNANT_SYSTEM_H
 
-#include "ecs/system.h"
-#include "ecs/entity.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -17,12 +16,11 @@ namespace systems {
  * Unlike myth-based bosses, these are site-native guardians with fixed behavior
  * patterns and difficulty based on site tier.
  */
-class AncientAIRemnantSystem : public ecs::System {
+class AncientAIRemnantSystem : public ecs::SingleComponentSystem<components::AncientAIRemnant> {
 public:
     explicit AncientAIRemnantSystem(ecs::World* world);
     ~AncientAIRemnantSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "AncientAIRemnantSystem"; }
 
     /**
@@ -63,6 +61,9 @@ public:
      * @brief Get remnant type name by index
      */
     static std::string getRemnantTypeName(int type_index);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::AncientAIRemnant& comp, float delta_time) override;
 
 private:
     int remnant_counter_ = 0;

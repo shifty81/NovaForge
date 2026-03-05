@@ -1,8 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_VIEW_MODE_TRANSITION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_VIEW_MODE_TRANSITION_SYSTEM_H
 
-#include "ecs/system.h"
-#include "ecs/entity.h"
+#include "ecs/state_machine_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -16,12 +15,11 @@ namespace systems {
  * Interior (FPS walking inside ship), EVA (space walk), and
  * RTS Overlay (tactical fleet command) view modes.
  */
-class ViewModeTransitionSystem : public ecs::System {
+class ViewModeTransitionSystem : public ecs::StateMachineSystem<components::ViewModeState> {
 public:
     explicit ViewModeTransitionSystem(ecs::World* world);
     ~ViewModeTransitionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ViewModeTransitionSystem"; }
 
     /**
@@ -64,6 +62,9 @@ public:
      * @brief Get the name of a view mode
      */
     static std::string getModeName(int mode);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ViewModeState& comp, float delta_time) override;
 
 private:
     static constexpr const char* VIEWMODE_ENTITY_PREFIX = "viewmode_";

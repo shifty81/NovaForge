@@ -1,5 +1,6 @@
 #include "systems/ancient_ai_remnant_system.h"
 #include "ecs/world.h"
+#include "ecs/entity.h"
 #include <algorithm>
 #include <memory>
 
@@ -12,20 +13,16 @@ static constexpr float BASE_DAMAGE = 50.0f;
 static constexpr float DAMAGE_PER_TIER = 25.0f;
 
 AncientAIRemnantSystem::AncientAIRemnantSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AncientAIRemnantSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::AncientAIRemnant>();
-    for (auto* entity : entities) {
-        auto* remnant = entity->getComponent<components::AncientAIRemnant>();
-        if (!remnant || !remnant->active) continue;
+void AncientAIRemnantSystem::updateComponent(ecs::Entity& /*entity*/, components::AncientAIRemnant& comp, float delta_time) {
+    if (!comp.active) return;
 
-        remnant->active_time += delta_time;
+    comp.active_time += delta_time;
 
-        if (remnant->isExpired()) {
-            remnant->active = false;
-        }
+    if (comp.isExpired()) {
+        comp.active = false;
     }
 }
 
@@ -73,16 +70,12 @@ std::string AncientAIRemnantSystem::spawnRemnant(const std::string& site_id, int
 }
 
 bool AncientAIRemnantSystem::isRemnantActive(const std::string& remnant_id) const {
-    auto* entity = world_->getEntity(remnant_id);
-    if (!entity) return false;
-    auto* remnant = entity->getComponent<components::AncientAIRemnant>();
+    const auto* remnant = getComponentFor(remnant_id);
     return remnant && remnant->isActive();
 }
 
 bool AncientAIRemnantSystem::defeatRemnant(const std::string& remnant_id) {
-    auto* entity = world_->getEntity(remnant_id);
-    if (!entity) return false;
-    auto* remnant = entity->getComponent<components::AncientAIRemnant>();
+    auto* remnant = getComponentFor(remnant_id);
     if (!remnant || !remnant->active) return false;
     remnant->active = false;
     remnant->defeated = true;
@@ -100,16 +93,12 @@ int AncientAIRemnantSystem::getActiveRemnantCount() const {
 }
 
 float AncientAIRemnantSystem::getRemnantDifficulty(const std::string& remnant_id) const {
-    auto* entity = world_->getEntity(remnant_id);
-    if (!entity) return 1.0f;
-    auto* remnant = entity->getComponent<components::AncientAIRemnant>();
+    const auto* remnant = getComponentFor(remnant_id);
     return remnant ? remnant->difficulty : 1.0f;
 }
 
 std::string AncientAIRemnantSystem::getRemnantSiteId(const std::string& remnant_id) const {
-    auto* entity = world_->getEntity(remnant_id);
-    if (!entity) return "";
-    auto* remnant = entity->getComponent<components::AncientAIRemnant>();
+    const auto* remnant = getComponentFor(remnant_id);
     return remnant ? remnant->site_id : "";
 }
 
