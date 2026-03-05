@@ -9,22 +9,16 @@ namespace atlas {
 namespace systems {
 
 PropagandaSystem::PropagandaSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void PropagandaSystem::update(float delta_time) {
+void PropagandaSystem::updateComponent(ecs::Entity& /*entity*/, components::PropagandaNetwork& network, float delta_time) {
     // Decay credibility of all myths over time
-    auto entities = world_->getEntities<components::PropagandaNetwork>();
-    for (auto* entity : entities) {
-        auto* network = entity->getComponent<components::PropagandaNetwork>();
-        if (!network) continue;
-
-        for (auto& myth : network->myths) {
-            if (!myth.debunked && myth.credibility > 0.0f) {
-                myth.credibility = std::max(0.0f, myth.credibility - credibility_decay_rate_ * delta_time);
-                if (myth.credibility <= 0.0f) {
-                    myth.debunked = true;
-                }
+    for (auto& myth : network.myths) {
+        if (!myth.debunked && myth.credibility > 0.0f) {
+            myth.credibility = std::max(0.0f, myth.credibility - credibility_decay_rate_ * delta_time);
+            if (myth.credibility <= 0.0f) {
+                myth.debunked = true;
             }
         }
     }

@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_PERSISTENCE_DELTA_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_PERSISTENCE_DELTA_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Records player actions by category, applies decay over time, and triggers
  * consequences when accumulated impact exceeds thresholds.
  */
-class PersistenceDeltaSystem : public ecs::System {
+class PersistenceDeltaSystem : public ecs::SingleComponentSystem<components::PersistenceDelta> {
 public:
     explicit PersistenceDeltaSystem(ecs::World* world);
     ~PersistenceDeltaSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "PersistenceDeltaSystem"; }
 
     bool initializeTracker(const std::string& entity_id);
@@ -33,6 +33,9 @@ public:
     int getEntryCount(const std::string& entity_id) const;
     float getPositiveImpact(const std::string& entity_id) const;
     float getNegativeImpact(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::PersistenceDelta& pd, float delta_time) override;
 };
 
 } // namespace systems

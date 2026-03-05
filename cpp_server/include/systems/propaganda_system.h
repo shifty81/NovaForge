@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_PROPAGANDA_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_PROPAGANDA_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -17,12 +17,11 @@ namespace systems {
  * spread through dialogue. Myths can be beneficial (inflated reputation) or
  * harmful (false accusations), and have a credibility score that decays over time.
  */
-class PropagandaSystem : public ecs::System {
+class PropagandaSystem : public ecs::SingleComponentSystem<components::PropagandaNetwork> {
 public:
     explicit PropagandaSystem(ecs::World* world);
     ~PropagandaSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "PropagandaSystem"; }
 
     /**
@@ -86,6 +85,9 @@ public:
      * @brief Get myth type name
      */
     static std::string getMythTypeName(int type_index);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::PropagandaNetwork& network, float delta_time) override;
 
 private:
     int myth_counter_ = 0;
