@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_STATION_MONUMENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_STATION_MONUMENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -13,12 +13,11 @@ namespace systems {
 // Minimum legend score required to earn a monument
 static constexpr int kMonumentMinScore = 25;
 
-class StationMonumentSystem : public ecs::System {
+class StationMonumentSystem : public ecs::SingleComponentSystem<components::StationMonument> {
 public:
     explicit StationMonumentSystem(ecs::World* world);
     ~StationMonumentSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "StationMonumentSystem"; }
 
     // Check player legend and create/upgrade a monument in the station if warranted.
@@ -36,6 +35,9 @@ public:
 
     // List all monument entity IDs in a station
     std::vector<std::string> getMonuments(const std::string& station_entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::StationMonument& monument, float delta_time) override;
 
 private:
     int monument_counter_ = 0;

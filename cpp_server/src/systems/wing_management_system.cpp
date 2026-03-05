@@ -7,37 +7,32 @@ namespace atlas {
 namespace systems {
 
 WingManagementSystem::WingManagementSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void WingManagementSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::WingState>();
-    for (auto* entity : entities) {
-        auto* ws = entity->getComponent<components::WingState>();
-        if (!ws) continue;
-
-        for (auto& wing : ws->wings) {
-            if (wing.members.empty()) {
-                wing.morale = 50.0f;
-                continue;
-            }
-
-            float sum = 0.0f;
-            int count = 0;
-            for (const auto& member_id : wing.members) {
-                auto* member = world_->getEntity(member_id);
-                if (!member) continue;
-                auto* morale_comp = member->getComponent<components::FleetMorale>();
-                if (morale_comp) {
-                    // Map morale_score (-100..+100) to 0..100 range
-                    sum += (morale_comp->morale_score + 100.0f) / 2.0f;
-                } else {
-                    sum += 50.0f;
-                }
-                count++;
-            }
-            wing.morale = (count > 0) ? std::clamp(sum / static_cast<float>(count), 0.0f, 100.0f) : 50.0f;
+void WingManagementSystem::updateComponent(ecs::Entity& /*entity*/,
+    components::WingState& ws, float /*delta_time*/) {
+    for (auto& wing : ws.wings) {
+        if (wing.members.empty()) {
+            wing.morale = 50.0f;
+            continue;
         }
+
+        float sum = 0.0f;
+        int count = 0;
+        for (const auto& member_id : wing.members) {
+            auto* member = world_->getEntity(member_id);
+            if (!member) continue;
+            auto* morale_comp = member->getComponent<components::FleetMorale>();
+            if (morale_comp) {
+                // Map morale_score (-100..+100) to 0..100 range
+                sum += (morale_comp->morale_score + 100.0f) / 2.0f;
+            } else {
+                sum += 50.0f;
+            }
+            count++;
+        }
+        wing.morale = (count > 0) ? std::clamp(sum / static_cast<float>(count), 0.0f, 100.0f) : 50.0f;
     }
 }
 
@@ -66,10 +61,7 @@ bool WingManagementSystem::createWing(const std::string& fleet_id, const std::st
 }
 
 bool WingManagementSystem::dissolveWing(const std::string& fleet_id, const std::string& wing_id) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return false;
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return false;
 
     auto it = std::find_if(ws->wings.begin(), ws->wings.end(),
@@ -82,10 +74,7 @@ bool WingManagementSystem::dissolveWing(const std::string& fleet_id, const std::
 }
 
 bool WingManagementSystem::assignToWing(const std::string& fleet_id, const std::string& wing_id, const std::string& member_id) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return false;
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return false;
 
     auto* wing = ws->getWing(wing_id);
@@ -103,10 +92,7 @@ bool WingManagementSystem::assignToWing(const std::string& fleet_id, const std::
 }
 
 bool WingManagementSystem::removeFromWing(const std::string& fleet_id, const std::string& wing_id, const std::string& member_id) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return false;
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return false;
 
     auto* wing = ws->getWing(wing_id);
@@ -125,10 +111,7 @@ bool WingManagementSystem::removeFromWing(const std::string& fleet_id, const std
 }
 
 bool WingManagementSystem::setWingCommander(const std::string& fleet_id, const std::string& wing_id, const std::string& commander_id) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return false;
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return false;
 
     auto* wing = ws->getWing(wing_id);
@@ -145,10 +128,7 @@ bool WingManagementSystem::setWingCommander(const std::string& fleet_id, const s
 }
 
 std::string WingManagementSystem::getWingRole(const std::string& fleet_id, const std::string& wing_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return "";
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return "";
 
     const auto* wing = ws->getWing(wing_id);
@@ -156,10 +136,7 @@ std::string WingManagementSystem::getWingRole(const std::string& fleet_id, const
 }
 
 std::vector<std::string> WingManagementSystem::getWingMembers(const std::string& fleet_id, const std::string& wing_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return {};
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return {};
 
     const auto* wing = ws->getWing(wing_id);
@@ -167,10 +144,7 @@ std::vector<std::string> WingManagementSystem::getWingMembers(const std::string&
 }
 
 std::string WingManagementSystem::getWingCommander(const std::string& fleet_id, const std::string& wing_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return "";
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return "";
 
     const auto* wing = ws->getWing(wing_id);
@@ -178,10 +152,7 @@ std::string WingManagementSystem::getWingCommander(const std::string& fleet_id, 
 }
 
 float WingManagementSystem::getWingMorale(const std::string& fleet_id, const std::string& wing_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 50.0f;
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return 50.0f;
 
     const auto* wing = ws->getWing(wing_id);
@@ -189,10 +160,7 @@ float WingManagementSystem::getWingMorale(const std::string& fleet_id, const std
 }
 
 int WingManagementSystem::getWingCount(const std::string& fleet_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0;
-
-    auto* ws = entity->getComponent<components::WingState>();
+    auto* ws = getComponentFor(fleet_id);
     if (!ws) return 0;
 
     return static_cast<int>(ws->wings.size());

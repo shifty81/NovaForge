@@ -9,23 +9,20 @@ namespace atlas {
 namespace systems {
 
 CloudDeploymentConfigSystem::CloudDeploymentConfigSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void CloudDeploymentConfigSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::CloudDeploymentConfig>();
-    for (auto* entity : entities) {
-        auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
-        if (!cfg || !cfg->active) continue;
+void CloudDeploymentConfigSystem::updateComponent(ecs::Entity& /*entity*/,
+    components::CloudDeploymentConfig& cfg, float delta_time) {
+    if (!cfg.active) return;
 
-        if (cfg->deployed) {
-            cfg->uptime += delta_time;
+    if (cfg.deployed) {
+        cfg.uptime += delta_time;
 
-            // Health check countdown
-            if (cfg->health_check_enabled && cfg->health_check_interval > 0.0f) {
-                float interval_count = std::floor(cfg->uptime / cfg->health_check_interval);
-                cfg->health_check_count = static_cast<int>(interval_count);
-            }
+        // Health check countdown
+        if (cfg.health_check_enabled && cfg.health_check_interval > 0.0f) {
+            float interval_count = std::floor(cfg.uptime / cfg.health_check_interval);
+            cfg.health_check_count = static_cast<int>(interval_count);
         }
     }
 }
@@ -39,9 +36,7 @@ bool CloudDeploymentConfigSystem::createConfig(const std::string& entity_id) {
 }
 
 bool CloudDeploymentConfigSystem::setProvider(const std::string& entity_id, int provider) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
     if (provider < 0 || provider > 2) return false;
     cfg->provider = provider;
@@ -57,9 +52,7 @@ bool CloudDeploymentConfigSystem::setProvider(const std::string& entity_id, int 
 
 bool CloudDeploymentConfigSystem::setRegion(const std::string& entity_id,
                                              const std::string& region) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
     if (region.empty()) return false;
     cfg->region = region;
@@ -68,9 +61,7 @@ bool CloudDeploymentConfigSystem::setRegion(const std::string& entity_id,
 
 bool CloudDeploymentConfigSystem::setInstanceType(const std::string& entity_id,
                                                    const std::string& instance_type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
     if (instance_type.empty()) return false;
     cfg->instance_type = instance_type;
@@ -78,9 +69,7 @@ bool CloudDeploymentConfigSystem::setInstanceType(const std::string& entity_id,
 }
 
 bool CloudDeploymentConfigSystem::setMaxPlayers(const std::string& entity_id, int max_players) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
     cfg->max_players = std::max(1, std::min(max_players, 100));
     // Recalculate cost
@@ -93,9 +82,7 @@ bool CloudDeploymentConfigSystem::setMaxPlayers(const std::string& entity_id, in
 
 bool CloudDeploymentConfigSystem::enableHealthCheck(const std::string& entity_id,
                                                      float interval_seconds) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
     cfg->health_check_enabled = true;
     cfg->health_check_interval = std::max(5.0f, interval_seconds);
@@ -103,9 +90,7 @@ bool CloudDeploymentConfigSystem::enableHealthCheck(const std::string& entity_id
 }
 
 bool CloudDeploymentConfigSystem::validate(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
 
     if (cfg->region.empty()) return false;
@@ -115,9 +100,7 @@ bool CloudDeploymentConfigSystem::validate(const std::string& entity_id) const {
 }
 
 bool CloudDeploymentConfigSystem::deploy(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
 
     if (!validate(entity_id)) return false;
@@ -128,57 +111,43 @@ bool CloudDeploymentConfigSystem::deploy(const std::string& entity_id) {
 }
 
 int CloudDeploymentConfigSystem::getProvider(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return -1;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return -1;
     return cfg->provider;
 }
 
 std::string CloudDeploymentConfigSystem::getRegion(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return "";
     return cfg->region;
 }
 
 int CloudDeploymentConfigSystem::getMaxPlayers(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return 0;
     return cfg->max_players;
 }
 
 float CloudDeploymentConfigSystem::getUptime(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return 0.0f;
     return cfg->uptime;
 }
 
 int CloudDeploymentConfigSystem::getHealthCheckCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return 0;
     return cfg->health_check_count;
 }
 
 bool CloudDeploymentConfigSystem::isDeployed(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return false;
     return cfg->deployed;
 }
 
 float CloudDeploymentConfigSystem::getEstimatedMonthlyCost(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* cfg = entity->getComponent<components::CloudDeploymentConfig>();
+    auto* cfg = getComponentFor(entity_id);
     if (!cfg) return 0.0f;
     return cfg->estimated_monthly_cost;
 }

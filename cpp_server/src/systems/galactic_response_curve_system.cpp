@@ -8,31 +8,28 @@ namespace atlas {
 namespace systems {
 
 GalacticResponseCurveSystem::GalacticResponseCurveSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void GalacticResponseCurveSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::GalacticResponseCurve>();
-    for (auto* entity : entities) {
-        auto* grc = entity->getComponent<components::GalacticResponseCurve>();
-        if (!grc || !grc->active) continue;
+void GalacticResponseCurveSystem::updateComponent(ecs::Entity& /*entity*/,
+    components::GalacticResponseCurve& grc, float delta_time) {
+    if (!grc.active) return;
 
-        // Decay threat over time
-        grc->threat_level = std::max(0.0f,
-            grc->threat_level - grc->decay_rate * delta_time);
+    // Decay threat over time
+    grc.threat_level = std::max(0.0f,
+        grc.threat_level - grc.decay_rate * delta_time);
 
-        // Update response tier based on threat level
-        if (grc->threat_level >= components::GalacticResponseCurve::TIER_4_THRESHOLD) {
-            grc->response_tier = 4;
-        } else if (grc->threat_level >= components::GalacticResponseCurve::TIER_3_THRESHOLD) {
-            grc->response_tier = 3;
-        } else if (grc->threat_level >= components::GalacticResponseCurve::TIER_2_THRESHOLD) {
-            grc->response_tier = 2;
-        } else if (grc->threat_level >= components::GalacticResponseCurve::TIER_1_THRESHOLD) {
-            grc->response_tier = 1;
-        } else {
-            grc->response_tier = 0;
-        }
+    // Update response tier based on threat level
+    if (grc.threat_level >= components::GalacticResponseCurve::TIER_4_THRESHOLD) {
+        grc.response_tier = 4;
+    } else if (grc.threat_level >= components::GalacticResponseCurve::TIER_3_THRESHOLD) {
+        grc.response_tier = 3;
+    } else if (grc.threat_level >= components::GalacticResponseCurve::TIER_2_THRESHOLD) {
+        grc.response_tier = 2;
+    } else if (grc.threat_level >= components::GalacticResponseCurve::TIER_1_THRESHOLD) {
+        grc.response_tier = 1;
+    } else {
+        grc.response_tier = 0;
     }
 }
 
@@ -48,9 +45,7 @@ bool GalacticResponseCurveSystem::initializeFaction(const std::string& entity_id
 
 bool GalacticResponseCurveSystem::reportThreat(const std::string& entity_id,
     float magnitude) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return false;
     grc->threat_level += magnitude * grc->escalation_rate;
     grc->threat_level = std::max(0.0f, grc->threat_level);
@@ -58,9 +53,7 @@ bool GalacticResponseCurveSystem::reportThreat(const std::string& entity_id,
 }
 
 bool GalacticResponseCurveSystem::dispatchReinforcement(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return false;
     // Must be at tier 3+ to dispatch reinforcements
     if (grc->response_tier < 3) return false;
@@ -70,9 +63,7 @@ bool GalacticResponseCurveSystem::dispatchReinforcement(const std::string& entit
 
 bool GalacticResponseCurveSystem::rerouteTradeFor(const std::string& entity_id,
     const std::string& system_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return false;
     if (static_cast<int>(grc->rerouted_systems.size()) >= grc->max_rerouted) return false;
 
@@ -86,49 +77,37 @@ bool GalacticResponseCurveSystem::rerouteTradeFor(const std::string& entity_id,
 }
 
 float GalacticResponseCurveSystem::getThreatLevel(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return 0.0f;
     return grc->threat_level;
 }
 
 int GalacticResponseCurveSystem::getResponseTier(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return 0;
     return grc->response_tier;
 }
 
 int GalacticResponseCurveSystem::getReinforcementCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return 0;
     return grc->reinforcements_dispatched;
 }
 
 int GalacticResponseCurveSystem::getReroutedSystemCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return 0;
     return static_cast<int>(grc->rerouted_systems.size());
 }
 
 float GalacticResponseCurveSystem::getEscalationRate(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return 0.0f;
     return grc->escalation_rate;
 }
 
 bool GalacticResponseCurveSystem::isFullMobilization(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* grc = entity->getComponent<components::GalacticResponseCurve>();
+    auto* grc = getComponentFor(entity_id);
     if (!grc) return false;
     return grc->response_tier >= 4;
 }

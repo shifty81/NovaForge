@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_WING_MANAGEMENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WING_MANAGEMENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +16,11 @@ namespace systems {
  * wing roles (Mining/Combat/Logistics/Salvage/Construction),
  * and wing-level morale.
  */
-class WingManagementSystem : public ecs::System {
+class WingManagementSystem : public ecs::SingleComponentSystem<components::WingState> {
 public:
     explicit WingManagementSystem(ecs::World* world);
     ~WingManagementSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WingManagementSystem"; }
 
     /**
@@ -77,6 +76,9 @@ public:
 
     /// Maximum members allowed per wing
     int max_members_per_wing = 5;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WingState& ws, float delta_time) override;
 };
 
 } // namespace systems

@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_VISUAL_COUPLING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_VISUAL_COUPLING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/ship_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Solar panels, ore containers, vents, and other features become visible
  * on the exterior when corresponding interior modules are installed.
  */
-class VisualCouplingSystem : public ecs::System {
+class VisualCouplingSystem : public ecs::SingleComponentSystem<components::VisualCoupling> {
 public:
     explicit VisualCouplingSystem(ecs::World* world);
     ~VisualCouplingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "VisualCouplingSystem"; }
 
     // Initialization
@@ -40,6 +39,9 @@ public:
     int getFeatureCount(const std::string& entity_id,
                         components::VisualCoupling::ExteriorFeature feature) const;
     std::string getFeatureName(components::VisualCoupling::ExteriorFeature feature) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::VisualCoupling& coupling, float delta_time) override;
 };
 
 } // namespace systems
