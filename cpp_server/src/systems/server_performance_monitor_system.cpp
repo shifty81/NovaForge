@@ -1,44 +1,38 @@
 #include "systems/server_performance_monitor_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
 namespace atlas {
 namespace systems {
 
 ServerPerformanceMonitorSystem::ServerPerformanceMonitorSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ServerPerformanceMonitorSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::ServerPerformanceMetrics>();
-    for (auto* entity : entities) {
-        auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
-        if (!metrics) continue;
+void ServerPerformanceMonitorSystem::updateComponent(ecs::Entity& /*entity*/, components::ServerPerformanceMetrics& metrics, float /*delta_time*/) {
+    // Recompute budget utilization
+    if (metrics.tick_budget_ms > 0.0f && metrics.total_ticks > 0) {
+        metrics.budget_utilization = metrics.avg_tick_time_ms / metrics.tick_budget_ms;
+    }
 
-        // Recompute budget utilization
-        if (metrics->tick_budget_ms > 0.0f && metrics->total_ticks > 0) {
-            metrics->budget_utilization = metrics->avg_tick_time_ms / metrics->tick_budget_ms;
+    // Alert check
+    metrics.alert_active = (metrics.budget_utilization >= metrics.alert_threshold);
+
+    // Find slowest system and hot paths
+    float max_avg = 0.0f;
+    metrics.hot_path_count = 0;
+    metrics.slowest_system.clear();
+
+    float hot_threshold = metrics.tick_budget_ms * 0.25f;
+    for (const auto& timing : metrics.system_timings) {
+        if (timing.avg_time_ms > max_avg) {
+            max_avg = timing.avg_time_ms;
+            metrics.slowest_system = timing.system_name;
         }
-
-        // Alert check
-        metrics->alert_active = (metrics->budget_utilization >= metrics->alert_threshold);
-
-        // Find slowest system and hot paths
-        float max_avg = 0.0f;
-        metrics->hot_path_count = 0;
-        metrics->slowest_system.clear();
-
-        float hot_threshold = metrics->tick_budget_ms * 0.25f;
-        for (const auto& timing : metrics->system_timings) {
-            if (timing.avg_time_ms > max_avg) {
-                max_avg = timing.avg_time_ms;
-                metrics->slowest_system = timing.system_name;
-            }
-            if (timing.avg_time_ms > hot_threshold) {
-                metrics->hot_path_count++;
-            }
+        if (timing.avg_time_ms > hot_threshold) {
+            metrics.hot_path_count++;
         }
     }
 }
@@ -63,10 +57,7 @@ bool ServerPerformanceMonitorSystem::initializeMonitor(const std::string& entity
 bool ServerPerformanceMonitorSystem::recordSystemTiming(const std::string& entity_id,
                                                          const std::string& system_name,
                                                          float time_ms) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    auto* metrics = getComponentFor(entity_id);
     if (!metrics) return false;
 
     auto* timing = metrics->findTiming(system_name);
@@ -92,10 +83,7 @@ bool ServerPerformanceMonitorSystem::recordSystemTiming(const std::string& entit
 bool ServerPerformanceMonitorSystem::recordTickComplete(const std::string& entity_id,
                                                          float total_time_ms,
                                                          int entity_count) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    auto* metrics = getComponentFor(entity_id);
     if (!metrics) return false;
 
     metrics->total_ticks++;
@@ -120,60 +108,42 @@ bool ServerPerformanceMonitorSystem::recordTickComplete(const std::string& entit
 }
 
 float ServerPerformanceMonitorSystem::getAverageTickTime(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    const auto* metrics = getComponentFor(entity_id);
     if (!metrics) return 0.0f;
 
     return metrics->avg_tick_time_ms;
 }
 
 float ServerPerformanceMonitorSystem::getBudgetUtilization(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    const auto* metrics = getComponentFor(entity_id);
     if (!metrics) return 0.0f;
 
     return metrics->budget_utilization;
 }
 
 std::string ServerPerformanceMonitorSystem::getSlowestSystem(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    const auto* metrics = getComponentFor(entity_id);
     if (!metrics) return "";
 
     return metrics->slowest_system;
 }
 
 int ServerPerformanceMonitorSystem::getHotPathCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    const auto* metrics = getComponentFor(entity_id);
     if (!metrics) return 0;
 
     return metrics->hot_path_count;
 }
 
 bool ServerPerformanceMonitorSystem::isAlertActive(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    const auto* metrics = getComponentFor(entity_id);
     if (!metrics) return false;
 
     return metrics->alert_active;
 }
 
 bool ServerPerformanceMonitorSystem::resetMetrics(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* metrics = entity->getComponent<components::ServerPerformanceMetrics>();
+    auto* metrics = getComponentFor(entity_id);
     if (!metrics) return false;
 
     metrics->system_timings.clear();

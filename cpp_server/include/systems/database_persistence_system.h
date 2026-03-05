@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_DATABASE_PERSISTENCE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_DATABASE_PERSISTENCE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Provides a simple key-value store with auto-save support,
  * tracking reads/writes and dirty state for persistence.
  */
-class DatabasePersistenceSystem : public ecs::System {
+class DatabasePersistenceSystem : public ecs::SingleComponentSystem<components::DatabasePersistence> {
 public:
     explicit DatabasePersistenceSystem(ecs::World* world);
     ~DatabasePersistenceSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "DatabasePersistenceSystem"; }
 
     bool createDatabase(const std::string& entity_id, const std::string& db_name,
@@ -31,6 +31,9 @@ public:
     bool isDirty(const std::string& entity_id) const;
     int getSaveCount(const std::string& entity_id) const;
     int getTotalWrites(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::DatabasePersistence& db, float delta_time) override;
 };
 
 } // namespace systems

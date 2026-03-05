@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ECONOMIC_FLOW_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ECONOMIC_FLOW_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -18,12 +18,11 @@ namespace systems {
  * Each star system with an EconomicFlowState component has per-commodity
  * flow rates that are updated each tick and decay over time.
  */
-class EconomicFlowSystem : public ecs::System {
+class EconomicFlowSystem : public ecs::SingleComponentSystem<components::EconomicFlowState> {
 public:
     explicit EconomicFlowSystem(ecs::World* world);
     ~EconomicFlowSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "EconomicFlowSystem"; }
 
     // --- Recording API ---
@@ -53,6 +52,9 @@ public:
     // --- Configuration ---
     float flow_decay_rate = 0.1f;     // rates decay towards 0 over time
     float health_smoothing = 0.05f;   // smoothing factor for economic_health
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::EconomicFlowState& flow, float delta_time) override;
 };
 
 } // namespace systems

@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_DATA_BINDING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_DATA_BINDING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/ui_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages data bindings between source paths and UI widgets,
  * observer notifications, dirty tracking, and batch updates.
  */
-class DataBindingSystem : public ecs::System {
+class DataBindingSystem : public ecs::SingleComponentSystem<components::DataBinding> {
 public:
     explicit DataBindingSystem(ecs::World* world);
     ~DataBindingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "DataBindingSystem"; }
 
     // Initialization
@@ -49,6 +48,9 @@ public:
 
     // Notification processing
     bool processNotifications(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::DataBinding& db, float delta_time) override;
 };
 
 } // namespace systems
