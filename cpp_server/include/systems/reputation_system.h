@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_REPUTATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_REPUTATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <map>
@@ -16,12 +16,11 @@ namespace systems {
  * Reputation changes are event-driven: when a standing is modified the
  * system automatically propagates derived effects to allied/enemy factions.
  */
-class ReputationSystem : public ecs::System {
+class ReputationSystem : public ecs::SingleComponentSystem<components::Standings> {
 public:
     explicit ReputationSystem(ecs::World* world);
     ~ReputationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ReputationSystem"; }
 
     /**
@@ -59,6 +58,9 @@ public:
      */
     float getFactionDisposition(const std::string& faction_a,
                                 const std::string& faction_b) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Standings& standings, float delta_time) override;
 
 private:
     // Faction pair relationships: key = "factionA:factionB", value = disposition (-1 to +1)

@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_SCANNER_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SCANNER_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -17,12 +17,11 @@ namespace systems {
  * improves signal strength on nearby anomalies based on
  * probe count, scan strength, and the anomaly's signature.
  */
-class ScannerSystem : public ecs::System {
+class ScannerSystem : public ecs::SingleComponentSystem<components::Scanner> {
 public:
     explicit ScannerSystem(ecs::World* world);
     ~ScannerSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ScannerSystem"; }
 
     /**
@@ -60,6 +59,9 @@ public:
      * @brief Get the number of currently active scanners
      */
     int getActiveScannerCount() const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Scanner& scanner, float delta_time) override;
 
 private:
     /**

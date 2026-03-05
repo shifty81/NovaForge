@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_JUMP_GATE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_JUMP_GATE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/navigation_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,14 +15,14 @@ namespace systems {
  * activation sequences with progress tracking, fuel cost validation,
  * cooldown enforcement, security level checks, and jump statistics.
  */
-class JumpGateSystem : public ecs::System {
+class JumpGateSystem : public ecs::SingleComponentSystem<components::JumpGate> {
 public:
     explicit JumpGateSystem(ecs::World* world);
     ~JumpGateSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "JumpGateSystem"; }
 
+public:
     bool initializeGateNetwork(const std::string& entity_id, const std::string& system_id);
     bool addGate(const std::string& entity_id, const std::string& gate_id,
                  const std::string& dest_system, const std::string& dest_gate_id,
@@ -36,6 +37,9 @@ public:
     int getOnlineGateCount(const std::string& entity_id) const;
     int getTotalJumps(const std::string& entity_id) const;
     bool isGateReady(const std::string& entity_id, const std::string& gate_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::JumpGate& jg, float delta_time) override;
 };
 
 } // namespace systems

@@ -10,19 +10,16 @@ static constexpr int OPTIMAL_PROBE_COUNT = 8;       // baseline probe count for 
 static constexpr float MIN_SIGNAL_GAIN = 0.01f;     // minimum gain per cycle to ensure progress
 
 ScannerSystem::ScannerSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ScannerSystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* scanner = entity->getComponent<components::Scanner>();
-        if (!scanner || !scanner->scanning) continue;
+void ScannerSystem::updateComponent(ecs::Entity& entity, components::Scanner& scanner, float delta_time) {
+    if (!scanner.scanning) return;
 
-        scanner->scan_progress += delta_time;
-        if (scanner->scan_progress >= scanner->scan_duration) {
-            completeScanCycle(entity);
-            scanner->scan_progress = 0.0f;
-        }
+    scanner.scan_progress += delta_time;
+    if (scanner.scan_progress >= scanner.scan_duration) {
+        completeScanCycle(&entity);
+        scanner.scan_progress = 0.0f;
     }
 }
 
@@ -32,10 +29,7 @@ void ScannerSystem::update(float delta_time) {
 
 bool ScannerSystem::startScan(const std::string& scanner_id,
                                const std::string& system_id) {
-    auto* entity = world_->getEntity(scanner_id);
-    if (!entity) return false;
-
-    auto* scanner = entity->getComponent<components::Scanner>();
+    auto* scanner = getComponentFor(scanner_id);
     if (!scanner) return false;
 
     scanner->scanning = true;
@@ -46,10 +40,7 @@ bool ScannerSystem::startScan(const std::string& scanner_id,
 }
 
 bool ScannerSystem::stopScan(const std::string& scanner_id) {
-    auto* entity = world_->getEntity(scanner_id);
-    if (!entity) return false;
-
-    auto* scanner = entity->getComponent<components::Scanner>();
+    auto* scanner = getComponentFor(scanner_id);
     if (!scanner || !scanner->scanning) return false;
 
     scanner->scanning = false;
@@ -59,10 +50,7 @@ bool ScannerSystem::stopScan(const std::string& scanner_id) {
 
 std::vector<components::Scanner::ScanResult>
 ScannerSystem::getScanResults(const std::string& scanner_id) const {
-    auto* entity = world_->getEntity(scanner_id);
-    if (!entity) return {};
-
-    auto* scanner = entity->getComponent<components::Scanner>();
+    auto* scanner = getComponentFor(scanner_id);
     if (!scanner) return {};
 
     return scanner->results;

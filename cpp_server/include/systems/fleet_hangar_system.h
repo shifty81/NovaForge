@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_HANGAR_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_HANGAR_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/ship_components.h"
 #include <string>
 
@@ -14,14 +14,14 @@ namespace systems {
  * Manages fleet-scale hangars with tiered ship storage, locking,
  * repair, power management, and maintenance costs.
  */
-class FleetHangarSystem : public ecs::System {
+class FleetHangarSystem : public ecs::SingleComponentSystem<components::FleetHangar> {
 public:
     explicit FleetHangarSystem(ecs::World* world);
     ~FleetHangarSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetHangarSystem"; }
 
+public:
     // Initialization
     bool initializeHangar(const std::string& entity_id, const std::string& owner_id,
                           const std::string& name, int tier);
@@ -44,6 +44,9 @@ public:
 
     // Power
     bool setPowerEnabled(const std::string& entity_id, bool enabled);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetHangar& hangar, float delta_time) override;
 };
 
 } // namespace systems

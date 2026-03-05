@@ -23,28 +23,24 @@ const components::JumpGate::Gate* findGateConst(const components::JumpGate* jg, 
 }
 } // anonymous namespace
 
-JumpGateSystem::JumpGateSystem(ecs::World* world) : System(world) {}
+JumpGateSystem::JumpGateSystem(ecs::World* world) : SingleComponentSystem(world) {}
 
-void JumpGateSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::JumpGate>();
-    for (auto* entity : entities) {
-        auto* jg = entity->getComponent<components::JumpGate>();
-        if (!jg || !jg->active) continue;
+void JumpGateSystem::updateComponent(ecs::Entity& entity, components::JumpGate& jg, float delta_time) {
+    if (!jg.active) return;
 
-        for (auto& gate : jg->gates) {
-            if (!gate.online) continue;
+    for (auto& gate : jg.gates) {
+        if (!gate.online) continue;
 
-            // Advance cooldown
-            if (gate.current_cooldown > 0.0f) {
-                gate.current_cooldown -= delta_time;
-                if (gate.current_cooldown < 0.0f) gate.current_cooldown = 0.0f;
-            }
+        // Advance cooldown
+        if (gate.current_cooldown > 0.0f) {
+            gate.current_cooldown -= delta_time;
+            if (gate.current_cooldown < 0.0f) gate.current_cooldown = 0.0f;
+        }
 
-            // Advance activation progress
-            if (gate.in_use && gate.activation_progress < 1.0f) {
-                gate.activation_progress += delta_time / gate.activation_time;
-                if (gate.activation_progress > 1.0f) gate.activation_progress = 1.0f;
-            }
+        // Advance activation progress
+        if (gate.in_use && gate.activation_progress < 1.0f) {
+            gate.activation_progress += delta_time / gate.activation_time;
+            if (gate.activation_progress > 1.0f) gate.activation_progress = 1.0f;
         }
     }
 }
@@ -62,9 +58,7 @@ bool JumpGateSystem::initializeGateNetwork(const std::string& entity_id,
 bool JumpGateSystem::addGate(const std::string& entity_id, const std::string& gate_id,
     const std::string& dest_system, const std::string& dest_gate_id,
     float fuel_cost, float security_level) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return false;
     if (static_cast<int>(jg->gates.size()) >= jg->max_gates) return false;
     if (findGate(jg, gate_id)) return false; // duplicate
@@ -80,9 +74,7 @@ bool JumpGateSystem::addGate(const std::string& entity_id, const std::string& ga
 }
 
 bool JumpGateSystem::removeGate(const std::string& entity_id, const std::string& gate_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return false;
 
     auto it = std::remove_if(jg->gates.begin(), jg->gates.end(),
@@ -93,9 +85,7 @@ bool JumpGateSystem::removeGate(const std::string& entity_id, const std::string&
 }
 
 bool JumpGateSystem::activateGate(const std::string& entity_id, const std::string& gate_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return false;
 
     auto* gate = findGate(jg, gate_id);
@@ -110,9 +100,7 @@ bool JumpGateSystem::activateGate(const std::string& entity_id, const std::strin
 }
 
 bool JumpGateSystem::completeJump(const std::string& entity_id, const std::string& gate_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return false;
 
     auto* gate = findGate(jg, gate_id);
@@ -129,9 +117,7 @@ bool JumpGateSystem::completeJump(const std::string& entity_id, const std::strin
 
 bool JumpGateSystem::setGateOnline(const std::string& entity_id, const std::string& gate_id,
     bool online) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return false;
 
     auto* gate = findGate(jg, gate_id);
@@ -146,9 +132,7 @@ bool JumpGateSystem::setGateOnline(const std::string& entity_id, const std::stri
 
 float JumpGateSystem::getActivationProgress(const std::string& entity_id,
     const std::string& gate_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return 0.0f;
     auto* gate = findGateConst(jg, gate_id);
     return gate ? gate->activation_progress : 0.0f;
@@ -156,25 +140,19 @@ float JumpGateSystem::getActivationProgress(const std::string& entity_id,
 
 float JumpGateSystem::getCooldownRemaining(const std::string& entity_id,
     const std::string& gate_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return 0.0f;
     auto* gate = findGateConst(jg, gate_id);
     return gate ? gate->current_cooldown : 0.0f;
 }
 
 int JumpGateSystem::getGateCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     return jg ? static_cast<int>(jg->gates.size()) : 0;
 }
 
 int JumpGateSystem::getOnlineGateCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return 0;
     int count = 0;
     for (const auto& g : jg->gates) {
@@ -184,16 +162,12 @@ int JumpGateSystem::getOnlineGateCount(const std::string& entity_id) const {
 }
 
 int JumpGateSystem::getTotalJumps(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     return jg ? jg->total_jumps_processed : 0;
 }
 
 bool JumpGateSystem::isGateReady(const std::string& entity_id, const std::string& gate_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* jg = entity->getComponent<components::JumpGate>();
+    auto* jg = getComponentFor(entity_id);
     if (!jg) return false;
     auto* gate = findGateConst(jg, gate_id);
     if (!gate) return false;

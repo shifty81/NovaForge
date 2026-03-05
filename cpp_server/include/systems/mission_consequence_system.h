@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_MISSION_CONSEQUENCE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MISSION_CONSEQUENCE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/mission_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Completing/failing missions changes faction standings, system security,
  * market prices, and spawns.
  */
-class MissionConsequenceSystem : public ecs::System {
+class MissionConsequenceSystem : public ecs::SingleComponentSystem<components::MissionConsequence> {
 public:
     explicit MissionConsequenceSystem(ecs::World* world);
     ~MissionConsequenceSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "MissionConsequenceSystem"; }
 
     // Initialization
@@ -41,6 +40,9 @@ public:
     bool isConsequenceActive(const std::string& entity_id,
                               const std::string& consequence_id) const;
     int getPermanentCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::MissionConsequence& mc, float delta_time) override;
 };
 
 } // namespace systems

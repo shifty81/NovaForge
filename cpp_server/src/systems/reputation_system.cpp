@@ -6,10 +6,10 @@ namespace atlas {
 namespace systems {
 
 ReputationSystem::ReputationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ReputationSystem::update(float /*delta_time*/) {
+void ReputationSystem::updateComponent(ecs::Entity& /*entity*/, components::Standings& /*standings*/, float /*delta_time*/) {
     // No-op: reputation changes are event-driven
 }
 
@@ -20,10 +20,7 @@ void ReputationSystem::update(float /*delta_time*/) {
 void ReputationSystem::modifyFactionStanding(const std::string& entity_id,
                                              const std::string& faction,
                                              float change) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* standings = entity->getComponent<components::Standings>();
+    auto* standings = getComponentFor(entity_id);
     if (!standings) return;
 
     // Apply the direct standing change
@@ -72,10 +69,7 @@ bool ReputationSystem::hasAgentAccess(const std::string& entity_id,
 
 float ReputationSystem::getEffectiveStanding(const std::string& entity_id,
                                              const std::string& faction) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* standings = entity->getComponent<components::Standings>();
+    auto* standings = getComponentFor(entity_id);
     if (!standings) return 0.0f;
 
     auto it = standings->faction_standings.find(faction);
