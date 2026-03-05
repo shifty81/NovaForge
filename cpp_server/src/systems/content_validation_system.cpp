@@ -8,16 +8,13 @@ namespace atlas {
 namespace systems {
 
 ContentValidationSystem::ContentValidationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ContentValidationSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::ContentValidation>();
-    for (auto* entity : entities) {
-        auto* cv = entity->getComponent<components::ContentValidation>();
-        if (!cv || !cv->active) continue;
-        // Validation is on-demand, not tick-driven
-    }
+void ContentValidationSystem::updateComponent(ecs::Entity& /*entity*/,
+                                               components::ContentValidation& /*cv*/,
+                                               float /*delta_time*/) {
+    // Validation is on-demand, not tick-driven
 }
 
 bool ContentValidationSystem::createValidator(const std::string& entity_id) {
@@ -32,9 +29,7 @@ bool ContentValidationSystem::submitContent(const std::string& entity_id,
                                              const std::string& content_id,
                                              int content_type,
                                              const std::string& name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    auto* cv = getComponentFor(entity_id);
     if (!cv) return false;
     if (content_id.empty() || name.empty()) return false;
 
@@ -52,9 +47,7 @@ bool ContentValidationSystem::submitContent(const std::string& entity_id,
 
 bool ContentValidationSystem::runValidation(const std::string& entity_id,
                                              const std::string& content_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    auto* cv = getComponentFor(entity_id);
     if (!cv) return false;
 
     auto* entry = cv->findEntry(content_id);
@@ -68,9 +61,7 @@ bool ContentValidationSystem::runValidation(const std::string& entity_id,
 
 bool ContentValidationSystem::approveContent(const std::string& entity_id,
                                               const std::string& content_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    auto* cv = getComponentFor(entity_id);
     if (!cv) return false;
 
     auto* entry = cv->findEntry(content_id);
@@ -85,9 +76,7 @@ bool ContentValidationSystem::approveContent(const std::string& entity_id,
 bool ContentValidationSystem::rejectContent(const std::string& entity_id,
                                              const std::string& content_id,
                                              const std::string& reason) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    auto* cv = getComponentFor(entity_id);
     if (!cv) return false;
 
     auto* entry = cv->findEntry(content_id);
@@ -102,9 +91,7 @@ bool ContentValidationSystem::rejectContent(const std::string& entity_id,
 
 int ContentValidationSystem::getContentState(const std::string& entity_id,
                                               const std::string& content_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return -1;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    const auto* cv = getComponentFor(entity_id);
     if (!cv) return -1;
 
     const auto* entry = cv->findEntry(content_id);
@@ -113,9 +100,7 @@ int ContentValidationSystem::getContentState(const std::string& entity_id,
 }
 
 int ContentValidationSystem::getPendingCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    const auto* cv = getComponentFor(entity_id);
     if (!cv) return 0;
     int count = 0;
     for (const auto& e : cv->entries) {
@@ -125,26 +110,20 @@ int ContentValidationSystem::getPendingCount(const std::string& entity_id) const
 }
 
 int ContentValidationSystem::getApprovedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    const auto* cv = getComponentFor(entity_id);
     if (!cv) return 0;
     return cv->approved_count;
 }
 
 int ContentValidationSystem::getRejectedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    const auto* cv = getComponentFor(entity_id);
     if (!cv) return 0;
     return cv->rejected_count;
 }
 
 std::string ContentValidationSystem::getRejectionReason(const std::string& entity_id,
                                                          const std::string& content_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    const auto* cv = getComponentFor(entity_id);
     if (!cv) return "";
 
     const auto* entry = cv->findEntry(content_id);
@@ -153,9 +132,7 @@ std::string ContentValidationSystem::getRejectionReason(const std::string& entit
 }
 
 int ContentValidationSystem::getTotalValidations(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* cv = entity->getComponent<components::ContentValidation>();
+    const auto* cv = getComponentFor(entity_id);
     if (!cv) return 0;
     return cv->total_validations;
 }

@@ -7,21 +7,17 @@ namespace atlas {
 namespace systems {
 
 KeyboardNavigationSystem::KeyboardNavigationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void KeyboardNavigationSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::KeyboardNavigation>();
-    for (auto* entity : entities) {
-        auto* nav = entity->getComponent<components::KeyboardNavigation>();
-        if (!nav) continue;
-
-        // Update cursor blink timer
-        nav->cursor_blink_timer += delta_time;
-        if (nav->cursor_blink_timer >= 1.0f) {
-            nav->cursor_blink_timer -= 1.0f;
-            nav->cursor_visible = !nav->cursor_visible;
-        }
+void KeyboardNavigationSystem::updateComponent(ecs::Entity& /*entity*/,
+                                                components::KeyboardNavigation& nav,
+                                                float delta_time) {
+    // Update cursor blink timer
+    nav.cursor_blink_timer += delta_time;
+    if (nav.cursor_blink_timer >= 1.0f) {
+        nav.cursor_blink_timer -= 1.0f;
+        nav.cursor_visible = !nav.cursor_visible;
     }
 }
 
@@ -42,10 +38,7 @@ bool KeyboardNavigationSystem::initializeNavigation(const std::string& entity_id
 
 bool KeyboardNavigationSystem::setFocusPanel(const std::string& entity_id,
                                               const std::string& panel_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     nav->active_panel_id = panel_id;
@@ -55,10 +48,7 @@ bool KeyboardNavigationSystem::setFocusPanel(const std::string& entity_id,
 
 bool KeyboardNavigationSystem::moveFocus(const std::string& entity_id,
                                           const std::string& direction) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     if (nav->tab_order.empty()) return false;
@@ -76,10 +66,7 @@ bool KeyboardNavigationSystem::moveFocus(const std::string& entity_id,
 }
 
 bool KeyboardNavigationSystem::activateFocus(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     if (nav->tab_order.empty()) return false;
@@ -92,10 +79,7 @@ bool KeyboardNavigationSystem::activateFocus(const std::string& entity_id) {
 
 bool KeyboardNavigationSystem::pushFocusStack(const std::string& entity_id,
                                                const std::string& panel_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     nav->focus_stack.push_back(nav->active_panel_id);
@@ -105,10 +89,7 @@ bool KeyboardNavigationSystem::pushFocusStack(const std::string& entity_id,
 }
 
 bool KeyboardNavigationSystem::popFocusStack(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     if (nav->focus_stack.empty()) return false;
@@ -122,10 +103,7 @@ bool KeyboardNavigationSystem::popFocusStack(const std::string& entity_id) {
 bool KeyboardNavigationSystem::bindKey(const std::string& entity_id,
                                         const std::string& key,
                                         const std::string& action) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     nav->key_bindings[key] = action;
@@ -133,30 +111,21 @@ bool KeyboardNavigationSystem::bindKey(const std::string& entity_id,
 }
 
 std::string KeyboardNavigationSystem::getActivePanel(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    const auto* nav = getComponentFor(entity_id);
     if (!nav) return "";
 
     return nav->active_panel_id;
 }
 
 int KeyboardNavigationSystem::getFocusIndex(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    const auto* nav = getComponentFor(entity_id);
     if (!nav) return 0;
 
     return nav->focus_index;
 }
 
 bool KeyboardNavigationSystem::isModal(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    const auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     return nav->is_modal;
@@ -164,10 +133,7 @@ bool KeyboardNavigationSystem::isModal(const std::string& entity_id) const {
 
 bool KeyboardNavigationSystem::setModal(const std::string& entity_id, bool modal,
                                          const std::string& modal_panel_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     nav->is_modal = modal;
@@ -177,10 +143,7 @@ bool KeyboardNavigationSystem::setModal(const std::string& entity_id, bool modal
 
 bool KeyboardNavigationSystem::handleKeyInput(const std::string& entity_id,
                                                const std::string& key) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* nav = entity->getComponent<components::KeyboardNavigation>();
+    auto* nav = getComponentFor(entity_id);
     if (!nav) return false;
 
     // Check for key binding

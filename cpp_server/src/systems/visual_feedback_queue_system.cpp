@@ -8,31 +8,29 @@ namespace atlas {
 namespace systems {
 
 VisualFeedbackQueueSystem::VisualFeedbackQueueSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void VisualFeedbackQueueSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::VisualFeedbackQueue>();
-    for (auto* entity : entities) {
-        auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
-        if (!vfq || !vfq->active) continue;
+void VisualFeedbackQueueSystem::updateComponent(ecs::Entity& /*entity*/,
+                                                 components::VisualFeedbackQueue& vfq,
+                                                 float delta_time) {
+    if (!vfq.active) return;
 
-        for (auto& effect : vfq->effects) {
-            effect.lifetime -= delta_time;
-            if (effect.lifetime < 0.3f && effect.lifetime > 0.0f) {
-                effect.fading = true;
-            }
+    for (auto& effect : vfq.effects) {
+        effect.lifetime -= delta_time;
+        if (effect.lifetime < 0.3f && effect.lifetime > 0.0f) {
+            effect.fading = true;
         }
+    }
 
-        // Remove expired effects
-        auto it = vfq->effects.begin();
-        while (it != vfq->effects.end()) {
-            if (it->lifetime <= 0.0f) {
-                vfq->total_effects_expired++;
-                it = vfq->effects.erase(it);
-            } else {
-                ++it;
-            }
+    // Remove expired effects
+    auto it = vfq.effects.begin();
+    while (it != vfq.effects.end()) {
+        if (it->lifetime <= 0.0f) {
+            vfq.total_effects_expired++;
+            it = vfq.effects.erase(it);
+        } else {
+            ++it;
         }
     }
 }
@@ -48,9 +46,7 @@ bool VisualFeedbackQueueSystem::createQueue(const std::string& entity_id) {
 int VisualFeedbackQueueSystem::queueEffect(const std::string& entity_id, int category,
                                             float intensity, float duration, int priority,
                                             const std::string& label) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return -1;
-    auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
+    auto* vfq = getComponentFor(entity_id);
     if (!vfq) return -1;
 
     // If at max, remove lowest priority effect
@@ -87,9 +83,7 @@ int VisualFeedbackQueueSystem::queueEffect(const std::string& entity_id, int cat
 }
 
 bool VisualFeedbackQueueSystem::removeEffect(const std::string& entity_id, int effect_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
+    auto* vfq = getComponentFor(entity_id);
     if (!vfq) return false;
 
     for (auto it = vfq->effects.begin(); it != vfq->effects.end(); ++it) {
@@ -102,17 +96,13 @@ bool VisualFeedbackQueueSystem::removeEffect(const std::string& entity_id, int e
 }
 
 int VisualFeedbackQueueSystem::getActiveEffectCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
+    const auto* vfq = getComponentFor(entity_id);
     if (!vfq) return 0;
     return static_cast<int>(vfq->effects.size());
 }
 
 int VisualFeedbackQueueSystem::getEffectsByCategory(const std::string& entity_id, int category) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
+    const auto* vfq = getComponentFor(entity_id);
     if (!vfq) return 0;
     int count = 0;
     for (const auto& e : vfq->effects) {
@@ -122,9 +112,7 @@ int VisualFeedbackQueueSystem::getEffectsByCategory(const std::string& entity_id
 }
 
 int VisualFeedbackQueueSystem::getHighestPriority(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return -1;
-    auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
+    const auto* vfq = getComponentFor(entity_id);
     if (!vfq) return -1;
     if (vfq->effects.empty()) return -1;
     int highest = vfq->effects[0].priority;
@@ -135,17 +123,13 @@ int VisualFeedbackQueueSystem::getHighestPriority(const std::string& entity_id) 
 }
 
 int VisualFeedbackQueueSystem::getTotalQueued(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
+    const auto* vfq = getComponentFor(entity_id);
     if (!vfq) return 0;
     return vfq->total_effects_queued;
 }
 
 int VisualFeedbackQueueSystem::getTotalExpired(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* vfq = entity->getComponent<components::VisualFeedbackQueue>();
+    const auto* vfq = getComponentFor(entity_id);
     if (!vfq) return 0;
     return vfq->total_effects_expired;
 }

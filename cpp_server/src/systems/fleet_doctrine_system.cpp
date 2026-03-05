@@ -7,39 +7,35 @@ namespace atlas {
 namespace systems {
 
 FleetDoctrineSystem::FleetDoctrineSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetDoctrineSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::FleetDoctrine>();
-    for (auto* entity : entities) {
-        auto* doctrine = entity->getComponent<components::FleetDoctrine>();
-        if (!doctrine) continue;
+void FleetDoctrineSystem::updateComponent(ecs::Entity& /*entity*/,
+                                           components::FleetDoctrine& doctrine,
+                                           float /*delta_time*/) {
+    // Calculate readiness: fraction of required slots that meet minimum count
+    int required_slots = 0;
+    int filled_required = 0;
+    int total_target = 0;
+    int total_current = 0;
 
-        // Calculate readiness: fraction of required slots that meet minimum count
-        int required_slots = 0;
-        int filled_required = 0;
-        int total_target = 0;
-        int total_current = 0;
-
-        for (const auto& slot : doctrine->slots) {
-            total_target += slot.max_count;
-            total_current += slot.current_count;
-            if (slot.required) {
-                required_slots++;
-                if (slot.current_count >= slot.min_count) {
-                    filled_required++;
-                }
+    for (const auto& slot : doctrine.slots) {
+        total_target += slot.max_count;
+        total_current += slot.current_count;
+        if (slot.required) {
+            required_slots++;
+            if (slot.current_count >= slot.min_count) {
+                filled_required++;
             }
         }
-
-        doctrine->readiness = (required_slots > 0)
-            ? static_cast<float>(filled_required) / static_cast<float>(required_slots)
-            : 1.0f;  // no required slots = always ready
-
-        doctrine->total_ship_target = total_target;
-        doctrine->current_ship_count = total_current;
     }
+
+    doctrine.readiness = (required_slots > 0)
+        ? static_cast<float>(filled_required) / static_cast<float>(required_slots)
+        : 1.0f;  // no required slots = always ready
+
+    doctrine.total_ship_target = total_target;
+    doctrine.current_ship_count = total_current;
 }
 
 bool FleetDoctrineSystem::createDoctrine(const std::string& entity_id, const std::string& doctrine_id, const std::string& name) {
@@ -59,10 +55,7 @@ bool FleetDoctrineSystem::createDoctrine(const std::string& entity_id, const std
 
 bool FleetDoctrineSystem::addSlot(const std::string& entity_id, const std::string& role, const std::string& ship_class,
                                    int min_count, int max_count, bool required) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    auto* doctrine = getComponentFor(entity_id);
     if (!doctrine || doctrine->is_locked) return false;
 
     // Check for duplicate role
@@ -82,10 +75,7 @@ bool FleetDoctrineSystem::addSlot(const std::string& entity_id, const std::strin
 }
 
 bool FleetDoctrineSystem::removeSlot(const std::string& entity_id, const std::string& role) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    auto* doctrine = getComponentFor(entity_id);
     if (!doctrine || doctrine->is_locked) return false;
 
     auto it = std::remove_if(doctrine->slots.begin(), doctrine->slots.end(),
@@ -99,10 +89,7 @@ bool FleetDoctrineSystem::removeSlot(const std::string& entity_id, const std::st
 }
 
 bool FleetDoctrineSystem::assignShip(const std::string& entity_id, const std::string& role) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return false;
 
     for (auto& slot : doctrine->slots) {
@@ -116,10 +103,7 @@ bool FleetDoctrineSystem::assignShip(const std::string& entity_id, const std::st
 }
 
 bool FleetDoctrineSystem::unassignShip(const std::string& entity_id, const std::string& role) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return false;
 
     for (auto& slot : doctrine->slots) {
@@ -133,10 +117,7 @@ bool FleetDoctrineSystem::unassignShip(const std::string& entity_id, const std::
 }
 
 bool FleetDoctrineSystem::lockDoctrine(const std::string& entity_id, bool locked) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return false;
 
     doctrine->is_locked = locked;
@@ -144,70 +125,49 @@ bool FleetDoctrineSystem::lockDoctrine(const std::string& entity_id, bool locked
 }
 
 float FleetDoctrineSystem::getReadiness(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    const auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return 0.0f;
 
     return doctrine->readiness;
 }
 
 int FleetDoctrineSystem::getSlotCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    const auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return 0;
 
     return static_cast<int>(doctrine->slots.size());
 }
 
 int FleetDoctrineSystem::getCurrentShipCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    const auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return 0;
 
     return doctrine->current_ship_count;
 }
 
 int FleetDoctrineSystem::getTargetShipCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    const auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return 0;
 
     return doctrine->total_ship_target;
 }
 
 bool FleetDoctrineSystem::isReady(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    const auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return false;
 
     return doctrine->readiness >= 1.0f;
 }
 
 bool FleetDoctrineSystem::isLocked(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    const auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return false;
 
     return doctrine->is_locked;
 }
 
 std::string FleetDoctrineSystem::getDoctrineName(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* doctrine = entity->getComponent<components::FleetDoctrine>();
+    const auto* doctrine = getComponentFor(entity_id);
     if (!doctrine) return "";
 
     return doctrine->doctrine_name;

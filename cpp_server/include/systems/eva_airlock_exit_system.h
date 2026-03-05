@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_EVA_AIRLOCK_EXIT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_EVA_AIRLOCK_EXIT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/state_machine_system.h"
 #include "components/fps_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages exiting to space when the ship is undocked. Checks docking state,
  * validates suit oxygen, handles tether range, and manages the exit/return lifecycle.
  */
-class EVAAirlockExitSystem : public ecs::System {
+class EVAAirlockExitSystem : public ecs::StateMachineSystem<components::EVAAirlockExit> {
 public:
     explicit EVAAirlockExitSystem(ecs::World* world);
     ~EVAAirlockExitSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "EVAAirlockExitSystem"; }
 
     // Initialization
@@ -45,6 +44,10 @@ public:
     bool isTetherActive(const std::string& entity_id) const;
 
     static std::string stateName(int state);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::EVAAirlockExit& exit,
+                         float delta_time) override;
 };
 
 } // namespace systems

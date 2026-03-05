@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_TASK_SCHEDULER_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_TASK_SCHEDULER_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages queued tasks with priorities, dependencies, and concurrency limits.
  * Tasks progress through Queued -> Running -> Complete/Failed/Cancelled states.
  */
-class TaskSchedulerSystem : public ecs::System {
+class TaskSchedulerSystem : public ecs::SingleComponentSystem<components::TaskScheduler> {
 public:
     explicit TaskSchedulerSystem(ecs::World* world);
     ~TaskSchedulerSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "TaskSchedulerSystem"; }
 
     bool createScheduler(const std::string& entity_id);
@@ -31,6 +31,10 @@ public:
     int getQueuedCount(const std::string& entity_id) const;
     int getTotalCompleted(const std::string& entity_id) const;
     float getThroughput(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::TaskScheduler& sched,
+                         float delta_time) override;
 };
 
 } // namespace systems

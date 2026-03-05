@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_PLAYER_PROGRESSION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_PLAYER_PROGRESSION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Levels follow a scaling curve: each level requires 100 × level^1.5 XP.
  * Milestones are unlocked when category XP thresholds are met.
  */
-class PlayerProgressionSystem : public ecs::System {
+class PlayerProgressionSystem : public ecs::SingleComponentSystem<components::PlayerProgression> {
 public:
     explicit PlayerProgressionSystem(ecs::World* world);
     ~PlayerProgressionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "PlayerProgressionSystem"; }
 
     // XP earning
@@ -45,6 +44,10 @@ public:
 
     // Level calculation helper
     static float xpForLevel(int level);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::PlayerProgression& prog,
+                         float delta_time) override;
 };
 
 } // namespace systems
