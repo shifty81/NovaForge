@@ -7,31 +7,27 @@ namespace atlas {
 namespace systems {
 
 FPSSalvagePathSystem::FPSSalvagePathSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FPSSalvagePathSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::FPSSalvagePath>();
-    for (auto* entity : entities) {
-        auto* path = entity->getComponent<components::FPSSalvagePath>();
-        if (!path || !path->active) continue;
+void FPSSalvagePathSystem::updateComponent(ecs::Entity& /*entity*/, components::FPSSalvagePath& path, float delta_time) {
+    if (!path.active) return;
 
-        // Advance cutting progress for any entry points being cut
-        for (auto& entry : path->entry_points) {
-            if (entry.state == components::FPSSalvagePath::EntryState::Cutting) {
-                entry.cut_progress += delta_time;
-                if (entry.cut_progress >= entry.cut_required) {
-                    entry.cut_progress = entry.cut_required;
-                    entry.state = components::FPSSalvagePath::EntryState::Open;
-                }
+    // Advance cutting progress for any entry points being cut
+    for (auto& entry : path.entry_points) {
+        if (entry.state == components::FPSSalvagePath::EntryState::Cutting) {
+            entry.cut_progress += delta_time;
+            if (entry.cut_progress >= entry.cut_required) {
+                entry.cut_progress = entry.cut_required;
+                entry.state = components::FPSSalvagePath::EntryState::Open;
             }
         }
+    }
 
-        // Update exploration progress
-        if (path->total_rooms > 0) {
-            path->exploration_progress = static_cast<float>(path->rooms_explored) /
-                                         static_cast<float>(path->total_rooms);
-        }
+    // Update exploration progress
+    if (path.total_rooms > 0) {
+        path.exploration_progress = static_cast<float>(path.rooms_explored) /
+                                     static_cast<float>(path.total_rooms);
     }
 }
 
@@ -42,7 +38,7 @@ bool FPSSalvagePathSystem::initializePath(const std::string& entity_id,
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
 
-    auto* existing = entity->getComponent<components::FPSSalvagePath>();
+    auto* existing = getComponentFor(entity_id);
     if (existing) return false;
 
     auto comp = std::make_unique<components::FPSSalvagePath>();
@@ -57,10 +53,7 @@ bool FPSSalvagePathSystem::addEntryPoint(const std::string& entity_id,
                                           const std::string& entry_id,
                                           float cut_required,
                                           const std::string& tool_required) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    auto* path = getComponentFor(entity_id);
     if (!path) return false;
 
     // Check for duplicate
@@ -76,10 +69,7 @@ bool FPSSalvagePathSystem::addEntryPoint(const std::string& entity_id,
 
 bool FPSSalvagePathSystem::startCutting(const std::string& entity_id,
                                          const std::string& entry_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    auto* path = getComponentFor(entity_id);
     if (!path) return false;
 
     auto* entry = path->findEntry(entry_id);
@@ -92,10 +82,7 @@ bool FPSSalvagePathSystem::startCutting(const std::string& entity_id,
 }
 
 bool FPSSalvagePathSystem::exploreRoom(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    auto* path = getComponentFor(entity_id);
     if (!path) return false;
 
     if (path->rooms_explored >= path->total_rooms) return false;
@@ -109,10 +96,7 @@ bool FPSSalvagePathSystem::exploreRoom(const std::string& entity_id) {
 }
 
 bool FPSSalvagePathSystem::setActive(const std::string& entity_id, bool active) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    auto* path = getComponentFor(entity_id);
     if (!path) return false;
 
     path->active = active;
@@ -124,10 +108,7 @@ bool FPSSalvagePathSystem::addLootNode(const std::string& entity_id,
                                         const std::string& item_name,
                                         components::FPSSalvagePath::LootRarity rarity,
                                         float value) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    auto* path = getComponentFor(entity_id);
     if (!path) return false;
 
     // Check for duplicate
@@ -144,10 +125,7 @@ bool FPSSalvagePathSystem::addLootNode(const std::string& entity_id,
 
 bool FPSSalvagePathSystem::discoverLoot(const std::string& entity_id,
                                          const std::string& loot_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    auto* path = getComponentFor(entity_id);
     if (!path) return false;
 
     auto* loot = path->findLoot(loot_id);
@@ -160,10 +138,7 @@ bool FPSSalvagePathSystem::discoverLoot(const std::string& entity_id,
 
 bool FPSSalvagePathSystem::collectLoot(const std::string& entity_id,
                                         const std::string& loot_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    auto* path = getComponentFor(entity_id);
     if (!path) return false;
 
     auto* loot = path->findLoot(loot_id);
@@ -177,30 +152,21 @@ bool FPSSalvagePathSystem::collectLoot(const std::string& entity_id,
 }
 
 float FPSSalvagePathSystem::getExplorationProgress(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    const auto* path = getComponentFor(entity_id);
     if (!path) return 0.0f;
 
     return path->exploration_progress;
 }
 
 int FPSSalvagePathSystem::getDiscoveredLootCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    const auto* path = getComponentFor(entity_id);
     if (!path) return 0;
 
     return path->discoveredCount();
 }
 
 int FPSSalvagePathSystem::getCollectedLootCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    const auto* path = getComponentFor(entity_id);
     if (!path) return 0;
 
     return path->collectedCount();
@@ -208,10 +174,7 @@ int FPSSalvagePathSystem::getCollectedLootCount(const std::string& entity_id) co
 
 std::string FPSSalvagePathSystem::getEntryState(const std::string& entity_id,
                                                   const std::string& entry_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* path = entity->getComponent<components::FPSSalvagePath>();
+    const auto* path = getComponentFor(entity_id);
     if (!path) return "unknown";
 
     const auto* entry = path->findEntry(entry_id);

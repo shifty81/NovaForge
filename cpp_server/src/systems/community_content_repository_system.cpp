@@ -18,16 +18,12 @@ components::CommunityContentRepo::ContentEntry* findContent(
 } // anonymous namespace
 
 CommunityContentRepositorySystem::CommunityContentRepositorySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void CommunityContentRepositorySystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::CommunityContentRepo>();
-    for (auto* entity : entities) {
-        auto* repo = entity->getComponent<components::CommunityContentRepo>();
-        if (!repo || !repo->active) continue;
-        // Periodic maintenance — no time-based logic required
-    }
+void CommunityContentRepositorySystem::updateComponent(ecs::Entity& /*entity*/, components::CommunityContentRepo& repo, float /*delta_time*/) {
+    if (!repo.active) return;
+    // Periodic maintenance — no time-based logic required
 }
 
 bool CommunityContentRepositorySystem::createRepo(const std::string& entity_id) {
@@ -42,9 +38,7 @@ bool CommunityContentRepositorySystem::submitContent(
     const std::string& entity_id, const std::string& content_id,
     const std::string& type, const std::string& author,
     const std::string& title, const std::string& description) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    auto* repo = getComponentFor(entity_id);
     if (!repo) return false;
     if (static_cast<int>(repo->contents.size()) >= repo->max_content) return false;
     // Check for duplicate content_id
@@ -64,9 +58,7 @@ bool CommunityContentRepositorySystem::submitContent(
 
 bool CommunityContentRepositorySystem::publishContent(
     const std::string& entity_id, const std::string& content_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    auto* repo = getComponentFor(entity_id);
     if (!repo) return false;
     auto* entry = findContent(repo, content_id);
     if (!entry || entry->state != "Draft") return false;
@@ -76,9 +68,7 @@ bool CommunityContentRepositorySystem::publishContent(
 
 bool CommunityContentRepositorySystem::featureContent(
     const std::string& entity_id, const std::string& content_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    auto* repo = getComponentFor(entity_id);
     if (!repo) return false;
     auto* entry = findContent(repo, content_id);
     if (!entry || entry->state != "Published") return false;
@@ -88,9 +78,7 @@ bool CommunityContentRepositorySystem::featureContent(
 
 bool CommunityContentRepositorySystem::archiveContent(
     const std::string& entity_id, const std::string& content_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    auto* repo = getComponentFor(entity_id);
     if (!repo) return false;
     auto* entry = findContent(repo, content_id);
     if (!entry) return false;
@@ -100,9 +88,7 @@ bool CommunityContentRepositorySystem::archiveContent(
 
 bool CommunityContentRepositorySystem::rateContent(
     const std::string& entity_id, const std::string& content_id, int rating) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    auto* repo = getComponentFor(entity_id);
     if (!repo) return false;
     auto* entry = findContent(repo, content_id);
     if (!entry) return false;
@@ -116,9 +102,7 @@ bool CommunityContentRepositorySystem::rateContent(
 
 bool CommunityContentRepositorySystem::downloadContent(
     const std::string& entity_id, const std::string& content_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    auto* repo = getComponentFor(entity_id);
     if (!repo) return false;
     auto* entry = findContent(repo, content_id);
     if (!entry) return false;
@@ -128,18 +112,14 @@ bool CommunityContentRepositorySystem::downloadContent(
 }
 
 int CommunityContentRepositorySystem::getContentCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    const auto* repo = getComponentFor(entity_id);
     if (!repo) return 0;
     return static_cast<int>(repo->contents.size());
 }
 
 float CommunityContentRepositorySystem::getAverageRating(
     const std::string& entity_id, const std::string& content_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    const auto* repo = getComponentFor(entity_id);
     if (!repo) return 0.0f;
     for (const auto& entry : repo->contents) {
         if (entry.content_id == content_id) return entry.average_rating;
@@ -149,9 +129,7 @@ float CommunityContentRepositorySystem::getAverageRating(
 
 int CommunityContentRepositorySystem::getDownloadCount(
     const std::string& entity_id, const std::string& content_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    const auto* repo = getComponentFor(entity_id);
     if (!repo) return 0;
     for (const auto& entry : repo->contents) {
         if (entry.content_id == content_id) return entry.downloads;
@@ -160,18 +138,14 @@ int CommunityContentRepositorySystem::getDownloadCount(
 }
 
 int CommunityContentRepositorySystem::getTotalDownloads(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    const auto* repo = getComponentFor(entity_id);
     if (!repo) return 0;
     return repo->total_downloads;
 }
 
 int CommunityContentRepositorySystem::getContentByType(
     const std::string& entity_id, const std::string& type) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    const auto* repo = getComponentFor(entity_id);
     if (!repo) return 0;
     int count = 0;
     for (const auto& entry : repo->contents) {
@@ -182,9 +156,7 @@ int CommunityContentRepositorySystem::getContentByType(
 
 std::string CommunityContentRepositorySystem::getContentState(
     const std::string& entity_id, const std::string& content_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    const auto* repo = getComponentFor(entity_id);
     if (!repo) return "";
     for (const auto& entry : repo->contents) {
         if (entry.content_id == content_id) return entry.state;
@@ -193,9 +165,7 @@ std::string CommunityContentRepositorySystem::getContentState(
 }
 
 int CommunityContentRepositorySystem::getTotalSubmissions(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* repo = entity->getComponent<components::CommunityContentRepo>();
+    const auto* repo = getComponentFor(entity_id);
     if (!repo) return 0;
     return repo->total_submissions;
 }

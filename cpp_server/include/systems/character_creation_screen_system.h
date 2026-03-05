@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_CHARACTER_CREATION_SCREEN_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CHARACTER_CREATION_SCREEN_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -16,12 +16,11 @@ namespace systems {
  * race/faction selection, attribute sliders, appearance customization,
  * and final validation before character finalization.
  */
-class CharacterCreationScreenSystem : public ecs::System {
+class CharacterCreationScreenSystem : public ecs::SingleComponentSystem<components::CharacterCreationScreen> {
 public:
     explicit CharacterCreationScreenSystem(ecs::World* world);
     ~CharacterCreationScreenSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CharacterCreationScreenSystem"; }
 
     /**
@@ -80,6 +79,9 @@ public:
      * @brief Get the currently selected faction
      */
     std::string getSelectedFaction(const std::string& player_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CharacterCreationScreen& screen, float delta_time) override;
 
 private:
     static constexpr const char* SCREEN_ENTITY_PREFIX = "char_screen_";

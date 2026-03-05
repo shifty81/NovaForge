@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FPS_SALVAGE_PATH_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FPS_SALVAGE_PATH_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/fps_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages FPS-mode salvage exploration including entry point cutting,
  * room exploration, and loot discovery/collection.
  */
-class FPSSalvagePathSystem : public ecs::System {
+class FPSSalvagePathSystem : public ecs::SingleComponentSystem<components::FPSSalvagePath> {
 public:
     explicit FPSSalvagePathSystem(ecs::World* world);
     ~FPSSalvagePathSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FPSSalvagePathSystem"; }
 
     // Initialization
@@ -47,6 +46,9 @@ public:
     int getDiscoveredLootCount(const std::string& entity_id) const;
     int getCollectedLootCount(const std::string& entity_id) const;
     std::string getEntryState(const std::string& entity_id, const std::string& entry_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FPSSalvagePath& path, float delta_time) override;
 };
 
 } // namespace systems

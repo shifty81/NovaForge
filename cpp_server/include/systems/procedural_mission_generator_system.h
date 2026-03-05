@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_PROCEDURAL_MISSION_GENERATOR_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_PROCEDURAL_MISSION_GENERATOR_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/mission_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * based on difficulty and faction standing, accept/complete/expire lifecycle,
  * and automatic generation on a timer.
  */
-class ProceduralMissionGeneratorSystem : public ecs::System {
+class ProceduralMissionGeneratorSystem : public ecs::SingleComponentSystem<components::ProceduralMissionGenerator> {
 public:
     explicit ProceduralMissionGeneratorSystem(ecs::World* world);
     ~ProceduralMissionGeneratorSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ProceduralMissionGeneratorSystem"; }
 
     bool initialize(const std::string& entity_id, const std::string& generator_id,
@@ -37,6 +37,9 @@ public:
     int getMissionDifficulty(const std::string& entity_id, const std::string& mission_id) const;
     bool isMissionAccepted(const std::string& entity_id, const std::string& mission_id) const;
     int getTotalGenerated(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ProceduralMissionGenerator& gen, float delta_time) override;
 };
 
 } // namespace systems

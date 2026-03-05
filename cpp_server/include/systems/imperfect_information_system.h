@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_IMPERFECT_INFORMATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_IMPERFECT_INFORMATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/npc_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * Entities below ghost threshold become sensor ghosts (unreliable data).
  * Scan quality depends on sensor strength and distance.
  */
-class ImperfectInformationSystem : public ecs::System {
+class ImperfectInformationSystem : public ecs::SingleComponentSystem<components::EntityIntel> {
 public:
     explicit ImperfectInformationSystem(ecs::World* world);
     ~ImperfectInformationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ImperfectInformationSystem"; }
 
     // Commands
@@ -38,6 +37,9 @@ public:
     int getIntelCount(const std::string& observer_id) const;
     int getTotalScans(const std::string& observer_id) const;
     float getSensorStrength(const std::string& observer_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::EntityIntel& intel, float delta_time) override;
 };
 
 } // namespace systems

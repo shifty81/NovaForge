@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_COMMUNITY_CONTENT_REPOSITORY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_COMMUNITY_CONTENT_REPOSITORY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages submission, publishing, rating, and download tracking of
  * community-created content such as ships, modules, missions, and skins.
  */
-class CommunityContentRepositorySystem : public ecs::System {
+class CommunityContentRepositorySystem : public ecs::SingleComponentSystem<components::CommunityContentRepo> {
 public:
     explicit CommunityContentRepositorySystem(ecs::World* world);
     ~CommunityContentRepositorySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CommunityContentRepositorySystem"; }
 
     bool createRepo(const std::string& entity_id);
@@ -37,6 +37,9 @@ public:
     int getContentByType(const std::string& entity_id, const std::string& type) const;
     std::string getContentState(const std::string& entity_id, const std::string& content_id) const;
     int getTotalSubmissions(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CommunityContentRepo& repo, float delta_time) override;
 };
 
 } // namespace systems

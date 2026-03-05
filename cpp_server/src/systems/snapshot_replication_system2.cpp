@@ -7,29 +7,25 @@
 namespace atlas {
 namespace systems {
 
-SnapshotReplicationSystem2::SnapshotReplicationSystem2(ecs::World* world) : System(world) {}
+SnapshotReplicationSystem2::SnapshotReplicationSystem2(ecs::World* world) : SingleComponentSystem(world) {}
 
-void SnapshotReplicationSystem2::update(float delta_time) {
-    auto entities = world_->getEntities<components::SnapshotReplication>();
-    for (auto* entity : entities) {
-        auto* sr = entity->getComponent<components::SnapshotReplication>();
-        if (!sr || !sr->active) continue;
+void SnapshotReplicationSystem2::updateComponent(ecs::Entity& /*entity*/, components::SnapshotReplication& sr, float delta_time) {
+    if (!sr.active) return;
 
-        sr->time_accumulator += delta_time;
-        if (sr->time_accumulator >= sr->snapshot_interval) {
-            sr->time_accumulator -= sr->snapshot_interval;
-            // Auto-capture: advance frame
-            sr->current_frame++;
-            components::SnapshotReplication::SnapshotFrame frame;
-            frame.frame_number = sr->current_frame;
-            frame.timestamp = static_cast<float>(sr->current_frame) * sr->snapshot_interval;
-            sr->history.push_back(frame);
-            sr->total_snapshots_sent++;
+    sr.time_accumulator += delta_time;
+    if (sr.time_accumulator >= sr.snapshot_interval) {
+        sr.time_accumulator -= sr.snapshot_interval;
+        // Auto-capture: advance frame
+        sr.current_frame++;
+        components::SnapshotReplication::SnapshotFrame frame;
+        frame.frame_number = sr.current_frame;
+        frame.timestamp = static_cast<float>(sr.current_frame) * sr.snapshot_interval;
+        sr.history.push_back(frame);
+        sr.total_snapshots_sent++;
 
-            // Trim history
-            while (static_cast<int>(sr->history.size()) > sr->max_history) {
-                sr->history.erase(sr->history.begin());
-            }
+        // Trim history
+        while (static_cast<int>(sr.history.size()) > sr.max_history) {
+            sr.history.erase(sr.history.begin());
         }
     }
 }
@@ -45,9 +41,7 @@ bool SnapshotReplicationSystem2::initialize(const std::string& entity_id,
 }
 
 bool SnapshotReplicationSystem2::captureSnapshot(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    auto* sr = getComponentFor(entity_id);
     if (!sr) return false;
 
     sr->current_frame++;
@@ -65,9 +59,7 @@ bool SnapshotReplicationSystem2::captureSnapshot(const std::string& entity_id) {
 bool SnapshotReplicationSystem2::addEntityToSnapshot(const std::string& entity_id,
     const std::string& target_entity_id,
     float x, float y, float z, float health, float shield, float velocity) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    auto* sr = getComponentFor(entity_id);
     if (!sr || sr->history.empty()) return false;
 
     auto& current = sr->history.back();
@@ -88,9 +80,7 @@ bool SnapshotReplicationSystem2::addEntityToSnapshot(const std::string& entity_i
 
 bool SnapshotReplicationSystem2::registerClient(const std::string& entity_id,
     const std::string& client_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    auto* sr = getComponentFor(entity_id);
     if (!sr) return false;
     if (static_cast<int>(sr->client_acks.size()) >= sr->max_clients) return false;
 
@@ -108,9 +98,7 @@ bool SnapshotReplicationSystem2::registerClient(const std::string& entity_id,
 
 bool SnapshotReplicationSystem2::unregisterClient(const std::string& entity_id,
     const std::string& client_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    auto* sr = getComponentFor(entity_id);
     if (!sr) return false;
 
     auto it = std::remove_if(sr->client_acks.begin(), sr->client_acks.end(),
@@ -124,9 +112,7 @@ bool SnapshotReplicationSystem2::unregisterClient(const std::string& entity_id,
 
 bool SnapshotReplicationSystem2::acknowledgeFrame(const std::string& entity_id,
     const std::string& client_id, uint32_t frame_number) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    auto* sr = getComponentFor(entity_id);
     if (!sr) return false;
 
     for (auto& ca : sr->client_acks) {
@@ -142,9 +128,7 @@ bool SnapshotReplicationSystem2::acknowledgeFrame(const std::string& entity_id,
 
 int SnapshotReplicationSystem2::getDeltaEntityCount(const std::string& entity_id,
     const std::string& client_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    const auto* sr = getComponentFor(entity_id);
     if (!sr || sr->history.empty()) return 0;
 
     uint32_t last_acked = 0;
@@ -189,38 +173,28 @@ int SnapshotReplicationSystem2::getDeltaEntityCount(const std::string& entity_id
 }
 
 uint32_t SnapshotReplicationSystem2::getCurrentFrame(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    const auto* sr = getComponentFor(entity_id);
     return sr ? sr->current_frame : 0;
 }
 
 int SnapshotReplicationSystem2::getHistorySize(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    const auto* sr = getComponentFor(entity_id);
     return sr ? static_cast<int>(sr->history.size()) : 0;
 }
 
 int SnapshotReplicationSystem2::getClientCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    const auto* sr = getComponentFor(entity_id);
     return sr ? static_cast<int>(sr->client_acks.size()) : 0;
 }
 
 int SnapshotReplicationSystem2::getTotalSnapshotsSent(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    const auto* sr = getComponentFor(entity_id);
     return sr ? sr->total_snapshots_sent : 0;
 }
 
 uint32_t SnapshotReplicationSystem2::getClientLastAck(const std::string& entity_id,
     const std::string& client_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* sr = entity->getComponent<components::SnapshotReplication>();
+    const auto* sr = getComponentFor(entity_id);
     if (!sr) return 0;
     for (const auto& ca : sr->client_acks) {
         if (ca.client_id == client_id) return ca.last_acked_frame;

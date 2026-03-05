@@ -8,47 +8,38 @@ namespace atlas {
 namespace systems {
 
 ImperfectInformationSystem::ImperfectInformationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ImperfectInformationSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::EntityIntel>();
-    for (auto* entity : entities) {
-        auto* intel = entity->getComponent<components::EntityIntel>();
-        if (!intel) continue;
+void ImperfectInformationSystem::updateComponent(ecs::Entity& /*entity*/, components::EntityIntel& intel, float delta_time) {
+    for (auto& entry : intel.entries) {
+        entry.age += delta_time;
 
-        for (auto& entry : intel->entries) {
-            entry.age += delta_time;
+        // Decay confidence over time
+        entry.confidence -= entry.decay_rate * delta_time;
+        entry.confidence = std::max(0.0f, entry.confidence);
 
-            // Decay confidence over time
-            entry.confidence -= entry.decay_rate * delta_time;
-            entry.confidence = std::max(0.0f, entry.confidence);
-
-            // Mark as ghost if below threshold
-            if (entry.confidence < intel->ghost_threshold && !entry.is_ghost) {
-                entry.is_ghost = true;
-            }
+        // Mark as ghost if below threshold
+        if (entry.confidence < intel.ghost_threshold && !entry.is_ghost) {
+            entry.is_ghost = true;
         }
-
-        // Remove entries with zero confidence that are ghosts
-        intel->entries.erase(
-            std::remove_if(intel->entries.begin(), intel->entries.end(),
-                [](const components::EntityIntel::IntelEntry& e) {
-                    return e.confidence <= 0.0f;
-                }),
-            intel->entries.end()
-        );
     }
+
+    // Remove entries with zero confidence that are ghosts
+    intel.entries.erase(
+        std::remove_if(intel.entries.begin(), intel.entries.end(),
+            [](const components::EntityIntel::IntelEntry& e) {
+                return e.confidence <= 0.0f;
+            }),
+        intel.entries.end()
+    );
 }
 
 bool ImperfectInformationSystem::recordIntel(const std::string& observer_id,
                                               const std::string& target_id,
                                               float scan_quality,
                                               float distance) {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return false;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    auto* intel = getComponentFor(observer_id);
     if (!intel) return false;
 
     // Compute confidence: scan_quality * sensor_strength, reduced by distance
@@ -92,10 +83,7 @@ bool ImperfectInformationSystem::recordIntel(const std::string& observer_id,
 
 bool ImperfectInformationSystem::clearIntel(const std::string& observer_id,
                                              const std::string& target_id) {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return false;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    auto* intel = getComponentFor(observer_id);
     if (!intel) return false;
 
     auto it = std::remove_if(intel->entries.begin(), intel->entries.end(),
@@ -108,10 +96,7 @@ bool ImperfectInformationSystem::clearIntel(const std::string& observer_id,
 }
 
 bool ImperfectInformationSystem::clearAllIntel(const std::string& observer_id) {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return false;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    auto* intel = getComponentFor(observer_id);
     if (!intel) return false;
 
     intel->entries.clear();
@@ -119,10 +104,7 @@ bool ImperfectInformationSystem::clearAllIntel(const std::string& observer_id) {
 }
 
 bool ImperfectInformationSystem::setSensorStrength(const std::string& observer_id, float strength) {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return false;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    auto* intel = getComponentFor(observer_id);
     if (!intel) return false;
 
     intel->sensor_strength = std::max(0.0f, strength);
@@ -131,10 +113,7 @@ bool ImperfectInformationSystem::setSensorStrength(const std::string& observer_i
 
 float ImperfectInformationSystem::getConfidence(const std::string& observer_id,
                                                  const std::string& target_id) const {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return 0.0f;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    const auto* intel = getComponentFor(observer_id);
     if (!intel) return 0.0f;
 
     auto* entry = intel->getEntry(target_id);
@@ -143,10 +122,7 @@ float ImperfectInformationSystem::getConfidence(const std::string& observer_id,
 
 bool ImperfectInformationSystem::hasIntel(const std::string& observer_id,
                                            const std::string& target_id) const {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return false;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    const auto* intel = getComponentFor(observer_id);
     if (!intel) return false;
 
     return intel->getEntry(target_id) != nullptr;
@@ -154,10 +130,7 @@ bool ImperfectInformationSystem::hasIntel(const std::string& observer_id,
 
 float ImperfectInformationSystem::getIntelAge(const std::string& observer_id,
                                                const std::string& target_id) const {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return 0.0f;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    const auto* intel = getComponentFor(observer_id);
     if (!intel) return 0.0f;
 
     auto* entry = intel->getEntry(target_id);
@@ -166,10 +139,7 @@ float ImperfectInformationSystem::getIntelAge(const std::string& observer_id,
 
 bool ImperfectInformationSystem::isGhost(const std::string& observer_id,
                                           const std::string& target_id) const {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return false;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    const auto* intel = getComponentFor(observer_id);
     if (!intel) return false;
 
     auto* entry = intel->getEntry(target_id);
@@ -177,30 +147,21 @@ bool ImperfectInformationSystem::isGhost(const std::string& observer_id,
 }
 
 int ImperfectInformationSystem::getIntelCount(const std::string& observer_id) const {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return 0;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    const auto* intel = getComponentFor(observer_id);
     if (!intel) return 0;
 
     return static_cast<int>(intel->entries.size());
 }
 
 int ImperfectInformationSystem::getTotalScans(const std::string& observer_id) const {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return 0;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    const auto* intel = getComponentFor(observer_id);
     if (!intel) return 0;
 
     return intel->total_scans;
 }
 
 float ImperfectInformationSystem::getSensorStrength(const std::string& observer_id) const {
-    auto* entity = world_->getEntity(observer_id);
-    if (!entity) return 0.0f;
-
-    auto* intel = entity->getComponent<components::EntityIntel>();
+    const auto* intel = getComponentFor(observer_id);
     if (!intel) return 0.0f;
 
     return intel->sensor_strength;

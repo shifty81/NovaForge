@@ -48,29 +48,25 @@ float calculateTimeLimit(int difficulty) {
 } // anonymous namespace
 
 ProceduralMissionGeneratorSystem::ProceduralMissionGeneratorSystem(ecs::World* world)
-    : System(world) {}
+    : SingleComponentSystem(world) {}
 
-void ProceduralMissionGeneratorSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::ProceduralMissionGenerator>();
-    for (auto* entity : entities) {
-        auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
-        if (!gen || !gen->active) continue;
+void ProceduralMissionGeneratorSystem::updateComponent(ecs::Entity& /*entity*/, components::ProceduralMissionGenerator& gen, float delta_time) {
+    if (!gen.active) return;
 
-        // Countdown generation cooldown
-        if (gen->generation_cooldown > 0.0f) {
-            gen->generation_cooldown -= delta_time;
-            if (gen->generation_cooldown < 0.0f) gen->generation_cooldown = 0.0f;
-        }
+    // Countdown generation cooldown
+    if (gen.generation_cooldown > 0.0f) {
+        gen.generation_cooldown -= delta_time;
+        if (gen.generation_cooldown < 0.0f) gen.generation_cooldown = 0.0f;
+    }
 
-        // Check for expired accepted missions with time limits
-        for (auto& m : gen->available_missions) {
-            if (m.accepted && !m.completed && !m.expired && m.time_limit > 0.0f) {
-                m.time_limit -= delta_time;
-                if (m.time_limit <= 0.0f) {
-                    m.time_limit = 0.0f;
-                    m.expired = true;
-                    gen->total_expired++;
-                }
+    // Check for expired accepted missions with time limits
+    for (auto& m : gen.available_missions) {
+        if (m.accepted && !m.completed && !m.expired && m.time_limit > 0.0f) {
+            m.time_limit -= delta_time;
+            if (m.time_limit <= 0.0f) {
+                m.time_limit = 0.0f;
+                m.expired = true;
+                gen.total_expired++;
             }
         }
     }
@@ -90,9 +86,7 @@ bool ProceduralMissionGeneratorSystem::initialize(const std::string& entity_id,
 bool ProceduralMissionGeneratorSystem::generateMission(const std::string& entity_id,
     const std::string& mission_id, const std::string& type, int difficulty,
     const std::string& target_system) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    auto* gen = getComponentFor(entity_id);
     if (!gen) return false;
     if (static_cast<int>(gen->available_missions.size()) >= gen->max_available) return false;
 
@@ -119,9 +113,7 @@ bool ProceduralMissionGeneratorSystem::generateMission(const std::string& entity
 
 bool ProceduralMissionGeneratorSystem::acceptMission(const std::string& entity_id,
     const std::string& mission_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    auto* gen = getComponentFor(entity_id);
     if (!gen) return false;
 
     auto* m = findMission(gen, mission_id);
@@ -132,9 +124,7 @@ bool ProceduralMissionGeneratorSystem::acceptMission(const std::string& entity_i
 
 bool ProceduralMissionGeneratorSystem::completeMission(const std::string& entity_id,
     const std::string& mission_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    auto* gen = getComponentFor(entity_id);
     if (!gen) return false;
 
     auto* m = findMission(gen, mission_id);
@@ -149,9 +139,7 @@ bool ProceduralMissionGeneratorSystem::completeMission(const std::string& entity
 
 bool ProceduralMissionGeneratorSystem::expireMission(const std::string& entity_id,
     const std::string& mission_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    auto* gen = getComponentFor(entity_id);
     if (!gen) return false;
 
     auto* m = findMission(gen, mission_id);
@@ -163,9 +151,7 @@ bool ProceduralMissionGeneratorSystem::expireMission(const std::string& entity_i
 
 bool ProceduralMissionGeneratorSystem::removeMission(const std::string& entity_id,
     const std::string& mission_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    auto* gen = getComponentFor(entity_id);
     if (!gen) return false;
 
     auto it = std::remove_if(gen->available_missions.begin(), gen->available_missions.end(),
@@ -178,24 +164,18 @@ bool ProceduralMissionGeneratorSystem::removeMission(const std::string& entity_i
 }
 
 int ProceduralMissionGeneratorSystem::getAvailableCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    const auto* gen = getComponentFor(entity_id);
     return gen ? static_cast<int>(gen->available_missions.size()) : 0;
 }
 
 int ProceduralMissionGeneratorSystem::getCompletedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    const auto* gen = getComponentFor(entity_id);
     return gen ? gen->total_completed : 0;
 }
 
 float ProceduralMissionGeneratorSystem::getMissionReward(const std::string& entity_id,
     const std::string& mission_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    const auto* gen = getComponentFor(entity_id);
     if (!gen) return 0.0f;
     auto* m = findMissionConst(gen, mission_id);
     return m ? m->reward_credits : 0.0f;
@@ -203,9 +183,7 @@ float ProceduralMissionGeneratorSystem::getMissionReward(const std::string& enti
 
 int ProceduralMissionGeneratorSystem::getMissionDifficulty(const std::string& entity_id,
     const std::string& mission_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    const auto* gen = getComponentFor(entity_id);
     if (!gen) return 0;
     auto* m = findMissionConst(gen, mission_id);
     return m ? m->difficulty : 0;
@@ -213,18 +191,14 @@ int ProceduralMissionGeneratorSystem::getMissionDifficulty(const std::string& en
 
 bool ProceduralMissionGeneratorSystem::isMissionAccepted(const std::string& entity_id,
     const std::string& mission_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    const auto* gen = getComponentFor(entity_id);
     if (!gen) return false;
     auto* m = findMissionConst(gen, mission_id);
     return m ? m->accepted : false;
 }
 
 int ProceduralMissionGeneratorSystem::getTotalGenerated(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* gen = entity->getComponent<components::ProceduralMissionGenerator>();
+    const auto* gen = getComponentFor(entity_id);
     return gen ? gen->total_generated : 0;
 }
 
