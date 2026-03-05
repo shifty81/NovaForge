@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_DOCK_NODE_LAYOUT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_DOCK_NODE_LAYOUT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/ui_components.h"
 #include <string>
 #include <tuple>
@@ -15,12 +15,11 @@ namespace systems {
  * Retained-mode UI window framework with DockNode tree for managing
  * dockable window panels. Server-side layout calculation engine.
  */
-class DockNodeLayoutSystem : public ecs::System {
+class DockNodeLayoutSystem : public ecs::SingleComponentSystem<components::DockNodeLayout> {
 public:
     explicit DockNodeLayoutSystem(ecs::World* world);
     ~DockNodeLayoutSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "DockNodeLayoutSystem"; }
 
     // Initialization
@@ -44,6 +43,9 @@ public:
     std::string getNodeType(const std::string& entity_id, const std::string& node_id) const;
     std::tuple<float, float, float, float> getWindowBounds(const std::string& entity_id,
                                                             const std::string& window_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::DockNodeLayout& layout, float delta_time) override;
 
 private:
     void recalculateLayout(components::DockNodeLayout* layout,

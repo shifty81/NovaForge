@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_WARP_FORMATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_WARP_FORMATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -22,12 +22,11 @@ namespace systems {
  * A breathing oscillation (0.02–0.05 Hz) adds organic feel. Warp distortion
  * bends around larger ships, and smaller ships' wakes ripple.
  */
-class FleetWarpFormationSystem : public ecs::System {
+class FleetWarpFormationSystem : public ecs::SingleComponentSystem<components::FleetWarpState> {
 public:
     explicit FleetWarpFormationSystem(ecs::World* world);
     ~FleetWarpFormationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetWarpFormationSystem"; }
 
     /**
@@ -70,6 +69,9 @@ public:
 
     /// Default spacing between warp formation slots (metres)
     static constexpr float kWarpSpacing = 800.0f;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetWarpState& ws, float delta_time) override;
 };
 
 } // namespace systems

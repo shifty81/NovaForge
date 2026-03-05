@@ -1,6 +1,5 @@
 #include "systems/fleet_warp_formation_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
 
 #include <cmath>
 
@@ -8,21 +7,17 @@ namespace atlas {
 namespace systems {
 
 FleetWarpFormationSystem::FleetWarpFormationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetWarpFormationSystem::update(float delta_time) {
+void FleetWarpFormationSystem::updateComponent(ecs::Entity& /*entity*/, components::FleetWarpState& ws, float delta_time) {
     static constexpr float kTwoPi = 6.2831853f;
-    auto entities = world_->getEntities<components::FleetWarpState>();
-    for (auto* entity : entities) {
-        auto* ws = entity->getComponent<components::FleetWarpState>();
-        if (!ws || !ws->in_fleet_warp) continue;
+    if (!ws.in_fleet_warp) return;
 
-        // Advance breathing phase
-        ws->breathing_phase += delta_time * ws->breathing_frequency * kTwoPi;
-        // Wrap phase to prevent unbounded growth
-        ws->breathing_phase = std::fmod(ws->breathing_phase, kTwoPi);
-    }
+    // Advance breathing phase
+    ws.breathing_phase += delta_time * ws.breathing_frequency * kTwoPi;
+    // Wrap phase to prevent unbounded growth
+    ws.breathing_phase = std::fmod(ws.breathing_phase, kTwoPi);
 }
 
 void FleetWarpFormationSystem::beginFleetWarp(const std::string& entity_id) {
@@ -40,10 +35,7 @@ void FleetWarpFormationSystem::beginFleetWarp(const std::string& entity_id) {
 }
 
 void FleetWarpFormationSystem::endFleetWarp(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* ws = entity->getComponent<components::FleetWarpState>();
+    auto* ws = getComponentFor(entity_id);
     if (!ws) return;
 
     ws->in_fleet_warp = false;
@@ -51,10 +43,7 @@ void FleetWarpFormationSystem::endFleetWarp(const std::string& entity_id) {
 }
 
 bool FleetWarpFormationSystem::isInFleetWarp(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* ws = entity->getComponent<components::FleetWarpState>();
+    const auto* ws = getComponentFor(entity_id);
     if (!ws) return false;
 
     return ws->in_fleet_warp;
@@ -100,20 +89,14 @@ void FleetWarpFormationSystem::selectFormationByShipClass(
 }
 
 float FleetWarpFormationSystem::getBreathingOffset(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* ws = entity->getComponent<components::FleetWarpState>();
+    const auto* ws = getComponentFor(entity_id);
     if (!ws) return 0.0f;
 
     return ws->breathing_amplitude * std::sin(ws->breathing_phase);
 }
 
 float FleetWarpFormationSystem::getDistortionBend(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* ws = entity->getComponent<components::FleetWarpState>();
+    const auto* ws = getComponentFor(entity_id);
     if (!ws) return 0.0f;
 
     return ws->distortion_bend;
@@ -123,10 +106,7 @@ void FleetWarpFormationSystem::computeWarpOffset(
     const std::string& entity_id, int slot_index,
     float& ox, float& oy, float& oz) const {
 
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) { ox = oy = oz = 0.0f; return; }
-
-    auto* ws = entity->getComponent<components::FleetWarpState>();
+    const auto* ws = getComponentFor(entity_id);
     if (!ws) { ox = oy = oz = 0.0f; return; }
 
     if (slot_index == 0) {

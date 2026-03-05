@@ -1,18 +1,18 @@
 #ifndef NOVAFORGE_SYSTEMS_CHARACTER_CREATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CHARACTER_CREATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
 namespace systems {
 
-class CharacterCreationSystem : public ecs::System {
+class CharacterCreationSystem : public ecs::SingleComponentSystem<components::CharacterSheet> {
 public:
     explicit CharacterCreationSystem(ecs::World* world);
     ~CharacterCreationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CharacterCreationSystem"; }
 
     // Character creation
@@ -54,6 +54,9 @@ public:
                              const std::string& corp_id,
                              const std::string& corp_name,
                              float join_date);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CharacterSheet& sheet, float delta_time) override;
 };
 
 } // namespace systems
