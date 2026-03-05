@@ -18,27 +18,23 @@ components::FleetSupplyLine::SupplyDepot* findDepot(
 } // anonymous namespace
 
 FleetSupplyLineSystem::FleetSupplyLineSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetSupplyLineSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::FleetSupplyLine>();
-    for (auto* entity : entities) {
-        auto* fsl = entity->getComponent<components::FleetSupplyLine>();
-        if (!fsl || !fsl->active) continue;
+void FleetSupplyLineSystem::updateComponent(ecs::Entity& entity, components::FleetSupplyLine& comp, float delta_time) {
+    if (!comp.active) return;
 
-        for (auto& depot : fsl->depots) {
-            float drain = fsl->consumption_rate * delta_time;
+    for (auto& depot : comp.depots) {
+        float drain = comp.consumption_rate * delta_time;
 
-            float actual_fuel = std::min(drain, depot.fuel_level);
-            float actual_ammo = std::min(drain, depot.ammo_level);
+        float actual_fuel = std::min(drain, depot.fuel_level);
+        float actual_ammo = std::min(drain, depot.ammo_level);
 
-            depot.fuel_level -= actual_fuel;
-            depot.ammo_level -= actual_ammo;
+        depot.fuel_level -= actual_fuel;
+        depot.ammo_level -= actual_ammo;
 
-            fsl->total_fuel_consumed += actual_fuel;
-            fsl->total_ammo_consumed += actual_ammo;
-        }
+        comp.total_fuel_consumed += actual_fuel;
+        comp.total_ammo_consumed += actual_ammo;
     }
 }
 
@@ -52,9 +48,7 @@ bool FleetSupplyLineSystem::initializeSupplyLine(const std::string& entity_id) {
 
 bool FleetSupplyLineSystem::addDepot(const std::string& entity_id,
     const std::string& depot_id, const std::string& system_id, float capacity) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    auto* fsl = getComponentFor(entity_id);
     if (!fsl) return false;
     if (static_cast<int>(fsl->depots.size()) >= fsl->max_depots) return false;
     if (findDepot(fsl, depot_id)) return false; // duplicate
@@ -71,9 +65,7 @@ bool FleetSupplyLineSystem::addDepot(const std::string& entity_id,
 
 bool FleetSupplyLineSystem::removeDepot(const std::string& entity_id,
     const std::string& depot_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    auto* fsl = getComponentFor(entity_id);
     if (!fsl) return false;
 
     auto it = std::remove_if(fsl->depots.begin(), fsl->depots.end(),
@@ -87,9 +79,7 @@ bool FleetSupplyLineSystem::removeDepot(const std::string& entity_id,
 
 bool FleetSupplyLineSystem::resupplyDepot(const std::string& entity_id,
     const std::string& depot_id, float fuel, float ammo) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    auto* fsl = getComponentFor(entity_id);
     if (!fsl) return false;
     auto* depot = findDepot(fsl, depot_id);
     if (!depot) return false;
@@ -103,9 +93,7 @@ bool FleetSupplyLineSystem::resupplyDepot(const std::string& entity_id,
 
 bool FleetSupplyLineSystem::consumeSupplies(const std::string& entity_id,
     const std::string& depot_id, float fuel, float ammo) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    auto* fsl = getComponentFor(entity_id);
     if (!fsl) return false;
     auto* depot = findDepot(fsl, depot_id);
     if (!depot) return false;
@@ -116,18 +104,14 @@ bool FleetSupplyLineSystem::consumeSupplies(const std::string& entity_id,
 }
 
 int FleetSupplyLineSystem::getDepotCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    const auto* fsl = getComponentFor(entity_id);
     if (!fsl) return 0;
     return static_cast<int>(fsl->depots.size());
 }
 
 float FleetSupplyLineSystem::getFuelLevel(const std::string& entity_id,
     const std::string& depot_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    const auto* fsl = getComponentFor(entity_id);
     if (!fsl) return 0.0f;
     for (const auto& d : fsl->depots) {
         if (d.depot_id == depot_id) return d.fuel_level;
@@ -137,9 +121,7 @@ float FleetSupplyLineSystem::getFuelLevel(const std::string& entity_id,
 
 float FleetSupplyLineSystem::getAmmoLevel(const std::string& entity_id,
     const std::string& depot_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    const auto* fsl = getComponentFor(entity_id);
     if (!fsl) return 0.0f;
     for (const auto& d : fsl->depots) {
         if (d.depot_id == depot_id) return d.ammo_level;
@@ -148,18 +130,14 @@ float FleetSupplyLineSystem::getAmmoLevel(const std::string& entity_id,
 }
 
 int FleetSupplyLineSystem::getTotalResupplies(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    const auto* fsl = getComponentFor(entity_id);
     if (!fsl) return 0;
     return fsl->total_resupplies;
 }
 
 bool FleetSupplyLineSystem::isDepotCritical(const std::string& entity_id,
     const std::string& depot_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fsl = entity->getComponent<components::FleetSupplyLine>();
+    const auto* fsl = getComponentFor(entity_id);
     if (!fsl) return false;
     for (const auto& d : fsl->depots) {
         if (d.depot_id == depot_id) {

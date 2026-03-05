@@ -7,32 +7,28 @@ namespace atlas {
 namespace systems {
 
 AncientModuleDiscoverySystem::AncientModuleDiscoverySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AncientModuleDiscoverySystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::AncientModuleDiscovery>();
-    for (auto* entity : entities) {
-        auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
-        if (!disc || !disc->active) continue;
+void AncientModuleDiscoverySystem::updateComponent(ecs::Entity& /*entity*/, components::AncientModuleDiscovery& comp, float delta_time) {
+    if (!comp.active) return;
 
-        using DS = components::AncientModuleDiscovery::DiscoveryState;
+    using DS = components::AncientModuleDiscovery::DiscoveryState;
 
-        for (auto& mod : disc->modules) {
-            auto state = static_cast<DS>(mod.state);
-            if (state == DS::Scanning) {
-                mod.scan_progress += delta_time;
-                if (mod.scan_progress >= 1.0f) {
-                    mod.scan_progress = 1.0f;
-                    mod.state = static_cast<int>(DS::Discovered);
-                }
-            } else if (state == DS::Extracting) {
-                mod.extract_progress += delta_time;
-                if (mod.extract_progress >= mod.extract_required) {
-                    mod.extract_progress = mod.extract_required;
-                    mod.state = static_cast<int>(DS::Extracted);
-                    disc->total_extractions++;
-                }
+    for (auto& mod : comp.modules) {
+        auto state = static_cast<DS>(mod.state);
+        if (state == DS::Scanning) {
+            mod.scan_progress += delta_time;
+            if (mod.scan_progress >= 1.0f) {
+                mod.scan_progress = 1.0f;
+                mod.state = static_cast<int>(DS::Discovered);
+            }
+        } else if (state == DS::Extracting) {
+            mod.extract_progress += delta_time;
+            if (mod.extract_progress >= mod.extract_required) {
+                mod.extract_progress = mod.extract_required;
+                mod.state = static_cast<int>(DS::Extracted);
+                comp.total_extractions++;
             }
         }
     }
@@ -61,10 +57,7 @@ bool AncientModuleDiscoverySystem::addHiddenModule(const std::string& entity_id,
                                                     float repair_difficulty,
                                                     float extract_required,
                                                     float estimated_value) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
+    auto* disc = getComponentFor(entity_id);
     if (!disc) return false;
 
     if (disc->findModule(module_id)) return false;
@@ -82,10 +75,7 @@ bool AncientModuleDiscoverySystem::addHiddenModule(const std::string& entity_id,
 
 bool AncientModuleDiscoverySystem::beginScan(const std::string& entity_id,
                                               const std::string& module_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
+    auto* disc = getComponentFor(entity_id);
     if (!disc) return false;
 
     auto* mod = disc->findModule(module_id);
@@ -101,10 +91,7 @@ bool AncientModuleDiscoverySystem::beginScan(const std::string& entity_id,
 
 bool AncientModuleDiscoverySystem::beginExtraction(const std::string& entity_id,
                                                     const std::string& module_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
+    auto* disc = getComponentFor(entity_id);
     if (!disc) return false;
 
     auto* mod = disc->findModule(module_id);
@@ -120,10 +107,7 @@ bool AncientModuleDiscoverySystem::beginExtraction(const std::string& entity_id,
 
 bool AncientModuleDiscoverySystem::analyzeModule(const std::string& entity_id,
                                                   const std::string& module_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
+    auto* disc = getComponentFor(entity_id);
     if (!disc) return false;
 
     auto* mod = disc->findModule(module_id);
@@ -137,10 +121,7 @@ bool AncientModuleDiscoverySystem::analyzeModule(const std::string& entity_id,
 }
 
 bool AncientModuleDiscoverySystem::setActive(const std::string& entity_id, bool active) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
+    auto* disc = getComponentFor(entity_id);
     if (!disc) return false;
 
     disc->active = active;
@@ -149,10 +130,7 @@ bool AncientModuleDiscoverySystem::setActive(const std::string& entity_id, bool 
 
 int AncientModuleDiscoverySystem::getModuleState(const std::string& entity_id,
                                                   const std::string& module_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
+    const auto* disc = getComponentFor(entity_id);
     if (!disc) return 0;
 
     const auto* mod = disc->findModule(module_id);
@@ -162,43 +140,23 @@ int AncientModuleDiscoverySystem::getModuleState(const std::string& entity_id,
 }
 
 int AncientModuleDiscoverySystem::getDiscoveredCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
-    if (!disc) return 0;
-
-    return disc->discoveredCount();
+    const auto* disc = getComponentFor(entity_id);
+    return disc ? disc->discoveredCount() : 0;
 }
 
 int AncientModuleDiscoverySystem::getExtractedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
-    if (!disc) return 0;
-
-    return disc->extractedCount();
+    const auto* disc = getComponentFor(entity_id);
+    return disc ? disc->extractedCount() : 0;
 }
 
 int AncientModuleDiscoverySystem::getTotalModules(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
-    if (!disc) return 0;
-
-    return static_cast<int>(disc->modules.size());
+    const auto* disc = getComponentFor(entity_id);
+    return disc ? static_cast<int>(disc->modules.size()) : 0;
 }
 
 float AncientModuleDiscoverySystem::getScanRange(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* disc = entity->getComponent<components::AncientModuleDiscovery>();
-    if (!disc) return 0.0f;
-
-    return disc->scan_range;
+    const auto* disc = getComponentFor(entity_id);
+    return disc ? disc->scan_range : 0.0f;
 }
 
 std::string AncientModuleDiscoverySystem::stateName(int state) {

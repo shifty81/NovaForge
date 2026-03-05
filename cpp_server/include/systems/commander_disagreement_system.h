@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_COMMANDER_DISAGREEMENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_COMMANDER_DISAGREEMENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/fleet_components.h"
 #include <string>
 
@@ -16,12 +16,11 @@ namespace systems {
  * and impact fleet morale. Resolution methods: Vote, AuthorityOverride,
  * Compromise, or Escalation.
  */
-class CommanderDisagreementSystem : public ecs::System {
+class CommanderDisagreementSystem : public ecs::SingleComponentSystem<components::CommanderDisagreement> {
 public:
     explicit CommanderDisagreementSystem(ecs::World* world);
     ~CommanderDisagreementSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "CommanderDisagreementSystem"; }
 
     // Commands
@@ -41,6 +40,9 @@ public:
     std::string getSeverity(const std::string& fleet_id, int index) const;
     std::string getResolution(const std::string& fleet_id, int index) const;
     float getMoraleImpact(const std::string& fleet_id, int index) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::CommanderDisagreement& comp, float delta_time) override;
 };
 
 } // namespace systems

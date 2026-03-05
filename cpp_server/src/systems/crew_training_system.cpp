@@ -18,24 +18,20 @@ components::CrewTraining::TrainingSlot* findTrainee(
 } // anonymous namespace
 
 CrewTrainingSystem::CrewTrainingSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void CrewTrainingSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::CrewTraining>();
-    for (auto* entity : entities) {
-        auto* ct = entity->getComponent<components::CrewTraining>();
-        if (!ct || !ct->active) continue;
+void CrewTrainingSystem::updateComponent(ecs::Entity& entity, components::CrewTraining& comp, float delta_time) {
+    if (!comp.active) return;
 
-        for (auto& slot : ct->trainees) {
-            if (slot.completed) continue;
+    for (auto& slot : comp.trainees) {
+        if (slot.completed) continue;
 
-            slot.progress += slot.training_rate * ct->xp_bonus * delta_time;
-            if (slot.progress >= 1.0f) {
-                slot.progress = 1.0f;
-                slot.completed = true;
-                ct->total_completed++;
-            }
+        slot.progress += slot.training_rate * comp.xp_bonus * delta_time;
+        if (slot.progress >= 1.0f) {
+            slot.progress = 1.0f;
+            slot.completed = true;
+            comp.total_completed++;
         }
     }
 }
@@ -50,9 +46,7 @@ bool CrewTrainingSystem::initializeTraining(const std::string& entity_id) {
 
 bool CrewTrainingSystem::enrollTrainee(const std::string& entity_id,
     const std::string& trainee_id, const std::string& skill_name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    auto* ct = getComponentFor(entity_id);
     if (!ct) return false;
     if (static_cast<int>(ct->trainees.size()) >= ct->max_trainees) return false;
     if (findTrainee(ct, trainee_id)) return false; // duplicate
@@ -66,9 +60,7 @@ bool CrewTrainingSystem::enrollTrainee(const std::string& entity_id,
 
 bool CrewTrainingSystem::removeTrainee(const std::string& entity_id,
     const std::string& trainee_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    auto* ct = getComponentFor(entity_id);
     if (!ct) return false;
 
     auto it = std::remove_if(ct->trainees.begin(), ct->trainees.end(),
@@ -81,18 +73,14 @@ bool CrewTrainingSystem::removeTrainee(const std::string& entity_id,
 }
 
 int CrewTrainingSystem::getTraineeCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    const auto* ct = getComponentFor(entity_id);
     if (!ct) return 0;
     return static_cast<int>(ct->trainees.size());
 }
 
 float CrewTrainingSystem::getProgress(const std::string& entity_id,
     const std::string& trainee_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    const auto* ct = getComponentFor(entity_id);
     if (!ct) return 0.0f;
     for (const auto& t : ct->trainees) {
         if (t.trainee_id == trainee_id) return t.progress;
@@ -102,9 +90,7 @@ float CrewTrainingSystem::getProgress(const std::string& entity_id,
 
 bool CrewTrainingSystem::isComplete(const std::string& entity_id,
     const std::string& trainee_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    const auto* ct = getComponentFor(entity_id);
     if (!ct) return false;
     for (const auto& t : ct->trainees) {
         if (t.trainee_id == trainee_id) return t.completed;
@@ -113,35 +99,27 @@ bool CrewTrainingSystem::isComplete(const std::string& entity_id,
 }
 
 int CrewTrainingSystem::getTotalCompleted(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    const auto* ct = getComponentFor(entity_id);
     if (!ct) return 0;
     return ct->total_completed;
 }
 
 bool CrewTrainingSystem::setXpBonus(const std::string& entity_id, float bonus) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    auto* ct = getComponentFor(entity_id);
     if (!ct) return false;
     ct->xp_bonus = bonus;
     return true;
 }
 
 float CrewTrainingSystem::getXpBonus(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    const auto* ct = getComponentFor(entity_id);
     if (!ct) return 0.0f;
     return ct->xp_bonus;
 }
 
 std::string CrewTrainingSystem::getSkillName(const std::string& entity_id,
     const std::string& trainee_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* ct = entity->getComponent<components::CrewTraining>();
+    const auto* ct = getComponentFor(entity_id);
     if (!ct) return "";
     for (const auto& t : ct->trainees) {
         if (t.trainee_id == trainee_id) return t.skill_name;

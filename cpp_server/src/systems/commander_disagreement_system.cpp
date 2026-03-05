@@ -1,57 +1,50 @@
 #include "systems/commander_disagreement_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
 #include <algorithm>
 
 namespace atlas {
 namespace systems {
 
 CommanderDisagreementSystem::CommanderDisagreementSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void CommanderDisagreementSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::CommanderDisagreement>();
-    for (auto* entity : entities) {
-        auto* cd = entity->getComponent<components::CommanderDisagreement>();
-        if (!cd) continue;
+void CommanderDisagreementSystem::updateComponent(ecs::Entity& /*entity*/, components::CommanderDisagreement& comp, float delta_time) {
+    for (auto& d : comp.disagreements) {
+        if (d.resolved) continue;
 
-        for (auto& d : cd->disagreements) {
-            if (d.resolved) continue;
+        d.timer += delta_time;
 
-            d.timer += delta_time;
-
-            // Escalate severity over time
-            if (d.timer >= d.escalation_threshold) {
-                if (d.severity == components::CommanderDisagreement::Severity::Minor) {
-                    d.severity = components::CommanderDisagreement::Severity::Moderate;
-                    d.morale_impact -= 5.0f;
-                } else if (d.severity == components::CommanderDisagreement::Severity::Moderate) {
-                    d.severity = components::CommanderDisagreement::Severity::Serious;
-                    d.morale_impact -= 10.0f;
-                } else if (d.severity == components::CommanderDisagreement::Severity::Serious) {
-                    d.severity = components::CommanderDisagreement::Severity::Critical;
-                    d.resolution = components::CommanderDisagreement::Resolution::Escalated;
-                    d.morale_impact -= 20.0f;
-                    d.resolved = true;
-                    cd->total_resolved++;
-                }
-                d.timer = 0.0f;
+        // Escalate severity over time
+        if (d.timer >= d.escalation_threshold) {
+            if (d.severity == components::CommanderDisagreement::Severity::Minor) {
+                d.severity = components::CommanderDisagreement::Severity::Moderate;
+                d.morale_impact -= 5.0f;
+            } else if (d.severity == components::CommanderDisagreement::Severity::Moderate) {
+                d.severity = components::CommanderDisagreement::Severity::Serious;
+                d.morale_impact -= 10.0f;
+            } else if (d.severity == components::CommanderDisagreement::Severity::Serious) {
+                d.severity = components::CommanderDisagreement::Severity::Critical;
+                d.resolution = components::CommanderDisagreement::Resolution::Escalated;
+                d.morale_impact -= 20.0f;
+                d.resolved = true;
+                comp.total_resolved++;
             }
-
-            // Accumulate tension from unresolved disagreements
-            float severity_weight = 0.0f;
-            switch (d.severity) {
-                case components::CommanderDisagreement::Severity::Minor: severity_weight = 0.5f; break;
-                case components::CommanderDisagreement::Severity::Moderate: severity_weight = 1.0f; break;
-                case components::CommanderDisagreement::Severity::Serious: severity_weight = 2.0f; break;
-                case components::CommanderDisagreement::Severity::Critical: severity_weight = 5.0f; break;
-            }
-            cd->fleet_tension += severity_weight * delta_time;
+            d.timer = 0.0f;
         }
 
-        cd->fleet_tension = std::clamp(cd->fleet_tension, 0.0f, 100.0f);
+        // Accumulate tension from unresolved disagreements
+        float severity_weight = 0.0f;
+        switch (d.severity) {
+            case components::CommanderDisagreement::Severity::Minor: severity_weight = 0.5f; break;
+            case components::CommanderDisagreement::Severity::Moderate: severity_weight = 1.0f; break;
+            case components::CommanderDisagreement::Severity::Serious: severity_weight = 2.0f; break;
+            case components::CommanderDisagreement::Severity::Critical: severity_weight = 5.0f; break;
+        }
+        comp.fleet_tension += severity_weight * delta_time;
     }
+
+    comp.fleet_tension = std::clamp(comp.fleet_tension, 0.0f, 100.0f);
 }
 
 static components::CommanderDisagreement::Topic parseTopicString(const std::string& topic) {
@@ -74,10 +67,7 @@ bool CommanderDisagreementSystem::raiseDisagreement(const std::string& fleet_id,
                                                      const std::string& commander_a,
                                                      const std::string& commander_b,
                                                      const std::string& topic) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return false;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
+    auto* cd = getComponentFor(fleet_id);
     if (!cd) return false;
 
     components::CommanderDisagreement::Disagreement d;
@@ -99,10 +89,7 @@ bool CommanderDisagreementSystem::raiseDisagreement(const std::string& fleet_id,
 
 bool CommanderDisagreementSystem::resolveDisagreement(const std::string& fleet_id, int index,
                                                        const std::string& resolution) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return false;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
+    auto* cd = getComponentFor(fleet_id);
     if (!cd) return false;
 
     if (index < 0 || index >= static_cast<int>(cd->disagreements.size())) return false;
@@ -135,10 +122,7 @@ bool CommanderDisagreementSystem::resolveDisagreement(const std::string& fleet_i
 }
 
 bool CommanderDisagreementSystem::dismissDisagreement(const std::string& fleet_id, int index) {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return false;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
+    auto* cd = getComponentFor(fleet_id);
     if (!cd) return false;
 
     if (index < 0 || index >= static_cast<int>(cd->disagreements.size())) return false;
@@ -147,10 +131,7 @@ bool CommanderDisagreementSystem::dismissDisagreement(const std::string& fleet_i
 }
 
 int CommanderDisagreementSystem::getActiveCount(const std::string& fleet_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
+    const auto* cd = getComponentFor(fleet_id);
     if (!cd) return 0;
 
     int count = 0;
@@ -161,40 +142,22 @@ int CommanderDisagreementSystem::getActiveCount(const std::string& fleet_id) con
 }
 
 float CommanderDisagreementSystem::getFleetTension(const std::string& fleet_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0.0f;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
-    if (!cd) return 0.0f;
-
-    return cd->fleet_tension;
+    const auto* cd = getComponentFor(fleet_id);
+    return cd ? cd->fleet_tension : 0.0f;
 }
 
 int CommanderDisagreementSystem::getTotalDisagreements(const std::string& fleet_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
-    if (!cd) return 0;
-
-    return cd->total_disagreements;
+    const auto* cd = getComponentFor(fleet_id);
+    return cd ? cd->total_disagreements : 0;
 }
 
 int CommanderDisagreementSystem::getTotalResolved(const std::string& fleet_id) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
-    if (!cd) return 0;
-
-    return cd->total_resolved;
+    const auto* cd = getComponentFor(fleet_id);
+    return cd ? cd->total_resolved : 0;
 }
 
 std::string CommanderDisagreementSystem::getSeverity(const std::string& fleet_id, int index) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return "Unknown";
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
+    const auto* cd = getComponentFor(fleet_id);
     if (!cd) return "Unknown";
 
     if (index < 0 || index >= static_cast<int>(cd->disagreements.size())) return "Unknown";
@@ -202,10 +165,7 @@ std::string CommanderDisagreementSystem::getSeverity(const std::string& fleet_id
 }
 
 std::string CommanderDisagreementSystem::getResolution(const std::string& fleet_id, int index) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return "None";
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
+    const auto* cd = getComponentFor(fleet_id);
     if (!cd) return "None";
 
     if (index < 0 || index >= static_cast<int>(cd->disagreements.size())) return "None";
@@ -213,10 +173,7 @@ std::string CommanderDisagreementSystem::getResolution(const std::string& fleet_
 }
 
 float CommanderDisagreementSystem::getMoraleImpact(const std::string& fleet_id, int index) const {
-    auto* entity = world_->getEntity(fleet_id);
-    if (!entity) return 0.0f;
-
-    auto* cd = entity->getComponent<components::CommanderDisagreement>();
+    const auto* cd = getComponentFor(fleet_id);
     if (!cd) return 0.0f;
 
     if (index < 0 || index >= static_cast<int>(cd->disagreements.size())) return 0.0f;

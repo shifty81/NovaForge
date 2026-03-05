@@ -18,28 +18,24 @@ components::RumorPropagation::Rumor* findRumor(
 } // anonymous namespace
 
 RumorPropagationSystem::RumorPropagationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void RumorPropagationSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::RumorPropagation>();
-    for (auto* entity : entities) {
-        auto* rp = entity->getComponent<components::RumorPropagation>();
-        if (!rp || !rp->active) continue;
+void RumorPropagationSystem::updateComponent(ecs::Entity& entity, components::RumorPropagation& comp, float delta_time) {
+    if (!comp.active) return;
 
-        for (auto& rumor : rp->rumors) {
-            if (rumor.expired || rumor.confirmed) continue;
+    for (auto& rumor : comp.rumors) {
+        if (rumor.expired || rumor.confirmed) continue;
 
-            rumor.age += delta_time;
+        rumor.age += delta_time;
 
-            // Decay accuracy over time (confirmed rumors don't decay)
-            rumor.accuracy = std::max(0.0f, rumor.accuracy - rumor.decay_rate * delta_time);
+        // Decay accuracy over time (confirmed rumors don't decay)
+        rumor.accuracy = std::max(0.0f, rumor.accuracy - rumor.decay_rate * delta_time);
 
-            // Check for expiry
-            if (rumor.accuracy < rp->expiry_threshold) {
-                rumor.expired = true;
-                rp->total_expired++;
-            }
+        // Check for expiry
+        if (rumor.accuracy < comp.expiry_threshold) {
+            rumor.expired = true;
+            comp.total_expired++;
         }
     }
 }
@@ -54,9 +50,7 @@ bool RumorPropagationSystem::initializeNetwork(const std::string& entity_id) {
 
 bool RumorPropagationSystem::createRumor(const std::string& entity_id,
     const std::string& rumor_id, const std::string& category, float accuracy) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    auto* rp = getComponentFor(entity_id);
     if (!rp) return false;
     if (static_cast<int>(rp->rumors.size()) >= rp->max_rumors) return false;
     if (findRumor(rp, rumor_id)) return false; // duplicate
@@ -71,9 +65,7 @@ bool RumorPropagationSystem::createRumor(const std::string& entity_id,
 
 bool RumorPropagationSystem::spreadRumor(const std::string& entity_id,
     const std::string& rumor_id, const std::string& target_system) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    auto* rp = getComponentFor(entity_id);
     if (!rp) return false;
     auto* rumor = findRumor(rp, rumor_id);
     if (!rumor || rumor->expired) return false;
@@ -92,9 +84,7 @@ bool RumorPropagationSystem::spreadRumor(const std::string& entity_id,
 
 bool RumorPropagationSystem::confirmRumor(const std::string& entity_id,
     const std::string& rumor_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    auto* rp = getComponentFor(entity_id);
     if (!rp) return false;
     auto* rumor = findRumor(rp, rumor_id);
     if (!rumor || rumor->expired || rumor->confirmed) return false;
@@ -107,9 +97,7 @@ bool RumorPropagationSystem::confirmRumor(const std::string& entity_id,
 
 float RumorPropagationSystem::getRumorAccuracy(const std::string& entity_id,
     const std::string& rumor_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    const auto* rp = getComponentFor(entity_id);
     if (!rp) return 0.0f;
     for (const auto& r : rp->rumors) {
         if (r.rumor_id == rumor_id) return r.accuracy;
@@ -118,34 +106,26 @@ float RumorPropagationSystem::getRumorAccuracy(const std::string& entity_id,
 }
 
 int RumorPropagationSystem::getRumorCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    const auto* rp = getComponentFor(entity_id);
     if (!rp) return 0;
     return static_cast<int>(rp->rumors.size());
 }
 
 int RumorPropagationSystem::getConfirmedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    const auto* rp = getComponentFor(entity_id);
     if (!rp) return 0;
     return rp->total_confirmed;
 }
 
 int RumorPropagationSystem::getExpiredCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    const auto* rp = getComponentFor(entity_id);
     if (!rp) return 0;
     return rp->total_expired;
 }
 
 int RumorPropagationSystem::getSpreadCount(const std::string& entity_id,
     const std::string& rumor_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    const auto* rp = getComponentFor(entity_id);
     if (!rp) return 0;
     for (const auto& r : rp->rumors) {
         if (r.rumor_id == rumor_id) return r.spread_count;
@@ -155,9 +135,7 @@ int RumorPropagationSystem::getSpreadCount(const std::string& entity_id,
 
 bool RumorPropagationSystem::isRumorActive(const std::string& entity_id,
     const std::string& rumor_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* rp = entity->getComponent<components::RumorPropagation>();
+    const auto* rp = getComponentFor(entity_id);
     if (!rp) return false;
     for (const auto& r : rp->rumors) {
         if (r.rumor_id == rumor_id) return !r.expired;

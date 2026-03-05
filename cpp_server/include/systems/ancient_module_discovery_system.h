@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ANCIENT_MODULE_DISCOVERY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ANCIENT_MODULE_DISCOVERY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages finding repairable ancient tech in ruins. Handles scanning for
  * hidden modules, discovering them, and extracting them for repair.
  */
-class AncientModuleDiscoverySystem : public ecs::System {
+class AncientModuleDiscoverySystem : public ecs::SingleComponentSystem<components::AncientModuleDiscovery> {
 public:
     explicit AncientModuleDiscoverySystem(ecs::World* world);
     ~AncientModuleDiscoverySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "AncientModuleDiscoverySystem"; }
 
     // Initialization
@@ -45,6 +44,9 @@ public:
     float getScanRange(const std::string& entity_id) const;
 
     static std::string stateName(int state);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::AncientModuleDiscovery& comp, float delta_time) override;
 };
 
 } // namespace systems

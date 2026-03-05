@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_HANGAR_ENVIRONMENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_HANGAR_ENVIRONMENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/ship_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages atmospheric hazards when a hangar is opened in unsafe environments,
  * including toxicity, corrosion, occupant damage, and alarm systems.
  */
-class HangarEnvironmentSystem : public ecs::System {
+class HangarEnvironmentSystem : public ecs::SingleComponentSystem<components::HangarEnvironment> {
 public:
     explicit HangarEnvironmentSystem(ecs::World* world);
     ~HangarEnvironmentSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "HangarEnvironmentSystem"; }
 
     // Initialization
@@ -45,6 +44,9 @@ public:
     float getToxicity(const std::string& entity_id) const;
     bool isAlarmActive(const std::string& entity_id) const;
     int getOccupantCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::HangarEnvironment& comp, float delta_time) override;
 };
 
 } // namespace systems

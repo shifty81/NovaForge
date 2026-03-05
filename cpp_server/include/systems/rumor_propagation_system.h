@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_RUMOR_PROPAGATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_RUMOR_PROPAGATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/narrative_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * confirmation, and expiration. Rumors carry partial information
  * about events like titan assembly, pirate activity, and trade shifts.
  */
-class RumorPropagationSystem : public ecs::System {
+class RumorPropagationSystem : public ecs::SingleComponentSystem<components::RumorPropagation> {
 public:
     explicit RumorPropagationSystem(ecs::World* world);
     ~RumorPropagationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "RumorPropagationSystem"; }
 
     bool initializeNetwork(const std::string& entity_id);
@@ -34,6 +34,9 @@ public:
     int getExpiredCount(const std::string& entity_id) const;
     int getSpreadCount(const std::string& entity_id, const std::string& rumor_id) const;
     bool isRumorActive(const std::string& entity_id, const std::string& rumor_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::RumorPropagation& comp, float delta_time) override;
 };
 
 } // namespace systems
