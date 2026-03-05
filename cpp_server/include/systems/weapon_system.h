@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WEAPON_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WEAPON_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,12 +15,11 @@ namespace systems {
  * entities that are in the Attacking state. Consumes capacitor when
  * firing weapons. Delegates damage application to CombatSystem.
  */
-class WeaponSystem : public ecs::System {
+class WeaponSystem : public ecs::SingleComponentSystem<components::Weapon> {
 public:
     explicit WeaponSystem(ecs::World* world);
     ~WeaponSystem() override = default;
     
-    void update(float delta_time) override;
     std::string getName() const override { return "WeaponSystem"; }
     
     /**
@@ -30,6 +30,9 @@ public:
      */
     bool fireWeapon(const std::string& shooter_id, const std::string& target_id);
     
+protected:
+    void updateComponent(ecs::Entity& entity, components::Weapon& comp, float delta_time) override;
+
 private:
     /**
      * @brief Calculate damage falloff based on distance

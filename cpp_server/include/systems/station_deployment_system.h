@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_STATION_DEPLOYMENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_STATION_DEPLOYMENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -17,12 +17,11 @@ namespace systems {
  * stations. Once deployed, modules can be attached to upgrade the
  * station and improve the solar system's stats.
  */
-class StationDeploymentSystem : public ecs::System {
+class StationDeploymentSystem : public ecs::SingleComponentSystem<components::StationDeployment> {
 public:
     explicit StationDeploymentSystem(ecs::World* world);
     ~StationDeploymentSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "StationDeploymentSystem"; }
 
     /**
@@ -64,6 +63,9 @@ public:
      */
     void getSystemBonuses(const std::string& entity_id,
                           float& security, float& economy, float& resource) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::StationDeployment& comp, float delta_time) override;
 };
 
 } // namespace systems

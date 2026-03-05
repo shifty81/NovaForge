@@ -8,54 +8,50 @@ namespace atlas {
 namespace systems {
 
 ResourceProductionChainSystem::ResourceProductionChainSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ResourceProductionChainSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::ResourceProductionChain>();
-    for (auto* entity : entities) {
-        auto* chain = entity->getComponent<components::ResourceProductionChain>();
-        if (!chain || !chain->is_active) continue;
+void ResourceProductionChainSystem::updateComponent(ecs::Entity& /*entity*/, components::ResourceProductionChain& comp, float delta_time) {
+    if (!comp.is_active) return;
 
-        chain->uptime += delta_time;
+    comp.uptime += delta_time;
 
-        // Calculate bottleneck factors (downstream capacity limits upstream)
-        for (size_t i = 0; i < chain->stages.size(); i++) {
-            if (i + 1 < chain->stages.size()) {
-                // Downstream stage limits upstream: if downstream is inefficient,
-                // upstream gets bottlenecked
-                float downstream_capacity = chain->stages[i + 1].efficiency * chain->stages[i + 1].conversion_rate;
-                float upstream_output = chain->stages[i].efficiency * chain->stages[i].conversion_rate;
-                if (upstream_output > 0.0f && downstream_capacity < upstream_output) {
-                    chain->stages[i].bottleneck_factor = std::clamp(downstream_capacity / upstream_output, 0.0f, 1.0f);
-                } else {
-                    chain->stages[i].bottleneck_factor = 1.0f;
-                }
+    // Calculate bottleneck factors (downstream capacity limits upstream)
+    for (size_t i = 0; i < comp.stages.size(); i++) {
+        if (i + 1 < comp.stages.size()) {
+            // Downstream stage limits upstream: if downstream is inefficient,
+            // upstream gets bottlenecked
+            float downstream_capacity = comp.stages[i + 1].efficiency * comp.stages[i + 1].conversion_rate;
+            float upstream_output = comp.stages[i].efficiency * comp.stages[i].conversion_rate;
+            if (upstream_output > 0.0f && downstream_capacity < upstream_output) {
+                comp.stages[i].bottleneck_factor = std::clamp(downstream_capacity / upstream_output, 0.0f, 1.0f);
             } else {
-                chain->stages[i].bottleneck_factor = 1.0f; // last stage has no downstream bottleneck
+                comp.stages[i].bottleneck_factor = 1.0f;
             }
-        }
-
-        // Calculate throughput for each stage
-        float input_flow = 1.0f; // base input rate
-        for (auto& stage : chain->stages) {
-            stage.throughput = input_flow * stage.conversion_rate * stage.efficiency * stage.bottleneck_factor;
-            input_flow = stage.throughput; // output of this stage becomes input for next
-        }
-
-        // Calculate overall efficiency (product of all stage efficiencies)
-        float overall = 1.0f;
-        for (const auto& stage : chain->stages) {
-            overall *= stage.efficiency;
-        }
-        chain->overall_efficiency = overall;
-
-        // Total output is the throughput of the last stage
-        if (!chain->stages.empty()) {
-            chain->total_output = chain->stages.back().throughput;
         } else {
-            chain->total_output = 0.0f;
+            comp.stages[i].bottleneck_factor = 1.0f; // last stage has no downstream bottleneck
         }
+    }
+
+    // Calculate throughput for each stage
+    float input_flow = 1.0f; // base input rate
+    for (auto& stage : comp.stages) {
+        stage.throughput = input_flow * stage.conversion_rate * stage.efficiency * stage.bottleneck_factor;
+        input_flow = stage.throughput; // output of this stage becomes input for next
+    }
+
+    // Calculate overall efficiency (product of all stage efficiencies)
+    float overall = 1.0f;
+    for (const auto& stage : comp.stages) {
+        overall *= stage.efficiency;
+    }
+    comp.overall_efficiency = overall;
+
+    // Total output is the throughput of the last stage
+    if (!comp.stages.empty()) {
+        comp.total_output = comp.stages.back().throughput;
+    } else {
+        comp.total_output = 0.0f;
     }
 }
 
@@ -76,10 +72,7 @@ bool ResourceProductionChainSystem::createChain(const std::string& entity_id, co
 bool ResourceProductionChainSystem::addStage(const std::string& entity_id, const std::string& stage_name,
                                               const std::string& input_resource, const std::string& output_resource,
                                               float conversion_rate) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return false;
 
     // Check for duplicate stage name
@@ -100,10 +93,7 @@ bool ResourceProductionChainSystem::addStage(const std::string& entity_id, const
 }
 
 bool ResourceProductionChainSystem::removeStage(const std::string& entity_id, const std::string& stage_name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return false;
 
     auto it = std::remove_if(chain->stages.begin(), chain->stages.end(),
@@ -117,10 +107,7 @@ bool ResourceProductionChainSystem::removeStage(const std::string& entity_id, co
 }
 
 bool ResourceProductionChainSystem::setStageEfficiency(const std::string& entity_id, const std::string& stage_name, float efficiency) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return false;
 
     for (auto& stage : chain->stages) {
@@ -133,10 +120,7 @@ bool ResourceProductionChainSystem::setStageEfficiency(const std::string& entity
 }
 
 bool ResourceProductionChainSystem::setChainActive(const std::string& entity_id, bool active) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return false;
 
     chain->is_active = active;
@@ -144,30 +128,21 @@ bool ResourceProductionChainSystem::setChainActive(const std::string& entity_id,
 }
 
 float ResourceProductionChainSystem::getOverallEfficiency(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return 0.0f;
 
     return chain->overall_efficiency;
 }
 
 float ResourceProductionChainSystem::getTotalOutput(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return 0.0f;
 
     return chain->total_output;
 }
 
 float ResourceProductionChainSystem::getStageThroughput(const std::string& entity_id, const std::string& stage_name) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return 0.0f;
 
     for (const auto& stage : chain->stages) {
@@ -177,10 +152,7 @@ float ResourceProductionChainSystem::getStageThroughput(const std::string& entit
 }
 
 float ResourceProductionChainSystem::getBottleneckFactor(const std::string& entity_id, const std::string& stage_name) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 1.0f;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return 1.0f;
 
     for (const auto& stage : chain->stages) {
@@ -190,30 +162,21 @@ float ResourceProductionChainSystem::getBottleneckFactor(const std::string& enti
 }
 
 int ResourceProductionChainSystem::getStageCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return 0;
 
     return static_cast<int>(chain->stages.size());
 }
 
 bool ResourceProductionChainSystem::isChainActive(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return false;
 
     return chain->is_active;
 }
 
 float ResourceProductionChainSystem::getUptime(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* chain = entity->getComponent<components::ResourceProductionChain>();
+    auto* chain = getComponentFor(entity_id);
     if (!chain) return 0.0f;
 
     return chain->uptime;

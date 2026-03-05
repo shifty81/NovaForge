@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_RESOURCE_PRODUCTION_CHAIN_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_RESOURCE_PRODUCTION_CHAIN_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/economy_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +16,11 @@ namespace systems {
  * and throughput. Enables the living economy where everything is produced,
  * transported, consumed, or destroyed — no fake NPC market orders.
  */
-class ResourceProductionChainSystem : public ecs::System {
+class ResourceProductionChainSystem : public ecs::SingleComponentSystem<components::ResourceProductionChain> {
 public:
     explicit ResourceProductionChainSystem(ecs::World* world);
     ~ResourceProductionChainSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ResourceProductionChainSystem"; }
 
     // Chain management
@@ -41,6 +40,9 @@ public:
     int getStageCount(const std::string& entity_id) const;
     bool isChainActive(const std::string& entity_id) const;
     float getUptime(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ResourceProductionChain& comp, float delta_time) override;
 };
 
 } // namespace systems

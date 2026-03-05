@@ -8,31 +8,27 @@ namespace atlas {
 namespace systems {
 
 FleetMoraleResolutionSystem::FleetMoraleResolutionSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetMoraleResolutionSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::FleetMoraleResolution>();
-    for (auto* entity : entities) {
-        auto* fm = entity->getComponent<components::FleetMoraleResolution>();
-        if (!fm || !fm->active) continue;
+void FleetMoraleResolutionSystem::updateComponent(ecs::Entity& /*entity*/, components::FleetMoraleResolution& comp, float delta_time) {
+    if (!comp.active) return;
 
-        if (fm->crisis_active) {
-            fm->crisis_duration += delta_time;
-            if (fm->crisis_duration >= fm->max_crisis_duration) {
-                fm->departures++;
-                fm->crisis_active = false;
-                fm->fleet_morale = std::max(0.0f, fm->fleet_morale - 10.0f);
-                fm->crisis_duration = 0.0f;
-                fm->current_resolution = "None";
-            }
-        } else {
-            fm->fleet_morale = std::min(100.0f, fm->fleet_morale + fm->recovery_rate * delta_time * fm->ideology_alignment);
-            if (fm->fleet_morale < fm->fracture_threshold) {
-                fm->crisis_active = true;
-                fm->fractures_triggered++;
-                fm->crisis_duration = 0.0f;
-            }
+    if (comp.crisis_active) {
+        comp.crisis_duration += delta_time;
+        if (comp.crisis_duration >= comp.max_crisis_duration) {
+            comp.departures++;
+            comp.crisis_active = false;
+            comp.fleet_morale = std::max(0.0f, comp.fleet_morale - 10.0f);
+            comp.crisis_duration = 0.0f;
+            comp.current_resolution = "None";
+        }
+    } else {
+        comp.fleet_morale = std::min(100.0f, comp.fleet_morale + comp.recovery_rate * delta_time * comp.ideology_alignment);
+        if (comp.fleet_morale < comp.fracture_threshold) {
+            comp.crisis_active = true;
+            comp.fractures_triggered++;
+            comp.crisis_duration = 0.0f;
         }
     }
 }
@@ -46,9 +42,7 @@ bool FleetMoraleResolutionSystem::initializeFleet(const std::string& entity_id) 
 }
 
 bool FleetMoraleResolutionSystem::triggerCrisis(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return false;
     fm->crisis_active = true;
     fm->fractures_triggered++;
@@ -57,9 +51,7 @@ bool FleetMoraleResolutionSystem::triggerCrisis(const std::string& entity_id) {
 }
 
 bool FleetMoraleResolutionSystem::resolveWithMethod(const std::string& entity_id, const std::string& method) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return false;
     if (!fm->crisis_active) return false;
 
@@ -83,59 +75,45 @@ bool FleetMoraleResolutionSystem::resolveWithMethod(const std::string& entity_id
 }
 
 bool FleetMoraleResolutionSystem::adjustMorale(const std::string& entity_id, float amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return false;
     fm->fleet_morale = std::max(0.0f, std::min(100.0f, fm->fleet_morale + amount));
     return true;
 }
 
 bool FleetMoraleResolutionSystem::setIdeologyAlignment(const std::string& entity_id, float alignment) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return false;
     fm->ideology_alignment = std::max(0.0f, std::min(1.0f, alignment));
     return true;
 }
 
 float FleetMoraleResolutionSystem::getFleetMorale(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return 0.0f;
     return fm->fleet_morale;
 }
 
 float FleetMoraleResolutionSystem::getIdeologyAlignment(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return 0.0f;
     return fm->ideology_alignment;
 }
 
 bool FleetMoraleResolutionSystem::isCrisisActive(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return false;
     return fm->crisis_active;
 }
 
 int FleetMoraleResolutionSystem::getDepartures(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return 0;
     return fm->departures;
 }
 
 int FleetMoraleResolutionSystem::getResolutionCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* fm = entity->getComponent<components::FleetMoraleResolution>();
+    auto* fm = getComponentFor(entity_id);
     if (!fm) return 0;
     return fm->resolutions_applied;
 }

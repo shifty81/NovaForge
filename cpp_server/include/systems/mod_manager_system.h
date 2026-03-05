@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_MOD_MANAGER_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MOD_MANAGER_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <vector>
 
@@ -14,12 +15,11 @@ namespace systems {
  * Manages a collection of mods with dependency tracking, conflict detection,
  * and automatic load-order calculation.
  */
-class ModManagerSystem : public ecs::System {
+class ModManagerSystem : public ecs::SingleComponentSystem<components::ModManager> {
 public:
     explicit ModManagerSystem(ecs::World* world);
     ~ModManagerSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ModManagerSystem"; }
 
     bool createManager(const std::string& entity_id);
@@ -38,6 +38,9 @@ public:
     int getEnabledCount(const std::string& entity_id) const;
     bool isInstalled(const std::string& entity_id, const std::string& mod_id) const;
     std::vector<std::string> getLoadOrder(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ModManager& comp, float delta_time) override;
 };
 
 } // namespace systems

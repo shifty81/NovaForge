@@ -9,31 +9,24 @@ namespace atlas {
 namespace systems {
 
 WeaponSystem::WeaponSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void WeaponSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::Weapon>();
-    
-    for (auto* entity : entities) {
-        auto* weapon = entity->getComponent<components::Weapon>();
-        if (!weapon) continue;
-        
-        // Update weapon cooldowns
-        if (weapon->cooldown > 0.0f) {
-            weapon->cooldown -= delta_time;
-            if (weapon->cooldown < 0.0f) {
-                weapon->cooldown = 0.0f;
-            }
+void WeaponSystem::updateComponent(ecs::Entity& entity, components::Weapon& comp, float delta_time) {
+    // Update weapon cooldowns
+    if (comp.cooldown > 0.0f) {
+        comp.cooldown -= delta_time;
+        if (comp.cooldown < 0.0f) {
+            comp.cooldown = 0.0f;
         }
-        
-        // Auto-fire for AI entities in Attacking state
-        auto* ai = entity->getComponent<components::AI>();
-        if (ai && ai->state == components::AI::State::Attacking 
-            && !ai->target_entity_id.empty()) {
-            if (weapon->cooldown <= 0.0f) {
-                fireWeapon(entity->getId(), ai->target_entity_id);
-            }
+    }
+    
+    // Auto-fire for AI entities in Attacking state
+    auto* ai = entity.getComponent<components::AI>();
+    if (ai && ai->state == components::AI::State::Attacking 
+        && !ai->target_entity_id.empty()) {
+        if (comp.cooldown <= 0.0f) {
+            fireWeapon(entity.getId(), ai->target_entity_id);
         }
     }
 }
