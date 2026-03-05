@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_INCURSION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_INCURSION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/economy_components.h"
 #include <string>
 
 namespace atlas {
@@ -14,14 +15,14 @@ namespace systems {
  * participant roster, reward pool, and state transitions from
  * Pending → Active → Withdrawing → Defeated.
  */
-class IncursionSystem : public ecs::System {
+class IncursionSystem : public ecs::SingleComponentSystem<components::Incursion> {
 public:
     explicit IncursionSystem(ecs::World* world);
     ~IncursionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "IncursionSystem"; }
 
+public:
     bool initialize(const std::string& entity_id, const std::string& incursion_id,
                     const std::string& system_id, int tier);
     bool addWave(const std::string& entity_id, int wave_number,
@@ -36,6 +37,9 @@ public:
     int getState(const std::string& entity_id) const;
     float getRewardPool(const std::string& entity_id) const;
     int getTotalWavesDefeated(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Incursion& inc, float delta_time) override;
 };
 
 } // namespace systems

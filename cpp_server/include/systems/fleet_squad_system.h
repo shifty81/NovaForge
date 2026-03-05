@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_SQUAD_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_SQUAD_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/fleet_components.h"
 #include <string>
 
@@ -14,14 +14,14 @@ namespace systems {
  * Manages squads within fleets: creation, membership, formations, roles.
  * Updates cohesion and effectiveness based on squad composition.
  */
-class FleetSquadSystem : public ecs::System {
+class FleetSquadSystem : public ecs::SingleComponentSystem<components::FleetSquad> {
 public:
     explicit FleetSquadSystem(ecs::World* world);
     ~FleetSquadSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetSquadSystem"; }
 
+public:
     // Commands
     bool createSquad(const std::string& entity_id, const std::string& squad_id,
                      const std::string& leader_id, components::FleetSquad::SquadRole role);
@@ -40,6 +40,9 @@ public:
     float getCohesion(const std::string& entity_id) const;
     float getEffectiveness(const std::string& entity_id) const;
     bool isSquadActive(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetSquad& sq, float delta_time) override;
 };
 
 } // namespace systems

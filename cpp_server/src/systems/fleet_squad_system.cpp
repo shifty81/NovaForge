@@ -8,30 +8,24 @@ namespace atlas {
 namespace systems {
 
 FleetSquadSystem::FleetSquadSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetSquadSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::FleetSquad>();
-    for (auto* entity : entities) {
-        auto* sq = entity->getComponent<components::FleetSquad>();
-        if (!sq) continue;
+void FleetSquadSystem::updateComponent(ecs::Entity& /*entity*/, components::FleetSquad& sq, float /*delta_time*/) {
+    // Recalculate cohesion
+    if (sq.is_active && !sq.member_ids.empty()) {
+        sq.cohesion = 1.0f;
+    } else {
+        sq.cohesion = 0.0f;
+    }
 
-        // Recalculate cohesion
-        if (sq->is_active && !sq->member_ids.empty()) {
-            sq->cohesion = 1.0f;
-        } else {
-            sq->cohesion = 0.0f;
-        }
-
-        // Recalculate effectiveness: 1.0 + 0.05 * (member_count - 1), clamped to [0.0, 2.0]
-        int count = static_cast<int>(sq->member_ids.size());
-        if (count == 0) {
-            sq->effectiveness = 0.0f;
-        } else {
-            float eff = 1.0f + 0.05f * static_cast<float>(count - 1);
-            sq->effectiveness = std::clamp(eff, 0.0f, 2.0f);
-        }
+    // Recalculate effectiveness: 1.0 + 0.05 * (member_count - 1), clamped to [0.0, 2.0]
+    int count = static_cast<int>(sq.member_ids.size());
+    if (count == 0) {
+        sq.effectiveness = 0.0f;
+    } else {
+        float eff = 1.0f + 0.05f * static_cast<float>(count - 1);
+        sq.effectiveness = std::clamp(eff, 0.0f, 2.0f);
     }
 }
 
@@ -57,7 +51,7 @@ bool FleetSquadSystem::dissolveSquad(const std::string& entity_id) {
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
 
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return false;
 
     entity->removeComponent<components::FleetSquad>();
@@ -65,10 +59,7 @@ bool FleetSquadSystem::dissolveSquad(const std::string& entity_id) {
 }
 
 bool FleetSquadSystem::addMember(const std::string& entity_id, const std::string& member_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return false;
 
     if (static_cast<int>(sq->member_ids.size()) >= sq->max_members) return false;
@@ -83,10 +74,7 @@ bool FleetSquadSystem::addMember(const std::string& entity_id, const std::string
 }
 
 bool FleetSquadSystem::removeMember(const std::string& entity_id, const std::string& member_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return false;
 
     auto it = std::find(sq->member_ids.begin(), sq->member_ids.end(), member_id);
@@ -103,10 +91,7 @@ bool FleetSquadSystem::removeMember(const std::string& entity_id, const std::str
 }
 
 bool FleetSquadSystem::setFormation(const std::string& entity_id, components::FleetSquad::SquadFormation formation) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return false;
 
     sq->formation = formation;
@@ -114,10 +99,7 @@ bool FleetSquadSystem::setFormation(const std::string& entity_id, components::Fl
 }
 
 bool FleetSquadSystem::setRole(const std::string& entity_id, components::FleetSquad::SquadRole role) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return false;
 
     sq->role = role;
@@ -125,10 +107,7 @@ bool FleetSquadSystem::setRole(const std::string& entity_id, components::FleetSq
 }
 
 bool FleetSquadSystem::setActive(const std::string& entity_id, bool active) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return false;
 
     sq->is_active = active;
@@ -136,70 +115,49 @@ bool FleetSquadSystem::setActive(const std::string& entity_id, bool active) {
 }
 
 int FleetSquadSystem::getMemberCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return 0;
 
     return static_cast<int>(sq->member_ids.size());
 }
 
 std::string FleetSquadSystem::getLeaderId(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return "";
 
     return sq->squad_leader_id;
 }
 
 std::string FleetSquadSystem::getRole(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return "";
 
     return components::FleetSquad::roleToString(sq->role);
 }
 
 std::string FleetSquadSystem::getFormation(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return "";
 
     return components::FleetSquad::formationToString(sq->formation);
 }
 
 float FleetSquadSystem::getCohesion(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return 0.0f;
 
     return sq->cohesion;
 }
 
 float FleetSquadSystem::getEffectiveness(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return 0.0f;
 
     return sq->effectiveness;
 }
 
 bool FleetSquadSystem::isSquadActive(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sq = entity->getComponent<components::FleetSquad>();
+    auto* sq = getComponentFor(entity_id);
     if (!sq) return false;
 
     return sq->is_active;

@@ -8,32 +8,26 @@ namespace atlas {
 namespace systems {
 
 MissionConsequenceSystem::MissionConsequenceSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void MissionConsequenceSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::MissionConsequence>();
-    for (auto* entity : entities) {
-        auto* mc = entity->getComponent<components::MissionConsequence>();
-        if (!mc) continue;
-
-        for (auto& entry : mc->active_consequences) {
-            if (entry.permanent) continue;
-            entry.remaining_time -= delta_time;
-            if (entry.remaining_time <= 0.0f) {
-                entry.remaining_time = 0.0f;
-            }
+void MissionConsequenceSystem::updateComponent(ecs::Entity& entity, components::MissionConsequence& mc, float delta_time) {
+    for (auto& entry : mc.active_consequences) {
+        if (entry.permanent) continue;
+        entry.remaining_time -= delta_time;
+        if (entry.remaining_time <= 0.0f) {
+            entry.remaining_time = 0.0f;
         }
-
-        // Remove expired non-permanent consequences
-        mc->active_consequences.erase(
-            std::remove_if(mc->active_consequences.begin(), mc->active_consequences.end(),
-                [](const components::MissionConsequence::ConsequenceEntry& e) {
-                    return !e.permanent && e.remaining_time <= 0.0f;
-                }),
-            mc->active_consequences.end()
-        );
     }
+
+    // Remove expired non-permanent consequences
+    mc.active_consequences.erase(
+        std::remove_if(mc.active_consequences.begin(), mc.active_consequences.end(),
+            [](const components::MissionConsequence::ConsequenceEntry& e) {
+                return !e.permanent && e.remaining_time <= 0.0f;
+            }),
+        mc.active_consequences.end()
+    );
 }
 
 bool MissionConsequenceSystem::initializeConsequences(const std::string& entity_id,
@@ -56,10 +50,7 @@ bool MissionConsequenceSystem::triggerConsequence(
         components::MissionConsequence::ConsequenceType type,
         float magnitude, float duration,
         const std::string& target_faction, bool permanent) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* mc = entity->getComponent<components::MissionConsequence>();
+    auto* mc = getComponentFor(entity_id);
     if (!mc) return false;
 
     components::MissionConsequence::ConsequenceEntry entry;
@@ -78,10 +69,7 @@ bool MissionConsequenceSystem::triggerConsequence(
 }
 
 int MissionConsequenceSystem::getActiveCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* mc = entity->getComponent<components::MissionConsequence>();
+    auto* mc = getComponentFor(entity_id);
     if (!mc) return 0;
 
     return static_cast<int>(mc->active_consequences.size());
@@ -90,10 +78,7 @@ int MissionConsequenceSystem::getActiveCount(const std::string& entity_id) const
 float MissionConsequenceSystem::getMagnitude(
         const std::string& entity_id,
         components::MissionConsequence::ConsequenceType type) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* mc = entity->getComponent<components::MissionConsequence>();
+    auto* mc = getComponentFor(entity_id);
     if (!mc) return 0.0f;
 
     float total = 0.0f;
@@ -107,10 +92,7 @@ float MissionConsequenceSystem::getMagnitude(
 
 bool MissionConsequenceSystem::expireConsequence(const std::string& entity_id,
                                                   const std::string& consequence_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* mc = entity->getComponent<components::MissionConsequence>();
+    auto* mc = getComponentFor(entity_id);
     if (!mc) return false;
 
     for (auto it = mc->active_consequences.begin(); it != mc->active_consequences.end(); ++it) {
@@ -124,10 +106,7 @@ bool MissionConsequenceSystem::expireConsequence(const std::string& entity_id,
 
 bool MissionConsequenceSystem::isConsequenceActive(const std::string& entity_id,
                                                     const std::string& consequence_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* mc = entity->getComponent<components::MissionConsequence>();
+    auto* mc = getComponentFor(entity_id);
     if (!mc) return false;
 
     for (const auto& entry : mc->active_consequences) {
@@ -137,10 +116,7 @@ bool MissionConsequenceSystem::isConsequenceActive(const std::string& entity_id,
 }
 
 int MissionConsequenceSystem::getPermanentCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* mc = entity->getComponent<components::MissionConsequence>();
+    auto* mc = getComponentFor(entity_id);
     if (!mc) return 0;
 
     int count = 0;

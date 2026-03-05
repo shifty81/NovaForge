@@ -8,19 +8,13 @@ namespace atlas {
 namespace systems {
 
 FleetHangarSystem::FleetHangarSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetHangarSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::FleetHangar>();
-    for (auto* entity : entities) {
-        auto* hangar = entity->getComponent<components::FleetHangar>();
-        if (!hangar) continue;
-
-        // Accrue maintenance cost when powered
-        if (hangar->is_powered) {
-            hangar->total_maintenance_paid += hangar->maintenance_cost_per_tick * delta_time;
-        }
+void FleetHangarSystem::updateComponent(ecs::Entity& entity, components::FleetHangar& hangar, float delta_time) {
+    // Accrue maintenance cost when powered
+    if (hangar.is_powered) {
+        hangar.total_maintenance_paid += hangar.maintenance_cost_per_tick * delta_time;
     }
 }
 
@@ -47,10 +41,7 @@ bool FleetHangarSystem::initializeHangar(const std::string& entity_id,
 
 bool FleetHangarSystem::dockShip(const std::string& entity_id, const std::string& ship_id,
                                   const std::string& ship_class, float hull_integrity) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return false;
 
     if (!hangar->is_powered) return false;
@@ -72,10 +63,7 @@ bool FleetHangarSystem::dockShip(const std::string& entity_id, const std::string
 }
 
 bool FleetHangarSystem::undockShip(const std::string& entity_id, const std::string& ship_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return false;
 
     if (!hangar->is_powered) return false;
@@ -91,10 +79,7 @@ bool FleetHangarSystem::undockShip(const std::string& entity_id, const std::stri
 }
 
 bool FleetHangarSystem::lockShip(const std::string& entity_id, const std::string& ship_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return false;
 
     for (auto& s : hangar->current_ships) {
@@ -107,10 +92,7 @@ bool FleetHangarSystem::lockShip(const std::string& entity_id, const std::string
 }
 
 bool FleetHangarSystem::unlockShip(const std::string& entity_id, const std::string& ship_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return false;
 
     for (auto& s : hangar->current_ships) {
@@ -124,10 +106,7 @@ bool FleetHangarSystem::unlockShip(const std::string& entity_id, const std::stri
 
 bool FleetHangarSystem::repairShip(const std::string& entity_id, const std::string& ship_id,
                                     float amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return false;
 
     for (auto& s : hangar->current_ships) {
@@ -140,10 +119,7 @@ bool FleetHangarSystem::repairShip(const std::string& entity_id, const std::stri
 }
 
 bool FleetHangarSystem::upgradeHangar(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return false;
 
     if (hangar->tier >= 5) return false;
@@ -155,40 +131,28 @@ bool FleetHangarSystem::upgradeHangar(const std::string& entity_id) {
 }
 
 int FleetHangarSystem::getShipCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return 0;
 
     return static_cast<int>(hangar->current_ships.size());
 }
 
 int FleetHangarSystem::getMaxSlots(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return 0;
 
     return hangar->max_ship_slots;
 }
 
 int FleetHangarSystem::getTier(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return 0;
 
     return hangar->tier;
 }
 
 bool FleetHangarSystem::setPowerEnabled(const std::string& entity_id, bool enabled) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* hangar = entity->getComponent<components::FleetHangar>();
+    auto* hangar = getComponentFor(entity_id);
     if (!hangar) return false;
 
     hangar->is_powered = enabled;
