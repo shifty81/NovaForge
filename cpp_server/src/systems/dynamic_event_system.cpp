@@ -18,42 +18,38 @@ components::DynamicEvent::EventEntry* findEvent(
 } // anonymous namespace
 
 DynamicEventSystem::DynamicEventSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void DynamicEventSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::DynamicEvent>();
-    for (auto* entity : entities) {
-        auto* de = entity->getComponent<components::DynamicEvent>();
-        if (!de || !de->active) continue;
+void DynamicEventSystem::updateComponent(ecs::Entity& entity, components::DynamicEvent& de, float delta_time) {
+    if (!de.active) return;
 
-        for (auto& ev : de->events) {
-            if (ev.state == "Pending") {
-                ev.start_delay -= delta_time;
-                if (ev.start_delay <= 0.0f) {
-                    ev.state = "Active";
-                    ev.start_delay = 0.0f;
-                }
-            } else if (ev.state == "Active") {
-                ev.elapsed_time += delta_time;
-                ev.reward_pool += ev.intensity * delta_time * 100.0f;
-                float progress = ev.elapsed_time / ev.duration;
-                if (progress >= 1.0f) {
-                    ev.state = "Completed";
-                    ev.elapsed_time = ev.duration;
-                    de->total_completed++;
-                } else if (progress >= 0.8f) {
-                    ev.state = "Concluding";
-                }
-            } else if (ev.state == "Concluding") {
-                ev.elapsed_time += delta_time;
-                ev.reward_pool += ev.intensity * delta_time * 100.0f;
-                float progress = ev.elapsed_time / ev.duration;
-                if (progress >= 1.0f) {
-                    ev.state = "Completed";
-                    ev.elapsed_time = ev.duration;
-                    de->total_completed++;
-                }
+    for (auto& ev : de.events) {
+        if (ev.state == "Pending") {
+            ev.start_delay -= delta_time;
+            if (ev.start_delay <= 0.0f) {
+                ev.state = "Active";
+                ev.start_delay = 0.0f;
+            }
+        } else if (ev.state == "Active") {
+            ev.elapsed_time += delta_time;
+            ev.reward_pool += ev.intensity * delta_time * 100.0f;
+            float progress = ev.elapsed_time / ev.duration;
+            if (progress >= 1.0f) {
+                ev.state = "Completed";
+                ev.elapsed_time = ev.duration;
+                de.total_completed++;
+            } else if (progress >= 0.8f) {
+                ev.state = "Concluding";
+            }
+        } else if (ev.state == "Concluding") {
+            ev.elapsed_time += delta_time;
+            ev.reward_pool += ev.intensity * delta_time * 100.0f;
+            float progress = ev.elapsed_time / ev.duration;
+            if (progress >= 1.0f) {
+                ev.state = "Completed";
+                ev.elapsed_time = ev.duration;
+                de.total_completed++;
             }
         }
     }
@@ -70,9 +66,7 @@ bool DynamicEventSystem::createEventManager(const std::string& entity_id) {
 bool DynamicEventSystem::scheduleEvent(
     const std::string& entity_id, const std::string& event_id,
     const std::string& type, float duration, float intensity) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return false;
 
     // Count active/pending events
@@ -98,9 +92,7 @@ bool DynamicEventSystem::scheduleEvent(
 
 bool DynamicEventSystem::startEvent(const std::string& entity_id,
                                     const std::string& event_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return false;
     auto* ev = findEvent(de, event_id);
     if (!ev || ev->state != "Pending") return false;
@@ -112,9 +104,7 @@ bool DynamicEventSystem::startEvent(const std::string& entity_id,
 bool DynamicEventSystem::joinEvent(const std::string& entity_id,
                                    const std::string& event_id,
                                    const std::string& participant) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return false;
     auto* ev = findEvent(de, event_id);
     if (!ev || ev->state == "Completed") return false;
@@ -129,9 +119,7 @@ bool DynamicEventSystem::joinEvent(const std::string& entity_id,
 bool DynamicEventSystem::leaveEvent(const std::string& entity_id,
                                     const std::string& event_id,
                                     const std::string& participant) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return false;
     auto* ev = findEvent(de, event_id);
     if (!ev) return false;
@@ -143,9 +131,7 @@ bool DynamicEventSystem::leaveEvent(const std::string& entity_id,
 
 std::string DynamicEventSystem::getEventState(const std::string& entity_id,
                                               const std::string& event_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return "";
     for (const auto& ev : de->events) {
         if (ev.event_id == event_id) return ev.state;
@@ -155,9 +141,7 @@ std::string DynamicEventSystem::getEventState(const std::string& entity_id,
 
 std::string DynamicEventSystem::getEventType(const std::string& entity_id,
                                              const std::string& event_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return "";
     for (const auto& ev : de->events) {
         if (ev.event_id == event_id) return ev.type;
@@ -167,9 +151,7 @@ std::string DynamicEventSystem::getEventType(const std::string& entity_id,
 
 int DynamicEventSystem::getParticipantCount(const std::string& entity_id,
                                             const std::string& event_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return 0;
     for (const auto& ev : de->events) {
         if (ev.event_id == event_id)
@@ -180,9 +162,7 @@ int DynamicEventSystem::getParticipantCount(const std::string& entity_id,
 
 float DynamicEventSystem::getRewardPool(const std::string& entity_id,
                                         const std::string& event_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return 0.0f;
     for (const auto& ev : de->events) {
         if (ev.event_id == event_id) return ev.reward_pool;
@@ -192,9 +172,7 @@ float DynamicEventSystem::getRewardPool(const std::string& entity_id,
 
 float DynamicEventSystem::getIntensity(const std::string& entity_id,
                                        const std::string& event_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return 0.0f;
     for (const auto& ev : de->events) {
         if (ev.event_id == event_id) return ev.intensity;
@@ -203,9 +181,7 @@ float DynamicEventSystem::getIntensity(const std::string& entity_id,
 }
 
 int DynamicEventSystem::getActiveEventCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return 0;
     int count = 0;
     for (const auto& ev : de->events) {
@@ -215,18 +191,14 @@ int DynamicEventSystem::getActiveEventCount(const std::string& entity_id) const 
 }
 
 int DynamicEventSystem::getTotalCompleted(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return 0;
     return de->total_completed;
 }
 
 float DynamicEventSystem::getElapsedTime(const std::string& entity_id,
                                          const std::string& event_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return 0.0f;
     for (const auto& ev : de->events) {
         if (ev.event_id == event_id) return ev.elapsed_time;
@@ -236,9 +208,7 @@ float DynamicEventSystem::getElapsedTime(const std::string& entity_id,
 
 bool DynamicEventSystem::cancelEvent(const std::string& entity_id,
                                      const std::string& event_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* de = entity->getComponent<components::DynamicEvent>();
+    auto* de = getComponentFor(entity_id);
     if (!de) return false;
     auto* ev = findEvent(de, event_id);
     if (!ev || ev->state == "Completed") return false;

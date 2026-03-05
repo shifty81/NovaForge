@@ -1,18 +1,18 @@
 #ifndef NOVAFORGE_SYSTEMS_SOVEREIGNTY_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SOVEREIGNTY_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
 namespace systems {
 
-class SovereigntySystem : public ecs::System {
+class SovereigntySystem : public ecs::SingleComponentSystem<components::Sovereignty> {
 public:
     explicit SovereigntySystem(ecs::World* world);
     ~SovereigntySystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "SovereigntySystem"; }
 
     bool claimSovereignty(const std::string& system_entity_id,
@@ -34,6 +34,9 @@ public:
 
     bool upgradeInfrastructure(const std::string& system_entity_id,
                                const std::string& requester_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Sovereignty& comp, float delta_time) override;
 };
 
 } // namespace systems

@@ -6,37 +6,27 @@ namespace atlas {
 namespace systems {
 
 FleetProgressionSystem::FleetProgressionSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetProgressionSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::FleetProgression>();
-    for (auto* entity : entities) {
-        auto* prog = entity->getComponent<components::FleetProgression>();
-        if (!prog) continue;
+void FleetProgressionSystem::updateComponent(ecs::Entity& entity, components::FleetProgression& prog, float /*delta_time*/) {
+    prog.updateStage();
 
-        auto prev_stage = prog->stage;
-        prog->updateStage();
-
-        // Auto-unlock wing roles on stage transition
-        if (prog->stage >= components::FleetProgression::Stage::Mid) {
-            prog->mining_wing_unlocked = true;
-            prog->combat_wing_unlocked = true;
-            prog->logistics_wing_unlocked = true;
-        }
-        if (prog->stage >= components::FleetProgression::Stage::End) {
-            prog->salvage_wing_unlocked = true;
-            prog->construction_wing_unlocked = true;
-        }
+    // Auto-unlock wing roles on stage transition
+    if (prog.stage >= components::FleetProgression::Stage::Mid) {
+        prog.mining_wing_unlocked = true;
+        prog.combat_wing_unlocked = true;
+        prog.logistics_wing_unlocked = true;
+    }
+    if (prog.stage >= components::FleetProgression::Stage::End) {
+        prog.salvage_wing_unlocked = true;
+        prog.construction_wing_unlocked = true;
     }
 }
 
 components::FleetProgression::Stage
 FleetProgressionSystem::getStage(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return components::FleetProgression::Stage::Early;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return components::FleetProgression::Stage::Early;
 
     return prog->stage;
@@ -57,40 +47,28 @@ void FleetProgressionSystem::addExperience(const std::string& entity_id, float x
 }
 
 int FleetProgressionSystem::getMaxShips(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 5;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return 5;
 
     return prog->max_ships;
 }
 
 int FleetProgressionSystem::getMaxWings(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 1;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return 1;
 
     return prog->max_wings;
 }
 
 bool FleetProgressionSystem::canAddShip(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return false;
 
     return prog->current_ship_count < prog->max_ships;
 }
 
 bool FleetProgressionSystem::addShipToFleet(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return false;
 
     if (prog->current_ship_count >= prog->max_ships) return false;
@@ -100,10 +78,7 @@ bool FleetProgressionSystem::addShipToFleet(const std::string& entity_id) {
 }
 
 void FleetProgressionSystem::removeShipFromFleet(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return;
 
     if (prog->current_ship_count > 0) {
@@ -112,10 +87,7 @@ void FleetProgressionSystem::removeShipFromFleet(const std::string& entity_id) {
 }
 
 void FleetProgressionSystem::unlockWingRole(const std::string& entity_id, const std::string& role) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return;
 
     if (role == "mining") prog->mining_wing_unlocked = true;
@@ -126,10 +98,7 @@ void FleetProgressionSystem::unlockWingRole(const std::string& entity_id, const 
 }
 
 bool FleetProgressionSystem::isWingRoleUnlocked(const std::string& entity_id, const std::string& role) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* prog = entity->getComponent<components::FleetProgression>();
+    auto* prog = getComponentFor(entity_id);
     if (!prog) return false;
 
     if (role == "mining") return prog->mining_wing_unlocked;

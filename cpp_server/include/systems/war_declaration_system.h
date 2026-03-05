@@ -1,18 +1,18 @@
 #ifndef NOVAFORGE_SYSTEMS_WAR_DECLARATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WAR_DECLARATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
 namespace systems {
 
-class WarDeclarationSystem : public ecs::System {
+class WarDeclarationSystem : public ecs::SingleComponentSystem<components::WarDeclaration> {
 public:
     explicit WarDeclarationSystem(ecs::World* world);
     ~WarDeclarationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WarDeclarationSystem"; }
 
     std::string declareWar(const std::string& aggressor_id,
@@ -35,6 +35,9 @@ public:
                     double isk_value);
 
     std::string getWarStatus(const std::string& war_entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WarDeclaration& comp, float delta_time) override;
 
 private:
     int war_counter_ = 0;

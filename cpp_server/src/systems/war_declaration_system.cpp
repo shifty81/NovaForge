@@ -7,21 +7,17 @@ namespace atlas {
 namespace systems {
 
 WarDeclarationSystem::WarDeclarationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void WarDeclarationSystem::update(float delta_time) {
+void WarDeclarationSystem::updateComponent(ecs::Entity& entity, components::WarDeclaration& war, float delta_time) {
     float dt_hours = delta_time / 3600.0f;
-    for (auto* entity : world_->getAllEntities()) {
-        auto* war = entity->getComponent<components::WarDeclaration>();
-        if (!war) continue;
 
-        if (war->status == "active" || war->status == "mutual") {
-            war->elapsed_hours += dt_hours;
-            // Mutual wars have no time limit; only non-mutual wars auto-finish
-            if (!war->is_mutual && war->elapsed_hours >= war->duration_hours) {
-                war->status = "finished";
-            }
+    if (war.status == "active" || war.status == "mutual") {
+        war.elapsed_hours += dt_hours;
+        // Mutual wars have no time limit; only non-mutual wars auto-finish
+        if (!war.is_mutual && war.elapsed_hours >= war.duration_hours) {
+            war.status = "finished";
         }
     }
 }
@@ -57,10 +53,7 @@ std::string WarDeclarationSystem::declareWar(const std::string& aggressor_id,
 }
 
 bool WarDeclarationSystem::activateWar(const std::string& war_entity_id) {
-    auto* entity = world_->getEntity(war_entity_id);
-    if (!entity) return false;
-
-    auto* war = entity->getComponent<components::WarDeclaration>();
+    auto* war = getComponentFor(war_entity_id);
     if (!war) return false;
 
     if (war->status != "pending") return false;
@@ -71,10 +64,7 @@ bool WarDeclarationSystem::activateWar(const std::string& war_entity_id) {
 
 bool WarDeclarationSystem::makeMutual(const std::string& war_entity_id,
                                       const std::string& requester_id) {
-    auto* entity = world_->getEntity(war_entity_id);
-    if (!entity) return false;
-
-    auto* war = entity->getComponent<components::WarDeclaration>();
+    auto* war = getComponentFor(war_entity_id);
     if (!war) return false;
 
     // Only defender can make mutual
@@ -87,10 +77,7 @@ bool WarDeclarationSystem::makeMutual(const std::string& war_entity_id,
 
 bool WarDeclarationSystem::surrender(const std::string& war_entity_id,
                                      const std::string& requester_id) {
-    auto* entity = world_->getEntity(war_entity_id);
-    if (!entity) return false;
-
-    auto* war = entity->getComponent<components::WarDeclaration>();
+    auto* war = getComponentFor(war_entity_id);
     if (!war) return false;
 
     // Only defender can surrender
@@ -102,10 +89,7 @@ bool WarDeclarationSystem::surrender(const std::string& war_entity_id,
 
 bool WarDeclarationSystem::retractWar(const std::string& war_entity_id,
                                       const std::string& requester_id) {
-    auto* entity = world_->getEntity(war_entity_id);
-    if (!entity) return false;
-
-    auto* war = entity->getComponent<components::WarDeclaration>();
+    auto* war = getComponentFor(war_entity_id);
     if (!war) return false;
 
     // Only aggressor can retract
@@ -118,10 +102,7 @@ bool WarDeclarationSystem::retractWar(const std::string& war_entity_id,
 bool WarDeclarationSystem::recordKill(const std::string& war_entity_id,
                                       const std::string& killer_side,
                                       double isk_value) {
-    auto* entity = world_->getEntity(war_entity_id);
-    if (!entity) return false;
-
-    auto* war = entity->getComponent<components::WarDeclaration>();
+    auto* war = getComponentFor(war_entity_id);
     if (!war) return false;
 
     if (killer_side == "aggressor") {
@@ -138,10 +119,7 @@ bool WarDeclarationSystem::recordKill(const std::string& war_entity_id,
 }
 
 std::string WarDeclarationSystem::getWarStatus(const std::string& war_entity_id) {
-    auto* entity = world_->getEntity(war_entity_id);
-    if (!entity) return "";
-
-    auto* war = entity->getComponent<components::WarDeclaration>();
+    auto* war = getComponentFor(war_entity_id);
     if (!war) return "";
 
     return war->status;
