@@ -7,10 +7,11 @@ namespace atlas {
 namespace systems {
 
 StationMonumentSystem::StationMonumentSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void StationMonumentSystem::update(float /*delta_time*/) {
+void StationMonumentSystem::updateComponent(ecs::Entity& /*entity*/,
+    components::StationMonument& /*monument*/, float /*delta_time*/) {
     // Monument creation is event-driven via checkAndCreateMonument
 }
 

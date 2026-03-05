@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WARP_PERFORMANCE_BUDGET_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WARP_PERFORMANCE_BUDGET_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/navigation_components.h"
 #include <string>
 #include <algorithm>
 #include <cmath>
@@ -25,12 +26,11 @@ namespace systems {
  *   - No dynamic branching: a single fullscreen pass selects layers via
  *     the enabled mask.
  */
-class WarpPerformanceBudgetSystem : public ecs::System {
+class WarpPerformanceBudgetSystem : public ecs::SingleComponentSystem<components::WarpPerformanceBudget> {
 public:
     explicit WarpPerformanceBudgetSystem(ecs::World* world);
     ~WarpPerformanceBudgetSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WarpPerformanceBudgetSystem"; }
 
     /**
@@ -94,6 +94,9 @@ public:
         if (running <= 0.0f) return 0.0f;
         return std::min(running / budget_ms, 1.0f);
     }
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WarpPerformanceBudget& budget, float delta_time) override;
 };
 
 } // namespace systems

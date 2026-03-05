@@ -8,24 +8,18 @@ namespace atlas {
 namespace systems {
 
 WarpPerformanceBudgetSystem::WarpPerformanceBudgetSystem(ecs::World* world)
-    : ecs::System(world) {}
+    : SingleComponentSystem(world) {}
 
-void WarpPerformanceBudgetSystem::update(float delta_time) {
-    if (!world_) return;
+void WarpPerformanceBudgetSystem::updateComponent(ecs::Entity& entity,
+    components::WarpPerformanceBudget& budget, float delta_time) {
+    float total = computeTotalCost(budget.layer_costs);
+    budget.total_cost_ms = total;
 
-    for (auto* entity : world_->getEntities()) {
-        auto* budget = entity->getComponent<components::WarpPerformanceBudget>();
-        if (!budget) continue;
+    bool enabled[5];
+    budget.scale_factor = enforceBudget(budget.layer_costs, budget.budget_ms, enabled);
 
-        float total = computeTotalCost(budget->layer_costs);
-        budget->total_cost_ms = total;
-
-        bool enabled[5];
-        budget->scale_factor = enforceBudget(budget->layer_costs, budget->budget_ms, enabled);
-
-        for (int i = 0; i < 5; ++i) {
-            budget->layer_enabled[i] = enabled[i];
-        }
+    for (int i = 0; i < 5; ++i) {
+        budget.layer_enabled[i] = enabled[i];
     }
 }
 

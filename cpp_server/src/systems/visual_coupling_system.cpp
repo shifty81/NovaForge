@@ -7,17 +7,14 @@ namespace atlas {
 namespace systems {
 
 VisualCouplingSystem::VisualCouplingSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void VisualCouplingSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::VisualCoupling>();
-    for (auto* entity : entities) {
-        auto* coupling = entity->getComponent<components::VisualCoupling>();
-        if (!coupling || !coupling->auto_update) continue;
+void VisualCouplingSystem::updateComponent(ecs::Entity& entity,
+    components::VisualCoupling& coupling, float delta_time) {
+    if (!coupling.auto_update) return;
 
-        coupling->total_updates++;
-    }
+    coupling.total_updates++;
 }
 
 bool VisualCouplingSystem::initializeCoupling(const std::string& entity_id,
@@ -38,10 +35,7 @@ bool VisualCouplingSystem::addCoupling(const std::string& entity_id,
                                         const std::string& module_id,
                                         components::VisualCoupling::ExteriorFeature feature,
                                         float scale) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    auto* coupling = getComponentFor(entity_id);
     if (!coupling) return false;
 
     if (static_cast<int>(coupling->entries.size()) >= coupling->max_entries) return false;
@@ -60,10 +54,7 @@ bool VisualCouplingSystem::addCoupling(const std::string& entity_id,
 
 bool VisualCouplingSystem::removeCoupling(const std::string& entity_id,
                                            const std::string& module_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    auto* coupling = getComponentFor(entity_id);
     if (!coupling) return false;
 
     auto it = std::remove_if(coupling->entries.begin(), coupling->entries.end(),
@@ -78,10 +69,7 @@ bool VisualCouplingSystem::removeCoupling(const std::string& entity_id,
 bool VisualCouplingSystem::setVisibility(const std::string& entity_id,
                                           const std::string& module_id,
                                           bool visible) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    auto* coupling = getComponentFor(entity_id);
     if (!coupling) return false;
 
     auto* entry = coupling->findEntry(module_id);
@@ -94,10 +82,7 @@ bool VisualCouplingSystem::setVisibility(const std::string& entity_id,
 bool VisualCouplingSystem::setOffset(const std::string& entity_id,
                                       const std::string& module_id,
                                       float x, float y, float z) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    auto* coupling = getComponentFor(entity_id);
     if (!coupling) return false;
 
     auto* entry = coupling->findEntry(module_id);
@@ -110,20 +95,14 @@ bool VisualCouplingSystem::setOffset(const std::string& entity_id,
 }
 
 int VisualCouplingSystem::getCouplingCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    auto* coupling = getComponentFor(entity_id);
     if (!coupling) return 0;
 
     return static_cast<int>(coupling->entries.size());
 }
 
 int VisualCouplingSystem::getVisibleCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    auto* coupling = getComponentFor(entity_id);
     if (!coupling) return 0;
 
     return coupling->visibleCount();
@@ -131,10 +110,7 @@ int VisualCouplingSystem::getVisibleCount(const std::string& entity_id) const {
 
 int VisualCouplingSystem::getFeatureCount(const std::string& entity_id,
                                            components::VisualCoupling::ExteriorFeature feature) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* coupling = entity->getComponent<components::VisualCoupling>();
+    auto* coupling = getComponentFor(entity_id);
     if (!coupling) return 0;
 
     return coupling->countByFeature(feature);

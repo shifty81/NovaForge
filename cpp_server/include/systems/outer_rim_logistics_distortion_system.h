@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_OUTER_RIM_LOGISTICS_DISTORTION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_OUTER_RIM_LOGISTICS_DISTORTION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/economy_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages route efficiency, threat-based distortion, price impact calculation,
  * and recovery when threat subsides.
  */
-class OuterRimLogisticsDistortionSystem : public ecs::System {
+class OuterRimLogisticsDistortionSystem : public ecs::SingleComponentSystem<components::OuterRimLogisticsDistortion> {
 public:
     explicit OuterRimLogisticsDistortionSystem(ecs::World* world);
     ~OuterRimLogisticsDistortionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "OuterRimLogisticsDistortionSystem"; }
 
     bool initializeRegion(const std::string& entity_id, const std::string& region_id);
@@ -31,6 +31,9 @@ public:
     int getDisruptedRouteCount(const std::string& entity_id) const;
     float getTotalPriceImpact(const std::string& entity_id) const;
     int getRouteCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::OuterRimLogisticsDistortion& ord, float delta_time) override;
 };
 
 } // namespace systems
