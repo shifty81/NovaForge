@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_NPC_REROUTING_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_NPC_REROUTING_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -13,12 +13,11 @@ namespace systems {
 /**
  * @brief Reroutes NPCs away from dangerous star systems
  */
-class NPCReroutingSystem : public ecs::System {
+class NPCReroutingSystem : public ecs::SingleComponentSystem<components::NPCRouteState> {
 public:
     explicit NPCReroutingSystem(ecs::World* world);
     ~NPCReroutingSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "NPCReroutingSystem"; }
 
     // --- Query API ---
@@ -28,6 +27,9 @@ public:
 
     // --- Configuration ---
     float reroute_interval = 60.0f;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::NPCRouteState& route, float delta_time) override;
 };
 
 } // namespace systems

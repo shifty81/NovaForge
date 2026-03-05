@@ -7,7 +7,7 @@ namespace atlas {
 namespace systems {
 
 TurretAISystem::TurretAISystem(ecs::World* world)
-    : ecs::System(world) {}
+    : SingleComponentSystem(world) {}
 
 // ── Static helpers ──────────────────────────────────────────────────
 
@@ -35,33 +35,27 @@ float TurretAISystem::computeTrackingPenalty(float angular_velocity,
 
 // ── Update ──────────────────────────────────────────────────────────
 
-void TurretAISystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::TurretAIState>();
-    for (auto* entity : entities) {
-        auto* turret = entity->getComponent<components::TurretAIState>();
-        if (!turret) continue;
+void TurretAISystem::updateComponent(ecs::Entity& /*entity*/, components::TurretAIState& turret, float delta_time) {
+    // Count down cooldown
+    if (turret.cooldown_remaining > 0.0f) {
+        turret.cooldown_remaining -= delta_time;
+        if (turret.cooldown_remaining < 0.0f)
+            turret.cooldown_remaining = 0.0f;
+    }
 
-        // Count down cooldown
-        if (turret->cooldown_remaining > 0.0f) {
-            turret->cooldown_remaining -= delta_time;
-            if (turret->cooldown_remaining < 0.0f)
-                turret->cooldown_remaining = 0.0f;
-        }
+    // If engaged and cooldown expired, fire
+    if (turret.engaged && turret.cooldown_remaining <= 0.0f
+        && !turret.target_entity_id.empty()) {
 
-        // If engaged and cooldown expired, fire
-        if (turret->engaged && turret->cooldown_remaining <= 0.0f
-            && !turret->target_entity_id.empty()) {
+        float tracking_hit = computeTrackingPenalty(
+            turret.angular_velocity, turret.tracking_speed);
+        float damage = turret.base_damage * tracking_hit;
 
-            float tracking_hit = computeTrackingPenalty(
-                turret->angular_velocity, turret->tracking_speed);
-            float damage = turret->base_damage * tracking_hit;
-
-            turret->total_damage_dealt += damage;
-            turret->shots_fired++;
-            turret->cooldown_remaining = (turret->rate_of_fire > 0.0f)
-                ? 1.0f / turret->rate_of_fire
-                : 1.0f;
-        }
+        turret.total_damage_dealt += damage;
+        turret.shots_fired++;
+        turret.cooldown_remaining = (turret.rate_of_fire > 0.0f)
+            ? 1.0f / turret.rate_of_fire
+            : 1.0f;
     }
 }
 

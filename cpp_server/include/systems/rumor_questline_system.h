@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_RUMOR_QUESTLINE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_RUMOR_QUESTLINE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -16,12 +16,11 @@ namespace systems {
  * When a rumor has been heard enough times and has sufficient belief,
  * it graduates into a full questline.
  */
-class RumorQuestlineSystem : public ecs::System {
+class RumorQuestlineSystem : public ecs::SingleComponentSystem<components::RumorLog> {
 public:
     explicit RumorQuestlineSystem(ecs::World* world);
     ~RumorQuestlineSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "RumorQuestlineSystem"; }
 
     // --- Query API ---
@@ -31,6 +30,9 @@ public:
     // --- Configuration ---
     int required_confirmations = 3;
     float belief_threshold = 0.7f;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::RumorLog& log, float delta_time) override;
 };
 
 } // namespace systems

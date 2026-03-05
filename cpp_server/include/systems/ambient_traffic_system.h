@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_AMBIENT_TRAFFIC_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_AMBIENT_TRAFFIC_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -26,12 +26,11 @@ namespace systems {
  * requests in the AmbientTrafficState so that other systems or the
  * game session can act on them.
  */
-class AmbientTrafficSystem : public ecs::System {
+class AmbientTrafficSystem : public ecs::SingleComponentSystem<components::AmbientTrafficState> {
 public:
     explicit AmbientTrafficSystem(ecs::World* world);
     ~AmbientTrafficSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "AmbientTrafficSystem"; }
 
     // --- Query API ---
@@ -52,8 +51,11 @@ public:
     float miner_resource_threshold = 0.3f;   // min resource_availability for miners
     float pirate_activity_threshold = 0.3f;  // min pirate_activity for pirates
 
+protected:
+    void updateComponent(ecs::Entity& entity, components::AmbientTrafficState& traffic, float delta_time) override;
+
 private:
-    void evaluateSpawns(ecs::Entity* entity,
+    void evaluateSpawns(ecs::Entity& entity,
                         components::AmbientTrafficState* traffic,
                         const components::SimStarSystemState* state);
 };

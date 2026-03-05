@@ -6,21 +6,17 @@ namespace atlas {
 namespace systems {
 
 AmbientTrafficSystem::AmbientTrafficSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AmbientTrafficSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::AmbientTrafficState>();
-    for (auto* entity : entities) {
-        auto* traffic = entity->getComponent<components::AmbientTrafficState>();
-        auto* state   = entity->getComponent<components::SimStarSystemState>();
-        if (!traffic || !state) continue;
+void AmbientTrafficSystem::updateComponent(ecs::Entity& entity, components::AmbientTrafficState& traffic, float delta_time) {
+    auto* state = entity.getComponent<components::SimStarSystemState>();
+    if (!state) return;
 
-        traffic->spawn_timer -= delta_time;
-        if (traffic->spawn_timer <= 0.0f) {
-            traffic->spawn_timer = spawn_interval;
-            evaluateSpawns(entity, traffic, state);
-        }
+    traffic.spawn_timer -= delta_time;
+    if (traffic.spawn_timer <= 0.0f) {
+        traffic.spawn_timer = spawn_interval;
+        evaluateSpawns(entity, &traffic, state);
     }
 }
 
@@ -29,7 +25,7 @@ void AmbientTrafficSystem::update(float delta_time) {
 // -----------------------------------------------------------------------
 
 void AmbientTrafficSystem::evaluateSpawns(
-        ecs::Entity* /*entity*/,
+        ecs::Entity& /*entity*/,
         components::AmbientTrafficState* traffic,
         const components::SimStarSystemState* state) {
 
@@ -78,30 +74,21 @@ void AmbientTrafficSystem::evaluateSpawns(
 
 std::vector<std::string>
 AmbientTrafficSystem::getPendingSpawns(const std::string& system_id) const {
-    auto* entity = world_->getEntity(system_id);
-    if (!entity) return {};
-
-    auto* traffic = entity->getComponent<components::AmbientTrafficState>();
+    const auto* traffic = getComponentFor(system_id);
     if (!traffic) return {};
 
     return traffic->pending_spawns;
 }
 
 int AmbientTrafficSystem::getActiveTrafficCount(const std::string& system_id) const {
-    auto* entity = world_->getEntity(system_id);
-    if (!entity) return 0;
-
-    auto* traffic = entity->getComponent<components::AmbientTrafficState>();
+    const auto* traffic = getComponentFor(system_id);
     if (!traffic) return 0;
 
     return traffic->active_traffic_count;
 }
 
 void AmbientTrafficSystem::clearPendingSpawns(const std::string& system_id) {
-    auto* entity = world_->getEntity(system_id);
-    if (!entity) return;
-
-    auto* traffic = entity->getComponent<components::AmbientTrafficState>();
+    auto* traffic = getComponentFor(system_id);
     if (!traffic) return;
 
     traffic->pending_spawns.clear();

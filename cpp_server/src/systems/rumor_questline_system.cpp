@@ -5,30 +5,24 @@ namespace atlas {
 namespace systems {
 
 RumorQuestlineSystem::RumorQuestlineSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void RumorQuestlineSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::RumorLog>();
-    for (auto* entity : entities) {
-        auto* log = entity->getComponent<components::RumorLog>();
-        if (!log) continue;
-
-        for (const auto& rumor : log->rumors) {
-            if (rumor.times_heard >= required_confirmations &&
-                rumor.belief_strength >= belief_threshold) {
-                // Check if already graduated
-                auto* existing = entity->getComponent<components::RumorQuestline>();
-                if (!existing) {
-                    auto quest = std::make_unique<components::RumorQuestline>();
-                    quest->rumor_id = rumor.rumor_id;
-                    quest->questline_id = "quest_" + rumor.rumor_id;
-                    quest->required_confirmations = required_confirmations;
-                    quest->graduated = true;
-                    quest->quest_description = "Investigate: " + rumor.text;
-                    entity->addComponent(std::move(quest));
-                    break; // One graduation per update tick
-                }
+void RumorQuestlineSystem::updateComponent(ecs::Entity& entity, components::RumorLog& log, float /*delta_time*/) {
+    for (const auto& rumor : log.rumors) {
+        if (rumor.times_heard >= required_confirmations &&
+            rumor.belief_strength >= belief_threshold) {
+            // Check if already graduated
+            auto* existing = entity.getComponent<components::RumorQuestline>();
+            if (!existing) {
+                auto quest = std::make_unique<components::RumorQuestline>();
+                quest->rumor_id = rumor.rumor_id;
+                quest->questline_id = "quest_" + rumor.rumor_id;
+                quest->required_confirmations = required_confirmations;
+                quest->graduated = true;
+                quest->quest_description = "Investigate: " + rumor.text;
+                entity.addComponent(std::move(quest));
+                break; // One graduation per update tick
             }
         }
     }
