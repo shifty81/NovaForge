@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_NPC_DIALOGUE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_NPC_DIALOGUE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -10,12 +10,11 @@
 namespace atlas {
 namespace systems {
 
-class NPCDialogueSystem : public ecs::System {
+class NPCDialogueSystem : public ecs::SingleComponentSystem<components::NPCDialogue> {
 public:
     explicit NPCDialogueSystem(ecs::World* world);
     ~NPCDialogueSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "NPCDialogueSystem"; }
 
     // Record that an NPC observed a legend event for a player
@@ -33,6 +32,9 @@ public:
 
     // Get all generated dialogue lines for an NPC
     std::vector<std::string> getDialogueLines(const std::string& npc_entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::NPCDialogue& comp, float delta_time) override;
 };
 
 } // namespace systems

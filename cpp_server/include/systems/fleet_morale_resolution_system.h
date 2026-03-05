@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_MORALE_RESOLUTION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_MORALE_RESOLUTION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/fleet_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages fleet morale, crisis detection, resolution methods (Compromise,
  * AuthorityOverride, Vote, Mediation), and captain departures.
  */
-class FleetMoraleResolutionSystem : public ecs::System {
+class FleetMoraleResolutionSystem : public ecs::SingleComponentSystem<components::FleetMoraleResolution> {
 public:
     explicit FleetMoraleResolutionSystem(ecs::World* world);
     ~FleetMoraleResolutionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetMoraleResolutionSystem"; }
 
     bool initializeFleet(const std::string& entity_id);
@@ -31,6 +31,9 @@ public:
     bool isCrisisActive(const std::string& entity_id) const;
     int getDepartures(const std::string& entity_id) const;
     int getResolutionCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetMoraleResolution& comp, float delta_time) override;
 };
 
 } // namespace systems

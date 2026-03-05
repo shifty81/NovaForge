@@ -6,21 +6,15 @@ namespace atlas {
 namespace systems {
 
 StationDeploymentSystem::StationDeploymentSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void StationDeploymentSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::StationDeployment>();
-    for (auto* entity : entities) {
-        auto* dep = entity->getComponent<components::StationDeployment>();
-        if (!dep) continue;
-
-        if (dep->deploy_state == components::StationDeployment::DeployState::Deploying) {
-            dep->deploy_timer -= delta_time;
-            if (dep->deploy_timer <= 0.0f) {
-                dep->deploy_timer = 0.0f;
-                dep->deploy_state = components::StationDeployment::DeployState::Deployed;
-            }
+void StationDeploymentSystem::updateComponent(ecs::Entity& /*entity*/, components::StationDeployment& comp, float delta_time) {
+    if (comp.deploy_state == components::StationDeployment::DeployState::Deploying) {
+        comp.deploy_timer -= delta_time;
+        if (comp.deploy_timer <= 0.0f) {
+            comp.deploy_timer = 0.0f;
+            comp.deploy_state = components::StationDeployment::DeployState::Deployed;
         }
     }
 }
@@ -52,10 +46,7 @@ bool StationDeploymentSystem::beginDeployment(const std::string& entity_id,
 }
 
 void StationDeploymentSystem::cancelDeployment(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* dep = entity->getComponent<components::StationDeployment>();
+    auto* dep = getComponentFor(entity_id);
     if (!dep) return;
 
     if (dep->deploy_state == components::StationDeployment::DeployState::Deploying) {
@@ -65,20 +56,14 @@ void StationDeploymentSystem::cancelDeployment(const std::string& entity_id) {
 }
 
 bool StationDeploymentSystem::isDeployed(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* dep = entity->getComponent<components::StationDeployment>();
+    auto* dep = getComponentFor(entity_id);
     if (!dep) return false;
 
     return dep->deploy_state == components::StationDeployment::DeployState::Deployed;
 }
 
 bool StationDeploymentSystem::isDeploying(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* dep = entity->getComponent<components::StationDeployment>();
+    auto* dep = getComponentFor(entity_id);
     if (!dep) return false;
 
     return dep->deploy_state == components::StationDeployment::DeployState::Deploying;
@@ -86,10 +71,7 @@ bool StationDeploymentSystem::isDeploying(const std::string& entity_id) const {
 
 bool StationDeploymentSystem::attachModule(const std::string& entity_id,
                                             const std::string& module_type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* dep = entity->getComponent<components::StationDeployment>();
+    auto* dep = getComponentFor(entity_id);
     if (!dep) return false;
 
     // Must be deployed to attach modules
@@ -114,10 +96,7 @@ bool StationDeploymentSystem::attachModule(const std::string& entity_id,
 }
 
 int StationDeploymentSystem::getAttachedModuleCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* dep = entity->getComponent<components::StationDeployment>();
+    auto* dep = getComponentFor(entity_id);
     if (!dep) return 0;
 
     return dep->getTotalAttachedModules();
@@ -126,13 +105,7 @@ int StationDeploymentSystem::getAttachedModuleCount(const std::string& entity_id
 void StationDeploymentSystem::getSystemBonuses(const std::string& entity_id,
                                                 float& security, float& economy,
                                                 float& resource) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) {
-        security = 0.0f; economy = 0.0f; resource = 0.0f;
-        return;
-    }
-
-    auto* dep = entity->getComponent<components::StationDeployment>();
+    auto* dep = getComponentFor(entity_id);
     if (!dep) {
         security = 0.0f; economy = 0.0f; resource = 0.0f;
         return;
