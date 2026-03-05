@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_TOURNAMENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_TOURNAMENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Handles tournament lifecycle: creation, registration, round
  * progression, scoring, elimination, and prize distribution.
  */
-class TournamentSystem : public ecs::System {
+class TournamentSystem : public ecs::SingleComponentSystem<components::Tournament> {
 public:
     explicit TournamentSystem(ecs::World* world);
     ~TournamentSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "TournamentSystem"; }
 
     /**
@@ -91,6 +91,9 @@ public:
      * @brief Get the prize pool
      */
     double getPrizePool(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::Tournament& tourney, float delta_time) override;
 };
 
 } // namespace systems

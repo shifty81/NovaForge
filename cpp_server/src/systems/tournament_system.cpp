@@ -8,45 +8,40 @@ namespace atlas {
 namespace systems {
 
 TournamentSystem::TournamentSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void TournamentSystem::update(float delta_time) {
-    // Advance round timers for active tournaments
-    auto entities = world_->getEntities<components::Tournament>();
-    for (auto* entity : entities) {
-        auto* tourney = entity->getComponent<components::Tournament>();
-        if (!tourney || tourney->status != "active") continue;
+void TournamentSystem::updateComponent(ecs::Entity& /*entity*/, components::Tournament& tourney, float delta_time) {
+    if (tourney.status != "active") return;
 
-        tourney->round_timer -= delta_time;
-        if (tourney->round_timer <= 0.0f) {
-            // Round ended — record result
-            components::Tournament::RoundResult result;
-            result.round_number = tourney->current_round;
-            result.participant_count = 0;
+    tourney.round_timer -= delta_time;
+    if (tourney.round_timer <= 0.0f) {
+        // Round ended — record result
+        components::Tournament::RoundResult result;
+        result.round_number = tourney.current_round;
+        result.participant_count = 0;
 
-            int best_score = -1;
-            std::string best_id;
-            for (const auto& p : tourney->participants) {
-                if (!p.eliminated) {
-                    result.participant_count++;
-                    if (p.score > best_score) {
-                        best_score = p.score;
-                        best_id = p.player_id;
-                    }
+        int best_score = -1;
+        std::string best_id;
+        for (const auto& p : tourney.participants) {
+            if (!p.eliminated) {
+                result.participant_count++;
+                if (p.score > best_score) {
+                    best_score = p.score;
+                    best_id = p.player_id;
                 }
             }
-            result.winner_id = best_id;
-            result.winner_score = best_score;
-            tourney->round_results.push_back(result);
+        }
+        result.winner_id = best_id;
+        result.winner_score = best_score;
+        tourney.round_results.push_back(result);
 
-            // Advance to next round
-            tourney->current_round++;
-            if (tourney->current_round > tourney->total_rounds) {
-                tourney->status = "completed";
-            } else {
-                tourney->round_timer = tourney->round_duration;
-            }
+        // Advance to next round
+        tourney.current_round++;
+        if (tourney.current_round > tourney.total_rounds) {
+            tourney.status = "completed";
+        } else {
+            tourney.round_timer = tourney.round_duration;
         }
     }
 }
@@ -77,10 +72,7 @@ bool TournamentSystem::createTournament(const std::string& entity_id,
 bool TournamentSystem::registerPlayer(const std::string& entity_id,
                                        const std::string& player_id,
                                        const std::string& player_name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney || tourney->status != "registration") return false;
 
     if (static_cast<int>(tourney->participants.size()) >= tourney->max_participants) return false;
@@ -103,10 +95,7 @@ bool TournamentSystem::registerPlayer(const std::string& entity_id,
 }
 
 bool TournamentSystem::startTournament(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney || tourney->status != "registration") return false;
 
     if (tourney->participants.empty()) return false;
@@ -120,10 +109,7 @@ bool TournamentSystem::startTournament(const std::string& entity_id) {
 bool TournamentSystem::recordKill(const std::string& entity_id,
                                    const std::string& player_id,
                                    int points) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney || tourney->status != "active") return false;
 
     for (auto& p : tourney->participants) {
@@ -138,10 +124,7 @@ bool TournamentSystem::recordKill(const std::string& entity_id,
 
 bool TournamentSystem::eliminatePlayer(const std::string& entity_id,
                                         const std::string& player_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney || tourney->status != "active") return false;
 
     for (auto& p : tourney->participants) {
@@ -155,10 +138,7 @@ bool TournamentSystem::eliminatePlayer(const std::string& entity_id,
 
 int TournamentSystem::getPlayerScore(const std::string& entity_id,
                                       const std::string& player_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney) return 0;
 
     for (const auto& p : tourney->participants) {
@@ -168,20 +148,14 @@ int TournamentSystem::getPlayerScore(const std::string& entity_id,
 }
 
 int TournamentSystem::getParticipantCount(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney) return 0;
 
     return static_cast<int>(tourney->participants.size());
 }
 
 int TournamentSystem::getActiveParticipantCount(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney) return 0;
 
     int count = 0;
@@ -192,30 +166,21 @@ int TournamentSystem::getActiveParticipantCount(const std::string& entity_id) {
 }
 
 std::string TournamentSystem::getStatus(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney) return "";
 
     return tourney->status;
 }
 
 int TournamentSystem::getCurrentRound(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney) return 0;
 
     return tourney->current_round;
 }
 
 double TournamentSystem::getPrizePool(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0;
-
-    auto* tourney = entity->getComponent<components::Tournament>();
+    auto* tourney = getComponentFor(entity_id);
     if (!tourney) return 0.0;
 
     return tourney->prize_pool;
