@@ -1,32 +1,26 @@
 #include "systems/data_binding_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
 #include <algorithm>
+#include <memory>
 
 namespace atlas {
 namespace systems {
 
 DataBindingSystem::DataBindingSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void DataBindingSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::DataBinding>();
-    for (auto* entity : entities) {
-        auto* db = entity->getComponent<components::DataBinding>();
-        if (!db) continue;
-
-        // Process any pending notifications
-        if (!db->pending_notifications.empty()) {
-            for (const auto& pattern : db->pending_notifications) {
-                for (auto& observer : db->observers) {
-                    if (observer.active && observer.pattern == pattern) {
-                        db->total_notifications++;
-                    }
+void DataBindingSystem::updateComponent(ecs::Entity& /*entity*/, components::DataBinding& db, float /*delta_time*/) {
+    // Process any pending notifications
+    if (!db.pending_notifications.empty()) {
+        for (const auto& pattern : db.pending_notifications) {
+            for (auto& observer : db.observers) {
+                if (observer.active && observer.pattern == pattern) {
+                    db.total_notifications++;
                 }
             }
-            db->pending_notifications.clear();
         }
+        db.pending_notifications.clear();
     }
 }
 
@@ -50,10 +44,7 @@ bool DataBindingSystem::addBinding(const std::string& entity_id,
                                     const std::string& source_path,
                                     const std::string& target_widget,
                                     const std::string& transform_func) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     if (static_cast<int>(db->bindings.size()) >= db->max_bindings) return false;
@@ -73,10 +64,7 @@ bool DataBindingSystem::addBinding(const std::string& entity_id,
 
 bool DataBindingSystem::removeBinding(const std::string& entity_id,
                                        const std::string& binding_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     for (auto it = db->bindings.begin(); it != db->bindings.end(); ++it) {
@@ -91,10 +79,7 @@ bool DataBindingSystem::removeBinding(const std::string& entity_id,
 bool DataBindingSystem::updateBinding(const std::string& entity_id,
                                        const std::string& binding_id,
                                        const std::string& new_value) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     auto* binding = db->findBinding(binding_id);
@@ -110,10 +95,7 @@ bool DataBindingSystem::updateBinding(const std::string& entity_id,
 
 bool DataBindingSystem::notifyObservers(const std::string& entity_id,
                                          const std::string& pattern) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     db->pending_notifications.push_back(pattern);
@@ -124,10 +106,7 @@ bool DataBindingSystem::addObserver(const std::string& entity_id,
                                      const std::string& observer_id,
                                      const std::string& pattern,
                                      const std::string& callback_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     // Check for duplicate
@@ -144,10 +123,7 @@ bool DataBindingSystem::addObserver(const std::string& entity_id,
 
 bool DataBindingSystem::removeObserver(const std::string& entity_id,
                                         const std::string& observer_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     for (auto it = db->observers.begin(); it != db->observers.end(); ++it) {
@@ -161,10 +137,7 @@ bool DataBindingSystem::removeObserver(const std::string& entity_id,
 
 bool DataBindingSystem::setDirty(const std::string& entity_id,
                                   const std::string& binding_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     auto* binding = db->findBinding(binding_id);
@@ -175,10 +148,7 @@ bool DataBindingSystem::setDirty(const std::string& entity_id,
 }
 
 int DataBindingSystem::getDirtyCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    const auto* db = getComponentFor(entity_id);
     if (!db) return 0;
 
     int count = 0;
@@ -189,30 +159,21 @@ int DataBindingSystem::getDirtyCount(const std::string& entity_id) const {
 }
 
 int DataBindingSystem::getBindingCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    const auto* db = getComponentFor(entity_id);
     if (!db) return 0;
 
     return static_cast<int>(db->bindings.size());
 }
 
 int DataBindingSystem::getObserverCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    const auto* db = getComponentFor(entity_id);
     if (!db) return 0;
 
     return static_cast<int>(db->observers.size());
 }
 
 bool DataBindingSystem::processNotifications(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* db = entity->getComponent<components::DataBinding>();
+    auto* db = getComponentFor(entity_id);
     if (!db) return false;
 
     if (db->pending_notifications.empty()) return false;

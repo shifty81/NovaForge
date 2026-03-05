@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ENTITY_STRESS_TEST_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ENTITY_STRESS_TEST_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -15,12 +15,11 @@ namespace systems {
  * query latency, and verifies the system stays within the 20Hz
  * tick budget threshold.
  */
-class EntityStressTestSystem : public ecs::System {
+class EntityStressTestSystem : public ecs::SingleComponentSystem<components::EntityStressTest> {
 public:
     explicit EntityStressTestSystem(ecs::World* world);
     ~EntityStressTestSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "EntityStressTestSystem"; }
 
     // Initialization
@@ -42,6 +41,9 @@ public:
     float getAverageQueryUs(const std::string& entity_id) const;
     bool isWithinBudget(const std::string& entity_id) const;
     std::string getPhase(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::EntityStressTest& test, float delta_time) override;
 };
 
 } // namespace systems

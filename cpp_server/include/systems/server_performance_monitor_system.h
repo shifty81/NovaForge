@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_SERVER_PERFORMANCE_MONITOR_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SERVER_PERFORMANCE_MONITOR_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Server tick performance profiling with per-system timing, entity count
  * tracking, hot-path identification, and performance alerting.
  */
-class ServerPerformanceMonitorSystem : public ecs::System {
+class ServerPerformanceMonitorSystem : public ecs::SingleComponentSystem<components::ServerPerformanceMetrics> {
 public:
     explicit ServerPerformanceMonitorSystem(ecs::World* world);
     ~ServerPerformanceMonitorSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ServerPerformanceMonitorSystem"; }
 
     // Initialization
@@ -41,6 +40,9 @@ public:
 
     // Reset
     bool resetMetrics(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ServerPerformanceMetrics& metrics, float delta_time) override;
 };
 
 } // namespace systems

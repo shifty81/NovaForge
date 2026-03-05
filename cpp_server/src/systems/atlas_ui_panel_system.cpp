@@ -1,29 +1,23 @@
 #include "systems/atlas_ui_panel_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
 #include <algorithm>
+#include <memory>
 
 namespace atlas {
 namespace systems {
 
 AtlasUIPanelSystem::AtlasUIPanelSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void AtlasUIPanelSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::AtlasUIPanel>();
-    for (auto* entity : entities) {
-        auto* panel = entity->getComponent<components::AtlasUIPanel>();
-        if (!panel) continue;
-
-        // Clamp selected_index within valid range
-        if (!panel->items.empty()) {
-            if (panel->selected_index >= static_cast<int>(panel->items.size())) {
-                panel->selected_index = static_cast<int>(panel->items.size()) - 1;
-            }
-        } else {
-            panel->selected_index = -1;
+void AtlasUIPanelSystem::updateComponent(ecs::Entity& /*entity*/, components::AtlasUIPanel& panel, float /*delta_time*/) {
+    // Clamp selected_index within valid range
+    if (!panel.items.empty()) {
+        if (panel.selected_index >= static_cast<int>(panel.items.size())) {
+            panel.selected_index = static_cast<int>(panel.items.size()) - 1;
         }
+    } else {
+        panel.selected_index = -1;
     }
 }
 
@@ -45,10 +39,7 @@ bool AtlasUIPanelSystem::initializePanel(const std::string& entity_id,
 }
 
 bool AtlasUIPanelSystem::openPanel(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->is_open = true;
@@ -56,10 +47,7 @@ bool AtlasUIPanelSystem::openPanel(const std::string& entity_id) {
 }
 
 bool AtlasUIPanelSystem::closePanel(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->is_open = false;
@@ -67,10 +55,7 @@ bool AtlasUIPanelSystem::closePanel(const std::string& entity_id) {
 }
 
 bool AtlasUIPanelSystem::togglePanel(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->is_open = !panel->is_open;
@@ -81,10 +66,7 @@ bool AtlasUIPanelSystem::addItem(const std::string& entity_id,
                                   const std::string& item_id,
                                   const std::string& name,
                                   int quantity, float value) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     if (static_cast<int>(panel->items.size()) >= panel->max_items) return false;
@@ -103,10 +85,7 @@ bool AtlasUIPanelSystem::addItem(const std::string& entity_id,
 
 bool AtlasUIPanelSystem::removeItem(const std::string& entity_id,
                                      const std::string& item_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     for (auto it = panel->items.begin(); it != panel->items.end(); ++it) {
@@ -120,10 +99,7 @@ bool AtlasUIPanelSystem::removeItem(const std::string& entity_id,
 
 bool AtlasUIPanelSystem::setFilter(const std::string& entity_id,
                                     const std::string& filter_text) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->filter_text = filter_text;
@@ -132,10 +108,7 @@ bool AtlasUIPanelSystem::setFilter(const std::string& entity_id,
 
 bool AtlasUIPanelSystem::setSort(const std::string& entity_id,
                                   const std::string& field, bool ascending) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     panel->sort_field = field;
@@ -144,10 +117,7 @@ bool AtlasUIPanelSystem::setSort(const std::string& entity_id,
 }
 
 bool AtlasUIPanelSystem::selectItem(const std::string& entity_id, int index) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     if (index < -1 || index >= static_cast<int>(panel->items.size())) return false;
@@ -157,10 +127,7 @@ bool AtlasUIPanelSystem::selectItem(const std::string& entity_id, int index) {
 }
 
 std::string AtlasUIPanelSystem::getPanelType(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return "";
 
     using PT = components::AtlasUIPanel::PanelType;
@@ -176,20 +143,14 @@ std::string AtlasUIPanelSystem::getPanelType(const std::string& entity_id) const
 }
 
 bool AtlasUIPanelSystem::isOpen(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return false;
 
     return panel->is_open;
 }
 
 int AtlasUIPanelSystem::getItemCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* panel = entity->getComponent<components::AtlasUIPanel>();
+    const auto* panel = getComponentFor(entity_id);
     if (!panel) return 0;
 
     return static_cast<int>(panel->items.size());

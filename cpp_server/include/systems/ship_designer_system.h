@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_SHIP_DESIGNER_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SHIP_DESIGNER_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages ship blueprints and module fitting, tracking resource budgets
  * (CPU, powergrid) and slot availability across high/mid/low/rig slots.
  */
-class ShipDesignerSystem : public ecs::System {
+class ShipDesignerSystem : public ecs::SingleComponentSystem<components::ShipDesigner> {
 public:
     explicit ShipDesignerSystem(ecs::World* world);
     ~ShipDesignerSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ShipDesignerSystem"; }
 
     bool createDesigner(const std::string& entity_id);
@@ -34,6 +34,9 @@ public:
     int getSlotsFree(const std::string& entity_id, int slot_type) const;
     bool clearDesign(const std::string& entity_id);
     bool isValid(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ShipDesigner& sd, float delta_time) override;
 };
 
 } // namespace systems

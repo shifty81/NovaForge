@@ -1,38 +1,32 @@
 #include "systems/ship_designer_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
-#include "components/game_components.h"
 #include <algorithm>
+#include <memory>
 
 namespace atlas {
 namespace systems {
 
 ShipDesignerSystem::ShipDesignerSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ShipDesignerSystem::update(float delta_time) {
-    (void)delta_time;
-    auto entities = world_->getEntities<components::ShipDesigner>();
-    for (auto* entity : entities) {
-        auto* sd = entity->getComponent<components::ShipDesigner>();
-        if (!sd || !sd->active) continue;
+void ShipDesignerSystem::updateComponent(ecs::Entity& /*entity*/, components::ShipDesigner& sd, float /*delta_time*/) {
+    if (!sd.active) return;
 
-        // Recalculate used_cpu and used_powergrid
-        float cpu = 0.0f;
-        float power = 0.0f;
-        for (const auto& m : sd->fitted_modules) {
-            cpu += m.cpu_cost;
-            power += m.power_cost;
-        }
-        sd->used_cpu = cpu;
-        sd->used_powergrid = power;
-
-        // Validate
-        sd->valid = !sd->blueprint_name.empty() &&
-                    sd->used_cpu <= sd->total_cpu &&
-                    sd->used_powergrid <= sd->total_powergrid;
+    // Recalculate used_cpu and used_powergrid
+    float cpu = 0.0f;
+    float power = 0.0f;
+    for (const auto& m : sd.fitted_modules) {
+        cpu += m.cpu_cost;
+        power += m.power_cost;
     }
+    sd.used_cpu = cpu;
+    sd.used_powergrid = power;
+
+    // Validate
+    sd.valid = !sd.blueprint_name.empty() &&
+                sd.used_cpu <= sd.total_cpu &&
+                sd.used_powergrid <= sd.total_powergrid;
 }
 
 bool ShipDesignerSystem::createDesigner(const std::string& entity_id) {
@@ -47,10 +41,7 @@ bool ShipDesignerSystem::createDesigner(const std::string& entity_id) {
 
 bool ShipDesignerSystem::setBlueprint(const std::string& entity_id, const std::string& name,
                                        const std::string& hull_type, const std::string& faction) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    auto* sd = getComponentFor(entity_id);
     if (!sd) return false;
 
     sd->blueprint_name = name;
@@ -62,10 +53,7 @@ bool ShipDesignerSystem::setBlueprint(const std::string& entity_id, const std::s
 
 bool ShipDesignerSystem::fitModule(const std::string& entity_id, const std::string& module_name,
                                     int slot_type, float cpu_cost, float power_cost) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    auto* sd = getComponentFor(entity_id);
     if (!sd) return false;
 
     // Check slot availability
@@ -94,10 +82,7 @@ bool ShipDesignerSystem::fitModule(const std::string& entity_id, const std::stri
 }
 
 bool ShipDesignerSystem::removeModule(const std::string& entity_id, const std::string& module_name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    auto* sd = getComponentFor(entity_id);
     if (!sd) return false;
 
     for (auto it = sd->fitted_modules.begin(); it != sd->fitted_modules.end(); ++it) {
@@ -110,10 +95,7 @@ bool ShipDesignerSystem::removeModule(const std::string& entity_id, const std::s
 }
 
 bool ShipDesignerSystem::validateDesign(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    auto* sd = getComponentFor(entity_id);
     if (!sd) return false;
 
     // Recalculate resources before validation
@@ -132,40 +114,28 @@ bool ShipDesignerSystem::validateDesign(const std::string& entity_id) {
 }
 
 float ShipDesignerSystem::getCpuUsage(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    const auto* sd = getComponentFor(entity_id);
     if (!sd || sd->total_cpu <= 0.0f) return 0.0f;
 
     return sd->used_cpu / sd->total_cpu;
 }
 
 float ShipDesignerSystem::getPowerUsage(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    const auto* sd = getComponentFor(entity_id);
     if (!sd || sd->total_powergrid <= 0.0f) return 0.0f;
 
     return sd->used_powergrid / sd->total_powergrid;
 }
 
 int ShipDesignerSystem::getFittedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    const auto* sd = getComponentFor(entity_id);
     if (!sd) return 0;
 
     return static_cast<int>(sd->fitted_modules.size());
 }
 
 int ShipDesignerSystem::getSlotsFree(const std::string& entity_id, int slot_type) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    const auto* sd = getComponentFor(entity_id);
     if (!sd) return 0;
 
     int max_slots = 0;
@@ -185,10 +155,7 @@ int ShipDesignerSystem::getSlotsFree(const std::string& entity_id, int slot_type
 }
 
 bool ShipDesignerSystem::clearDesign(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    auto* sd = getComponentFor(entity_id);
     if (!sd) return false;
 
     sd->fitted_modules.clear();
@@ -199,10 +166,7 @@ bool ShipDesignerSystem::clearDesign(const std::string& entity_id) {
 }
 
 bool ShipDesignerSystem::isValid(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sd = entity->getComponent<components::ShipDesigner>();
+    const auto* sd = getComponentFor(entity_id);
     if (!sd) return false;
 
     return sd->valid;

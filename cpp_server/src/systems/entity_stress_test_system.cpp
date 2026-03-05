@@ -1,35 +1,29 @@
 #include "systems/entity_stress_test_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
 #include <algorithm>
 #include <numeric>
 #include <cmath>
+#include <memory>
 
 namespace atlas {
 namespace systems {
 
 EntityStressTestSystem::EntityStressTestSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void EntityStressTestSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::EntityStressTest>();
-    for (auto* entity : entities) {
-        auto* test = entity->getComponent<components::EntityStressTest>();
-        if (!test) continue;
-
-        // Recompute averages from tick_times
-        if (!test->tick_times.empty()) {
-            float sum = 0.0f;
-            float max_val = 0.0f;
-            for (float t : test->tick_times) {
-                sum += t;
-                max_val = std::max(max_val, t);
-            }
-            test->avg_tick_ms = sum / static_cast<float>(test->tick_times.size());
-            test->max_tick_ms = max_val;
-            test->passed_threshold = (test->avg_tick_ms <= test->threshold_ms);
+void EntityStressTestSystem::updateComponent(ecs::Entity& /*entity*/, components::EntityStressTest& test, float /*delta_time*/) {
+    // Recompute averages from tick_times
+    if (!test.tick_times.empty()) {
+        float sum = 0.0f;
+        float max_val = 0.0f;
+        for (float t : test.tick_times) {
+            sum += t;
+            max_val = std::max(max_val, t);
         }
+        test.avg_tick_ms = sum / static_cast<float>(test.tick_times.size());
+        test.max_tick_ms = max_val;
+        test.passed_threshold = (test.avg_tick_ms <= test.threshold_ms);
     }
 }
 
@@ -52,10 +46,7 @@ bool EntityStressTestSystem::initializeStressTest(const std::string& entity_id,
 }
 
 bool EntityStressTestSystem::startTest(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    auto* test = getComponentFor(entity_id);
     if (!test) return false;
 
     using SP = components::EntityStressTest::StressPhase;
@@ -74,10 +65,7 @@ bool EntityStressTestSystem::startTest(const std::string& entity_id) {
 }
 
 bool EntityStressTestSystem::completeTest(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    auto* test = getComponentFor(entity_id);
     if (!test) return false;
 
     test->stress_phase = components::EntityStressTest::StressPhase::Complete;
@@ -98,10 +86,7 @@ bool EntityStressTestSystem::completeTest(const std::string& entity_id) {
 }
 
 bool EntityStressTestSystem::recordTick(const std::string& entity_id, float tick_time_ms) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    auto* test = getComponentFor(entity_id);
     if (!test) return false;
 
     test->tick_times.push_back(tick_time_ms);
@@ -126,10 +111,7 @@ bool EntityStressTestSystem::recordTick(const std::string& entity_id, float tick
 }
 
 bool EntityStressTestSystem::recordQuery(const std::string& entity_id, float query_time_us) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    auto* test = getComponentFor(entity_id);
     if (!test) return false;
 
     test->queries_per_tick++;
@@ -140,10 +122,7 @@ bool EntityStressTestSystem::recordQuery(const std::string& entity_id, float que
 }
 
 bool EntityStressTestSystem::setEntityCount(const std::string& entity_id, int count) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    auto* test = getComponentFor(entity_id);
     if (!test) return false;
 
     test->entity_count = count;
@@ -157,50 +136,35 @@ bool EntityStressTestSystem::setEntityCount(const std::string& entity_id, int co
 }
 
 float EntityStressTestSystem::getAverageTickMs(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    const auto* test = getComponentFor(entity_id);
     if (!test) return 0.0f;
 
     return test->avg_tick_ms;
 }
 
 float EntityStressTestSystem::getMaxTickMs(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    const auto* test = getComponentFor(entity_id);
     if (!test) return 0.0f;
 
     return test->max_tick_ms;
 }
 
 float EntityStressTestSystem::getAverageQueryUs(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    const auto* test = getComponentFor(entity_id);
     if (!test) return 0.0f;
 
     return test->avg_query_us;
 }
 
 bool EntityStressTestSystem::isWithinBudget(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    const auto* test = getComponentFor(entity_id);
     if (!test) return false;
 
     return test->passed_threshold;
 }
 
 std::string EntityStressTestSystem::getPhase(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* test = entity->getComponent<components::EntityStressTest>();
+    const auto* test = getComponentFor(entity_id);
     if (!test) return "";
 
     using SP = components::EntityStressTest::StressPhase;

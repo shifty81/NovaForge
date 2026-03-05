@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_ATLAS_UI_PANEL_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_ATLAS_UI_PANEL_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/ui_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages dockable UI panels (inventory, fitting, market, overview,
  * chat, drone) with item management, filtering, and sorting.
  */
-class AtlasUIPanelSystem : public ecs::System {
+class AtlasUIPanelSystem : public ecs::SingleComponentSystem<components::AtlasUIPanel> {
 public:
     explicit AtlasUIPanelSystem(ecs::World* world);
     ~AtlasUIPanelSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "AtlasUIPanelSystem"; }
 
     // Initialization
@@ -45,6 +44,9 @@ public:
     std::string getPanelType(const std::string& entity_id) const;
     bool isOpen(const std::string& entity_id) const;
     int getItemCount(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::AtlasUIPanel& panel, float delta_time) override;
 };
 
 } // namespace systems
