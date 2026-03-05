@@ -7,45 +7,39 @@ namespace atlas {
 namespace systems {
 
 ModuleSystem::ModuleSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ModuleSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::ModuleRack>();
+void ModuleSystem::updateComponent(ecs::Entity& entity, components::ModuleRack& rack, float delta_time) {
+    auto* cap = entity.getComponent<components::Capacitor>();
 
-    for (auto* entity : entities) {
-        auto* rack = entity->getComponent<components::ModuleRack>();
-        auto* cap = entity->getComponent<components::Capacitor>();
-        if (!rack) continue;
+    auto processSlots = [&](std::vector<components::ModuleRack::FittedModule>& slots) {
+        for (auto& mod : slots) {
+            if (!mod.active) continue;
 
-        auto processSlots = [&](std::vector<components::ModuleRack::FittedModule>& slots) {
-            for (auto& mod : slots) {
-                if (!mod.active) continue;
+            mod.cycle_progress += delta_time / mod.cycle_time;
 
-                mod.cycle_progress += delta_time / mod.cycle_time;
+            // Check cycle completion
+            if (mod.cycle_progress >= 1.0f) {
+                mod.cycle_progress -= 1.0f;
 
-                // Check cycle completion
-                if (mod.cycle_progress >= 1.0f) {
-                    mod.cycle_progress -= 1.0f;
-
-                    // Consume capacitor
-                    if (cap && mod.capacitor_cost > 0.0f) {
-                        if (cap->capacitor >= mod.capacitor_cost) {
-                            cap->capacitor -= mod.capacitor_cost;
-                        } else {
-                            // Not enough capacitor — deactivate
-                            mod.active = false;
-                            mod.cycle_progress = 0.0f;
-                        }
+                // Consume capacitor
+                if (cap && mod.capacitor_cost > 0.0f) {
+                    if (cap->capacitor >= mod.capacitor_cost) {
+                        cap->capacitor -= mod.capacitor_cost;
+                    } else {
+                        // Not enough capacitor — deactivate
+                        mod.active = false;
+                        mod.cycle_progress = 0.0f;
                     }
                 }
             }
-        };
+        }
+    };
 
-        processSlots(rack->high_slots);
-        processSlots(rack->mid_slots);
-        processSlots(rack->low_slots);
-    }
+    processSlots(rack.high_slots);
+    processSlots(rack.mid_slots);
+    processSlots(rack.low_slots);
 }
 
 static std::vector<components::ModuleRack::FittedModule>*
@@ -62,7 +56,7 @@ bool ModuleSystem::toggleModule(const std::string& entity_id,
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
 
-    auto* rack = entity->getComponent<components::ModuleRack>();
+    auto* rack = getComponentFor(entity_id);
     if (!rack) return false;
 
     auto* slots = getSlots(rack, slot_type);
@@ -89,7 +83,7 @@ bool ModuleSystem::activateModule(const std::string& entity_id,
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
 
-    auto* rack = entity->getComponent<components::ModuleRack>();
+    auto* rack = getComponentFor(entity_id);
     if (!rack) return false;
 
     auto* slots = getSlots(rack, slot_type);
@@ -110,10 +104,7 @@ bool ModuleSystem::activateModule(const std::string& entity_id,
 bool ModuleSystem::deactivateModule(const std::string& entity_id,
                                      const std::string& slot_type,
                                      int slot_index) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* rack = entity->getComponent<components::ModuleRack>();
+    auto* rack = getComponentFor(entity_id);
     if (!rack) return false;
 
     auto* slots = getSlots(rack, slot_type);
@@ -132,7 +123,7 @@ bool ModuleSystem::validateFitting(const std::string& entity_id) {
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
 
-    auto* rack = entity->getComponent<components::ModuleRack>();
+    auto* rack = getComponentFor(entity_id);
     auto* ship = entity->getComponent<components::Ship>();
     if (!rack || !ship) return false;
 

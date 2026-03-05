@@ -1,18 +1,18 @@
 #ifndef NOVAFORGE_SYSTEMS_CHAT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_CHAT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
 namespace systems {
 
-class ChatSystem : public ecs::System {
+class ChatSystem : public ecs::SingleComponentSystem<components::ChatChannel> {
 public:
     explicit ChatSystem(ecs::World* world);
     ~ChatSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ChatSystem"; }
 
     // Channel management
@@ -47,6 +47,9 @@ public:
     int getMemberCount(const std::string& channel_entity_id);
     bool isMember(const std::string& channel_entity_id,
                   const std::string& player_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ChatChannel& channel, float delta_time) override;
 
 private:
     int message_counter_ = 0;

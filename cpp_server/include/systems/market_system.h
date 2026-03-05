@@ -1,19 +1,19 @@
 #ifndef NOVAFORGE_SYSTEMS_MARKET_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MARKET_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <vector>
 
 namespace atlas {
 namespace systems {
 
-class MarketSystem : public ecs::System {
+class MarketSystem : public ecs::SingleComponentSystem<components::MarketHub> {
 public:
     explicit MarketSystem(ecs::World* world);
     ~MarketSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "MarketSystem"; }
 
     /**
@@ -76,6 +76,9 @@ public:
      * @return number of NPC orders created
      */
     int seedNPCOrders(const std::string& station_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::MarketHub& hub, float delta_time) override;
 
 private:
     int order_counter_ = 0;

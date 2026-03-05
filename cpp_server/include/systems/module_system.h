@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_MODULE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_MODULE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -16,12 +17,11 @@ namespace systems {
  *  - Deactivates modules when capacitor is empty
  *  - Applies module effects to ship stats
  */
-class ModuleSystem : public ecs::System {
+class ModuleSystem : public ecs::SingleComponentSystem<components::ModuleRack> {
 public:
     explicit ModuleSystem(ecs::World* world);
     ~ModuleSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "ModuleSystem"; }
 
     /**
@@ -53,6 +53,9 @@ public:
      * @return true if fitting is valid
      */
     bool validateFitting(const std::string& entity_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::ModuleRack& rack, float delta_time) override;
 };
 
 } // namespace systems

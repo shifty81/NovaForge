@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_NPC_BEHAVIOR_TREE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_NPC_BEHAVIOR_TREE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -24,12 +24,11 @@ namespace systems {
  *   Pirate  Hunt  intent → SearchTargets → Approach → Engage → Loot → Idle
  *   Patrol  Patrol intent → PickWaypoint → TravelTo → ScanArea → PickWaypoint
  */
-class NPCBehaviorTreeSystem : public ecs::System {
+class NPCBehaviorTreeSystem : public ecs::SingleComponentSystem<components::NPCBehaviorState> {
 public:
     explicit NPCBehaviorTreeSystem(ecs::World* world);
     ~NPCBehaviorTreeSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "NPCBehaviorTreeSystem"; }
 
     // --- Query API ---
@@ -50,6 +49,9 @@ public:
     static std::vector<std::string> getPhasesForIntent(
         components::SimNPCIntent::Archetype archetype,
         components::SimNPCIntent::Intent intent);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::NPCBehaviorState& behavior, float delta_time) override;
 
 private:
     void tickBehavior(ecs::Entity* entity,
