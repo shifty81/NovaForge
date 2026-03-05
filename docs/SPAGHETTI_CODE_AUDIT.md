@@ -241,6 +241,22 @@ All 6415 tests passing. Total migrated: 67 systems.
 
 All 6415 tests passing. Total migrated: 77 systems.
 
+#### Step 2.5 (batch 7): Migrate 10 more systems to template bases ✅
+
+**→ SingleComponentSystem\<C\>**:
+- `RumorQuestlineSystem` → `SingleComponentSystem<components::RumorLog>`
+- `MenuSystem` → `SingleComponentSystem<components::MenuState>`
+- `CaptainTransferSystem` → `SingleComponentSystem<components::CaptainTransferRequest>`
+- `NPCReroutingSystem` → `SingleComponentSystem<components::NPCRouteState>`
+- `TurretAISystem` → `SingleComponentSystem<components::TurretAIState>`
+- `SecurityResponseSystem` → `SingleComponentSystem<components::SecurityResponseState>`
+- `AmbientTrafficSystem` → `SingleComponentSystem<components::AmbientTrafficState>`
+- `SupplyDemandSystem` → `SingleComponentSystem<components::SupplyDemand>`
+- `InterestManagementPrioritySystem` → `SingleComponentSystem<components::InterestPriority>`
+- `InformationPropagationSystem` → `SingleComponentSystem<components::InformationPropagation>`
+
+All 6415 tests passing. Total migrated: 87 systems.
+
 ### Remaining Remediation Plan
 
 | Step | Action | Status |
@@ -249,7 +265,7 @@ All 6415 tests passing. Total migrated: 77 systems.
 | 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
 | 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | ✅ Complete |
 | 2.4 | Migrate 20–30 simplest systems to template bases | ✅ Complete (28 of ~30 done) |
-| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (77 total, batch 6 done) |
+| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (87 total, batch 7 done) |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
 
@@ -353,7 +369,7 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | GameSession forward declarations | 15+ | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
 | Template base classes | 3 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`, `RechargeSystem<C>`) | 3 |
-| Systems migrated to templates | 77 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`, `Skill`, `FleetMorale`, `FleetCargo`, `AsteroidBelt`, `FleetChatter`, `Anomaly`, `Autopilot`, `CargoScan`, `PvPToggle`, `ShipCapabilityRating`, `Bounty`, `StationNews`, `RigLocker`, `RoverBayRamp`, `RoverInterior`, `StationHangar`, `BikeGarage`, `Drone`, `ContractAuction`, `Terraforming`, `LavatoryInteraction`, `ModuleCascadingFailure`, `RestStation`, `SpacePlanetTransition`, `MythBoss`, `WarpAnomaly`, `CaptainBackground`, `CaptainMemory`, `CaptainPersonality`, `CaptainDeparture`, `Legend`, `FleetHistory`, `LoyaltyPointStore`, `NavigationBookmark`, `DifficultyScaling`, `Leaderboard`, `ClientPrediction`, `CrewActivity`, `FPSCharacterController`, `EmotionalArc`, `CrewTraining`, `RumorPropagation`, `HangarEnvironment`, `FleetSupplyLine`, `BlackMarket`, `ViewModeTransition`, `AncientAIRemnant`, `CommanderDisagreement`, `AncientModuleDiscovery`) | 164 |
+| Systems migrated to templates | 87 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`, `Skill`, `FleetMorale`, `FleetCargo`, `AsteroidBelt`, `FleetChatter`, `Anomaly`, `Autopilot`, `CargoScan`, `PvPToggle`, `ShipCapabilityRating`, `Bounty`, `StationNews`, `RigLocker`, `RoverBayRamp`, `RoverInterior`, `StationHangar`, `BikeGarage`, `Drone`, `ContractAuction`, `Terraforming`, `LavatoryInteraction`, `ModuleCascadingFailure`, `RestStation`, `SpacePlanetTransition`, `MythBoss`, `WarpAnomaly`, `CaptainBackground`, `CaptainMemory`, `CaptainPersonality`, `CaptainDeparture`, `Legend`, `FleetHistory`, `LoyaltyPointStore`, `NavigationBookmark`, `DifficultyScaling`, `Leaderboard`, `ClientPrediction`, `CrewActivity`, `FPSCharacterController`, `EmotionalArc`, `CrewTraining`, `RumorPropagation`, `HangarEnvironment`, `FleetSupplyLine`, `BlackMarket`, `ViewModeTransition`, `AncientAIRemnant`, `CommanderDisagreement`, `AncientModuleDiscovery`, `RumorQuestline`, `Menu`, `CaptainTransfer`, `NPCRerouting`, `TurretAI`, `SecurityResponse`, `AmbientTraffic`, `SupplyDemand`, `InterestManagementPriority`, `InformationPropagation`) | 164 |
 
 ---
 
@@ -381,4 +397,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Phase 2 step 2.5 (batch 4) completed: March 4, 2026 — CaptainBackgroundSystem, CaptainMemorySystem, CaptainPersonalitySystem, CaptainDepartureSystem (StateMachineSystem), LegendSystem, FleetHistorySystem, LoyaltyPointStoreSystem, NavigationBookmarkSystem, DifficultyScalingSystem, LeaderboardSystem migrated (64 total)*
 *Phase 2 step 2.5 (batch 5) completed: March 4, 2026 — ClientPredictionSystem, CrewActivitySystem, FPSCharacterControllerSystem migrated (67 total)*
 *Phase 2 step 2.5 (batch 6) completed: March 4, 2026 — EmotionalArcSystem, CrewTrainingSystem, RumorPropagationSystem, HangarEnvironmentSystem, FleetSupplyLineSystem, BlackMarketSystem, ViewModeTransitionSystem (StateMachineSystem), AncientAIRemnantSystem, CommanderDisagreementSystem, AncientModuleDiscoverySystem migrated (77 total)*
+*Phase 2 step 2.5 (batch 7) completed: March 5, 2026 — RumorQuestlineSystem, MenuSystem, CaptainTransferSystem, NPCReroutingSystem, TurretAISystem, SecurityResponseSystem, AmbientTrafficSystem, SupplyDemandSystem, InterestManagementPrioritySystem, InformationPropagationSystem migrated (87 total)*
 *Next review: After Phase 2 (system template bases) completion*
