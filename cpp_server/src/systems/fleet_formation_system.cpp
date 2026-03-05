@@ -8,11 +8,23 @@ namespace atlas {
 namespace systems {
 
 FleetFormationSystem::FleetFormationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FleetFormationSystem::update(float /*delta_time*/) {
-    computeOffsets();
+void FleetFormationSystem::updateComponent(ecs::Entity& entity, components::FleetFormation& form, float /*delta_time*/) {
+    using FT = components::FleetFormation::FormationType;
+    switch (form.formation) {
+        case FT::Arrow:   computeArrow(&form);   break;
+        case FT::Line:    computeLine(&form);     break;
+        case FT::Wedge:   computeWedge(&form);    break;
+        case FT::Spread:  computeSpread(&form);   break;
+        case FT::Diamond: computeDiamond(&form);  break;
+        default:
+            form.offset_x = 0.0f;
+            form.offset_y = 0.0f;
+            form.offset_z = 0.0f;
+            break;
+    }
 }
 
 void FleetFormationSystem::setFormation(
@@ -35,43 +47,19 @@ void FleetFormationSystem::setFormation(
 
 components::FleetFormation::FormationType
 FleetFormationSystem::getFormation(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return components::FleetFormation::FormationType::None;
-
-    auto* form = entity->getComponent<components::FleetFormation>();
+    auto* form = getComponentFor(entity_id);
     if (!form) return components::FleetFormation::FormationType::None;
 
     return form->formation;
 }
 
 void FleetFormationSystem::computeOffsets() {
-    auto entities = world_->getEntities<components::FleetFormation>();
-    for (auto* entity : entities) {
-        auto* form = entity->getComponent<components::FleetFormation>();
-        if (!form) continue;
-
-        using FT = components::FleetFormation::FormationType;
-        switch (form->formation) {
-            case FT::Arrow:   computeArrow(form);   break;
-            case FT::Line:    computeLine(form);     break;
-            case FT::Wedge:   computeWedge(form);    break;
-            case FT::Spread:  computeSpread(form);   break;
-            case FT::Diamond: computeDiamond(form);  break;
-            default:
-                form->offset_x = 0.0f;
-                form->offset_y = 0.0f;
-                form->offset_z = 0.0f;
-                break;
-        }
-    }
+    update(0.0f);
 }
 
 bool FleetFormationSystem::getOffset(const std::string& entity_id,
                                      float& ox, float& oy, float& oz) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* form = entity->getComponent<components::FleetFormation>();
+    auto* form = getComponentFor(entity_id);
     if (!form) return false;
 
     ox = form->offset_x;

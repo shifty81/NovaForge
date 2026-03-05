@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_DYNAMIC_EVENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_DYNAMIC_EVENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Manages dynamic world events with duration-based lifecycles, intensity
  * scaling, participant tracking, and reward pool accumulation.
  */
-class DynamicEventSystem : public ecs::System {
+class DynamicEventSystem : public ecs::SingleComponentSystem<components::DynamicEvent> {
 public:
     explicit DynamicEventSystem(ecs::World* world);
     ~DynamicEventSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "DynamicEventSystem"; }
 
     bool createEventManager(const std::string& entity_id);
@@ -38,6 +38,9 @@ public:
     int getTotalCompleted(const std::string& entity_id) const;
     float getElapsedTime(const std::string& entity_id, const std::string& event_id) const;
     bool cancelEvent(const std::string& entity_id, const std::string& event_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::DynamicEvent& comp, float delta_time) override;
 };
 
 } // namespace systems

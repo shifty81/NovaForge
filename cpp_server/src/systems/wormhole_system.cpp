@@ -7,30 +7,22 @@ namespace atlas {
 namespace systems {
 
 WormholeSystem::WormholeSystem(ecs::World* world)
-    : ecs::System(world) {}
+    : SingleComponentSystem(world) {}
 
-void WormholeSystem::update(float delta_time) {
+void WormholeSystem::updateComponent(ecs::Entity& entity, components::WormholeConnection& wh, float delta_time) {
+    if (wh.collapsed) return;
+
     float delta_hours = delta_time / 3600.0f;
+    wh.elapsed_hours += delta_hours;
 
-    auto entities = world_->getEntities();
-    for (auto* entity : entities) {
-        auto* wh = entity->getComponent<components::WormholeConnection>();
-        if (!wh || wh->collapsed) continue;
-
-        wh->elapsed_hours += delta_hours;
-
-        // Collapse if lifetime exceeded or mass depleted
-        if (wh->elapsed_hours >= wh->max_lifetime_hours || wh->remaining_mass <= 0.0) {
-            wh->collapsed = true;
-        }
+    // Collapse if lifetime exceeded or mass depleted
+    if (wh.elapsed_hours >= wh.max_lifetime_hours || wh.remaining_mass <= 0.0) {
+        wh.collapsed = true;
     }
 }
 
 bool WormholeSystem::jumpThroughWormhole(const std::string& wormhole_entity_id, double ship_mass) {
-    auto* entity = world_->getEntity(wormhole_entity_id);
-    if (!entity) return false;
-
-    auto* wh = entity->getComponent<components::WormholeConnection>();
+    auto* wh = getComponentFor(wormhole_entity_id);
     if (!wh || wh->collapsed) return false;
 
     // Check single-ship mass limit
@@ -51,30 +43,21 @@ bool WormholeSystem::jumpThroughWormhole(const std::string& wormhole_entity_id, 
 }
 
 bool WormholeSystem::isWormholeStable(const std::string& wormhole_entity_id) const {
-    auto* entity = world_->getEntity(wormhole_entity_id);
-    if (!entity) return false;
-
-    auto* wh = entity->getComponent<components::WormholeConnection>();
+    auto* wh = getComponentFor(wormhole_entity_id);
     if (!wh) return false;
 
     return wh->isStable();
 }
 
 float WormholeSystem::getRemainingMassFraction(const std::string& wormhole_entity_id) const {
-    auto* entity = world_->getEntity(wormhole_entity_id);
-    if (!entity) return -1.0f;
-
-    auto* wh = entity->getComponent<components::WormholeConnection>();
+    auto* wh = getComponentFor(wormhole_entity_id);
     if (!wh || wh->max_mass <= 0.0) return -1.0f;
 
     return static_cast<float>(wh->remaining_mass / wh->max_mass);
 }
 
 float WormholeSystem::getRemainingLifetimeFraction(const std::string& wormhole_entity_id) const {
-    auto* entity = world_->getEntity(wormhole_entity_id);
-    if (!entity) return -1.0f;
-
-    auto* wh = entity->getComponent<components::WormholeConnection>();
+    auto* wh = getComponentFor(wormhole_entity_id);
     if (!wh || wh->max_lifetime_hours <= 0.0f) return -1.0f;
 
     float remaining = wh->max_lifetime_hours - wh->elapsed_hours;

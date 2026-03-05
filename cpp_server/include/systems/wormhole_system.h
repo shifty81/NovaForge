@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WORMHOLE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WORMHOLE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include "data/wormhole_database.h"
 #include <string>
 
@@ -14,12 +15,11 @@ namespace systems {
  * Each tick the system ages every WormholeConnection entity and collapses
  * any that exceed their lifetime or have their remaining mass depleted.
  */
-class WormholeSystem : public ecs::System {
+class WormholeSystem : public ecs::SingleComponentSystem<components::WormholeConnection> {
 public:
     explicit WormholeSystem(ecs::World* world);
     ~WormholeSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WormholeSystem"; }
 
     /**
@@ -46,6 +46,9 @@ public:
      * @return fraction, or -1.0 if entity not found
      */
     float getRemainingLifetimeFraction(const std::string& wormhole_entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WormholeConnection& comp, float delta_time) override;
 };
 
 } // namespace systems

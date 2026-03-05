@@ -6,22 +6,17 @@ namespace atlas {
 namespace systems {
 
 ContractSystem::ContractSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void ContractSystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* board = entity->getComponent<components::ContractBoard>();
-        if (!board) continue;
-
-        for (auto& contract : board->contracts) {
-            if (contract.status != "outstanding") continue;
-            if (contract.duration_remaining > 0.0f) {
-                contract.duration_remaining -= delta_time;
-                if (contract.duration_remaining <= 0.0f) {
-                    contract.duration_remaining = 0.0f;
-                    contract.status = "expired";
-                }
+void ContractSystem::updateComponent(ecs::Entity& entity, components::ContractBoard& board, float delta_time) {
+    for (auto& contract : board.contracts) {
+        if (contract.status != "outstanding") continue;
+        if (contract.duration_remaining > 0.0f) {
+            contract.duration_remaining -= delta_time;
+            if (contract.duration_remaining <= 0.0f) {
+                contract.duration_remaining = 0.0f;
+                contract.status = "expired";
             }
         }
     }
@@ -32,10 +27,7 @@ bool ContractSystem::createContract(const std::string& board_entity_id,
                                     const std::string& type,
                                     double isk_reward,
                                     float duration_seconds) {
-    auto* entity = world_->getEntity(board_entity_id);
-    if (!entity) return false;
-
-    auto* board = entity->getComponent<components::ContractBoard>();
+    auto* board = getComponentFor(board_entity_id);
     if (!board) return false;
 
     components::ContractBoard::Contract contract;
@@ -53,10 +45,7 @@ bool ContractSystem::createContract(const std::string& board_entity_id,
 bool ContractSystem::acceptContract(const std::string& board_entity_id,
                                     const std::string& contract_id,
                                     const std::string& acceptor_id) {
-    auto* entity = world_->getEntity(board_entity_id);
-    if (!entity) return false;
-
-    auto* board = entity->getComponent<components::ContractBoard>();
+    auto* board = getComponentFor(board_entity_id);
     if (!board) return false;
 
     for (auto& contract : board->contracts) {
@@ -72,10 +61,7 @@ bool ContractSystem::acceptContract(const std::string& board_entity_id,
 
 bool ContractSystem::completeContract(const std::string& board_entity_id,
                                       const std::string& contract_id) {
-    auto* entity = world_->getEntity(board_entity_id);
-    if (!entity) return false;
-
-    auto* board = entity->getComponent<components::ContractBoard>();
+    auto* board = getComponentFor(board_entity_id);
     if (!board) return false;
 
     for (auto& contract : board->contracts) {
@@ -99,10 +85,7 @@ bool ContractSystem::completeContract(const std::string& board_entity_id,
 }
 
 int ContractSystem::getActiveContractCount(const std::string& board_entity_id) {
-    auto* entity = world_->getEntity(board_entity_id);
-    if (!entity) return 0;
-
-    auto* board = entity->getComponent<components::ContractBoard>();
+    auto* board = getComponentFor(board_entity_id);
     if (!board) return 0;
 
     int count = 0;
@@ -115,10 +98,7 @@ int ContractSystem::getActiveContractCount(const std::string& board_entity_id) {
 
 int ContractSystem::getContractsByStatus(const std::string& board_entity_id,
                                          const std::string& status) {
-    auto* entity = world_->getEntity(board_entity_id);
-    if (!entity) return 0;
-
-    auto* board = entity->getComponent<components::ContractBoard>();
+    auto* board = getComponentFor(board_entity_id);
     if (!board) return 0;
 
     int count = 0;

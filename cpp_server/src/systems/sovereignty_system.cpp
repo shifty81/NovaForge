@@ -7,32 +7,28 @@ namespace atlas {
 namespace systems {
 
 SovereigntySystem::SovereigntySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void SovereigntySystem::update(float delta_time) {
+void SovereigntySystem::updateComponent(ecs::Entity& entity, components::Sovereignty& sov, float delta_time) {
     float dt_hours = delta_time / 3600.0f;
-    for (auto* entity : world_->getAllEntities()) {
-        auto* sov = entity->getComponent<components::Sovereignty>();
-        if (!sov) continue;
 
-        if (sov->is_contested) {
-            // Decay control level slowly
-            sov->control_level -= 0.01f * dt_hours;
-            if (sov->control_level < 0.0f) sov->control_level = 0.0f;
-        } else {
-            // Increase control level toward 1.0
-            sov->control_level += 0.01f * dt_hours;
-            if (sov->control_level > 1.0f) sov->control_level = 1.0f;
-        }
-
-        // Decay indices slowly
-        sov->military_index -= 0.005f * dt_hours;
-        if (sov->military_index < 0.0f) sov->military_index = 0.0f;
-
-        sov->industrial_index -= 0.005f * dt_hours;
-        if (sov->industrial_index < 0.0f) sov->industrial_index = 0.0f;
+    if (sov.is_contested) {
+        // Decay control level slowly
+        sov.control_level -= 0.01f * dt_hours;
+        if (sov.control_level < 0.0f) sov.control_level = 0.0f;
+    } else {
+        // Increase control level toward 1.0
+        sov.control_level += 0.01f * dt_hours;
+        if (sov.control_level > 1.0f) sov.control_level = 1.0f;
     }
+
+    // Decay indices slowly
+    sov.military_index -= 0.005f * dt_hours;
+    if (sov.military_index < 0.0f) sov.military_index = 0.0f;
+
+    sov.industrial_index -= 0.005f * dt_hours;
+    if (sov.industrial_index < 0.0f) sov.industrial_index = 0.0f;
 }
 
 bool SovereigntySystem::claimSovereignty(const std::string& system_entity_id,
@@ -68,10 +64,7 @@ bool SovereigntySystem::claimSovereignty(const std::string& system_entity_id,
 
 bool SovereigntySystem::relinquishSovereignty(const std::string& system_entity_id,
                                               const std::string& requester_id) {
-    auto* entity = world_->getEntity(system_entity_id);
-    if (!entity) return false;
-
-    auto* sov = entity->getComponent<components::Sovereignty>();
+    auto* sov = getComponentFor(system_entity_id);
     if (!sov) return false;
 
     if (sov->owner_id != requester_id) return false;
@@ -82,10 +75,7 @@ bool SovereigntySystem::relinquishSovereignty(const std::string& system_entity_i
 }
 
 bool SovereigntySystem::contestSovereignty(const std::string& system_entity_id) {
-    auto* entity = world_->getEntity(system_entity_id);
-    if (!entity) return false;
-
-    auto* sov = entity->getComponent<components::Sovereignty>();
+    auto* sov = getComponentFor(system_entity_id);
     if (!sov) return false;
 
     sov->is_contested = true;
@@ -95,10 +85,7 @@ bool SovereigntySystem::contestSovereignty(const std::string& system_entity_id) 
 bool SovereigntySystem::updateIndices(const std::string& system_entity_id,
                                       float military_delta,
                                       float industrial_delta) {
-    auto* entity = world_->getEntity(system_entity_id);
-    if (!entity) return false;
-
-    auto* sov = entity->getComponent<components::Sovereignty>();
+    auto* sov = getComponentFor(system_entity_id);
     if (!sov) return false;
 
     sov->military_index += military_delta;
@@ -113,20 +100,14 @@ bool SovereigntySystem::updateIndices(const std::string& system_entity_id,
 }
 
 float SovereigntySystem::getControlLevel(const std::string& system_entity_id) {
-    auto* entity = world_->getEntity(system_entity_id);
-    if (!entity) return 0.0f;
-
-    auto* sov = entity->getComponent<components::Sovereignty>();
+    auto* sov = getComponentFor(system_entity_id);
     if (!sov) return 0.0f;
 
     return sov->control_level;
 }
 
 std::string SovereigntySystem::getOwner(const std::string& system_entity_id) {
-    auto* entity = world_->getEntity(system_entity_id);
-    if (!entity) return "";
-
-    auto* sov = entity->getComponent<components::Sovereignty>();
+    auto* sov = getComponentFor(system_entity_id);
     if (!sov) return "";
 
     return sov->owner_id;
@@ -134,10 +115,7 @@ std::string SovereigntySystem::getOwner(const std::string& system_entity_id) {
 
 bool SovereigntySystem::upgradeInfrastructure(const std::string& system_entity_id,
                                               const std::string& requester_id) {
-    auto* entity = world_->getEntity(system_entity_id);
-    if (!entity) return false;
-
-    auto* sov = entity->getComponent<components::Sovereignty>();
+    auto* sov = getComponentFor(system_entity_id);
     if (!sov) return false;
 
     if (sov->owner_id != requester_id) return false;

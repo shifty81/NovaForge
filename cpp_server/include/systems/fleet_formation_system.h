@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_FORMATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_FORMATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +16,11 @@ namespace systems {
  * offset relative to the fleet commander based on the active formation
  * type and their slot index.
  */
-class FleetFormationSystem : public ecs::System {
+class FleetFormationSystem : public ecs::SingleComponentSystem<components::FleetFormation> {
 public:
     explicit FleetFormationSystem(ecs::World* world);
     ~FleetFormationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetFormationSystem"; }
 
     /**
@@ -73,6 +72,9 @@ public:
      * @brief Spacing between formation slots in metres
      */
     static constexpr float kDefaultSpacing = 500.0f;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetFormation& comp, float delta_time) override;
 
 private:
     void computeArrow(components::FleetFormation* f);
