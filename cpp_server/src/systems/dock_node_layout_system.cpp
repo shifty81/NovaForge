@@ -1,6 +1,5 @@
 #include "systems/dock_node_layout_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
 #include <algorithm>
 #include <cmath>
 
@@ -8,7 +7,7 @@ namespace atlas {
 namespace systems {
 
 DockNodeLayoutSystem::DockNodeLayoutSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
 std::string DockNodeLayoutSystem::generateNodeId(components::DockNodeLayout* layout) {
@@ -54,16 +53,10 @@ void DockNodeLayoutSystem::recalculateLayout(components::DockNodeLayout* layout,
     }
 }
 
-void DockNodeLayoutSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::DockNodeLayout>();
-    for (auto* entity : entities) {
-        auto* layout = entity->getComponent<components::DockNodeLayout>();
-        if (!layout) continue;
-
-        auto* root = layout->findNode(layout->root_node_id);
-        if (root) {
-            recalculateLayout(layout, root);
-        }
+void DockNodeLayoutSystem::updateComponent(ecs::Entity& /*entity*/, components::DockNodeLayout& layout, float /*delta_time*/) {
+    auto* root = layout.findNode(layout.root_node_id);
+    if (root) {
+        recalculateLayout(&layout, root);
     }
 }
 
@@ -97,10 +90,7 @@ bool DockNodeLayoutSystem::initializeLayout(const std::string& entity_id,
 
 bool DockNodeLayoutSystem::addWindow(const std::string& entity_id,
                                       const std::string& window_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    auto* layout = getComponentFor(entity_id);
     if (!layout) return false;
 
     if (layout->countLeaves() >= layout->max_windows) return false;
@@ -126,7 +116,7 @@ bool DockNodeLayoutSystem::addWindow(const std::string& entity_id,
             splitNode(entity_id, target_id,
                       components::DockNodeLayout::SplitDirection::Horizontal, 0.5f);
             // Now find the new empty leaf and assign window
-            auto* lay = entity->getComponent<components::DockNodeLayout>();
+            auto* lay = getComponentFor(entity_id);
             auto* split = lay->findNode(target_id);
             if (split) {
                 auto* right = lay->findNode(split->right_child_id);
@@ -145,10 +135,7 @@ bool DockNodeLayoutSystem::addWindow(const std::string& entity_id,
 
 bool DockNodeLayoutSystem::removeWindow(const std::string& entity_id,
                                          const std::string& window_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    auto* layout = getComponentFor(entity_id);
     if (!layout) return false;
 
     for (auto& node : layout->nodes) {
@@ -165,10 +152,7 @@ bool DockNodeLayoutSystem::splitNode(const std::string& entity_id,
                                       const std::string& node_id,
                                       components::DockNodeLayout::SplitDirection direction,
                                       float ratio) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    auto* layout = getComponentFor(entity_id);
     if (!layout) return false;
 
     auto* node = layout->findNode(node_id);
@@ -211,10 +195,7 @@ bool DockNodeLayoutSystem::splitNode(const std::string& entity_id,
 }
 
 int DockNodeLayoutSystem::getWindowCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    const auto* layout = getComponentFor(entity_id);
     if (!layout) return 0;
 
     return layout->countLeaves();
@@ -222,10 +203,7 @@ int DockNodeLayoutSystem::getWindowCount(const std::string& entity_id) const {
 
 std::string DockNodeLayoutSystem::getNodeType(const std::string& entity_id,
                                                const std::string& node_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "unknown";
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    const auto* layout = getComponentFor(entity_id);
     if (!layout) return "unknown";
 
     const auto* node = layout->findNode(node_id);
@@ -244,10 +222,7 @@ bool DockNodeLayoutSystem::dockWindow(const std::string& entity_id,
                                        const std::string& window_id,
                                        const std::string& target_node_id,
                                        components::DockNodeLayout::SplitDirection direction) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    auto* layout = getComponentFor(entity_id);
     if (!layout) return false;
 
     if (layout->countLeaves() >= layout->max_windows) return false;
@@ -261,7 +236,7 @@ bool DockNodeLayoutSystem::dockWindow(const std::string& entity_id,
     if (!splitNode(entity_id, target_node_id, direction, 0.5f)) return false;
 
     // Re-fetch layout (splitNode may invalidate pointers)
-    layout = entity->getComponent<components::DockNodeLayout>();
+    layout = getComponentFor(entity_id);
     target = layout->findNode(target_node_id);
     if (!target) return false;
 
@@ -276,10 +251,7 @@ bool DockNodeLayoutSystem::dockWindow(const std::string& entity_id,
 
 bool DockNodeLayoutSystem::undockWindow(const std::string& entity_id,
                                          const std::string& window_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    auto* layout = getComponentFor(entity_id);
     if (!layout) return false;
 
     for (auto& node : layout->nodes) {
@@ -294,10 +266,7 @@ bool DockNodeLayoutSystem::undockWindow(const std::string& entity_id,
 
 std::tuple<float, float, float, float> DockNodeLayoutSystem::getWindowBounds(
         const std::string& entity_id, const std::string& window_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return std::make_tuple(0.0f, 0.0f, 0.0f, 0.0f);
-
-    auto* layout = entity->getComponent<components::DockNodeLayout>();
+    const auto* layout = getComponentFor(entity_id);
     if (!layout) return std::make_tuple(0.0f, 0.0f, 0.0f, 0.0f);
 
     for (const auto& node : layout->nodes) {

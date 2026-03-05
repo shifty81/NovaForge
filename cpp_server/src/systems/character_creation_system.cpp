@@ -1,8 +1,5 @@
 #include "systems/character_creation_system.h"
 #include "ecs/world.h"
-#include "ecs/entity.h"
-#include "components/game_components.h"
-#include <iostream>
 #include <algorithm>
 
 namespace atlas {
@@ -10,18 +7,13 @@ namespace systems {
 
 static constexpr int CLONE_JUMP_COOLDOWN_SECONDS = 86400;  // 24 hours
 
-CharacterCreationSystem::CharacterCreationSystem(ecs::World* world) : System(world) {}
+CharacterCreationSystem::CharacterCreationSystem(ecs::World* world) : SingleComponentSystem(world) {}
 
-void CharacterCreationSystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* sheet = entity->getComponent<components::CharacterSheet>();
-        if (!sheet) continue;
-
-        if (sheet->clone_jump_cooldown > 0) {
-            sheet->clone_jump_cooldown -= static_cast<int>(delta_time);
-            if (sheet->clone_jump_cooldown < 0) {
-                sheet->clone_jump_cooldown = 0;
-            }
+void CharacterCreationSystem::updateComponent(ecs::Entity& /*entity*/, components::CharacterSheet& sheet, float delta_time) {
+    if (sheet.clone_jump_cooldown > 0) {
+        sheet.clone_jump_cooldown -= static_cast<int>(delta_time);
+        if (sheet.clone_jump_cooldown < 0) {
+            sheet.clone_jump_cooldown = 0;
         }
     }
 }
@@ -32,10 +24,7 @@ bool CharacterCreationSystem::createCharacter(const std::string& entity_id,
                                               const std::string& bloodline,
                                               const std::string& ancestry,
                                               const std::string& gender) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     // Validate race
@@ -85,10 +74,7 @@ bool CharacterCreationSystem::installImplant(const std::string& entity_id,
                                              int slot,
                                              const std::string& attribute_bonus,
                                              int bonus_amount) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     // Validate slot range
@@ -111,10 +97,7 @@ bool CharacterCreationSystem::installImplant(const std::string& entity_id,
 }
 
 bool CharacterCreationSystem::removeImplant(const std::string& entity_id, int slot) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     for (auto it = sheet->implants.begin(); it != sheet->implants.end(); ++it) {
@@ -129,10 +112,7 @@ bool CharacterCreationSystem::removeImplant(const std::string& entity_id, int sl
 
 bool CharacterCreationSystem::setCloneGrade(const std::string& entity_id,
                                             const std::string& grade) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     if (grade != "foundry" && grade != "apex") return false;
@@ -143,10 +123,7 @@ bool CharacterCreationSystem::setCloneGrade(const std::string& entity_id,
 
 bool CharacterCreationSystem::setCloneLocation(const std::string& entity_id,
                                                const std::string& station_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     sheet->clone_location = station_id;
@@ -154,10 +131,7 @@ bool CharacterCreationSystem::setCloneLocation(const std::string& entity_id,
 }
 
 bool CharacterCreationSystem::jumpClone(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     if (sheet->clone_jump_cooldown > 0) return false;
@@ -168,20 +142,14 @@ bool CharacterCreationSystem::jumpClone(const std::string& entity_id) {
 
 int CharacterCreationSystem::getEffectiveAttribute(const std::string& entity_id,
                                                    const std::string& attribute) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return 0;
 
     return sheet->getEffectiveAttribute(attribute);
 }
 
 bool CharacterCreationSystem::modifySecurityStatus(const std::string& entity_id, float delta) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     sheet->security_status += delta;
@@ -195,10 +163,7 @@ bool CharacterCreationSystem::addEmploymentRecord(const std::string& entity_id,
                                                   const std::string& corp_id,
                                                   const std::string& corp_name,
                                                   float join_date) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-
-    auto* sheet = entity->getComponent<components::CharacterSheet>();
+    auto* sheet = getComponentFor(entity_id);
     if (!sheet) return false;
 
     components::CharacterSheet::EmploymentRecord record;
