@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_VISUAL_FEEDBACK_QUEUE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_VISUAL_FEEDBACK_QUEUE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -13,12 +14,11 @@ namespace systems {
  * Queues visual effects (damage numbers, shield ripples, heal indicators)
  * with priority and lifetime for client-side rendering.
  */
-class VisualFeedbackQueueSystem : public ecs::System {
+class VisualFeedbackQueueSystem : public ecs::SingleComponentSystem<components::VisualFeedbackQueue> {
 public:
     explicit VisualFeedbackQueueSystem(ecs::World* world);
     ~VisualFeedbackQueueSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "VisualFeedbackQueueSystem"; }
 
     bool createQueue(const std::string& entity_id);
@@ -30,6 +30,10 @@ public:
     int getHighestPriority(const std::string& entity_id) const;
     int getTotalQueued(const std::string& entity_id) const;
     int getTotalExpired(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::VisualFeedbackQueue& vfq,
+                         float delta_time) override;
 };
 
 } // namespace systems

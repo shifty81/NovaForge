@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FLEET_DOCTRINE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FLEET_DOCTRINE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/fleet_components.h"
 #include <string>
 #include <vector>
@@ -15,12 +15,11 @@ namespace systems {
  * Defines required ship classes, roles, and minimum fleet composition.
  * Tracks readiness based on how well the current fleet matches the doctrine.
  */
-class FleetDoctrineSystem : public ecs::System {
+class FleetDoctrineSystem : public ecs::SingleComponentSystem<components::FleetDoctrine> {
 public:
     explicit FleetDoctrineSystem(ecs::World* world);
     ~FleetDoctrineSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FleetDoctrineSystem"; }
 
     // Doctrine management
@@ -40,6 +39,10 @@ public:
     bool isReady(const std::string& entity_id) const;
     bool isLocked(const std::string& entity_id) const;
     std::string getDoctrineName(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FleetDoctrine& doctrine,
+                         float delta_time) override;
 };
 
 } // namespace systems

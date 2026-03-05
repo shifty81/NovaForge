@@ -8,7 +8,7 @@ namespace atlas {
 namespace systems {
 
 PlayerProgressionSystem::PlayerProgressionSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
 float PlayerProgressionSystem::xpForLevel(int level) {
@@ -16,61 +16,54 @@ float PlayerProgressionSystem::xpForLevel(int level) {
     return 100.0f * std::pow(static_cast<float>(level), 1.5f);
 }
 
-void PlayerProgressionSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::PlayerProgression>();
-    for (auto* entity : entities) {
-        auto* prog = entity->getComponent<components::PlayerProgression>();
-        if (!prog) continue;
+void PlayerProgressionSystem::updateComponent(ecs::Entity& /*entity*/,
+                                               components::PlayerProgression& prog,
+                                               float /*delta_time*/) {
+    // Recalculate total XP
+    prog.total_xp = prog.combat_xp + prog.mining_xp + prog.exploration_xp
+                    + prog.industry_xp + prog.social_xp;
 
-        // Recalculate total XP
-        prog->total_xp = prog->combat_xp + prog->mining_xp + prog->exploration_xp
-                        + prog->industry_xp + prog->social_xp;
-
-        // Level calculation: accumulate XP thresholds
-        float xp_accumulated = 0.0f;
-        int new_level = 1;
-        while (xp_accumulated + xpForLevel(new_level) <= prog->total_xp) {
-            xp_accumulated += xpForLevel(new_level);
-            new_level++;
-            if (new_level > 100) break; // cap at level 100
-        }
-        prog->level = new_level;
-
-        // Progress to next level
-        float xp_needed = xpForLevel(new_level);
-        float xp_into_level = prog->total_xp - xp_accumulated;
-        prog->xp_to_next_level = xp_needed;
-        prog->level_progress = (xp_needed > 0.0f)
-            ? std::clamp(xp_into_level / xp_needed, 0.0f, 1.0f)
-            : 0.0f;
-
-        // Check milestones
-        int achieved = 0;
-        for (auto& milestone : prog->milestones) {
-            if (!milestone.achieved) {
-                float cat_xp = 0.0f;
-                if (milestone.category == "combat") cat_xp = prog->combat_xp;
-                else if (milestone.category == "mining") cat_xp = prog->mining_xp;
-                else if (milestone.category == "exploration") cat_xp = prog->exploration_xp;
-                else if (milestone.category == "industry") cat_xp = prog->industry_xp;
-                else if (milestone.category == "social") cat_xp = prog->social_xp;
-                else cat_xp = prog->total_xp; // "total" or unknown category uses total
-
-                if (cat_xp >= milestone.xp_required) {
-                    milestone.achieved = true;
-                }
-            }
-            if (milestone.achieved) achieved++;
-        }
-        prog->milestones_achieved = achieved;
+    // Level calculation: accumulate XP thresholds
+    float xp_accumulated = 0.0f;
+    int new_level = 1;
+    while (xp_accumulated + xpForLevel(new_level) <= prog.total_xp) {
+        xp_accumulated += xpForLevel(new_level);
+        new_level++;
+        if (new_level > 100) break; // cap at level 100
     }
+    prog.level = new_level;
+
+    // Progress to next level
+    float xp_needed = xpForLevel(new_level);
+    float xp_into_level = prog.total_xp - xp_accumulated;
+    prog.xp_to_next_level = xp_needed;
+    prog.level_progress = (xp_needed > 0.0f)
+        ? std::clamp(xp_into_level / xp_needed, 0.0f, 1.0f)
+        : 0.0f;
+
+    // Check milestones
+    int achieved = 0;
+    for (auto& milestone : prog.milestones) {
+        if (!milestone.achieved) {
+            float cat_xp = 0.0f;
+            if (milestone.category == "combat") cat_xp = prog.combat_xp;
+            else if (milestone.category == "mining") cat_xp = prog.mining_xp;
+            else if (milestone.category == "exploration") cat_xp = prog.exploration_xp;
+            else if (milestone.category == "industry") cat_xp = prog.industry_xp;
+            else if (milestone.category == "social") cat_xp = prog.social_xp;
+            else cat_xp = prog.total_xp; // "total" or unknown category uses total
+
+            if (cat_xp >= milestone.xp_required) {
+                milestone.achieved = true;
+            }
+        }
+        if (milestone.achieved) achieved++;
+    }
+    prog.milestones_achieved = achieved;
 }
 
 bool PlayerProgressionSystem::awardXP(const std::string& player_id, const std::string& category, float amount) {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return false;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    auto* prog = getComponentFor(player_id);
     if (!prog) return false;
 
     float scaled_amount = amount * prog->prestige_multiplier;
@@ -98,10 +91,7 @@ bool PlayerProgressionSystem::initProgression(const std::string& player_id) {
 
 bool PlayerProgressionSystem::addMilestone(const std::string& player_id, const std::string& name,
                                             const std::string& category, float xp_required) {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return false;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    auto* prog = getComponentFor(player_id);
     if (!prog) return false;
 
     components::PlayerProgression::Milestone milestone;
@@ -114,10 +104,7 @@ bool PlayerProgressionSystem::addMilestone(const std::string& player_id, const s
 }
 
 bool PlayerProgressionSystem::prestige(const std::string& player_id) {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return false;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    auto* prog = getComponentFor(player_id);
     if (!prog) return false;
 
     // Must be at least level 50 to prestige
@@ -144,30 +131,21 @@ bool PlayerProgressionSystem::prestige(const std::string& player_id) {
 }
 
 int PlayerProgressionSystem::getLevel(const std::string& player_id) const {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return 0;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    const auto* prog = getComponentFor(player_id);
     if (!prog) return 0;
 
     return prog->level;
 }
 
 float PlayerProgressionSystem::getTotalXP(const std::string& player_id) const {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return 0.0f;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    const auto* prog = getComponentFor(player_id);
     if (!prog) return 0.0f;
 
     return prog->total_xp;
 }
 
 float PlayerProgressionSystem::getCategoryXP(const std::string& player_id, const std::string& category) const {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return 0.0f;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    const auto* prog = getComponentFor(player_id);
     if (!prog) return 0.0f;
 
     if (category == "combat") return prog->combat_xp;
@@ -179,40 +157,28 @@ float PlayerProgressionSystem::getCategoryXP(const std::string& player_id, const
 }
 
 float PlayerProgressionSystem::getLevelProgress(const std::string& player_id) const {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return 0.0f;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    const auto* prog = getComponentFor(player_id);
     if (!prog) return 0.0f;
 
     return prog->level_progress;
 }
 
 int PlayerProgressionSystem::getMilestonesAchieved(const std::string& player_id) const {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return 0;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    const auto* prog = getComponentFor(player_id);
     if (!prog) return 0;
 
     return prog->milestones_achieved;
 }
 
 int PlayerProgressionSystem::getPrestigeLevel(const std::string& player_id) const {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return 0;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    const auto* prog = getComponentFor(player_id);
     if (!prog) return 0;
 
     return prog->prestige_level;
 }
 
 float PlayerProgressionSystem::getPrestigeMultiplier(const std::string& player_id) const {
-    auto* entity = world_->getEntity(player_id);
-    if (!entity) return 1.0f;
-
-    auto* prog = entity->getComponent<components::PlayerProgression>();
+    const auto* prog = getComponentFor(player_id);
     if (!prog) return 1.0f;
 
     return prog->prestige_multiplier;
