@@ -290,6 +290,14 @@ set(CLIENT_SOURCES
     src/ui/atlas/atlas_renderer.cpp
     src/ui/atlas/atlas_context.cpp
     src/ui/atlas/atlas_widgets.cpp
+    src/ui/atlas/atlas_widgets_panels.cpp
+    src/ui/atlas/atlas_widgets_hud.cpp
+    src/ui/atlas/atlas_widgets_lists.cpp
+    src/ui/atlas/atlas_widgets_forms.cpp
+    src/ui/atlas/atlas_widgets_sidebar.cpp
+    src/ui/atlas/atlas_widgets_cards.cpp
+    src/ui/atlas/atlas_widgets_effects.cpp
+    src/ui/atlas/atlas_widgets_menus.cpp
     src/ui/atlas/atlas_hud.cpp
     src/ui/atlas/atlas_console.cpp
     src/ui/atlas/atlas_pause_menu.cpp
@@ -867,6 +875,14 @@ if(BUILD_TESTS)
         src/ui/atlas/atlas_renderer.cpp
         src/ui/atlas/atlas_context.cpp
         src/ui/atlas/atlas_widgets.cpp
+        src/ui/atlas/atlas_widgets_panels.cpp
+        src/ui/atlas/atlas_widgets_hud.cpp
+        src/ui/atlas/atlas_widgets_lists.cpp
+        src/ui/atlas/atlas_widgets_forms.cpp
+        src/ui/atlas/atlas_widgets_sidebar.cpp
+        src/ui/atlas/atlas_widgets_cards.cpp
+        src/ui/atlas/atlas_widgets_effects.cpp
+        src/ui/atlas/atlas_widgets_menus.cpp
         src/ui/atlas/atlas_hud.cpp
         src/ui/atlas/atlas_console.cpp
         src/ui/atlas/atlas_pause_menu.cpp
