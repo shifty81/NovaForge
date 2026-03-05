@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_SNAPSHOT_REPLICATION_SYSTEM2_H
 #define NOVAFORGE_SYSTEMS_SNAPSHOT_REPLICATION_SYSTEM2_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 #include <cstdint>
 
@@ -15,12 +16,11 @@ namespace systems {
  * computes delta snapshots between frames, tracks per-client acknowledgment,
  * and manages snapshot lifecycle for bandwidth-efficient state synchronization.
  */
-class SnapshotReplicationSystem2 : public ecs::System {
+class SnapshotReplicationSystem2 : public ecs::SingleComponentSystem<components::SnapshotReplication> {
 public:
     explicit SnapshotReplicationSystem2(ecs::World* world);
     ~SnapshotReplicationSystem2() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "SnapshotReplicationSystem2"; }
 
     bool initialize(const std::string& entity_id, const std::string& server_id);
@@ -37,6 +37,9 @@ public:
     int getClientCount(const std::string& entity_id) const;
     int getTotalSnapshotsSent(const std::string& entity_id) const;
     uint32_t getClientLastAck(const std::string& entity_id, const std::string& client_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::SnapshotReplication& sr, float delta_time) override;
 };
 
 } // namespace systems

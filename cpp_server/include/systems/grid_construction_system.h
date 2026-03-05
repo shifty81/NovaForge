@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_GRID_CONSTRUCTION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_GRID_CONSTRUCTION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/exploration_components.h"
 #include <string>
 
@@ -14,12 +14,11 @@ namespace systems {
  * Manages snappable grid-based construction for habitats with power
  * networking, structural integrity, and module placement.
  */
-class GridConstructionSystem : public ecs::System {
+class GridConstructionSystem : public ecs::SingleComponentSystem<components::GridConstruction> {
 public:
     explicit GridConstructionSystem(ecs::World* world);
     ~GridConstructionSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "GridConstructionSystem"; }
 
     // Initialization
@@ -47,6 +46,9 @@ public:
     float calculateIntegrity(const std::string& entity_id);
     float calculatePower(const std::string& entity_id);
     bool setPowerEnabled(const std::string& entity_id, bool enabled);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::GridConstruction& grid, float delta_time) override;
 };
 
 } // namespace systems

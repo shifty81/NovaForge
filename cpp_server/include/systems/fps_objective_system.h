@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_FPS_OBJECTIVE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_FPS_OBJECTIVE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -17,12 +17,11 @@ namespace systems {
  * sabotage, defend-the-point, and item retrieval.  Objectives advance
  * through Inactive → Active → Completed/Failed states.
  */
-class FPSObjectiveSystem : public ecs::System {
+class FPSObjectiveSystem : public ecs::SingleComponentSystem<components::FPSObjective> {
 public:
     explicit FPSObjectiveSystem(ecs::World* world);
     ~FPSObjectiveSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "FPSObjectiveSystem"; }
 
     // --- Setup ---
@@ -96,6 +95,9 @@ public:
     // --- Configuration for RetrieveItem / Sabotage ---
 
     bool setTargetItem(const std::string& objective_id, const std::string& item_id);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::FPSObjective& obj, float delta_time) override;
 };
 
 } // namespace systems

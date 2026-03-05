@@ -20,16 +20,12 @@ static const std::vector<std::string> VALID_ATTRIBUTES = {
 };
 
 CharacterCreationScreenSystem::CharacterCreationScreenSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void CharacterCreationScreenSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::CharacterCreationScreen>();
-    for (auto* entity : entities) {
-        auto* screen = entity->getComponent<components::CharacterCreationScreen>();
-        if (!screen || !screen->is_open) continue;
-        screen->time_open += delta_time;
-    }
+void CharacterCreationScreenSystem::updateComponent(ecs::Entity& /*entity*/, components::CharacterCreationScreen& screen, float delta_time) {
+    if (!screen.is_open) return;
+    screen.time_open += delta_time;
 }
 
 bool CharacterCreationScreenSystem::openScreen(const std::string& player_id) {
@@ -60,9 +56,7 @@ bool CharacterCreationScreenSystem::selectRace(const std::string& player_id, con
     if (found == VALID_RACES.end()) return false;
 
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    auto* screen = getComponentFor(entity_id);
     if (!screen || !screen->is_open) return false;
 
     screen->selected_race = race;
@@ -74,9 +68,7 @@ bool CharacterCreationScreenSystem::selectFaction(const std::string& player_id, 
     if (found == VALID_FACTIONS.end()) return false;
 
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    auto* screen = getComponentFor(entity_id);
     if (!screen || !screen->is_open) return false;
 
     screen->selected_faction = faction;
@@ -90,9 +82,7 @@ bool CharacterCreationScreenSystem::setAttributeSlider(const std::string& player
     if (found == VALID_ATTRIBUTES.end()) return false;
 
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    auto* screen = getComponentFor(entity_id);
     if (!screen || !screen->is_open) return false;
 
     float clamped = std::max(0.0f, std::min(1.0f, value));
@@ -103,9 +93,7 @@ bool CharacterCreationScreenSystem::setAttributeSlider(const std::string& player
 float CharacterCreationScreenSystem::getAttributeSlider(const std::string& player_id,
                                                          const std::string& attribute) const {
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    const auto* screen = getComponentFor(entity_id);
     if (!screen) return 0.0f;
 
     auto it = screen->attribute_sliders.find(attribute);
@@ -117,9 +105,7 @@ bool CharacterCreationScreenSystem::setAppearanceSlider(const std::string& playe
                                                          const std::string& feature,
                                                          float value) {
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    auto* screen = getComponentFor(entity_id);
     if (!screen || !screen->is_open) return false;
 
     float clamped = std::max(0.0f, std::min(1.0f, value));
@@ -129,9 +115,7 @@ bool CharacterCreationScreenSystem::setAppearanceSlider(const std::string& playe
 
 bool CharacterCreationScreenSystem::validateSelections(const std::string& player_id) const {
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    const auto* screen = getComponentFor(entity_id);
     if (!screen || !screen->is_open) return false;
 
     // Must have race and faction selected
@@ -147,9 +131,7 @@ bool CharacterCreationScreenSystem::finalizeCharacter(const std::string& player_
     if (!validateSelections(player_id)) return false;
 
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    auto* screen = getComponentFor(entity_id);
     if (!screen || !screen->is_open) return false;
 
     screen->character_name = character_name;
@@ -160,25 +142,19 @@ bool CharacterCreationScreenSystem::finalizeCharacter(const std::string& player_
 
 bool CharacterCreationScreenSystem::isScreenOpen(const std::string& player_id) const {
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    const auto* screen = getComponentFor(entity_id);
     return screen && screen->is_open;
 }
 
 std::string CharacterCreationScreenSystem::getSelectedRace(const std::string& player_id) const {
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    const auto* screen = getComponentFor(entity_id);
     return screen ? screen->selected_race : "";
 }
 
 std::string CharacterCreationScreenSystem::getSelectedFaction(const std::string& player_id) const {
     std::string entity_id = std::string(SCREEN_ENTITY_PREFIX) + player_id;
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* screen = entity->getComponent<components::CharacterCreationScreen>();
+    const auto* screen = getComponentFor(entity_id);
     return screen ? screen->selected_faction : "";
 }
 

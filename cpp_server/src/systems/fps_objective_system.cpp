@@ -5,45 +5,40 @@ namespace atlas {
 namespace systems {
 
 FPSObjectiveSystem::FPSObjectiveSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void FPSObjectiveSystem::update(float delta_time) {
-    for (auto* entity : world_->getEntities<components::FPSObjective>()) {
-        auto* obj = entity->getComponent<components::FPSObjective>();
-        if (!obj) continue;
+void FPSObjectiveSystem::updateComponent(ecs::Entity& /*entity*/, components::FPSObjective& obj, float delta_time) {
+    using S = components::FPSObjective::ObjectiveState;
+    if (obj.state != static_cast<int>(S::Active)) return;
 
-        using S = components::FPSObjective::ObjectiveState;
-        if (obj->state != static_cast<int>(S::Active)) continue;
+    // Advance elapsed time
+    obj.elapsed_time += delta_time;
 
-        // Advance elapsed time
-        obj->elapsed_time += delta_time;
+    // Check time limit
+    if (obj.time_limit > 0.0f && obj.elapsed_time >= obj.time_limit) {
+        obj.state = static_cast<int>(S::Failed);
+        return;
+    }
 
-        // Check time limit
-        if (obj->time_limit > 0.0f && obj->elapsed_time >= obj->time_limit) {
-            obj->state = static_cast<int>(S::Failed);
-            continue;
+    // Type-specific update
+    using OT = components::FPSObjective::ObjectiveType;
+    int otype = obj.objective_type;
+
+    if (otype == static_cast<int>(OT::DefendPoint)) {
+        obj.defend_elapsed += delta_time;
+        if (obj.defend_duration > 0.0f) {
+            obj.progress = std::min(1.0f, obj.defend_elapsed / obj.defend_duration);
+            if (obj.defend_elapsed >= obj.defend_duration) {
+                obj.state = static_cast<int>(S::Completed);
+                obj.progress = 1.0f;
+            }
         }
-
-        // Type-specific update
-        using OT = components::FPSObjective::ObjectiveType;
-        int otype = obj->objective_type;
-
-        if (otype == static_cast<int>(OT::DefendPoint)) {
-            obj->defend_elapsed += delta_time;
-            if (obj->defend_duration > 0.0f) {
-                obj->progress = std::min(1.0f, obj->defend_elapsed / obj->defend_duration);
-                if (obj->defend_elapsed >= obj->defend_duration) {
-                    obj->state = static_cast<int>(S::Completed);
-                    obj->progress = 1.0f;
-                }
-            }
-        } else if (otype == static_cast<int>(OT::EliminateHostiles)) {
-            if (obj->hostiles_required > 0) {
-                obj->progress = std::min(1.0f,
-                    static_cast<float>(obj->hostiles_killed) /
-                    static_cast<float>(obj->hostiles_required));
-            }
+    } else if (otype == static_cast<int>(OT::EliminateHostiles)) {
+        if (obj.hostiles_required > 0) {
+            obj.progress = std::min(1.0f,
+                static_cast<float>(obj.hostiles_killed) /
+                static_cast<float>(obj.hostiles_required));
         }
     }
 }
@@ -83,9 +78,7 @@ bool FPSObjectiveSystem::createObjective(
 }
 
 bool FPSObjectiveSystem::activateObjective(const std::string& objective_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     if (obj->state != static_cast<int>(S::Inactive)) return false;
@@ -98,9 +91,7 @@ bool FPSObjectiveSystem::activateObjective(const std::string& objective_id) {
 // ---------------------------------------------------------------------------
 
 int FPSObjectiveSystem::getObjectiveState(const std::string& objective_id) const {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return -1;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    const auto* obj = getComponentFor(objective_id);
     if (!obj) return -1;
     return obj->state;
 }
@@ -119,9 +110,7 @@ std::vector<std::string> FPSObjectiveSystem::getPlayerObjectives(
 }
 
 float FPSObjectiveSystem::getProgress(const std::string& objective_id) const {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return 0.0f;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    const auto* obj = getComponentFor(objective_id);
     if (!obj) return 0.0f;
     return obj->progress;
 }
@@ -141,9 +130,7 @@ bool FPSObjectiveSystem::isFailed(const std::string& objective_id) const {
 // ---------------------------------------------------------------------------
 
 bool FPSObjectiveSystem::reportHostileKill(const std::string& objective_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     using OT = components::FPSObjective::ObjectiveType;
@@ -166,9 +153,7 @@ bool FPSObjectiveSystem::reportHostileKill(const std::string& objective_id) {
 bool FPSObjectiveSystem::reportItemCollected(
         const std::string& objective_id,
         const std::string& item_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     using OT = components::FPSObjective::ObjectiveType;
@@ -183,9 +168,7 @@ bool FPSObjectiveSystem::reportItemCollected(
 }
 
 bool FPSObjectiveSystem::reportSabotageComplete(const std::string& objective_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     using OT = components::FPSObjective::ObjectiveType;
@@ -198,9 +181,7 @@ bool FPSObjectiveSystem::reportSabotageComplete(const std::string& objective_id)
 }
 
 bool FPSObjectiveSystem::reportExtraction(const std::string& objective_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     using OT = components::FPSObjective::ObjectiveType;
@@ -213,9 +194,7 @@ bool FPSObjectiveSystem::reportExtraction(const std::string& objective_id) {
 }
 
 bool FPSObjectiveSystem::reportVIPRescued(const std::string& objective_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     using OT = components::FPSObjective::ObjectiveType;
@@ -228,9 +207,7 @@ bool FPSObjectiveSystem::reportVIPRescued(const std::string& objective_id) {
 }
 
 bool FPSObjectiveSystem::reportRepairComplete(const std::string& objective_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     using OT = components::FPSObjective::ObjectiveType;
@@ -243,9 +220,7 @@ bool FPSObjectiveSystem::reportRepairComplete(const std::string& objective_id) {
 }
 
 bool FPSObjectiveSystem::failObjective(const std::string& objective_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     using S = components::FPSObjective::ObjectiveState;
     if (obj->state != static_cast<int>(S::Active)) return false;
@@ -259,9 +234,7 @@ bool FPSObjectiveSystem::failObjective(const std::string& objective_id) {
 
 bool FPSObjectiveSystem::setHostileCount(const std::string& objective_id,
                                           int count) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     obj->hostiles_required = count;
     return true;
@@ -269,9 +242,7 @@ bool FPSObjectiveSystem::setHostileCount(const std::string& objective_id,
 
 bool FPSObjectiveSystem::setDefendDuration(const std::string& objective_id,
                                             float seconds) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     obj->defend_duration = seconds;
     return true;
@@ -279,9 +250,7 @@ bool FPSObjectiveSystem::setDefendDuration(const std::string& objective_id,
 
 bool FPSObjectiveSystem::setTargetItem(const std::string& objective_id,
                                         const std::string& item_id) {
-    auto* entity = world_->getEntity(objective_id);
-    if (!entity) return false;
-    auto* obj = entity->getComponent<components::FPSObjective>();
+    auto* obj = getComponentFor(objective_id);
     if (!obj) return false;
     obj->target_item_id = item_id;
     return true;
