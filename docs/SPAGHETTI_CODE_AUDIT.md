@@ -257,6 +257,25 @@ All 6415 tests passing. Total migrated: 77 systems.
 
 All 6415 tests passing. Total migrated: 87 systems.
 
+#### Step 2.5 (batch 8–13): Migrate 38 more systems to template bases ✅
+
+Batches 8–13 (PRs #382–#387) migrated an additional 38 systems, bringing the total from 87 → 125.
+
+All 6415 tests passing. Total migrated: 125 systems (65%).
+
+#### Step 2.5 (batch 14): Migrate 7 more systems to template bases ✅
+
+**→ SingleComponentSystem\<C\>**:
+- `AtlasUIPanelSystem` → `SingleComponentSystem<components::AtlasUIPanel>`
+- `EntityStressTestSystem` → `SingleComponentSystem<components::EntityStressTest>`
+- `DatabasePersistenceSystem` → `SingleComponentSystem<components::DatabasePersistence>`
+- `EconomicFlowSystem` → `SingleComponentSystem<components::EconomicFlowState>`
+- `DataBindingSystem` → `SingleComponentSystem<components::DataBinding>`
+- `ServerPerformanceMonitorSystem` → `SingleComponentSystem<components::ServerPerformanceMetrics>`
+- `ShipDesignerSystem` → `SingleComponentSystem<components::ShipDesigner>`
+
+All 6415 tests passing. Total migrated: 132 systems (69%).
+
 ### Remaining Remediation Plan
 
 | Step | Action | Status |
@@ -265,7 +284,7 @@ All 6415 tests passing. Total migrated: 87 systems.
 | 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
 | 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | ✅ Complete |
 | 2.4 | Migrate 20–30 simplest systems to template bases | ✅ Complete (28 of ~30 done) |
-| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (111 total, batch 11 done) |
+| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (132 total, batch 14 done) |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
 
