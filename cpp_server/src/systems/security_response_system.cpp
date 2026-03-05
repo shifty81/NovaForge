@@ -7,18 +7,14 @@ namespace atlas {
 namespace systems {
 
 SecurityResponseSystem::SecurityResponseSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void SecurityResponseSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::SecurityResponseState>();
-    for (auto* entity : entities) {
-        auto* resp  = entity->getComponent<components::SecurityResponseState>();
-        auto* state = entity->getComponent<components::SimStarSystemState>();
-        if (!resp || !state) continue;
+void SecurityResponseSystem::updateComponent(ecs::Entity& entity, components::SecurityResponseState& resp, float delta_time) {
+    auto* state = entity.getComponent<components::SimStarSystemState>();
+    if (!state) return;
 
-        evaluateSystem(entity, resp, state, delta_time);
-    }
+    evaluateSystem(entity, &resp, state, delta_time);
 }
 
 // -----------------------------------------------------------------------
@@ -26,7 +22,7 @@ void SecurityResponseSystem::update(float delta_time) {
 // -----------------------------------------------------------------------
 
 void SecurityResponseSystem::evaluateSystem(
-        ecs::Entity* /*entity*/,
+        ecs::Entity& /*entity*/,
         components::SecurityResponseState* resp,
         const components::SimStarSystemState* state,
         float dt) {
@@ -74,20 +70,14 @@ void SecurityResponseSystem::evaluateSystem(
 // -----------------------------------------------------------------------
 
 bool SecurityResponseSystem::isResponding(const std::string& system_id) const {
-    auto* entity = world_->getEntity(system_id);
-    if (!entity) return false;
-
-    auto* resp = entity->getComponent<components::SecurityResponseState>();
+    const auto* resp = getComponentFor(system_id);
     if (!resp) return false;
 
     return resp->responding;
 }
 
 float SecurityResponseSystem::getResponseTimer(const std::string& system_id) const {
-    auto* entity = world_->getEntity(system_id);
-    if (!entity) return 0.0f;
-
-    auto* resp = entity->getComponent<components::SecurityResponseState>();
+    const auto* resp = getComponentFor(system_id);
     if (!resp) return 0.0f;
 
     return resp->response_timer;

@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_TURRET_AI_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_TURRET_AI_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -20,12 +20,11 @@ namespace systems {
  * - Turrets respect cooldowns and capacitor costs
  * - Tracking speed limits engagement of fast targets
  */
-class TurretAISystem : public ecs::System {
+class TurretAISystem : public ecs::SingleComponentSystem<components::TurretAIState> {
 public:
     explicit TurretAISystem(ecs::World* world);
     ~TurretAISystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "TurretAISystem"; }
 
     // --- API ---
@@ -43,6 +42,9 @@ public:
 
     /** Get total DPS from all active turrets on an entity */
     float getActiveDPS(const std::string& entity_id) const;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::TurretAIState& turret, float delta_time) override;
 };
 
 } // namespace systems

@@ -19,21 +19,17 @@ void applyTierSettings(components::InterestPriority* ip, int tier) {
 } // anonymous namespace
 
 InterestManagementPrioritySystem::InterestManagementPrioritySystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void InterestManagementPrioritySystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::InterestPriority>();
-    for (auto* entity : entities) {
-        auto* ip = entity->getComponent<components::InterestPriority>();
-        if (!ip || !ip->active) continue;
+void InterestManagementPrioritySystem::updateComponent(ecs::Entity& /*entity*/, components::InterestPriority& ip, float delta_time) {
+    if (!ip.active) return;
 
-        ip->time_since_update += delta_time;
-        if (ip->time_since_update >= ip->update_interval) {
-            ip->needs_update = true;
-            ip->time_since_update = 0.0f;
-            ip->total_updates++;
-        }
+    ip.time_since_update += delta_time;
+    if (ip.time_since_update >= ip.update_interval) {
+        ip.needs_update = true;
+        ip.time_since_update = 0.0f;
+        ip.total_updates++;
     }
 }
 
@@ -46,18 +42,14 @@ bool InterestManagementPrioritySystem::createPriority(const std::string& entity_
 }
 
 bool InterestManagementPrioritySystem::setClientId(const std::string& entity_id, int client_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    auto* ip = getComponentFor(entity_id);
     if (!ip) return false;
     ip->client_id = client_id;
     return true;
 }
 
 bool InterestManagementPrioritySystem::setPriorityTier(const std::string& entity_id, int tier) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    auto* ip = getComponentFor(entity_id);
     if (!ip) return false;
     ip->priority_tier = std::max(0, std::min(tier, 3));
     applyTierSettings(ip, ip->priority_tier);
@@ -65,9 +57,7 @@ bool InterestManagementPrioritySystem::setPriorityTier(const std::string& entity
 }
 
 bool InterestManagementPrioritySystem::setDistance(const std::string& entity_id, float distance) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    auto* ip = getComponentFor(entity_id);
     if (!ip) return false;
     ip->distance = distance;
 
@@ -84,41 +74,31 @@ bool InterestManagementPrioritySystem::setDistance(const std::string& entity_id,
 }
 
 bool InterestManagementPrioritySystem::needsUpdate(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    const auto* ip = getComponentFor(entity_id);
     if (!ip) return false;
     return ip->needs_update;
 }
 
 int InterestManagementPrioritySystem::getPriorityTier(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return -1;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    const auto* ip = getComponentFor(entity_id);
     if (!ip) return -1;
     return ip->priority_tier;
 }
 
 float InterestManagementPrioritySystem::getBandwidthWeight(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    const auto* ip = getComponentFor(entity_id);
     if (!ip) return 0.0f;
     return ip->bandwidth_weight;
 }
 
 int InterestManagementPrioritySystem::getTotalUpdates(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    const auto* ip = getComponentFor(entity_id);
     if (!ip) return 0;
     return ip->total_updates;
 }
 
 float InterestManagementPrioritySystem::getEstimatedBandwidth(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-    auto* ip = entity->getComponent<components::InterestPriority>();
+    const auto* ip = getComponentFor(entity_id);
     if (!ip) return 0.0f;
     return ip->bandwidth_weight * 100.0f;
 }

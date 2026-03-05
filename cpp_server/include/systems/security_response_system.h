@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_SECURITY_RESPONSE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SECURITY_RESPONSE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -22,12 +22,11 @@ namespace systems {
  *   delay = base_delay * (1.0 - security_level * speed_factor)
  *   clamped to [min_delay, base_delay]
  */
-class SecurityResponseSystem : public ecs::System {
+class SecurityResponseSystem : public ecs::SingleComponentSystem<components::SecurityResponseState> {
 public:
     explicit SecurityResponseSystem(ecs::World* world);
     ~SecurityResponseSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "SecurityResponseSystem"; }
 
     // --- Query API ---
@@ -49,8 +48,11 @@ public:
     float speed_factor = 0.8f;        // how much security_level speeds response
     float response_duration = 120.0f; // how long response stays active
 
+protected:
+    void updateComponent(ecs::Entity& entity, components::SecurityResponseState& resp, float delta_time) override;
+
 private:
-    void evaluateSystem(ecs::Entity* entity,
+    void evaluateSystem(ecs::Entity& entity,
                         components::SecurityResponseState* resp,
                         const components::SimStarSystemState* state,
                         float dt);

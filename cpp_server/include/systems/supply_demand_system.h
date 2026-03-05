@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_SUPPLY_DEMAND_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_SUPPLY_DEMAND_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -9,12 +9,11 @@
 namespace atlas {
 namespace systems {
 
-class SupplyDemandSystem : public ecs::System {
+class SupplyDemandSystem : public ecs::SingleComponentSystem<components::SupplyDemand> {
 public:
     explicit SupplyDemandSystem(ecs::World* world);
     ~SupplyDemandSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "SupplyDemandSystem"; }
 
     // --- API ---
@@ -24,6 +23,9 @@ public:
     void addSupply(const std::string& system_id, const std::string& commodity_id, float amount);
     void addDemand(const std::string& system_id, const std::string& commodity_id, float amount);
     void setNPCActivityModifier(const std::string& system_id, float modifier);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::SupplyDemand& sd, float delta_time) override;
 };
 
 } // namespace systems
