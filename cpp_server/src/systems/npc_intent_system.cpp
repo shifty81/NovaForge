@@ -7,26 +7,20 @@ namespace atlas {
 namespace systems {
 
 NPCIntentSystem::NPCIntentSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void NPCIntentSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::SimNPCIntent>();
-    for (auto* entity : entities) {
-        auto* intent = entity->getComponent<components::SimNPCIntent>();
-        if (!intent) continue;
+void NPCIntentSystem::updateComponent(ecs::Entity& entity, components::SimNPCIntent& intent, float delta_time) {
+    intent.intent_duration += delta_time;
 
-        intent->intent_duration += delta_time;
-
-        // Tick cooldown
-        if (intent->intent_cooldown > 0.0f) {
-            intent->intent_cooldown -= delta_time;
-            if (intent->intent_cooldown < 0.0f)
-                intent->intent_cooldown = 0.0f;
-        }
-
-        evaluateIntent(entity, intent, delta_time);
+    // Tick cooldown
+    if (intent.intent_cooldown > 0.0f) {
+        intent.intent_cooldown -= delta_time;
+        if (intent.intent_cooldown < 0.0f)
+            intent.intent_cooldown = 0.0f;
     }
+
+    evaluateIntent(&entity, &intent, delta_time);
 }
 
 // -----------------------------------------------------------------------
@@ -236,10 +230,7 @@ void NPCIntentSystem::applyArchetypeWeights(components::SimNPCIntent* intent) {
 
 void NPCIntentSystem::forceIntent(const std::string& entity_id,
                                    components::SimNPCIntent::Intent intent) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* npc = entity->getComponent<components::SimNPCIntent>();
+    auto* npc = getComponentFor(entity_id);
     if (!npc) return;
 
     npc->previous_intent = npc->current_intent;
@@ -255,10 +246,7 @@ void NPCIntentSystem::forceIntent(const std::string& entity_id,
 
 components::SimNPCIntent::Intent
 NPCIntentSystem::getIntent(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return components::SimNPCIntent::Intent::Idle;
-
-    auto* npc = entity->getComponent<components::SimNPCIntent>();
+    const auto* npc = getComponentFor(entity_id);
     if (!npc) return components::SimNPCIntent::Intent::Idle;
 
     return npc->current_intent;

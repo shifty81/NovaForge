@@ -7,19 +7,13 @@ namespace atlas {
 namespace systems {
 
 BackgroundSimulationSystem::BackgroundSimulationSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void BackgroundSimulationSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::SimStarSystemState>();
-    for (auto* entity : entities) {
-        auto* state = entity->getComponent<components::SimStarSystemState>();
-        if (!state) continue;
-
-        updateSystemState(state, delta_time);
-        evaluateEvents(entity->getId(), state);
-        tickEventTimers(state, delta_time);
-    }
+void BackgroundSimulationSystem::updateComponent(ecs::Entity& entity, components::SimStarSystemState& state, float delta_time) {
+    updateSystemState(&state, delta_time);
+    evaluateEvents(entity.getId(), &state);
+    tickEventTimers(&state, delta_time);
 }
 
 // -----------------------------------------------------------------------
@@ -125,9 +119,7 @@ void BackgroundSimulationSystem::tickEventTimers(
 
 const components::SimStarSystemState*
 BackgroundSimulationSystem::getSystemState(const std::string& system_id) const {
-    auto* entity = world_->getEntity(system_id);
-    if (!entity) return nullptr;
-    return entity->getComponent<components::SimStarSystemState>();
+    return getComponentFor(system_id);
 }
 
 bool BackgroundSimulationSystem::isEventActive(

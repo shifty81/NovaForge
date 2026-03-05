@@ -6,18 +6,14 @@ namespace atlas {
 namespace systems {
 
 NPCBehaviorTreeSystem::NPCBehaviorTreeSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void NPCBehaviorTreeSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::NPCBehaviorState>();
-    for (auto* entity : entities) {
-        auto* behavior = entity->getComponent<components::NPCBehaviorState>();
-        auto* intent   = entity->getComponent<components::SimNPCIntent>();
-        if (!behavior || !intent) continue;
+void NPCBehaviorTreeSystem::updateComponent(ecs::Entity& entity, components::NPCBehaviorState& behavior, float delta_time) {
+    auto* intent = entity.getComponent<components::SimNPCIntent>();
+    if (!intent) return;
 
-        tickBehavior(entity, behavior, intent, delta_time);
-    }
+    tickBehavior(&entity, &behavior, intent, delta_time);
 }
 
 // -----------------------------------------------------------------------
@@ -119,10 +115,7 @@ std::vector<std::string> NPCBehaviorTreeSystem::getPhasesForIntent(
 // -----------------------------------------------------------------------
 
 std::string NPCBehaviorTreeSystem::getCurrentPhase(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-
-    auto* behavior = entity->getComponent<components::NPCBehaviorState>();
+    const auto* behavior = getComponentFor(entity_id);
     if (!behavior || behavior->phases.empty()) return "";
 
     int idx = std::min(behavior->current_phase_index,
@@ -131,30 +124,21 @@ std::string NPCBehaviorTreeSystem::getCurrentPhase(const std::string& entity_id)
 }
 
 float NPCBehaviorTreeSystem::getPhaseElapsed(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0.0f;
-
-    auto* behavior = entity->getComponent<components::NPCBehaviorState>();
+    const auto* behavior = getComponentFor(entity_id);
     if (!behavior) return 0.0f;
 
     return behavior->phase_elapsed;
 }
 
 bool NPCBehaviorTreeSystem::isTreeComplete(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return true;
-
-    auto* behavior = entity->getComponent<components::NPCBehaviorState>();
+    const auto* behavior = getComponentFor(entity_id);
     if (!behavior) return true;
 
     return behavior->tree_complete;
 }
 
 void NPCBehaviorTreeSystem::resetTree(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return;
-
-    auto* behavior = entity->getComponent<components::NPCBehaviorState>();
+    auto* behavior = getComponentFor(entity_id);
     if (!behavior) return;
 
     behavior->current_phase_index = 0;

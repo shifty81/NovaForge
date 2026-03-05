@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_NPC_INTENT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_NPC_INTENT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "ecs/entity.h"
 #include "components/game_components.h"
 #include <string>
@@ -23,12 +23,11 @@ namespace systems {
  * Once an intent is chosen it persists until completed, interrupted
  * by danger, or the cooldown expires.
  */
-class NPCIntentSystem : public ecs::System {
+class NPCIntentSystem : public ecs::SingleComponentSystem<components::SimNPCIntent> {
 public:
     explicit NPCIntentSystem(ecs::World* world);
     ~NPCIntentSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "NPCIntentSystem"; }
 
     // --- Configuration ---
@@ -57,6 +56,9 @@ public:
     /** Force an intent change on an NPC */
     void forceIntent(const std::string& entity_id,
                      components::SimNPCIntent::Intent intent);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::SimNPCIntent& intent, float delta_time) override;
 
 private:
     void evaluateIntent(ecs::Entity* entity,

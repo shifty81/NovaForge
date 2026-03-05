@@ -1,7 +1,7 @@
 #ifndef NOVAFORGE_SYSTEMS_BACKGROUND_SIMULATION_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_BACKGROUND_SIMULATION_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
 #include "components/game_components.h"
 #include <string>
 #include <vector>
@@ -16,12 +16,11 @@ namespace systems {
  * faction influence.  Triggers threshold-based events (pirate surge,
  * resource shortage, lockdown) when conditions are met.
  */
-class BackgroundSimulationSystem : public ecs::System {
+class BackgroundSimulationSystem : public ecs::SingleComponentSystem<components::SimStarSystemState> {
 public:
     explicit BackgroundSimulationSystem(ecs::World* world);
     ~BackgroundSimulationSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "BackgroundSimulationSystem"; }
 
     // --- Query API ---
@@ -48,6 +47,9 @@ public:
     float traffic_fluctuation_rate = 0.02f;    // traffic drifts toward baseline
     float resource_regen_rate = 0.002f;        // resources slowly regenerate
     float event_duration = 300.0f;             // default event duration in seconds
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::SimStarSystemState& state, float delta_time) override;
 
 private:
     void updateSystemState(components::SimStarSystemState* state, float dt);

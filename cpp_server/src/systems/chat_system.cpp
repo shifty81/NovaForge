@@ -8,29 +8,21 @@
 namespace atlas {
 namespace systems {
 
-ChatSystem::ChatSystem(ecs::World* world) : System(world) {}
+ChatSystem::ChatSystem(ecs::World* world) : SingleComponentSystem(world) {}
 
-void ChatSystem::update(float delta_time) {
-    for (auto* entity : world_->getAllEntities()) {
-        auto* channel = entity->getComponent<components::ChatChannel>();
-        if (!channel) continue;
-
-        // Trim message history if exceeding max_history
-        if (static_cast<int>(channel->messages.size()) > channel->max_history) {
-            int excess = static_cast<int>(channel->messages.size()) - channel->max_history;
-            channel->messages.erase(channel->messages.begin(),
-                                    channel->messages.begin() + excess);
-        }
+void ChatSystem::updateComponent(ecs::Entity& /*entity*/, components::ChatChannel& channel, float /*delta_time*/) {
+    // Trim message history if exceeding max_history
+    if (static_cast<int>(channel.messages.size()) > channel.max_history) {
+        int excess = static_cast<int>(channel.messages.size()) - channel.max_history;
+        channel.messages.erase(channel.messages.begin(),
+                                channel.messages.begin() + excess);
     }
 }
 
 bool ChatSystem::joinChannel(const std::string& channel_entity_id,
                              const std::string& player_id,
                              const std::string& player_name) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return false;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return false;
 
     // Check if already a member
@@ -66,10 +58,7 @@ bool ChatSystem::joinChannel(const std::string& channel_entity_id,
 
 bool ChatSystem::leaveChannel(const std::string& channel_entity_id,
                               const std::string& player_id) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return false;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return false;
 
     // Find and remove member
@@ -99,10 +88,7 @@ bool ChatSystem::sendMessage(const std::string& channel_entity_id,
                              const std::string& sender_id,
                              const std::string& sender_name,
                              const std::string& content) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return false;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return false;
 
     // Verify sender is a member
@@ -130,10 +116,7 @@ bool ChatSystem::sendMessage(const std::string& channel_entity_id,
 bool ChatSystem::mutePlayer(const std::string& channel_entity_id,
                             const std::string& moderator_id,
                             const std::string& target_id) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return false;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return false;
 
     // Verify moderator has appropriate role
@@ -159,10 +142,7 @@ bool ChatSystem::mutePlayer(const std::string& channel_entity_id,
 bool ChatSystem::unmutePlayer(const std::string& channel_entity_id,
                               const std::string& moderator_id,
                               const std::string& target_id) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return false;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return false;
 
     // Verify moderator has appropriate role
@@ -188,10 +168,7 @@ bool ChatSystem::unmutePlayer(const std::string& channel_entity_id,
 bool ChatSystem::setMotd(const std::string& channel_entity_id,
                          const std::string& setter_id,
                          const std::string& motd) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return false;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return false;
 
     // Verify setter has operator or owner role
@@ -207,20 +184,14 @@ bool ChatSystem::setMotd(const std::string& channel_entity_id,
 }
 
 int ChatSystem::getMessageCount(const std::string& channel_entity_id) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return 0;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return 0;
 
     return static_cast<int>(channel->messages.size());
 }
 
 int ChatSystem::getMemberCount(const std::string& channel_entity_id) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return 0;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return 0;
 
     return static_cast<int>(channel->members.size());
@@ -228,10 +199,7 @@ int ChatSystem::getMemberCount(const std::string& channel_entity_id) {
 
 bool ChatSystem::isMember(const std::string& channel_entity_id,
                           const std::string& player_id) {
-    auto* entity = world_->getEntity(channel_entity_id);
-    if (!entity) return false;
-
-    auto* channel = entity->getComponent<components::ChatChannel>();
+    auto* channel = getComponentFor(channel_entity_id);
     if (!channel) return false;
 
     for (const auto& m : channel->members) {

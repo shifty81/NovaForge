@@ -8,31 +8,25 @@ namespace atlas {
 namespace systems {
 
 MarketSystem::MarketSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void MarketSystem::update(float delta_time) {
+void MarketSystem::updateComponent(ecs::Entity& /*entity*/, components::MarketHub& hub, float delta_time) {
     // Tick order durations and expire/clean up
-    auto entities = world_->getEntities<components::MarketHub>();
-    for (auto* entity : entities) {
-        auto* hub = entity->getComponent<components::MarketHub>();
-        if (!hub) continue;
-
-        for (auto& order : hub->orders) {
-            if (order.fulfilled) continue;
-            if (order.duration_remaining < 0.0f) continue; // permanent
-            order.duration_remaining -= delta_time;
-            if (order.duration_remaining <= 0.0f) {
-                order.fulfilled = true;
-            }
+    for (auto& order : hub.orders) {
+        if (order.fulfilled) continue;
+        if (order.duration_remaining < 0.0f) continue; // permanent
+        order.duration_remaining -= delta_time;
+        if (order.duration_remaining <= 0.0f) {
+            order.fulfilled = true;
         }
-
-        // Remove fulfilled orders
-        hub->orders.erase(
-            std::remove_if(hub->orders.begin(), hub->orders.end(),
-                [](const components::MarketHub::Order& o) { return o.fulfilled; }),
-            hub->orders.end());
     }
+
+    // Remove fulfilled orders
+    hub.orders.erase(
+        std::remove_if(hub.orders.begin(), hub.orders.end(),
+            [](const components::MarketHub::Order& o) { return o.fulfilled; }),
+        hub.orders.end());
 }
 
 std::string MarketSystem::placeSellOrder(const std::string& station_id,
@@ -41,10 +35,7 @@ std::string MarketSystem::placeSellOrder(const std::string& station_id,
                                           const std::string& item_name,
                                           int quantity,
                                           double price_per_unit) {
-    auto* station = world_->getEntity(station_id);
-    if (!station) return "";
-
-    auto* hub = station->getComponent<components::MarketHub>();
+    auto* hub = getComponentFor(station_id);
     if (!hub) return "";
 
     auto* seller = world_->getEntity(seller_id);
@@ -79,10 +70,7 @@ std::string MarketSystem::placeBuyOrder(const std::string& station_id,
                                          const std::string& item_name,
                                          int quantity,
                                          double price_per_unit) {
-    auto* station = world_->getEntity(station_id);
-    if (!station) return "";
-
-    auto* hub = station->getComponent<components::MarketHub>();
+    auto* hub = getComponentFor(station_id);
     if (!hub) return "";
 
     auto* buyer = world_->getEntity(buyer_id);
@@ -117,10 +105,7 @@ int MarketSystem::buyFromMarket(const std::string& station_id,
                                  const std::string& buyer_id,
                                  const std::string& item_id,
                                  int quantity) {
-    auto* station = world_->getEntity(station_id);
-    if (!station) return 0;
-
-    auto* hub = station->getComponent<components::MarketHub>();
+    auto* hub = getComponentFor(station_id);
     if (!hub) return 0;
 
     auto* buyer = world_->getEntity(buyer_id);
@@ -177,10 +162,7 @@ int MarketSystem::buyFromMarket(const std::string& station_id,
 
 double MarketSystem::getLowestSellPrice(const std::string& station_id,
                                          const std::string& item_id) {
-    auto* station = world_->getEntity(station_id);
-    if (!station) return -1.0;
-
-    auto* hub = station->getComponent<components::MarketHub>();
+    auto* hub = getComponentFor(station_id);
     if (!hub) return -1.0;
 
     double lowest = -1.0;
@@ -197,10 +179,7 @@ double MarketSystem::getLowestSellPrice(const std::string& station_id,
 
 double MarketSystem::getHighestBuyPrice(const std::string& station_id,
                                          const std::string& item_id) {
-    auto* station = world_->getEntity(station_id);
-    if (!station) return -1.0;
-
-    auto* hub = station->getComponent<components::MarketHub>();
+    auto* hub = getComponentFor(station_id);
     if (!hub) return -1.0;
 
     double highest = -1.0;
@@ -216,10 +195,7 @@ double MarketSystem::getHighestBuyPrice(const std::string& station_id,
 }
 
 int MarketSystem::getOrderCount(const std::string& station_id) {
-    auto* station = world_->getEntity(station_id);
-    if (!station) return 0;
-
-    auto* hub = station->getComponent<components::MarketHub>();
+    auto* hub = getComponentFor(station_id);
     if (!hub) return 0;
 
     int count = 0;
@@ -232,9 +208,7 @@ int MarketSystem::getOrderCount(const std::string& station_id) {
 }
 
 int MarketSystem::seedNPCOrders(const std::string& station_id) {
-    auto* entity = world_->getEntity(station_id);
-    if (!entity) return 0;
-    auto* hub = entity->getComponent<components::MarketHub>();
+    auto* hub = getComponentFor(station_id);
     if (!hub) return 0;
 
     struct Seed { std::string id; std::string name; double price; int qty; };
