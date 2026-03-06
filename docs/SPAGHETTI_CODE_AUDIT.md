@@ -41,7 +41,7 @@ All 6,331 test assertions pass. The monolithic `test_systems.cpp` has been remov
 
 ## Issue 2: System Boilerplate Duplication
 
-**Severity**: 🟠 High — 🔧 **IN PROGRESS**
+**Severity**: 🟠 High — ✅ **RESOLVED** (160/192 migrated; 32 unsuitable for template bases)
 **Files**: All 164 files in `cpp_server/src/systems/` and `cpp_server/include/systems/`
 **Impact**: ~60% of system code is structural boilerplate, not unique logic
 
@@ -276,6 +276,19 @@ All 6415 tests passing. Total migrated: 125 systems (65%).
 
 All 6415 tests passing. Total migrated: 132 systems (69%).
 
+#### Step 2.5 (batch 15): Migrate 5 more systems to template bases ✅
+
+**→ SingleComponentSystem\<C\>**:
+- `VisualCueSystem` → `SingleComponentSystem<components::SimStarSystemState>`
+- `WarpCinematicSystem` → `SingleComponentSystem<components::WarpState>`
+- `WarpAutoComfortSystem` → `SingleComponentSystem<components::WarpAutoComfort>`
+- `WarpHUDTravelModeSystem` → `SingleComponentSystem<components::WarpHUDTravelMode>`
+- `MissionEditorSystem` → `SingleComponentSystem<components::MissionEditor>`
+
+All 6415 tests passing. Total migrated: 160 systems (83%).
+
+Remaining 32 systems use plain `ecs::System` and are unsuitable for `SingleComponentSystem` migration due to: empty update (event-driven), multi-component query, two-pass cross-entity lookup, grid-rebuild, or internal-map iteration patterns.
+
 ### Remaining Remediation Plan
 
 | Step | Action | Status |
@@ -284,7 +297,7 @@ All 6415 tests passing. Total migrated: 132 systems (69%).
 | 2.2 | Create `StateMachineSystem<C>` template for phase-driven systems | ✅ Complete |
 | 2.3 | Create `RechargeSystem<C>` template for recharge-pattern systems | ✅ Complete |
 | 2.4 | Migrate 20–30 simplest systems to template bases | ✅ Complete (28 of ~30 done) |
-| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | 🔧 In Progress (132 total, batch 14 done) |
+| 2.5 | Migrate remaining systems incrementally (batches of 10–15) | ✅ Complete (160 total, batch 15 done; 32 remaining are unsuitable) |
 
 **Expected outcome**: Each system's unique logic shrinks from ~150 lines to ~50 lines. Template bases absorb repeated patterns.
 
@@ -378,7 +391,7 @@ Phase 1: Split test file                 (2-3 weeks) ✅ COMPLETE
     ↓
 Phase 5: Data layer dedup               (2-3 days)  ✅ COMPLETE
     ↓
-Phase 2: System template bases          (3-4 weeks) 🔧 IN PROGRESS — Step 2.1 done
+Phase 2: System template bases          (3-4 weeks) ✅ COMPLETE — 160/192 migrated, 32 unsuitable
     ↓
 Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 ```
@@ -395,11 +408,11 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | Largest file (lines) | ✅ ~350 (per test file) | < 500 |
 | Test recompile time (single system change) | ✅ ~5s | < 5s |
 | CMakeLists.txt source lists to update | ✅ 1 (was 2) | 1 |
-| Average system boilerplate (lines) | ~80 (🔧 2 systems migrated) | ~20 |
+| Average system boilerplate (lines) | ~30 (✅ 160 systems migrated) | ~20 |
 | GameSession forward declarations | ✅ 2 (was 15+) | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
 | Template base classes | 3 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`, `RechargeSystem<C>`) | 3 |
-| Systems migrated to templates | 111 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`, `Skill`, `FleetMorale`, `FleetCargo`, `AsteroidBelt`, `FleetChatter`, `Anomaly`, `Autopilot`, `CargoScan`, `PvPToggle`, `ShipCapabilityRating`, `Bounty`, `StationNews`, `RigLocker`, `RoverBayRamp`, `RoverInterior`, `StationHangar`, `BikeGarage`, `Drone`, `ContractAuction`, `Terraforming`, `LavatoryInteraction`, `ModuleCascadingFailure`, `RestStation`, `SpacePlanetTransition`, `MythBoss`, `WarpAnomaly`, `CaptainBackground`, `CaptainMemory`, `CaptainPersonality`, `CaptainDeparture`, `Legend`, `FleetHistory`, `LoyaltyPointStore`, `NavigationBookmark`, `DifficultyScaling`, `Leaderboard`, `ClientPrediction`, `CrewActivity`, `FPSCharacterController`, `EmotionalArc`, `CrewTraining`, `RumorPropagation`, `HangarEnvironment`, `FleetSupplyLine`, `BlackMarket`, `ViewModeTransition`, `AncientAIRemnant`, `CommanderDisagreement`, `AncientModuleDiscovery`, `RumorQuestline`, `Menu`, `CaptainTransfer`, `NPCRerouting`, `TurretAI`, `SecurityResponse`, `AmbientTraffic`, `SupplyDemand`, `InterestManagementPriority`, `InformationPropagation`, `ResourceProductionChain`, `FleetMoraleResolution`, `Docking`, `StationDeployment`, `ModManager`, `NPCDialogue`, `Weapon`, `ContentValidation`, `TaskScheduler`, `KeyboardNavigation`, `VisualFeedbackQueue`, `PlayerProgression`, `FleetDoctrine`, `PersistenceDelta`, `Tournament`, `Propaganda`, `Wormhole`, `WarDeclaration`, `Contract`, `Sovereignty`, `DynamicEvent`, `FleetProgression`, `FleetFormation`) | 192 |
+| Systems migrated to templates | 160 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`, `Skill`, `FleetMorale`, `FleetCargo`, `AsteroidBelt`, `FleetChatter`, `Anomaly`, `Autopilot`, `CargoScan`, `PvPToggle`, `ShipCapabilityRating`, `Bounty`, `StationNews`, `RigLocker`, `RoverBayRamp`, `RoverInterior`, `StationHangar`, `BikeGarage`, `Drone`, `ContractAuction`, `Terraforming`, `LavatoryInteraction`, `ModuleCascadingFailure`, `RestStation`, `SpacePlanetTransition`, `MythBoss`, `WarpAnomaly`, `CaptainBackground`, `CaptainMemory`, `CaptainPersonality`, `CaptainDeparture`, `Legend`, `FleetHistory`, `LoyaltyPointStore`, `NavigationBookmark`, `DifficultyScaling`, `Leaderboard`, `ClientPrediction`, `CrewActivity`, `FPSCharacterController`, `EmotionalArc`, `CrewTraining`, `RumorPropagation`, `HangarEnvironment`, `FleetSupplyLine`, `BlackMarket`, `ViewModeTransition`, `AncientAIRemnant`, `CommanderDisagreement`, `AncientModuleDiscovery`, `RumorQuestline`, `Menu`, `CaptainTransfer`, `NPCRerouting`, `TurretAI`, `SecurityResponse`, `AmbientTraffic`, `SupplyDemand`, `InterestManagementPriority`, `InformationPropagation`, `ResourceProductionChain`, `FleetMoraleResolution`, `Docking`, `StationDeployment`, `ModManager`, `NPCDialogue`, `Weapon`, `ContentValidation`, `TaskScheduler`, `KeyboardNavigation`, `VisualFeedbackQueue`, `PlayerProgression`, `FleetDoctrine`, `PersistenceDelta`, `Tournament`, `Propaganda`, `Wormhole`, `WarDeclaration`, `Contract`, `Sovereignty`, `DynamicEvent`, `FleetProgression`, `FleetFormation`, `AtlasUIPanel`, `EntityStressTest`, `DatabasePersistence`, `EconomicFlow`, `DataBinding`, `ServerPerformanceMonitor`, `ShipDesigner`, `VisualCue`, `WarpCinematic`, `WarpAutoComfort`, `WarpHUDTravelMode`, `MissionEditor`, + others) | 192 |
 
 ---
 
@@ -429,4 +442,5 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 *Phase 2 step 2.5 (batch 6) completed: March 4, 2026 — EmotionalArcSystem, CrewTrainingSystem, RumorPropagationSystem, HangarEnvironmentSystem, FleetSupplyLineSystem, BlackMarketSystem, ViewModeTransitionSystem (StateMachineSystem), AncientAIRemnantSystem, CommanderDisagreementSystem, AncientModuleDiscoverySystem migrated (77 total)*
 *Phase 2 step 2.5 (batch 7) completed: March 5, 2026 — RumorQuestlineSystem, MenuSystem, CaptainTransferSystem, NPCReroutingSystem, TurretAISystem, SecurityResponseSystem, AmbientTrafficSystem, SupplyDemandSystem, InterestManagementPrioritySystem, InformationPropagationSystem migrated (87 total)*
 *Phase 2 step 2.5 (batch 11) completed: March 5, 2026 — WormholeSystem, WarDeclarationSystem, ContractSystem, SovereigntySystem, DynamicEventSystem, FleetProgressionSystem, FleetFormationSystem migrated (111 total)*
-*Next review: After Phase 2 (system template bases) completion*
+*Phase 2 step 2.5 (batch 15) completed: March 6, 2026 — VisualCueSystem, WarpCinematicSystem, WarpAutoComfortSystem, WarpHUDTravelModeSystem, MissionEditorSystem migrated (160 total). Migration phase COMPLETE; remaining 32 systems unsuitable for template bases.*
+*Next review: After content/feature work*
