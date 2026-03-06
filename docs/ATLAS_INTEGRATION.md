@@ -109,10 +109,12 @@ Nova Forge/
 
 ## Building
 
-### Build Everything
+> **Full build reference → [BUILDING.md](BUILDING.md)**
+
+### Build Everything (Recommended)
 
 ```bash
-./scripts/build.sh
+./scripts/build_all.sh
 ```
 
 ### Build Atlas Engine Only
@@ -138,11 +140,11 @@ make build
 | Option | Default | Description |
 |--------|---------|-------------|
 | `BUILD_ATLAS_ENGINE` | `ON` | Build the Atlas Engine static library |
-| `BUILD_ATLAS_EDITOR` | `OFF` | Build the Atlas Editor executable |
+| `BUILD_ATLAS_EDITOR` | `ON` | Build the Atlas Editor executable |
 | `BUILD_ATLAS_TESTS` | `ON` | Build and register Atlas Engine tests |
 | `BUILD_CLIENT` | `ON` | Build the Nova Forge game client |
 | `BUILD_SERVER` | `ON` | Build the Nova Forge game server |
-| `NOVAFORGE_EDITOR_TOOLS` | `OFF` | Embed editor tool layer in game client (F12 toggle) |
+| `NOVAFORGE_EDITOR_TOOLS` | `ON` | Embed editor tool layer in game client (F12 toggle) |
 
 ## Embedded Editor Tools (EditorToolLayer)
 

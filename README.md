@@ -65,16 +65,18 @@ Nova Forge is a **PVE space simulation** where you command ships, build fleets, 
 
 ## 🚀 Quick Start
 
+> **Full build reference → [docs/BUILDING.md](docs/BUILDING.md)**
+
 ### Prerequisites
 
 - **CMake** 3.15+
 - **C++17** compiler (GCC 9+, Clang 10+, MSVC 2019+)
-- **Libraries**: GLFW3 · GLM · GLEW · nlohmann-json · OpenAL (optional)
+- **Libraries**: GLFW3 · GLM · GLEW · nlohmann-json · FreeType · OpenAL (optional)
 
 ### Linux / macOS
 
 ```bash
-# Ubuntu/Debian
+# Ubuntu/Debian — install dependencies
 sudo apt-get install build-essential cmake \
   libgl1-mesa-dev libglew-dev libglfw3-dev libglm-dev \
   nlohmann-json3-dev libopenal-dev libfreetype-dev
@@ -82,28 +84,34 @@ sudo apt-get install build-essential cmake \
 # macOS
 brew install cmake glfw glm glew nlohmann-json openal-soft freetype
 
-# Build & run
-./scripts/build.sh
-cd build/bin && ./nova_forge "YourName"
+# Build everything (engine, editor, client with F12 tools, server, tests)
+./scripts/build_all.sh
+
+# Run the client
+./build/bin/atlas_client "YourName"
 ```
 
-### Windows (Visual Studio)
+### Windows
 
 ```cmd
-:: Install dependencies via vcpkg
+:: Install dependencies via vcpkg (one time)
 vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows ^
               nlohmann-json:x64-windows freetype:x64-windows
 
-:: Generate & open solution
-scripts\build_vs.bat --open
+:: Build everything
+scripts\build_all.bat
+
+:: Run the client
+build\bin\atlas_client.exe "YourName"
 ```
 
-### CMake (any platform)
+### Makefile shortcuts
 
 ```bash
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON
-cmake --build . --config Release
+make build-all             # Full build (same as build_all.sh)
+make build-client-editor   # Client only, with F12 editor tools
+make test                  # Run all tests
+make help                  # Show all targets
 ```
 
 ---
@@ -142,9 +150,9 @@ NovaForge/
 │   ├── missions/          #   Mission templates (5 levels, 7 types)
 │   ├── universe/          #   Solar systems, stargates, stations
 │   └── ...                #   Skills, NPCs, market, industry, etc.
-├── scripts/               # Build & packaging scripts
+├── scripts/               # Build scripts
+│   ├── build_all.sh / .bat#   ★ Full build (engine+editor+client+server+tests)
 │   ├── build.sh / .bat    #   Quick build (Release or Debug)
-│   ├── build_all.sh / .bat#   Full build (engine+editor+client+server+tests)
 │   ├── build_vs.bat       #   Visual Studio client build
 │   └── generate_solution.bat # Generate VS solution
 ├── assets/                # Raw reference models & archives (.blend, .zip)
@@ -232,11 +240,11 @@ This project includes the **Atlas Engine** — a modular, data-driven game engin
 
 ```bash
 make test-engine
-# or
+# or manually:
 mkdir build && cd build
 cmake .. -DBUILD_ATLAS_ENGINE=ON -DBUILD_ATLAS_TESTS=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF
 cmake --build .
-./atlas_tests/AtlasTests
+./bin/AtlasTests
 ```
 
 ---
@@ -354,7 +362,7 @@ See the [Modding Guide](docs/MODDING_GUIDE.md) for details.
 
 | Category | Links |
 |----------|-------|
-| **Get Started** | [Tutorial](docs/TUTORIAL.md) · [Build Guides](docs/guides/) |
+| **Get Started** | [Building](docs/BUILDING.md) · [Tutorial](docs/TUTORIAL.md) |
 | **Atlas Engine** | [Integration Guide](docs/ATLAS_INTEGRATION.md) · [Atlas Repo](https://github.com/shifty81/Atlas) |
 | **Atlas UI** | [Atlas UI Docs](docs/atlas-ui/README.md) · [Widget Reference](docs/atlas-ui/WIDGETS.md) |
 | **Editor Tools** | [Editor Tools Reference](docs/EDITOR_TOOLS.md) · [Tool Layer Design](docs/design/editor_tool_layer.md) · [Extended Features](docs/design/extended_tooling_features.md) |

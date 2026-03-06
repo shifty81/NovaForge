@@ -68,10 +68,16 @@ inline std::string resolvePath(const std::string& filePath) {
         // Visual Studio where the exe may be in bin/Release/ or bin/Debug/
         // while resources are at the project root).
         std::filesystem::path parent = exeDirPath;
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 6; ++i) {
             parent = parent.parent_path();
             if (parent.empty() || parent == parent.parent_path()) break;
             resolved = parent / filePath;
+            if (std::filesystem::exists(resolved)) {
+                return resolved.string();
+            }
+            // Also check under cpp_client/ subdirectory (handles builds
+            // from the root directory where shaders live in cpp_client/)
+            resolved = parent / "cpp_client" / filePath;
             if (std::filesystem::exists(resolved)) {
                 return resolved.string();
             }

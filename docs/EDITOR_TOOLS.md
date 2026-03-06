@@ -7,9 +7,9 @@
 
 The **EditorToolLayer** is an optional overlay embedded in the game client that
 provides developer tooling for content iteration without leaving the running
-game. Toggle it with **F12**. For release builds, set `NOVAFORGE_EDITOR_TOOLS=OFF`
-to compile out all editor headers, sources, and runtime objects — zero overhead
-in the shipping binary.
+game. Toggle it with **F12**. The overlay is compiled in by default. For release
+builds, set `NOVAFORGE_EDITOR_TOOLS=OFF` to compile out all editor headers,
+sources, and runtime objects — zero overhead in the shipping binary.
 
 ## 2. Architecture
 
@@ -138,17 +138,21 @@ Standalone panels in `editor/panels/`:
 
 | Flag | Default | Effect |
 |------|---------|--------|
-| `NOVAFORGE_EDITOR_TOOLS` | `OFF` | Compile editor tool sources into the client |
-| `BUILD_ATLAS_TESTS` | `OFF` | Build the Atlas test suite |
+| `NOVAFORGE_EDITOR_TOOLS` | `ON` | Compile editor tool sources into the client |
+| `BUILD_ATLAS_TESTS` | `ON` | Build the Atlas test suite |
 
 ### Build commands
 
 ```bash
-# Client with editor tools (development)
+# Recommended: build everything (includes editor tools by default)
+./scripts/build_all.sh
+
+# Client with editor tools (development) — via Makefile
 make build-client-editor
 
 # Client without editor tools (release)
-make build-client
+cmake .. -DNOVAFORGE_EDITOR_TOOLS=OFF
+cmake --build . --config Release
 
 # Standalone editor
 make build-editor
@@ -157,8 +161,8 @@ make build-editor
 ### Direct CMake
 
 ```bash
-cmake .. -DNOVAFORGE_EDITOR_TOOLS=ON   # embed tools
-cmake .. -DNOVAFORGE_EDITOR_TOOLS=OFF  # strip tools
+cmake .. -DNOVAFORGE_EDITOR_TOOLS=ON   # embed tools (default)
+cmake .. -DNOVAFORGE_EDITOR_TOOLS=OFF  # strip tools (release)
 ```
 
 ### Runtime toggle

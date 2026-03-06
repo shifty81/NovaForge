@@ -117,15 +117,15 @@ cd NovaForge
 # Check build dependencies
 make check-deps
 
-# Build everything (Release)
-make build
+# Build everything (recommended for first time)
+./scripts/build_all.sh
 
 # Run tests to verify setup
 make test
 ```
 
-See `docs/guides/` for platform-specific build instructions (Linux, macOS,
-Windows/VS2022).
+See [docs/BUILDING.md](BUILDING.md) for full build instructions and
+platform-specific details.
 
 ### 3. Create a Branch
 

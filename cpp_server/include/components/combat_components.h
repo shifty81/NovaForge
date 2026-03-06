@@ -290,6 +290,38 @@ public:
     COMPONENT_TYPE(CombatEngagement)
 };
 
+/**
+ * @brief Tracks accumulated combat rewards for an entity
+ *
+ * When NPCs are destroyed, reward XP and loot credits accumulate here.
+ * The system periodically flushes pending rewards to the player's wallet
+ * and progression components.
+ */
+class CombatReward : public ecs::Component {
+public:
+    struct KillReward {
+        std::string target_id;
+        std::string target_name;
+        float xp_awarded = 0.0f;
+        double credits_awarded = 0.0;
+        std::string loot_table;
+        float timestamp = 0.0f;
+        bool flushed = false;
+    };
+
+    std::vector<KillReward> pending_rewards;
+    double total_credits_awarded = 0.0;
+    float total_xp_awarded = 0.0f;
+    int total_kills = 0;
+    int pending_count = 0;
+    float flush_interval = 2.0f;    // seconds between flushes
+    float time_since_flush = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CombatReward)
+};
+
 } // namespace components
 } // namespace atlas
 
