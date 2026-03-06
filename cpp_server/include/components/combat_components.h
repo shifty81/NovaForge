@@ -144,6 +144,56 @@ public:
 };
 
 
+// ==================== Combat Log ====================
+
+/**
+ * @brief Combat event recording and engagement analytics
+ *
+ * Records combat events for damage type analysis, DPS calculation,
+ * and engagement outcome tracking. Supports balance tuning by
+ * providing per-engagement statistics and damage breakdowns.
+ */
+class CombatLog : public ecs::Component {
+public:
+    enum class DamageType { EM, Thermal, Kinetic, Explosive };
+    enum class EngagementOutcome { Ongoing, Victory, Defeat, Draw };
+
+    struct CombatEntry {
+        std::string attacker_id;
+        std::string defender_id;
+        DamageType damage_type = DamageType::Kinetic;
+        float damage_amount = 0.0f;
+        std::string weapon_type;
+        bool hit = true;
+        float timestamp = 0.0f;
+    };
+
+    struct EngagementSummary {
+        std::string engagement_id;
+        float start_time = 0.0f;
+        float duration = 0.0f;
+        float total_damage_dealt = 0.0f;
+        float total_damage_received = 0.0f;
+        int kills = 0;
+        int losses = 0;
+        EngagementOutcome outcome = EngagementOutcome::Ongoing;
+    };
+
+    std::vector<CombatEntry> entries;
+    std::vector<EngagementSummary> engagements;
+    int max_entries = 100;
+    int max_engagements = 20;
+    int total_entries_recorded = 0;
+    float total_damage_dealt = 0.0f;
+    float total_damage_received = 0.0f;
+    int total_kills = 0;
+    int total_losses = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CombatLog)
+};
+
 } // namespace components
 } // namespace atlas
 

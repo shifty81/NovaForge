@@ -241,6 +241,9 @@ void run_incursion_system_tests();
 void run_clone_bay_system_tests();
 void run_loyalty_point_store_system_tests();
 void run_contract_auction_system_tests();
+void run_trade_route_analytics_system_tests();
+void run_combat_log_system_tests();
+void run_fleet_coordination_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -479,6 +482,9 @@ int main() {
     run_clone_bay_system_tests();
     run_loyalty_point_store_system_tests();
     run_contract_auction_system_tests();
+    run_trade_route_analytics_system_tests();
+    run_combat_log_system_tests();
+    run_fleet_coordination_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
