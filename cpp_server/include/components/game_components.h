@@ -848,6 +848,153 @@ public:
     COMPONENT_TYPE(OnboardingState)
 };
 
+/**
+ * @brief Data for star system content population (vertical-slice seeding)
+ */
+class StarSystemPopulation : public ecs::Component {
+public:
+    struct StationSeed {
+        std::string station_id;
+        std::string station_name;
+        std::string station_type; // "Trade", "Industrial", "Military"
+        bool spawned = false;
+    };
+
+    struct AsteroidBeltSeed {
+        std::string belt_id;
+        std::string ore_type; // "Veldspar", "Scordite", "Pyroxeres"
+        int richness = 1;     // 1–5 scale
+        bool spawned = false;
+    };
+
+    struct NPCFactionSeed {
+        std::string faction_id;
+        std::string faction_name;
+        int spawn_count = 0;
+        bool spawned = false;
+    };
+
+    struct JumpGateSeed {
+        std::string gate_id;
+        std::string destination_system;
+        bool spawned = false;
+    };
+
+    struct PointOfInterestSeed {
+        std::string poi_id;
+        std::string poi_type; // "Anomaly", "Wreck", "Beacon", "Landmark"
+        std::string description;
+        bool spawned = false;
+    };
+
+    std::string system_id;
+    std::string system_name;
+    float security_status = 1.0f;
+
+    std::vector<StationSeed> stations;
+    std::vector<AsteroidBeltSeed> asteroid_belts;
+    std::vector<NPCFactionSeed> npc_factions;
+    std::vector<JumpGateSeed> jump_gates;
+    std::vector<PointOfInterestSeed> points_of_interest;
+
+    int max_stations = 10;
+    int max_asteroid_belts = 15;
+    int max_npc_factions = 8;
+    int max_jump_gates = 5;
+    int max_pois = 20;
+
+    bool populated = false;
+    float population_time = 0.0f;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(StarSystemPopulation)
+};
+
+/**
+ * @brief Tracks cumulative player progress and session statistics
+ */
+class SessionProgression : public ecs::Component {
+public:
+    struct Milestone {
+        std::string milestone_id;
+        std::string description;
+        float timestamp = 0.0f;
+        bool reached = false;
+    };
+
+    struct Statistic {
+        std::string stat_key;
+        double value = 0.0;
+    };
+
+    struct ActivityEntry {
+        std::string activity_type;
+        std::string detail;
+        float timestamp = 0.0f;
+    };
+
+    std::string player_id;
+
+    std::vector<Milestone> milestones;
+    std::vector<Statistic> statistics;
+    std::vector<ActivityEntry> activities;
+
+    int max_milestones = 50;
+    int max_activities = 200;
+
+    float session_start_time = 0.0f;
+    float session_end_time = 0.0f;
+    bool session_finalized = false;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SessionProgression)
+};
+
+/**
+ * @brief Manages dynamic encounter lifecycle during vertical-slice gameplay
+ */
+class EncounterState : public ecs::Component {
+public:
+    enum class Status {
+        Pending = 0,
+        Active,
+        Completed,
+        Failed,
+        Expired
+    };
+
+    struct Encounter {
+        std::string encounter_id;
+        std::string encounter_type; // "PirateAmbush", "TradeEscort", "CombatChallenge", "WarpInterdiction"
+        int difficulty = 1;         // 1–5 scale
+        float duration = 0.0f;     // max duration in seconds
+        float started_at = 0.0f;
+        float ended_at = 0.0f;
+        Status status = Status::Pending;
+        double isk_reward = 0.0;
+        int loot_count = 0;
+    };
+
+    std::string system_id;
+
+    std::vector<Encounter> encounters;
+    int max_encounters = 20;
+
+    int active_count = 0;
+    int completed_count = 0;
+    int failed_count = 0;
+    double total_rewards_earned = 0.0;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(EncounterState)
+};
+
 } // namespace components
 } // namespace atlas
 

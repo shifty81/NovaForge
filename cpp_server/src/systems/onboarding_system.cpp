@@ -56,7 +56,7 @@ bool OnboardingSystem::advancePhase(const std::string& entity_id) {
 bool OnboardingSystem::skipTutorial(const std::string& entity_id) {
     auto* state = getComponentFor(entity_id);
     if (!state) return false;
-    if (state->tutorial_complete) return false;
+    if (state->tutorial_complete || state->tutorial_skipped) return false;
     state->tutorial_skipped = true;
     state->current_phase = OBS::TutorialPhase::Completed;
     return true;
