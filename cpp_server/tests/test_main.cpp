@@ -257,6 +257,11 @@ void run_damage_notification_system_tests();
 void run_loot_container_system_tests();
 void run_system_map_system_tests();
 void run_overview_filter_system_tests();
+void run_fps_enemy_ai_system_tests();
+void run_fps_stealth_system_tests();
+void run_fps_companion_system_tests();
+void run_fps_terminal_hack_system_tests();
+void run_fps_cover_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -511,6 +516,11 @@ int main() {
     run_loot_container_system_tests();
     run_system_map_system_tests();
     run_overview_filter_system_tests();
+    run_fps_enemy_ai_system_tests();
+    run_fps_stealth_system_tests();
+    run_fps_companion_system_tests();
+    run_fps_terminal_hack_system_tests();
+    run_fps_cover_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
