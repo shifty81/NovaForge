@@ -679,6 +679,175 @@ public:
     COMPONENT_TYPE(SpatialPartition)
 };
 
+// ==================== Player Session State ====================
+
+/**
+ * @brief Player session state for connect/disconnect/character management
+ *
+ * Tracks a player's connection lifecycle, selected character, session
+ * duration, and reconnection history.  Enables the vertical-slice
+ * game loop where a player connects, selects a character, plays, and
+ * can reconnect after a disconnect.
+ */
+class PlayerSession : public ecs::Component {
+public:
+    enum class SessionState {
+        Disconnected = 0,
+        Connecting,
+        CharacterSelect,
+        Loading,
+        InGame,
+        Reconnecting
+    };
+
+    struct CharacterSlot {
+        std::string character_id;
+        std::string character_name;
+        std::string ship_type;
+        std::string location;       // star system or station
+        float play_time = 0.0f;     // total play time in seconds
+        bool active = false;
+    };
+
+    std::string player_id;
+    std::string display_name;
+    SessionState state = SessionState::Disconnected;
+    std::string selected_character_id;
+    std::vector<CharacterSlot> character_slots;
+    int max_character_slots = 3;
+
+    // Session tracking
+    float session_start_time = 0.0f;
+    float session_duration = 0.0f;
+    float total_play_time = 0.0f;
+    int login_count = 0;
+    int disconnect_count = 0;
+    int reconnect_count = 0;
+    float last_heartbeat = 0.0f;
+    float heartbeat_timeout = 30.0f;  // seconds before considered disconnected
+
+    bool active = true;
+
+    COMPONENT_TYPE(PlayerSession)
+};
+
+// ==================== Save Game State ====================
+
+/**
+ * @brief Save game state for persisting player progress
+ *
+ * Manages save slots with metadata (timestamp, location, playtime).
+ * Tracks what needs to be serialized: ship loadout, wallet balance,
+ * skill state, standing, cargo, and mission progress.
+ */
+class SaveGameState : public ecs::Component {
+public:
+    enum class SaveStatus {
+        Idle = 0,
+        Saving,
+        Loading,
+        Error
+    };
+
+    struct SaveSlot {
+        std::string slot_id;
+        std::string character_name;
+        std::string location;
+        std::string ship_type;
+        double wallet_balance = 0.0;
+        int skill_points = 0;
+        float play_time = 0.0f;
+        float save_timestamp = 0.0f;
+        bool occupied = false;
+        bool corrupted = false;
+    };
+
+    std::string owner_id;       // player who owns this save data
+    std::vector<SaveSlot> slots;
+    int max_slots = 5;
+    SaveStatus status = SaveStatus::Idle;
+
+    // Dirty flags — what changed since last save
+    bool ship_dirty = false;
+    bool wallet_dirty = false;
+    bool skills_dirty = false;
+    bool standings_dirty = false;
+    bool cargo_dirty = false;
+    bool missions_dirty = false;
+
+    // Stats
+    int total_saves = 0;
+    int total_loads = 0;
+    int save_errors = 0;
+    float last_save_time = 0.0f;
+    float auto_save_interval = 300.0f;  // 5 minutes
+    float auto_save_timer = 0.0f;
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SaveGameState)
+};
+
+// ==================== Onboarding State ====================
+
+/**
+ * @brief Onboarding / tutorial state for new-player experience
+ *
+ * Tracks tutorial progress through ordered objectives, hints shown,
+ * and completion milestones.  Designed for the vertical-slice first
+ * play-through: undock → fly → mine → sell → fit → fight → warp.
+ */
+class OnboardingState : public ecs::Component {
+public:
+    enum class TutorialPhase {
+        NotStarted = 0,
+        Welcome,
+        Undocking,
+        BasicFlight,
+        Mining,
+        Trading,
+        ShipFitting,
+        Combat,
+        Warping,
+        Completed
+    };
+
+    struct Objective {
+        std::string objective_id;
+        std::string description;
+        TutorialPhase phase = TutorialPhase::NotStarted;
+        bool completed = false;
+        float completed_at = 0.0f;
+    };
+
+    struct HintEntry {
+        std::string hint_id;
+        std::string text;
+        bool shown = false;
+        float shown_at = 0.0f;
+    };
+
+    std::string player_id;
+    TutorialPhase current_phase = TutorialPhase::NotStarted;
+    std::vector<Objective> objectives;
+    std::vector<HintEntry> hints;
+    int max_objectives = 50;
+    int max_hints = 30;
+
+    // Progress
+    int objectives_completed = 0;
+    int hints_shown = 0;
+    float start_time = 0.0f;
+    float completion_time = 0.0f;
+    bool tutorial_complete = false;
+    bool tutorial_skipped = false;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OnboardingState)
+};
+
 } // namespace components
 } // namespace atlas
 
