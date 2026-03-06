@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WARP_CINEMATIC_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WARP_CINEMATIC_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -25,12 +26,11 @@ namespace systems {
  *   - Harmonics: ramp during accel/cruise, quieter during align
  *   - Shimmer: environmental layer, gentle during cruise
  */
-class WarpCinematicSystem : public ecs::System {
+class WarpCinematicSystem : public ecs::SingleComponentSystem<components::WarpState> {
 public:
     explicit WarpCinematicSystem(ecs::World* world);
     ~WarpCinematicSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WarpCinematicSystem"; }
 
     /**
@@ -56,6 +56,9 @@ public:
                              float& engine_vol, float& harmonics_vol,
                              float& shimmer_vol,
                              float& engine_pitch, float& harmonics_pitch);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WarpState& warpState, float delta_time) override;
 };
 
 } // namespace systems

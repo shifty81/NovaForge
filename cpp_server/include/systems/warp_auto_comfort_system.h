@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WARP_AUTO_COMFORT_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WARP_AUTO_COMFORT_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -21,12 +22,11 @@ namespace systems {
  *   - If ultrawide_detected: clamp radial distortion (via blur_intensity)
  *   - Oscillation frequency reduced proportionally to comfort_reduction
  */
-class WarpAutoComfortSystem : public ecs::System {
+class WarpAutoComfortSystem : public ecs::SingleComponentSystem<components::WarpAutoComfort> {
 public:
     explicit WarpAutoComfortSystem(ecs::World* world);
     ~WarpAutoComfortSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WarpAutoComfortSystem"; }
 
     /**
@@ -52,6 +52,9 @@ public:
     static void applyComfort(float comfort_reduction, bool ultrawide,
                              float max_distortion_uw,
                              float& motion, float& blur);
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WarpAutoComfort& comfort, float delta_time) override;
 };
 
 } // namespace systems

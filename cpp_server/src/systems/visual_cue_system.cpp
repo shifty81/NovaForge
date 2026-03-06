@@ -6,48 +6,44 @@ namespace atlas {
 namespace systems {
 
 VisualCueSystem::VisualCueSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void VisualCueSystem::update(float /*delta_time*/) {
-    auto entities = world_->getEntities<components::SimStarSystemState>();
-    for (auto* entity : entities) {
-        auto* state = entity->getComponent<components::SimStarSystemState>();
-        auto* cue = entity->getComponent<components::VisualCue>();
-        if (!state || !cue) continue;
+void VisualCueSystem::updateComponent(ecs::Entity& entity, components::SimStarSystemState& state, float /*delta_time*/) {
+    auto* cue = entity.getComponent<components::VisualCue>();
+    if (!cue) return;
 
-        // Lockdown: active if threat > 0.8 or security < 0.2
-        cue->lockdown_active = (state->threat_level > 0.8f || state->security_level < 0.2f);
-        cue->lockdown_intensity = std::clamp(state->threat_level, 0.0f, 1.0f);
+    // Lockdown: active if threat > 0.8 or security < 0.2
+    cue->lockdown_active = (state.threat_level > 0.8f || state.security_level < 0.2f);
+    cue->lockdown_intensity = std::clamp(state.threat_level, 0.0f, 1.0f);
 
-        // Traffic density
-        cue->traffic_density = std::clamp(state->traffic_level, 0.0f, 1.0f);
-        cue->traffic_ship_count = static_cast<int>(state->traffic_level * 100.0f);
+    // Traffic density
+    cue->traffic_density = std::clamp(state.traffic_level, 0.0f, 1.0f);
+    cue->traffic_ship_count = static_cast<int>(state.traffic_level * 100.0f);
 
-        // Threat glow
-        cue->threat_glow = std::clamp(state->threat_level, 0.0f, 1.0f);
+    // Threat glow
+    cue->threat_glow = std::clamp(state.threat_level, 0.0f, 1.0f);
 
-        // Prosperity from economy
-        cue->prosperity_indicator = std::clamp(state->economic_index, 0.0f, 1.0f);
+    // Prosperity from economy
+    cue->prosperity_indicator = std::clamp(state.economic_index, 0.0f, 1.0f);
 
-        // Pirate warning
-        cue->pirate_warning = std::clamp(state->pirate_activity, 0.0f, 1.0f);
+    // Pirate warning
+    cue->pirate_warning = std::clamp(state.pirate_activity, 0.0f, 1.0f);
 
-        // Resource highlight
-        cue->resource_highlight = std::clamp(state->resource_availability, 0.0f, 1.0f);
+    // Resource highlight
+    cue->resource_highlight = std::clamp(state.resource_availability, 0.0f, 1.0f);
 
-        // Faction influence: find dominant faction
-        float best = 0.0f;
-        std::string best_faction;
-        for (const auto& pair : state->faction_influence) {
-            if (pair.second > best) {
-                best = pair.second;
-                best_faction = pair.first;
-            }
+    // Faction influence: find dominant faction
+    float best = 0.0f;
+    std::string best_faction;
+    for (const auto& pair : state.faction_influence) {
+        if (pair.second > best) {
+            best = pair.second;
+            best_faction = pair.first;
         }
-        cue->dominant_faction = best_faction;
-        cue->faction_influence_strength = best;
     }
+    cue->dominant_faction = best_faction;
+    cue->faction_influence_strength = best;
 }
 
 // --- Query API ---
