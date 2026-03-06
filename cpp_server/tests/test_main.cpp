@@ -252,6 +252,11 @@ void run_cargo_manifest_system_tests();
 void run_loadout_persistence_system_tests();
 void run_mission_reward_system_tests();
 void run_player_standing_system_tests();
+void run_undock_sequence_system_tests();
+void run_damage_notification_system_tests();
+void run_loot_container_system_tests();
+void run_system_map_system_tests();
+void run_overview_filter_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -501,6 +506,11 @@ int main() {
     run_loadout_persistence_system_tests();
     run_mission_reward_system_tests();
     run_player_standing_system_tests();
+    run_undock_sequence_system_tests();
+    run_damage_notification_system_tests();
+    run_loot_container_system_tests();
+    run_system_map_system_tests();
+    run_overview_filter_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

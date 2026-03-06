@@ -887,6 +887,42 @@ public:
     COMPONENT_TYPE(ScanProbe)
 };
 
+// ==================== Loot Container ====================
+
+/**
+ * @brief Manages loot containers from wrecks and exploration sites
+ *
+ * Tracks container contents with expiry timers. Supports access control
+ * via owner, blue-tag sharing, and abandonment mechanics.
+ */
+class LootContainer : public ecs::Component {
+public:
+    struct LootItem {
+        std::string item_id;
+        std::string name;
+        std::string category;    // "Module", "Ammo", "Ore", "Salvage", "DataCore"
+        int quantity = 1;
+        float volume = 1.0f;     // m3 per unit
+        float value = 0.0f;      // estimated ISK value
+    };
+
+    std::string container_id;
+    std::string owner_id;
+    std::string source_type;     // "Wreck", "Anomaly", "Mission", "PlayerJettison"
+    std::vector<LootItem> items;
+    int max_items = 30;
+    float expiry_duration = 7200.0f;   // 2 hours default
+    float time_remaining = 7200.0f;
+    float total_value = 0.0f;
+    float total_volume = 0.0f;
+    int total_looted = 0;
+    bool is_abandoned = false;
+    bool is_locked = false;
+    bool active = true;
+
+    COMPONENT_TYPE(LootContainer)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -253,6 +253,11 @@ set(CORE_SOURCES
     src/systems/loadout_persistence_system.cpp
     src/systems/mission_reward_system.cpp
     src/systems/player_standing_system.cpp
+    src/systems/undock_sequence_system.cpp
+    src/systems/damage_notification_system.cpp
+    src/systems/loot_container_system.cpp
+    src/systems/system_map_system.cpp
+    src/systems/overview_filter_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -587,6 +592,11 @@ set(SERVER_HEADERS
     include/systems/loadout_persistence_system.h
     include/systems/mission_reward_system.h
     include/systems/player_standing_system.h
+    include/systems/undock_sequence_system.h
+    include/systems/damage_notification_system.h
+    include/systems/loot_container_system.h
+    include/systems/system_map_system.h
+    include/systems/overview_filter_system.h
 )
 
 # Steam SDK configuration

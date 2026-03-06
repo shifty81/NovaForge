@@ -511,6 +511,103 @@ public:
     COMPONENT_TYPE(JitterBuffer)
 };
 
+// ==================== Undock Sequence ====================
+
+/**
+ * @brief Manages the multi-phase undock animation sequence from stations
+ *
+ * Tracks phase progression from Docked through HangarExit, TunnelTraversal,
+ * ExitAnimation to Ejected/Complete. Provides post-undock invulnerability window.
+ */
+class UndockSequence : public ecs::Component {
+public:
+    enum UndockPhase {
+        Docked = 0,
+        RequestingUndock = 1,
+        HangarExit = 2,
+        TunnelTraversal = 3,
+        ExitAnimation = 4,
+        Ejected = 5,
+        Complete = 6
+    };
+
+    UndockPhase phase = Docked;
+    float phase_progress = 0.0f;     // 0.0 to 1.0 within current phase
+    float phase_speed = 0.5f;        // progress per second
+    std::string station_id;
+    float exit_x = 0.0f;
+    float exit_y = 0.0f;
+    float exit_z = 0.0f;
+    float exit_velocity = 50.0f;
+    float undock_timer = 0.0f;
+    float total_undock_time = 0.0f;
+    float alignment_angle = 0.0f;
+    bool is_invulnerable = false;
+    float invulnerability_duration = 30.0f;
+    float invulnerability_timer = 0.0f;
+    int undock_count = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(UndockSequence)
+};
+
+// ==================== System Map ====================
+
+/**
+ * @brief In-system map data for celestials, bookmarks, and signatures
+ *
+ * Manages the objects visible on the system map including celestial bodies,
+ * player bookmarks, and scanned signatures with distance calculations.
+ */
+class SystemMap : public ecs::Component {
+public:
+    struct Celestial {
+        std::string celestial_id;
+        std::string name;
+        std::string type;       // "Star", "Planet", "Moon", "Station", "Gate", "Belt"
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float radius = 0.0f;
+        bool visible = true;
+    };
+
+    struct Bookmark {
+        std::string bookmark_id;
+        std::string label;
+        std::string folder;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float created_at = 0.0f;
+    };
+
+    struct Signature {
+        std::string sig_id;
+        std::string type;       // "Anomaly", "Wormhole", "Data", "Relic", "Gas", "Combat"
+        float scan_strength = 0.0f;  // 0.0 - 1.0
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        bool resolved = false;
+    };
+
+    std::string system_name;
+    float security_level = 1.0f;
+    std::vector<Celestial> celestials;
+    std::vector<Bookmark> bookmarks;
+    std::vector<Signature> signatures;
+    int max_celestials = 50;
+    int max_bookmarks = 100;
+    int max_signatures = 30;
+    int total_bookmarks_created = 0;
+    int total_signatures_scanned = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SystemMap)
+};
+
 } // namespace components
 } // namespace atlas
 
