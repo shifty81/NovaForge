@@ -268,6 +268,9 @@ void run_spatial_partition_system_tests();
 void run_player_session_system_tests();
 void run_save_game_system_tests();
 void run_onboarding_system_tests();
+void run_star_system_populator_system_tests();
+void run_session_progression_system_tests();
+void run_encounter_spawner_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -533,6 +536,9 @@ int main() {
     run_player_session_system_tests();
     run_save_game_system_tests();
     run_onboarding_system_tests();
+    run_star_system_populator_system_tests();
+    run_session_progression_system_tests();
+    run_encounter_spawner_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
