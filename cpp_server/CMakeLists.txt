@@ -278,6 +278,9 @@ set(CORE_SOURCES
     src/systems/market_browser_system.cpp
     src/systems/skill_queue_system.cpp
     src/systems/ship_fitting_validation_system.cpp
+    src/systems/combat_after_action_system.cpp
+    src/systems/transit_planner_system.cpp
+    src/systems/fleet_readiness_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -637,6 +640,9 @@ set(SERVER_HEADERS
     include/systems/market_browser_system.h
     include/systems/skill_queue_system.h
     include/systems/ship_fitting_validation_system.h
+    include/systems/combat_after_action_system.h
+    include/systems/transit_planner_system.h
+    include/systems/fleet_readiness_system.h
 )
 
 # Steam SDK configuration

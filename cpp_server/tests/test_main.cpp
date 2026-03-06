@@ -277,6 +277,9 @@ void run_session_summary_system_tests();
 void run_market_browser_system_tests();
 void run_skill_queue_system_tests();
 void run_ship_fitting_validation_system_tests();
+void run_combat_after_action_system_tests();
+void run_transit_planner_system_tests();
+void run_fleet_readiness_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -551,6 +554,9 @@ int main() {
     run_market_browser_system_tests();
     run_skill_queue_system_tests();
     run_ship_fitting_validation_system_tests();
+    run_combat_after_action_system_tests();
+    run_transit_planner_system_tests();
+    run_fleet_readiness_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

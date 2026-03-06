@@ -1197,6 +1197,98 @@ public:
     COMPONENT_TYPE(ShipFittingValidationState)
 };
 
+/**
+ * @brief Combat after-action report state with per-engagement tracking
+ */
+class CombatAfterActionState : public ecs::Component {
+public:
+    struct Engagement {
+        std::string engagement_id;
+        std::string target_name;
+        double damage_dealt = 0.0;
+        double damage_received = 0.0;
+        float duration = 0.0f;
+        double isk_destroyed = 0.0;
+        bool finalized = false;
+    };
+
+    struct Casualty {
+        std::string ship_name;
+        double isk_value = 0.0;
+    };
+
+    std::string player_id;
+
+    std::vector<Engagement> engagements;
+    int max_engagements = 100;
+
+    std::vector<Casualty> casualties;
+    int max_casualties = 50;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CombatAfterActionState)
+};
+
+/**
+ * @brief Multi-leg transit route with waypoints, travel times, and fuel costs
+ */
+class TransitPlannerState : public ecs::Component {
+public:
+    struct Waypoint {
+        std::string waypoint_id;
+        std::string waypoint_name;
+        float travel_time = 0.0f;
+        float fuel_cost = 0.0f;
+    };
+
+    std::string player_id;
+
+    std::vector<Waypoint> waypoints;
+    int max_waypoints = 50;
+
+    int current_waypoint_index = 0;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(TransitPlannerState)
+};
+
+/**
+ * @brief Fleet readiness assessment with member stats and supply tracking
+ */
+class FleetReadinessState : public ecs::Component {
+public:
+    struct FleetMember {
+        std::string member_id;
+        std::string ship_name;
+        float dps = 0.0f;
+        float ehp = 0.0f;
+        float capacitor = 0.0f;
+        bool ready = false;
+    };
+
+    struct SupplyStatus {
+        std::string supply_type;
+        float level = 0.0f;
+    };
+
+    std::string fleet_id;
+
+    std::vector<FleetMember> members;
+    int max_members = 25;
+
+    std::vector<SupplyStatus> supplies;
+    int max_supplies = 20;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetReadinessState)
+};
+
 } // namespace components
 } // namespace atlas
 
