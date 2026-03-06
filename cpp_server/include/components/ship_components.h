@@ -905,6 +905,29 @@ public:
     COMPONENT_TYPE(ModuleCascadingFailure)
 };
 
+/**
+ * @brief Unified cargo manifest with volume tracking and ore hold separation
+ */
+class CargoManifest : public ecs::Component {
+public:
+    struct CargoItem {
+        std::string item_id;
+        std::string item_name;
+        std::string category;     // "ore", "mineral", "module", "ammo", "salvage"
+        int quantity = 0;
+        double volume_per_unit = 1.0;
+    };
+
+    double general_capacity = 400.0;   // m³
+    double general_used = 0.0;
+    double ore_hold_capacity = 0.0;    // 0 = no ore hold
+    double ore_hold_used = 0.0;
+    bool active = true;
+    std::vector<CargoItem> items;
+
+    COMPONENT_TYPE(CargoManifest)
+};
+
 } // namespace components
 } // namespace atlas
 
