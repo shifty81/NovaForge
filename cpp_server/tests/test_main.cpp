@@ -247,6 +247,11 @@ void run_fleet_coordination_system_tests();
 void run_npc_schedule_system_tests();
 void run_jitter_buffer_system_tests();
 void run_entity_lifecycle_system_tests();
+void run_player_wallet_system_tests();
+void run_cargo_manifest_system_tests();
+void run_loadout_persistence_system_tests();
+void run_mission_reward_system_tests();
+void run_player_standing_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -491,6 +496,11 @@ int main() {
     run_npc_schedule_system_tests();
     run_jitter_buffer_system_tests();
     run_entity_lifecycle_system_tests();
+    run_player_wallet_system_tests();
+    run_cargo_manifest_system_tests();
+    run_loadout_persistence_system_tests();
+    run_mission_reward_system_tests();
+    run_player_standing_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

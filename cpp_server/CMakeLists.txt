@@ -248,6 +248,11 @@ set(CORE_SOURCES
     src/systems/npc_schedule_system.cpp
     src/systems/jitter_buffer_system.cpp
     src/systems/entity_lifecycle_system.cpp
+    src/systems/player_wallet_system.cpp
+    src/systems/cargo_manifest_system.cpp
+    src/systems/loadout_persistence_system.cpp
+    src/systems/mission_reward_system.cpp
+    src/systems/player_standing_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -577,6 +582,11 @@ set(SERVER_HEADERS
     include/systems/npc_schedule_system.h
     include/systems/jitter_buffer_system.h
     include/systems/entity_lifecycle_system.h
+    include/systems/player_wallet_system.h
+    include/systems/cargo_manifest_system.h
+    include/systems/loadout_persistence_system.h
+    include/systems/mission_reward_system.h
+    include/systems/player_standing_system.h
 )
 
 # Steam SDK configuration
