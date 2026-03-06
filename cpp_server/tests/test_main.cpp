@@ -274,6 +274,9 @@ void run_encounter_spawner_system_tests();
 void run_objective_tracker_system_tests();
 void run_event_notification_feed_system_tests();
 void run_session_summary_system_tests();
+void run_market_browser_system_tests();
+void run_skill_queue_system_tests();
+void run_ship_fitting_validation_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -545,6 +548,9 @@ int main() {
     run_objective_tracker_system_tests();
     run_event_notification_feed_system_tests();
     run_session_summary_system_tests();
+    run_market_browser_system_tests();
+    run_skill_queue_system_tests();
+    run_ship_fitting_validation_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

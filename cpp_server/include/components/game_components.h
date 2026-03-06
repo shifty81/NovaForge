@@ -1091,6 +1091,112 @@ public:
     COMPONENT_TYPE(SessionSummaryState)
 };
 
+/**
+ * @brief Market order browser state for trade hub interactions
+ */
+class MarketBrowserState : public ecs::Component {
+public:
+    struct MarketOrder {
+        std::string order_id;
+        std::string item_name;
+        bool is_buy_order = false;
+        double price = 0.0;
+        int quantity = 0;
+    };
+
+    struct Transaction {
+        std::string item_name;
+        bool is_buy = false;
+        double price = 0.0;
+        int quantity = 0;
+        float timestamp = 0.0f;
+    };
+
+    std::string player_id;
+
+    std::vector<MarketOrder> orders;
+    int max_orders = 200;
+
+    std::string current_filter;
+
+    std::vector<std::string> favorites;
+    int max_favorites = 50;
+
+    std::vector<Transaction> transactions;
+    int max_transactions = 100;
+
+    double total_spent = 0.0;
+    double total_earned = 0.0;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MarketBrowserState)
+};
+
+/**
+ * @brief Skill training queue with time-based progression
+ */
+class SkillQueueState : public ecs::Component {
+public:
+    struct QueuedSkill {
+        std::string skill_id;
+        int target_level = 1;
+        float train_duration = 0.0f;
+        float trained_time = 0.0f;
+    };
+
+    struct CompletedSkill {
+        std::string skill_id;
+        int level = 0;
+        float completed_at = 0.0f;
+    };
+
+    std::string player_id;
+
+    std::vector<QueuedSkill> queue;
+    int max_queue_size = 50;
+
+    std::vector<CompletedSkill> completed_skills;
+
+    bool paused = false;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SkillQueueState)
+};
+
+/**
+ * @brief Ship fitting validation state for CPU, power grid, and slot constraints
+ */
+class ShipFittingValidationState : public ecs::Component {
+public:
+    struct FittedModule {
+        std::string module_id;
+        std::string slot_type; // "high", "mid", "low"
+        float cpu_usage = 0.0f;
+        float power_grid_usage = 0.0f;
+    };
+
+    float max_cpu = 0.0f;
+    float max_power_grid = 0.0f;
+    int high_slots = 0;
+    int mid_slots = 0;
+    int low_slots = 0;
+
+    std::vector<FittedModule> fitted_modules;
+
+    float cpu_used = 0.0f;
+    float power_grid_used = 0.0f;
+    int validation_errors = 0;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ShipFittingValidationState)
+};
+
 } // namespace components
 } // namespace atlas
 
