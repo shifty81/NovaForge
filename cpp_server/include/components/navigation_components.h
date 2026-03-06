@@ -476,6 +476,41 @@ public:
     COMPONENT_TYPE(JumpGate)
 };
 
+/**
+ * @brief Network jitter buffer for smooth client interpolation
+ *
+ * Tracks packet timing, computes jitter metrics, and maintains an
+ * adaptive buffer size for smooth networked entity interpolation.
+ * Supports the Network Smoothness priority.
+ */
+class JitterBuffer : public ecs::Component {
+public:
+    struct PacketSample {
+        int sequence = 0;
+        float arrival_time = 0.0f;
+        float expected_time = 0.0f;
+        float jitter = 0.0f;           // |arrival - expected|
+    };
+
+    std::vector<PacketSample> samples;
+    int max_samples = 100;
+    float buffer_size_ms = 50.0f;       // current adaptive buffer size in ms
+    float min_buffer_ms = 20.0f;
+    float max_buffer_ms = 200.0f;
+    float average_jitter = 0.0f;
+    float peak_jitter = 0.0f;
+    float adaptation_rate = 0.1f;       // how fast buffer adapts (0-1)
+    int total_packets = 0;
+    int lost_packets = 0;
+    int underruns = 0;                  // buffer too small events
+    int overruns = 0;                   // buffer too large events
+    float elapsed = 0.0f;
+    int last_sequence = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(JitterBuffer)
+};
+
 } // namespace components
 } // namespace atlas
 

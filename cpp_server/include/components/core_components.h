@@ -303,6 +303,41 @@ public:
     COMPONENT_TYPE(Standings)
 };
 
+/**
+ * @brief Entity lifecycle tracking with spawn/destroy metrics
+ *
+ * Records entity creation and destruction events, tracks lifetime,
+ * death causes, and spawn rates for debugging and content balance.
+ */
+class EntityLifecycle : public ecs::Component {
+public:
+    enum class EventType { Spawned, Destroyed, StateChange };
+    enum class DeathCause { None, Combat, Expiry, Despawn, Environmental, SelfDestruct };
+
+    struct LifecycleEvent {
+        EventType event_type = EventType::Spawned;
+        float timestamp = 0.0f;
+        std::string cause;
+        std::string entity_type;
+    };
+
+    std::vector<LifecycleEvent> events;
+    int max_events = 50;
+    std::string entity_type;
+    std::string spawn_source;
+    float spawn_time = 0.0f;
+    float lifetime = 0.0f;             // updated each tick
+    DeathCause death_cause = DeathCause::None;
+    int total_spawned = 0;
+    int total_destroyed = 0;
+    int total_state_changes = 0;
+    float elapsed = 0.0f;
+    bool alive = true;
+    bool active = true;
+
+    COMPONENT_TYPE(EntityLifecycle)
+};
+
 
 } // namespace components
 } // namespace atlas

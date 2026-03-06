@@ -316,6 +316,39 @@ public:
     COMPONENT_TYPE(GalacticResponseCurve)
 };
 
+/**
+ * @brief NPC daily activity schedule for creating visible economic cycles
+ *
+ * Tracks per-NPC activity schedules with time-of-day driven transitions
+ * between activities (mining, hauling, trading, patrolling, resting).
+ * Enables observable AI economic patterns.
+ */
+class NPCSchedule : public ecs::Component {
+public:
+    enum class Activity { Idle, Mining, Hauling, Trading, Patrolling, Resting, Docking };
+
+    struct ScheduleEntry {
+        Activity activity = Activity::Idle;
+        float start_hour = 0.0f;      // 0-24 hour of day
+        float end_hour = 0.0f;
+        std::string location;
+        int priority = 1;              // 1 = lowest, 5 = highest
+    };
+
+    std::vector<ScheduleEntry> schedule;
+    Activity current_activity = Activity::Idle;
+    float current_hour = 0.0f;         // 0-24, wraps
+    float day_length = 86400.0f;       // seconds per game day (default 24h real-time)
+    float elapsed_day_time = 0.0f;
+    int max_entries = 24;
+    int transitions = 0;               // total activity transitions
+    int days_completed = 0;
+    float adherence_score = 1.0f;      // 0-1, how well NPC follows schedule
+    bool active = true;
+
+    COMPONENT_TYPE(NPCSchedule)
+};
+
 
 } // namespace components
 } // namespace atlas
