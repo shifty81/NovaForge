@@ -281,6 +281,11 @@ set(CORE_SOURCES
     src/systems/combat_after_action_system.cpp
     src/systems/transit_planner_system.cpp
     src/systems/fleet_readiness_system.cpp
+    src/systems/damage_application_system.cpp
+    src/systems/combat_engagement_system.cpp
+    src/systems/warp_disruption_system.cpp
+    src/systems/invulnerability_timer_system.cpp
+    src/systems/mining_laser_cycle_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp

@@ -923,6 +923,39 @@ public:
     COMPONENT_TYPE(LootContainer)
 };
 
+// ==================== Mining Laser Cycle ====================
+
+/**
+ * @brief Mining laser cycle tracking with progress, yield, and cargo transfer
+ *
+ * Tracks individual mining laser activation cycles on a target asteroid.
+ * Each cycle extracts ore based on yield rate and transfers to cargo hold.
+ */
+class MiningLaserCycle : public ecs::Component {
+public:
+    struct ActiveCycle {
+        std::string laser_id;
+        std::string target_asteroid_id;
+        std::string ore_type;
+        float cycle_time = 10.0f;        // seconds per cycle
+        float progress = 0.0f;           // 0.0 to 1.0
+        float yield_per_cycle = 100.0f;  // units of ore per completed cycle
+        bool completed = false;
+    };
+
+    std::vector<ActiveCycle> cycles;
+    std::string cargo_entity_id;         // entity holding cargo for ore deposit
+    int max_active_lasers = 3;
+    int total_cycles_completed = 0;
+    float total_ore_mined = 0.0f;
+    float cargo_capacity = 5000.0f;
+    float cargo_used = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MiningLaserCycle)
+};
+
 } // namespace components
 } // namespace atlas
 

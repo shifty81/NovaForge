@@ -231,6 +231,65 @@ public:
     COMPONENT_TYPE(DamageNotification)
 };
 
+// ==================== Damage Application ====================
+
+/**
+ * @brief Per-entity damage resistance profile and pending damage queue
+ *
+ * Stores EM/Thermal/Kinetic/Explosive resistance values per layer
+ * (shield/armor/hull) and queues incoming damage for application
+ * by DamageApplicationSystem each tick.
+ */
+class DamageApplication : public ecs::Component {
+public:
+    enum class DamageType { EM = 0, Thermal = 1, Kinetic = 2, Explosive = 3 };
+
+    struct PendingDamage {
+        std::string source_id;
+        float raw_amount = 0.0f;
+        DamageType type = DamageType::Kinetic;
+        float timestamp = 0.0f;
+    };
+
+    std::vector<PendingDamage> pending;
+    float total_applied = 0.0f;
+    float total_mitigated = 0.0f;
+    int hits_processed = 0;
+    int max_pending = 50;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DamageApplication)
+};
+
+// ==================== Combat Engagement ====================
+
+/**
+ * @brief Tracks combat engagement state lifecycle per entity
+ *
+ * Entities transition: Safe -> Engaging -> InCombat -> Disengaging -> Safe
+ * Used to gate warp, docking, and logoff while under fire.
+ */
+class CombatEngagement : public ecs::Component {
+public:
+    enum class State { Safe, Engaging, InCombat, Disengaging };
+
+    State state = State::Safe;
+    std::string primary_target_id;
+    std::vector<std::string> attackers;
+    float time_in_state = 0.0f;
+    float disengage_timer = 0.0f;
+    float disengage_duration = 15.0f;  // seconds before safe after last hit
+    float engage_range = 150000.0f;    // meters; auto-engage within this range
+    int engagement_count = 0;
+    float total_combat_time = 0.0f;
+    bool warp_blocked = false;
+    bool dock_blocked = false;
+    bool active = true;
+
+    COMPONENT_TYPE(CombatEngagement)
+};
+
 } // namespace components
 } // namespace atlas
 
