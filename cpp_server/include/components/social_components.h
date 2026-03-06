@@ -276,6 +276,34 @@ public:
     COMPONENT_TYPE(WarDeclaration)
 };
 
+/**
+ * @brief Player faction standing and reputation aggregation
+ */
+class PlayerStanding : public ecs::Component {
+public:
+    struct FactionStanding {
+        std::string faction_id;
+        std::string faction_name;
+        double standing = 0.0;     // -10.0 to 10.0
+        int rank = 0;              // 0=Neutral, 1-5=Positive ranks, -1 to -5=Negative ranks
+    };
+
+    struct StandingNotification {
+        std::string faction_id;
+        int old_rank = 0;
+        int new_rank = 0;
+        float timestamp = 0.0f;
+    };
+
+    float elapsed = 0.0f;
+    bool active = true;
+    int max_notifications = 20;
+    std::vector<FactionStanding> factions;
+    std::vector<StandingNotification> notifications;
+
+    COMPONENT_TYPE(PlayerStanding)
+};
+
 
 } // namespace components
 } // namespace atlas
