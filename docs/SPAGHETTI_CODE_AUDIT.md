@@ -292,31 +292,42 @@ All 6415 tests passing. Total migrated: 132 systems (69%).
 
 ## Issue 3: GameSession God Object (9 source files)
 
-**Severity**: 🟠 High
+**Severity**: 🟠 High — ✅ **RESOLVED**
 **Files**: `cpp_server/src/game_session*.cpp` (9 files), `cpp_server/include/game_session.h`
 **Impact**: Tight coupling between networking, ECS, combat, stations, scanning, missions — all through one class
 
 ### Problem
 
-`GameSession` is a single class split across 9 `.cpp` files to manage its size. It holds direct pointers to 8+ system classes and acts as a dispatcher for all game operations. This means:
+`GameSession` was a single class split across 9 `.cpp` files to manage its size. It held direct pointers to 8+ system classes and acted as a dispatcher for all game operations. This meant:
 
-1. Adding any new protocol message requires touching `game_session.h` (adds dependency)
-2. All 9 `.cpp` files share the same header, so changing one area recompiles all
-3. Forward declarations in the header list ~15 system types
+1. Adding any new protocol message required touching `game_session.h` (added dependency)
+2. All 9 `.cpp` files shared the same header, so changing one area recompiled all
+3. Forward declarations in the header listed ~15 system types
 
-From `game_session_internal.h`: Shared constants and utilities are extracted, but the class itself remains monolithic.
+From `game_session_internal.h`: Shared constants and utilities were extracted, but the class itself remained monolithic.
 
-### Remediation Plan (Phase 3 — 1–2 weeks)
+### Resolution
 
-| Step | Action | Effort |
-|------|--------|--------|
-| 3.1 | Define `IMessageHandler` interface with `handle(MessageType, payload)` | 1 day |
-| 3.2 | Create domain-specific handlers: `CombatHandler`, `StationHandler`, `MovementHandler`, `MissionHandler`, `ScannerHandler` | 3 days |
-| 3.3 | `GameSession` becomes a thin router that dispatches to handlers by message type | 2 days |
-| 3.4 | Each handler owns its system pointer(s), removing them from `GameSession` | 1 day |
-| 3.5 | Convert forward declarations to handler includes only | 1 day |
+Created `IMessageHandler` interface (`cpp_server/include/handlers/message_handler.h`) and 5 domain-specific handlers:
 
-**Expected outcome**: `GameSession` shrinks from 9 files to 1 router + 5 focused handlers. Adding new features no longer requires modifying the central class.
+| Handler | Messages | System Pointers |
+|---------|----------|----------------|
+| `CombatHandler` | TARGET_LOCK, TARGET_UNLOCK, MODULE_ACTIVATE, MODULE_DEACTIVATE | `TargetingSystem`, `CombatSystem` |
+| `StationHandler` | DOCK_REQUEST, UNDOCK_REQUEST, REPAIR_REQUEST | `StationSystem` |
+| `MovementHandler` | WARP_REQUEST, APPROACH, ORBIT, STOP | `MovementSystem` |
+| `ScannerHandler` | SCAN_START, SCAN_STOP, ANOMALY_LIST | `ScannerSystem`, `AnomalySystem` |
+| `MissionHandler` | MISSION_LIST, ACCEPT_MISSION, ABANDON_MISSION, MISSION_PROGRESS | `MissionSystem`, `MissionGeneratorSystem` |
+
+`GameSession` is now a thin router:
+- Core session messages (CONNECT, DISCONNECT, INPUT_MOVE, CHAT) handled directly
+- All domain messages dispatched via `canHandle()`/`handle()` loop over registered handlers
+- System injection methods preserved on `GameSession` (forwarded to handlers) for backward compatibility
+- 8 system pointers removed from `GameSession`, moved to their respective handlers
+- 5 old `game_session_*.cpp` domain files replaced by 5 focused handler classes
+
+Shared JSON utilities extracted to `cpp_server/include/handlers/handler_utils.h`.
+
+All 6415 tests passing.
 
 ---
 
@@ -385,7 +396,7 @@ Phase 3: GameSession decomposition      (1-2 weeks) ← Coupling fix
 | Test recompile time (single system change) | ✅ ~5s | < 5s |
 | CMakeLists.txt source lists to update | ✅ 1 (was 2) | 1 |
 | Average system boilerplate (lines) | ~80 (🔧 2 systems migrated) | ~20 |
-| GameSession forward declarations | 15+ | 0 |
+| GameSession forward declarations | ✅ 2 (was 15+) | 0 |
 | JSON brace-counting implementations | ✅ 1 (was 7) | 1 |
 | Template base classes | 3 (`SingleComponentSystem<C>`, `StateMachineSystem<C>`, `RechargeSystem<C>`) | 3 |
 | Systems migrated to templates | 111 (`Capacitor`, `ShieldRecharge`, `Cloaking`, `JumpDrive`, `AncientTech`, `LocalReputation`, `Survival`, `Rig`, `SolarPanel`, `ScanProbe`, `FoodProcessor`, `FarmingDeck`, `InteriorDoor`, `DockingRingExtension`, `EVAAirlock`, `SalvageExploration`, `WreckPersistence`, `TetherDocking`, `CloneBay`, `PlanetaryTraversal`, `VisualRig`, `EnvironmentalHazard`, `Insurance`, `WreckSalvage`, `Mining`, `Manufacturing`, `Research`, `PI`, `Skill`, `FleetMorale`, `FleetCargo`, `AsteroidBelt`, `FleetChatter`, `Anomaly`, `Autopilot`, `CargoScan`, `PvPToggle`, `ShipCapabilityRating`, `Bounty`, `StationNews`, `RigLocker`, `RoverBayRamp`, `RoverInterior`, `StationHangar`, `BikeGarage`, `Drone`, `ContractAuction`, `Terraforming`, `LavatoryInteraction`, `ModuleCascadingFailure`, `RestStation`, `SpacePlanetTransition`, `MythBoss`, `WarpAnomaly`, `CaptainBackground`, `CaptainMemory`, `CaptainPersonality`, `CaptainDeparture`, `Legend`, `FleetHistory`, `LoyaltyPointStore`, `NavigationBookmark`, `DifficultyScaling`, `Leaderboard`, `ClientPrediction`, `CrewActivity`, `FPSCharacterController`, `EmotionalArc`, `CrewTraining`, `RumorPropagation`, `HangarEnvironment`, `FleetSupplyLine`, `BlackMarket`, `ViewModeTransition`, `AncientAIRemnant`, `CommanderDisagreement`, `AncientModuleDiscovery`, `RumorQuestline`, `Menu`, `CaptainTransfer`, `NPCRerouting`, `TurretAI`, `SecurityResponse`, `AmbientTraffic`, `SupplyDemand`, `InterestManagementPriority`, `InformationPropagation`, `ResourceProductionChain`, `FleetMoraleResolution`, `Docking`, `StationDeployment`, `ModManager`, `NPCDialogue`, `Weapon`, `ContentValidation`, `TaskScheduler`, `KeyboardNavigation`, `VisualFeedbackQueue`, `PlayerProgression`, `FleetDoctrine`, `PersistenceDelta`, `Tournament`, `Propaganda`, `Wormhole`, `WarDeclaration`, `Contract`, `Sovereignty`, `DynamicEvent`, `FleetProgression`, `FleetFormation`) | 192 |

@@ -1,26 +1,61 @@
-#include "game_session.h"
-#include "game_session_internal.h"
+#include "handlers/combat_handler.h"
+#include "handlers/handler_utils.h"
+#include "ecs/world.h"
+#include "ecs/entity.h"
 #include "components/game_components.h"
 #include "systems/targeting_system.h"
 #include "systems/combat_system.h"
 #include <sstream>
-#include <mutex>
 
 namespace atlas {
+namespace handlers {
 
-// ---------------------------------------------------------------------------
-// TARGET_LOCK handler
-// ---------------------------------------------------------------------------
+CombatHandler::CombatHandler(ecs::World* world, network::TCPServer* tcp_server,
+                             network::ProtocolHandler* protocol, EntityLookupFn entity_lookup)
+    : world_(world), tcp_server_(tcp_server), protocol_(protocol),
+      entity_lookup_(std::move(entity_lookup)) {}
 
-void GameSession::handleTargetLock(const network::ClientConnection& client,
-                                   const std::string& data) {
-    std::string entity_id;
-    {
-        std::lock_guard<std::mutex> lock(players_mutex_);
-        auto it = players_.find(static_cast<int>(client.socket));
-        if (it == players_.end()) return;
-        entity_id = it->second.entity_id;
+bool CombatHandler::canHandle(network::MessageType type) const {
+    switch (type) {
+        case network::MessageType::TARGET_LOCK:
+        case network::MessageType::TARGET_UNLOCK:
+        case network::MessageType::MODULE_ACTIVATE:
+        case network::MessageType::MODULE_DEACTIVATE:
+            return true;
+        default:
+            return false;
     }
+}
+
+void CombatHandler::handle(network::MessageType type,
+                           const network::ClientConnection& client,
+                           const std::string& data) {
+    switch (type) {
+        case network::MessageType::TARGET_LOCK:
+            handleTargetLock(client, data);
+            break;
+        case network::MessageType::TARGET_UNLOCK:
+            handleTargetUnlock(client, data);
+            break;
+        case network::MessageType::MODULE_ACTIVATE:
+            handleModuleActivate(client, data);
+            break;
+        case network::MessageType::MODULE_DEACTIVATE:
+            handleModuleDeactivate(client, data);
+            break;
+        default:
+            break;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// TARGET_LOCK
+// ---------------------------------------------------------------------------
+
+void CombatHandler::handleTargetLock(const network::ClientConnection& client,
+                                     const std::string& data) {
+    std::string entity_id = entity_lookup_(static_cast<int>(client.socket));
+    if (entity_id.empty()) return;
 
     std::string target_id = extractJsonString(data, "target_id");
     if (target_id.empty()) return;
@@ -30,7 +65,6 @@ void GameSession::handleTargetLock(const network::ClientConnection& client,
         success = targeting_system_->startLock(entity_id, target_id);
     }
 
-    // Send acknowledgement to the requesting client
     std::ostringstream ack;
     ack << "{\"type\":\"target_lock_ack\",\"data\":{"
         << "\"success\":" << (success ? "true" : "false") << ","
@@ -40,18 +74,13 @@ void GameSession::handleTargetLock(const network::ClientConnection& client,
 }
 
 // ---------------------------------------------------------------------------
-// TARGET_UNLOCK handler
+// TARGET_UNLOCK
 // ---------------------------------------------------------------------------
 
-void GameSession::handleTargetUnlock(const network::ClientConnection& client,
-                                     const std::string& data) {
-    std::string entity_id;
-    {
-        std::lock_guard<std::mutex> lock(players_mutex_);
-        auto it = players_.find(static_cast<int>(client.socket));
-        if (it == players_.end()) return;
-        entity_id = it->second.entity_id;
-    }
+void CombatHandler::handleTargetUnlock(const network::ClientConnection& client,
+                                       const std::string& data) {
+    std::string entity_id = entity_lookup_(static_cast<int>(client.socket));
+    if (entity_id.empty()) return;
 
     std::string target_id = extractJsonString(data, "target_id");
     if (target_id.empty()) return;
@@ -60,7 +89,6 @@ void GameSession::handleTargetUnlock(const network::ClientConnection& client,
         targeting_system_->unlockTarget(entity_id, target_id);
     }
 
-    // Send acknowledgement
     std::ostringstream ack;
     ack << "{\"type\":\"target_unlock_ack\",\"data\":{"
         << "\"target_id\":\"" << escapeJsonString(target_id) << "\""
@@ -69,18 +97,13 @@ void GameSession::handleTargetUnlock(const network::ClientConnection& client,
 }
 
 // ---------------------------------------------------------------------------
-// MODULE_ACTIVATE handler
+// MODULE_ACTIVATE
 // ---------------------------------------------------------------------------
 
-void GameSession::handleModuleActivate(const network::ClientConnection& client,
-                                       const std::string& data) {
-    std::string entity_id;
-    {
-        std::lock_guard<std::mutex> lock(players_mutex_);
-        auto it = players_.find(static_cast<int>(client.socket));
-        if (it == players_.end()) return;
-        entity_id = it->second.entity_id;
-    }
+void CombatHandler::handleModuleActivate(const network::ClientConnection& client,
+                                         const std::string& data) {
+    std::string entity_id = entity_lookup_(static_cast<int>(client.socket));
+    if (entity_id.empty()) return;
 
     int slot_index = static_cast<int>(extractJsonFloat(data, "\"slot_index\":", -1.0f));
     std::string target_id = extractJsonString(data, "target_id");
@@ -88,13 +111,10 @@ void GameSession::handleModuleActivate(const network::ClientConnection& client,
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return;
 
-    // For now, module activation triggers the weapon system for high-slot weapons.
-    // Future: full module system with mid/low slot modules, heat, etc.
     auto* weapon = entity->getComponent<components::Weapon>();
     bool success = false;
 
     if (weapon && !target_id.empty()) {
-        // Validate and fire the weapon through the CombatSystem
         if (weapon->cooldown <= 0.0f && weapon->ammo_count > 0) {
             auto* cap = entity->getComponent<components::Capacitor>();
             if (!cap || cap->capacitor >= weapon->capacitor_cost) {
@@ -117,22 +137,16 @@ void GameSession::handleModuleActivate(const network::ClientConnection& client,
 }
 
 // ---------------------------------------------------------------------------
-// MODULE_DEACTIVATE handler
+// MODULE_DEACTIVATE
 // ---------------------------------------------------------------------------
 
-void GameSession::handleModuleDeactivate(const network::ClientConnection& client,
-                                         const std::string& data) {
-    std::string entity_id;
-    {
-        std::lock_guard<std::mutex> lock(players_mutex_);
-        auto it = players_.find(static_cast<int>(client.socket));
-        if (it == players_.end()) return;
-        entity_id = it->second.entity_id;
-    }
+void CombatHandler::handleModuleDeactivate(const network::ClientConnection& client,
+                                           const std::string& data) {
+    std::string entity_id = entity_lookup_(static_cast<int>(client.socket));
+    if (entity_id.empty()) return;
 
     int slot_index = static_cast<int>(extractJsonFloat(data, "\"slot_index\":", -1.0f));
 
-    // Module deactivation acknowledged (future: stop active module cycles)
     std::ostringstream ack;
     ack << "{\"type\":\"module_deactivate_ack\",\"data\":{"
         << "\"slot_index\":" << slot_index
@@ -140,4 +154,5 @@ void GameSession::handleModuleDeactivate(const network::ClientConnection& client
     tcp_server_->sendToClient(client, ack.str());
 }
 
+} // namespace handlers
 } // namespace atlas

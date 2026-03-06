@@ -32,12 +32,12 @@ set(CORE_SOURCES
     src/game_session.cpp
     src/game_session_network.cpp
     src/game_session_entities.cpp
-    src/game_session_combat.cpp
     src/game_session_utils.cpp
-    src/game_session_stations.cpp
-    src/game_session_movement.cpp
-    src/game_session_scanning.cpp
-    src/game_session_missions.cpp
+    src/handlers/combat_handler.cpp
+    src/handlers/station_handler.cpp
+    src/handlers/movement_handler.cpp
+    src/handlers/scanner_handler.cpp
+    src/handlers/mission_handler.cpp
     src/network/tcp_server.cpp
     src/network/protocol_handler.cpp
     src/config/server_config.cpp
@@ -312,6 +312,13 @@ endif()
 set(SERVER_HEADERS
     include/server.h
     include/game_session.h
+    include/handlers/message_handler.h
+    include/handlers/handler_utils.h
+    include/handlers/combat_handler.h
+    include/handlers/station_handler.h
+    include/handlers/movement_handler.h
+    include/handlers/scanner_handler.h
+    include/handlers/mission_handler.h
     include/network/tcp_server.h
     include/network/protocol_handler.h
     include/config/server_config.h
