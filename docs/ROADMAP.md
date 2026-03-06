@@ -38,7 +38,7 @@ If it fails any one → it doesn't ship.
 | System | Key Subsystems | Status |
 |--------|---------------|--------|
 | **Atlas Engine Core** | ECS, Deterministic Scheduler, EventBus, Plugin System | ✅ Complete |
-| **Networking** | TCP Client/Server, Interpolation, Delta Compression, Snapshot Replication | ✅ Complete |
+| **Networking** | TCP Client/Server, Interpolation, Delta Compression, Snapshot Replication, Jitter Buffer | ✅ Complete |
 | **Rendering** | OpenGL, Deferred Pipeline, Shadow Mapping, Post-Processing | ✅ Complete |
 | **Atlas UI** | Widgets, Panels, Docking (DockNode tree), Photon Dark Theme | ✅ Complete |
 | **Atlas Editor** | 17 Panels, PCG Tools, Dock Layout, Debug Console | ✅ Complete |
@@ -48,7 +48,7 @@ If it fails any one → it doesn't ship.
 | **PCG Content** | Stations, Interiors, Characters, Galaxy Generation | ✅ Complete |
 | **Combat** | Lock/Fire/Damage Layers, Wrecks, Salvage, Security Response | ✅ Complete |
 | **Fleet System** | Wings (5×5), Doctrine, Morale, Chatter, Fracture Mechanics | ✅ Complete |
-| **AI NPCs** | Miners, Haulers, Pirates, Traders, Security, Intent-driven Behavior Trees | ✅ Complete |
+| **AI NPCs** | Miners, Haulers, Pirates, Traders, Security, Intent-driven Behavior Trees, NPC Schedules | ✅ Complete |
 | **Economy** | Markets, Supply/Demand, Trade Routes, Dynamic Tax, Broker Fees | ✅ Complete |
 | **Mining & Industry** | Ore, Ice, Refining, Manufacturing, Planetary Industry | ✅ Complete |
 | **Missions** | Procedural Templates, Objectives, Rewards, Branching Chains, Consequences | ✅ Complete |
@@ -114,7 +114,7 @@ If it fails any one → it doesn't ship.
 | Milestone | Target | Criteria |
 |-----------|--------|----------|
 | **Engine Baseline** | ✅ Done | ECS, rendering, audio, physics, networking, UI framework |
-| **All Server Systems** | ✅ Done | 6551+ test assertions passing across 230+ ECS systems |
+| **All Server Systems** | ✅ Done | 6702+ test assertions passing across 230+ ECS systems |
 | **Atlas Engine Modules** | ✅ Done | 915 engine test assertions (input, camera, audio, animation, plugin) |
 | **Editor Tool Layer** | ✅ Done | 32 tools, 17 panels, EditorCommandBus, UndoableCommandBus, DeltaEditStore, 374+ test assertions |
 | **Vertical Slice** | In Progress | One star system fully playable end-to-end |
