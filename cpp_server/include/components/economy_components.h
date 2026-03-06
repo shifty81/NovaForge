@@ -741,6 +741,31 @@ public:
     COMPONENT_TYPE(TradeRouteAnalytics)
 };
 
+/**
+ * @brief Persistent player wallet with transaction logging
+ */
+class PlayerWallet : public ecs::Component {
+public:
+    struct Transaction {
+        std::string transaction_id;
+        std::string description;
+        double amount = 0.0;        // positive = credit, negative = debit
+        double balance_after = 0.0;
+        float timestamp = 0.0f;
+    };
+
+    double balance = 0.0;
+    double lifetime_earned = 0.0;
+    double lifetime_spent = 0.0;
+    double tax_rate = 0.05;          // 5% default tax
+    int max_transactions = 100;
+    float elapsed = 0.0f;
+    bool active = true;
+    std::vector<Transaction> transactions;
+
+    COMPONENT_TYPE(PlayerWallet)
+};
+
 } // namespace components
 } // namespace atlas
 
