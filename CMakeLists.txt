@@ -26,7 +26,7 @@ option(BUILD_SERVER "Build C++ dedicated server" ON)
 option(BUILD_ATLAS_ENGINE "Build Atlas Engine library" ON)
 option(BUILD_ATLAS_EDITOR "Build Atlas Editor" ON)
 option(BUILD_ATLAS_TESTS "Build Atlas Engine tests" ON)
-option(NOVAFORGE_EDITOR_TOOLS "Embed editor tool layer in the game client (F12 toggle)" OFF)
+option(NOVAFORGE_EDITOR_TOOLS "Embed editor tool layer in the game client (F12 toggle)" ON)
 
 # --- Atlas Engine (core library) ---
 if(BUILD_ATLAS_ENGINE)

@@ -85,27 +85,35 @@ bool Renderer::initialize() {
     // Load shaders
     m_basicShader = std::make_unique<Shader>();
     if (!m_basicShader->loadFromFiles("shaders/basic.vert", "shaders/basic.frag")) {
-        std::cerr << "Failed to load basic shader" << std::endl;
+        std::cerr << "Failed to load basic shader — scene will not render." << std::endl;
+        std::cerr << "  Ensure shaders/ directory is next to the executable or set CWD to the project root." << std::endl;
         return false;
     }
+    std::cout << "  Loaded basic shader" << std::endl;
     
     m_starfieldShader = std::make_unique<Shader>();
     if (!m_starfieldShader->loadFromFiles("shaders/starfield.vert", "shaders/starfield.frag")) {
-        std::cerr << "Failed to load starfield shader" << std::endl;
+        std::cerr << "Failed to load starfield shader — scene will not render." << std::endl;
+        std::cerr << "  Ensure shaders/ directory is next to the executable or set CWD to the project root." << std::endl;
         return false;
     }
+    std::cout << "  Loaded starfield shader" << std::endl;
     
     m_nebulaShader = std::make_unique<Shader>();
     if (!m_nebulaShader->loadFromFiles("shaders/nebula.vert", "shaders/nebula.frag")) {
         std::cerr << "Warning: Failed to load nebula shader - nebula disabled" << std::endl;
         m_nebulaShader.reset();
+    } else {
+        std::cout << "  Loaded nebula shader" << std::endl;
     }
     
     m_entityShader = std::make_unique<Shader>();
     if (!m_entityShader->loadFromFiles("shaders/entity.vert", "shaders/entity.frag")) {
-        std::cerr << "Failed to load entity shader" << std::endl;
+        std::cerr << "Failed to load entity shader — scene will not render." << std::endl;
+        std::cerr << "  Ensure shaders/ directory is next to the executable or set CWD to the project root." << std::endl;
         return false;
     }
+    std::cout << "  Loaded entity shader" << std::endl;
     
     // Initialize health bar renderer
     m_healthBarRenderer = std::make_unique<HealthBarRenderer>();

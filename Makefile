@@ -34,10 +34,13 @@ build-debug: ## Build client, server, engine, and editor (Debug)
 	./scripts/build.sh Debug
 
 .PHONY: build-client
-build-client: ## Build C++ client only
+build-client: ## Build C++ client only (use build-client-editor for F12 tools)
 	@mkdir -p $(LOG_DIR)
 	@mkdir -p cpp_client/build
 	(cd cpp_client/build && cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON && cmake --build . --config Release) 2>&1 | tee $(LOG_DIR)/build-client_$(TIMESTAMP).log
+	@echo ""
+	@echo "NOTE: For F12 editor overlay, use 'make build-client-editor' instead."
+	@echo ""
 
 .PHONY: build-server
 build-server: ## Build C++ server only

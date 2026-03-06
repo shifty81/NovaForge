@@ -14,6 +14,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 option(BUILD_TESTS "Build test suite" ON)
 option(USE_SYSTEM_LIBS "Use system libraries instead of bundled" ON)  # Default to ON since they're available
 option(USE_RMLUI "Enable RmlUi for advanced Photon UI game panels" OFF)
+option(NOVAFORGE_EDITOR_TOOLS "Embed editor tool layer in the game client (F12 toggle)" ON)
 
 
 # Platform-specific settings
@@ -432,6 +433,14 @@ endif()
 # When NOVAFORGE_EDITOR_TOOLS is ON, compile editor panels and tools
 # directly into the client as an F12-toggleable overlay.  Turn OFF
 # for release builds to strip all editor code.
+# When building standalone (cmake from cpp_client/), the editor/
+# directory may not be reachable — silently disable in that case.
+if(NOVAFORGE_EDITOR_TOOLS)
+    if(NOT EXISTS "${CMAKE_SOURCE_DIR}/editor/ui/EditorLayout.cpp")
+        message(STATUS "  Editor tool layer: DISABLED (editor sources not found — build from project root for F12 tools)")
+        set(NOVAFORGE_EDITOR_TOOLS OFF)
+    endif()
+endif()
 if(NOVAFORGE_EDITOR_TOOLS)
     message(STATUS "  Editor tool layer: ENABLED (F12 toggle)")
     target_compile_definitions(atlas_client PRIVATE NOVAFORGE_EDITOR_TOOLS)
