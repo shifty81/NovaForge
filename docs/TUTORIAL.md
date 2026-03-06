@@ -20,28 +20,36 @@ Welcome to Atlas! This tutorial will guide you through your first steps in the g
 
 ### Starting the Client
 
+> See [docs/BUILDING.md](BUILDING.md) for full build instructions.
+
 **Linux/macOS:**
 ```bash
-cd build/bin
-./eve_client "YourName"
+# Build first (if not already done):
+./scripts/build_all.sh
+
+# Run the client:
+./build/bin/atlas_client "YourName"
 ```
 
 **Windows:**
 ```cmd
-cd cpp_client\build_vs\bin\Release
-eve_client.exe YourName
+REM Build first (if not already done):
+scripts\build_all.bat
+
+REM Run the client:
+build\bin\atlas_client.exe YourName
 ```
 
 ### Connecting to Server
 
-The client will attempt to connect to:
-- **Local server**: `localhost:7777`
-- Or specify with: `./eve_client "YourName" --server 192.168.1.100:7777`
+The client includes an embedded server for solo play — just launch the client
+and you're in. For dedicated multiplayer:
 
-**First time?** You may need to start the server first:
 ```bash
-cd cpp_server/build/bin
-./eve_server
+# Start the server
+./build/bin/atlas_dedicated_server
+
+# Connect with: ./build/bin/atlas_client "YourName" --server 192.168.1.100:7777
 ```
 
 ---

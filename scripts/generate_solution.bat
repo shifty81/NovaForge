@@ -195,14 +195,10 @@ echo ================================================
 echo Solution Generated Successfully!
 echo ================================================
 echo.
-echo Solution file location: build_vs\EVEOffline.sln
+echo Solution file location: build_vs\Atlas.sln
 echo.
 echo To open in Visual Studio:
-echo   start build_vs\EVEOffline.sln
-echo.
-echo Or use individual component solutions:
-echo   cpp_client\build_vs\EVEOfflineClient.sln
-echo   cpp_server\build\EVEOfflineDedicatedServer.sln
+echo   start build_vs\Atlas.sln
 echo.
 
 exit /b 0
