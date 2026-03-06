@@ -269,6 +269,33 @@ public:
     COMPONENT_TYPE(ProceduralMissionGenerator)
 };
 
+/**
+ * @brief Mission reward tracker for collecting completion rewards
+ */
+class MissionReward : public ecs::Component {
+public:
+    struct RewardEntry {
+        std::string mission_id;
+        double isk_amount = 0.0;
+        double standing_change = 0.0;
+        std::string faction_id;
+        std::string item_id;
+        int item_quantity = 0;
+        bool collected = false;
+        float collected_at = 0.0f;
+    };
+
+    int max_pending = 50;
+    float elapsed = 0.0f;
+    bool active = true;
+    int total_collected = 0;
+    double total_isk_earned = 0.0;
+    double total_standing_gained = 0.0;
+    std::vector<RewardEntry> rewards;
+
+    COMPONENT_TYPE(MissionReward)
+};
+
 } // namespace components
 } // namespace atlas
 

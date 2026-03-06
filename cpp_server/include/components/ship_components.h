@@ -905,6 +905,59 @@ public:
     COMPONENT_TYPE(ModuleCascadingFailure)
 };
 
+/**
+ * @brief Unified cargo manifest with volume tracking and ore hold separation
+ */
+class CargoManifest : public ecs::Component {
+public:
+    struct CargoItem {
+        std::string item_id;
+        std::string item_name;
+        std::string category;     // "ore", "mineral", "module", "ammo", "salvage"
+        int quantity = 0;
+        double volume_per_unit = 1.0;
+    };
+
+    double general_capacity = 400.0;   // m³
+    double general_used = 0.0;
+    double ore_hold_capacity = 0.0;    // 0 = no ore hold
+    double ore_hold_used = 0.0;
+    bool active = true;
+    std::vector<CargoItem> items;
+
+    COMPONENT_TYPE(CargoManifest)
+};
+
+/**
+ * @brief Saved ship loadout for persistence and quick-swap
+ */
+class SavedLoadout : public ecs::Component {
+public:
+    struct ModuleSlot {
+        std::string module_id;
+        std::string module_name;
+        int slot_index = 0;
+        std::string slot_type;   // "high", "mid", "low", "rig"
+        bool online = true;
+    };
+
+    struct Loadout {
+        std::string loadout_id;
+        std::string loadout_name;
+        std::string ship_class;
+        float saved_at = 0.0f;
+        std::vector<ModuleSlot> modules;
+    };
+
+    int max_loadouts = 10;
+    float elapsed = 0.0f;
+    bool active = true;
+    std::string active_loadout_id;
+    std::vector<Loadout> loadouts;
+
+    COMPONENT_TYPE(SavedLoadout)
+};
+
 } // namespace components
 } // namespace atlas
 
