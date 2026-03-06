@@ -263,6 +263,9 @@ set(CORE_SOURCES
     src/systems/fps_companion_system.cpp
     src/systems/fps_terminal_hack_system.cpp
     src/systems/fps_cover_system.cpp
+    src/systems/star_system_manager_system.cpp
+    src/systems/wallet_transaction_system.cpp
+    src/systems/spatial_partition_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -607,6 +610,9 @@ set(SERVER_HEADERS
     include/systems/fps_companion_system.h
     include/systems/fps_terminal_hack_system.h
     include/systems/fps_cover_system.h
+    include/systems/star_system_manager_system.h
+    include/systems/wallet_transaction_system.h
+    include/systems/spatial_partition_system.h
 )
 
 # Steam SDK configuration
