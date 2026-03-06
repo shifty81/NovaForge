@@ -608,6 +608,62 @@ public:
     COMPONENT_TYPE(SystemMap)
 };
 
+// ==================== Warp Disruption ====================
+
+/**
+ * @brief Warp disruption/scramble state for combat interdiction
+ *
+ * Tracks active warp disruptors/scramblers applied to this entity.
+ * Total strength vs warp core strength determines if warp is blocked.
+ */
+class WarpDisruption : public ecs::Component {
+public:
+    struct Disruptor {
+        std::string source_id;
+        int strength = 1;          // disruption points (1 = disruptor, 2 = scrambler)
+        float range = 24000.0f;    // effective range in meters
+        float duration = 0.0f;     // elapsed seconds
+        bool active = true;
+    };
+
+    std::vector<Disruptor> disruptors;
+    int total_disruption_strength = 0;
+    int warp_core_strength = 1;    // base warp core strength (from Ship component)
+    bool warp_blocked = false;
+    int max_disruptors = 10;
+    int total_disruptions_applied = 0;
+    int total_escapes = 0;
+    float elapsed = 0.0f;
+    bool component_active = true;
+
+    COMPONENT_TYPE(WarpDisruption)
+};
+
+// ==================== Invulnerability Timer ====================
+
+/**
+ * @brief Temporary invulnerability after undocking, spawning, or jump
+ *
+ * Provides a timed immunity window where the entity cannot take damage.
+ * Breaks on movement, module activation, or timer expiry.
+ */
+class InvulnerabilityTimer : public ecs::Component {
+public:
+    enum class Reason { Undock, Spawn, JumpIn, Resurrection };
+
+    Reason reason = Reason::Undock;
+    float duration = 30.0f;        // total invulnerability seconds
+    float remaining = 0.0f;        // seconds left
+    bool invulnerable = false;
+    bool broken_by_action = false;  // set true if broken early
+    int total_invulns_granted = 0;
+    int total_broken_early = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(InvulnerabilityTimer)
+};
+
 } // namespace components
 } // namespace atlas
 

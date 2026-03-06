@@ -76,11 +76,29 @@ add_executable(AtlasEditor
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_panels.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_forms.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_hud.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_lists.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_sidebar.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_cards.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_effects.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_menus.cpp
     # Input handler for GLFW mouse/keyboard → Atlas InputState
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/input_handler.cpp
 )
 
 target_link_libraries(AtlasEditor AtlasEngine OpenGL::GL glfw)
+
+# Prevent server ECS World class from conflicting with engine ECS World.
+# The editor uses the engine's atlas::ecs::World (from engine/ecs/ECS.h).
+# Server headers included transitively via fleet_formation_system.h pull in
+# cpp_server/include/ecs/world.h which defines a second atlas::ecs::World.
+# Pre-defining the include guard skips the server definition.
+target_compile_definitions(AtlasEditor PRIVATE
+    NOVAFORGE_ECS_WORLD_H
+    NOVAFORGE_ECS_ENTITY_H
+)
 
 if(GLEW_FOUND)
     target_compile_definitions(AtlasEditor PRIVATE USE_GLEW)

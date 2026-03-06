@@ -280,6 +280,11 @@ void run_ship_fitting_validation_system_tests();
 void run_combat_after_action_system_tests();
 void run_transit_planner_system_tests();
 void run_fleet_readiness_system_tests();
+void run_damage_application_system_tests();
+void run_combat_engagement_system_tests();
+void run_warp_disruption_system_tests();
+void run_invulnerability_timer_system_tests();
+void run_mining_laser_cycle_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -557,6 +562,11 @@ int main() {
     run_combat_after_action_system_tests();
     run_transit_planner_system_tests();
     run_fleet_readiness_system_tests();
+    run_damage_application_system_tests();
+    run_combat_engagement_system_tests();
+    run_warp_disruption_system_tests();
+    run_invulnerability_timer_system_tests();
+    run_mining_laser_cycle_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
