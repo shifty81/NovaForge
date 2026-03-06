@@ -8,7 +8,7 @@ namespace atlas {
 namespace systems {
 
 WarpAutoComfortSystem::WarpAutoComfortSystem(ecs::World* world)
-    : ecs::System(world) {}
+    : SingleComponentSystem(world) {}
 
 float WarpAutoComfortSystem::computeComfortReduction(float current_fps, float target_fps,
                                                       float current_reduction, float delta_time) {
@@ -56,24 +56,19 @@ void WarpAutoComfortSystem::applyComfort(float comfort_reduction, bool ultrawide
     blur   = std::max(blur,   0.0f);
 }
 
-void WarpAutoComfortSystem::update(float delta_time) {
-    if (!world_) return;
+void WarpAutoComfortSystem::updateComponent(ecs::Entity& entity, components::WarpAutoComfort& comfort, float delta_time) {
+    auto* access = entity.getComponent<components::WarpAccessibility>();
+    if (!access) return;
 
-    for (auto* entity : world_->getEntities()) {
-        auto* comfort = entity->getComponent<components::WarpAutoComfort>();
-        auto* access  = entity->getComponent<components::WarpAccessibility>();
-        if (!comfort || !access) continue;
+    // Update comfort reduction based on FPS
+    comfort.comfort_reduction = computeComfortReduction(
+        comfort.current_fps, comfort.target_fps,
+        comfort.comfort_reduction, delta_time);
 
-        // Update comfort reduction based on FPS
-        comfort->comfort_reduction = computeComfortReduction(
-            comfort->current_fps, comfort->target_fps,
-            comfort->comfort_reduction, delta_time);
-
-        // Apply comfort adjustments to accessibility
-        applyComfort(comfort->comfort_reduction, comfort->ultrawide_detected,
-                     comfort->max_distortion_ultrawide,
-                     access->motion_intensity, access->blur_intensity);
-    }
+    // Apply comfort adjustments to accessibility
+    applyComfort(comfort.comfort_reduction, comfort.ultrawide_detected,
+                 comfort.max_distortion_ultrawide,
+                 access->motion_intensity, access->blur_intensity);
 }
 
 } // namespace systems

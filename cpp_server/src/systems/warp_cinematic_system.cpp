@@ -8,7 +8,7 @@ namespace atlas {
 namespace systems {
 
 WarpCinematicSystem::WarpCinematicSystem(ecs::World* world)
-    : ecs::System(world) {}
+    : SingleComponentSystem(world) {}
 
 float WarpCinematicSystem::computeCompositeIntensity(float mass_norm, float phase_frac) {
     // Base intensity from phase, amplified by mass (heavier = more dramatic)
@@ -61,79 +61,72 @@ void WarpCinematicSystem::computeAudio(float composite, float mass_norm,
     shimmer_vol   = std::clamp(shimmer_vol,   0.0f, 1.0f);
 }
 
-void WarpCinematicSystem::update(float /*delta_time*/) {
-    if (!world_) return;
+void WarpCinematicSystem::updateComponent(ecs::Entity& entity, components::WarpState& warpState, float /*delta_time*/) {
+    auto* tunnelCfg = entity.getComponent<components::WarpTunnelConfig>();
+    auto* audioCfg  = entity.getComponent<components::WarpAudioProfile>();
+    if (!tunnelCfg && !audioCfg) return;
 
-    for (auto* entity : world_->getEntities()) {
-        auto* warpState = entity->getComponent<components::WarpState>();
-        if (!warpState) continue;
+    // Compute phase fraction from WarpState phase
+    float phase_frac = 0.0f;
+    switch (warpState.phase) {
+        case components::WarpState::WarpPhase::None:
+            phase_frac = 0.0f;
+            break;
+        case components::WarpState::WarpPhase::Align:
+            phase_frac = 0.1f;      // Subtle during alignment
+            break;
+        case components::WarpState::WarpPhase::Entry:
+            phase_frac = 0.5f;      // Ramping up
+            break;
+        case components::WarpState::WarpPhase::Cruise:
+            phase_frac = 0.85f;     // Near-full intensity
+            break;
+        case components::WarpState::WarpPhase::Event:
+            phase_frac = 0.9f;      // Anomaly spike
+            break;
+        case components::WarpState::WarpPhase::Exit:
+            phase_frac = 0.3f;      // Fading out
+            break;
+    }
 
-        auto* tunnelCfg = entity->getComponent<components::WarpTunnelConfig>();
-        auto* audioCfg  = entity->getComponent<components::WarpAudioProfile>();
-        if (!tunnelCfg && !audioCfg) continue;
+    float composite = computeCompositeIntensity(warpState.mass_norm, phase_frac);
 
-        // Compute phase fraction from WarpState phase
-        float phase_frac = 0.0f;
-        switch (warpState->phase) {
-            case components::WarpState::WarpPhase::None:
-                phase_frac = 0.0f;
-                break;
-            case components::WarpState::WarpPhase::Align:
-                phase_frac = 0.1f;      // Subtle during alignment
-                break;
-            case components::WarpState::WarpPhase::Entry:
-                phase_frac = 0.5f;      // Ramping up
-                break;
-            case components::WarpState::WarpPhase::Cruise:
-                phase_frac = 0.85f;     // Near-full intensity
-                break;
-            case components::WarpState::WarpPhase::Event:
-                phase_frac = 0.9f;      // Anomaly spike
-                break;
-            case components::WarpState::WarpPhase::Exit:
-                phase_frac = 0.3f;      // Fading out
-                break;
+    // Apply accessibility scaling
+    float motion_scale = 1.0f;
+    float bass_scale   = 1.0f;
+    float blur_scale   = 1.0f;
+    auto* access = entity.getComponent<components::WarpAccessibility>();
+    if (access) {
+        motion_scale = access->motion_intensity;
+        bass_scale   = access->bass_intensity;
+        blur_scale   = access->blur_intensity;
+    }
+
+    if (tunnelCfg) {
+        computeLayers(composite, warpState.mass_norm,
+                      tunnelCfg->radial_distortion, tunnelCfg->starfield_bloom,
+                      tunnelCfg->tunnel_skin, tunnelCfg->vignette);
+        // Apply accessibility: motion reduces distortion+bloom, blur reduces skin
+        tunnelCfg->radial_distortion *= blur_scale;
+        tunnelCfg->starfield_bloom   *= motion_scale;
+        tunnelCfg->tunnel_skin       *= blur_scale;
+        tunnelCfg->vignette          *= motion_scale;
+        tunnelCfg->composite_intensity = composite * motion_scale;
+
+        // Tunnel geometry toggle: when disabled, zero the tunnel skin
+        // (star streaks remain via starfield_bloom)
+        if (access && !access->tunnel_geometry_enabled) {
+            tunnelCfg->tunnel_skin = 0.0f;
         }
+    }
 
-        float composite = computeCompositeIntensity(warpState->mass_norm, phase_frac);
-
-        // Apply accessibility scaling
-        float motion_scale = 1.0f;
-        float bass_scale   = 1.0f;
-        float blur_scale   = 1.0f;
-        auto* access = entity->getComponent<components::WarpAccessibility>();
-        if (access) {
-            motion_scale = access->motion_intensity;
-            bass_scale   = access->bass_intensity;
-            blur_scale   = access->blur_intensity;
-        }
-
-        if (tunnelCfg) {
-            computeLayers(composite, warpState->mass_norm,
-                          tunnelCfg->radial_distortion, tunnelCfg->starfield_bloom,
-                          tunnelCfg->tunnel_skin, tunnelCfg->vignette);
-            // Apply accessibility: motion reduces distortion+bloom, blur reduces skin
-            tunnelCfg->radial_distortion *= blur_scale;
-            tunnelCfg->starfield_bloom   *= motion_scale;
-            tunnelCfg->tunnel_skin       *= blur_scale;
-            tunnelCfg->vignette          *= motion_scale;
-            tunnelCfg->composite_intensity = composite * motion_scale;
-
-            // Tunnel geometry toggle: when disabled, zero the tunnel skin
-            // (star streaks remain via starfield_bloom)
-            if (access && !access->tunnel_geometry_enabled) {
-                tunnelCfg->tunnel_skin = 0.0f;
-            }
-        }
-
-        if (audioCfg) {
-            computeAudio(composite, warpState->mass_norm,
-                         audioCfg->engine_core_volume, audioCfg->harmonics_volume,
-                         audioCfg->shimmer_volume,
-                         audioCfg->engine_core_pitch, audioCfg->harmonics_pitch);
-            // Apply accessibility: bass scaling on engine core
-            audioCfg->engine_core_volume *= bass_scale;
-        }
+    if (audioCfg) {
+        computeAudio(composite, warpState.mass_norm,
+                     audioCfg->engine_core_volume, audioCfg->harmonics_volume,
+                     audioCfg->shimmer_volume,
+                     audioCfg->engine_core_pitch, audioCfg->harmonics_pitch);
+        // Apply accessibility: bass scaling on engine core
+        audioCfg->engine_core_volume *= bass_scale;
     }
 }
 

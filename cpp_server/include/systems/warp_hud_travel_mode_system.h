@@ -1,7 +1,8 @@
 #ifndef NOVAFORGE_SYSTEMS_WARP_HUD_TRAVEL_MODE_SYSTEM_H
 #define NOVAFORGE_SYSTEMS_WARP_HUD_TRAVEL_MODE_SYSTEM_H
 
-#include "ecs/system.h"
+#include "ecs/single_component_system.h"
+#include "components/game_components.h"
 #include <string>
 
 namespace atlas {
@@ -17,12 +18,11 @@ namespace systems {
  *
  * Transition speed is configurable via ramp_speed (per-second).
  */
-class WarpHUDTravelModeSystem : public ecs::System {
+class WarpHUDTravelModeSystem : public ecs::SingleComponentSystem<components::WarpHUDTravelMode> {
 public:
     explicit WarpHUDTravelModeSystem(ecs::World* world);
     ~WarpHUDTravelModeSystem() override = default;
 
-    void update(float delta_time) override;
     std::string getName() const override { return "WarpHUDTravelModeSystem"; }
 
     /**
@@ -56,6 +56,9 @@ public:
 
     /** Per-second ramp speed for soft transitions (default 1.5). */
     static constexpr float kDefaultRampSpeed = 1.5f;
+
+protected:
+    void updateComponent(ecs::Entity& entity, components::WarpHUDTravelMode& hudMode, float delta_time) override;
 };
 
 } // namespace systems

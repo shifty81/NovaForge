@@ -8,16 +8,12 @@ namespace atlas {
 namespace systems {
 
 MissionEditorSystem::MissionEditorSystem(ecs::World* world)
-    : System(world) {
+    : SingleComponentSystem(world) {
 }
 
-void MissionEditorSystem::update(float delta_time) {
-    auto entities = world_->getEntities<components::MissionEditor>();
-    for (auto* entity : entities) {
-        auto* ed = entity->getComponent<components::MissionEditor>();
-        if (!ed || !ed->active) continue;
-        // Editor doesn't need tick-based updates — all operations are explicit
-    }
+void MissionEditorSystem::updateComponent(ecs::Entity& /*entity*/, components::MissionEditor& ed, float /*delta_time*/) {
+    if (!ed.active) return;
+    // Editor doesn't need tick-based updates — all operations are explicit
 }
 
 bool MissionEditorSystem::createEditor(const std::string& entity_id) {
@@ -29,27 +25,21 @@ bool MissionEditorSystem::createEditor(const std::string& entity_id) {
 }
 
 bool MissionEditorSystem::setMissionName(const std::string& entity_id, const std::string& name) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    auto* ed = getComponentFor(entity_id);
     if (!ed) return false;
     ed->mission_name = name;
     return true;
 }
 
 bool MissionEditorSystem::setMissionLevel(const std::string& entity_id, int level) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    auto* ed = getComponentFor(entity_id);
     if (!ed) return false;
     ed->mission_level = std::max(1, std::min(level, 5));
     return true;
 }
 
 bool MissionEditorSystem::setMissionType(const std::string& entity_id, int type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    auto* ed = getComponentFor(entity_id);
     if (!ed) return false;
     if (type < 0 || type > 4) return false;
     ed->mission_type = type;
@@ -58,9 +48,7 @@ bool MissionEditorSystem::setMissionType(const std::string& entity_id, int type)
 
 int MissionEditorSystem::addObjective(const std::string& entity_id,
                                        const std::string& description, int obj_type) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return -1;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    auto* ed = getComponentFor(entity_id);
     if (!ed) return -1;
     if (description.empty()) return -1;
 
@@ -73,9 +61,7 @@ int MissionEditorSystem::addObjective(const std::string& entity_id,
 }
 
 bool MissionEditorSystem::removeObjective(const std::string& entity_id, int objective_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    auto* ed = getComponentFor(entity_id);
     if (!ed) return false;
 
     auto it = std::find_if(ed->objectives.begin(), ed->objectives.end(),
@@ -86,9 +72,7 @@ bool MissionEditorSystem::removeObjective(const std::string& entity_id, int obje
 }
 
 bool MissionEditorSystem::setReward(const std::string& entity_id, float credits, float standing) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    auto* ed = getComponentFor(entity_id);
     if (!ed) return false;
     ed->reward_credits = std::max(0.0f, credits);
     ed->reward_standing = standing;
@@ -119,9 +103,7 @@ bool MissionEditorSystem::validate(const std::string& entity_id) const {
 }
 
 bool MissionEditorSystem::publish(const std::string& entity_id) {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return false;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    auto* ed = getComponentFor(entity_id);
     if (!ed) return false;
 
     if (!validate(entity_id)) return false;
@@ -130,25 +112,19 @@ bool MissionEditorSystem::publish(const std::string& entity_id) {
 }
 
 int MissionEditorSystem::getObjectiveCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    const auto* ed = getComponentFor(entity_id);
     if (!ed) return 0;
     return static_cast<int>(ed->objectives.size());
 }
 
 int MissionEditorSystem::getPublishedCount(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return 0;
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    const auto* ed = getComponentFor(entity_id);
     if (!ed) return 0;
     return ed->published_count;
 }
 
 std::string MissionEditorSystem::getValidationError(const std::string& entity_id) const {
-    auto* entity = world_->getEntity(entity_id);
-    if (!entity) return "";
-    auto* ed = entity->getComponent<components::MissionEditor>();
+    const auto* ed = getComponentFor(entity_id);
     if (!ed) return "";
     return ed->validation_error;
 }

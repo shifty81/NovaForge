@@ -8,7 +8,7 @@ namespace atlas {
 namespace systems {
 
 WarpHUDTravelModeSystem::WarpHUDTravelModeSystem(ecs::World* world)
-    : ecs::System(world) {}
+    : SingleComponentSystem(world) {}
 
 void WarpHUDTravelModeSystem::computeTargets(int phase,
                                               float& target_edge_softness,
@@ -94,43 +94,38 @@ static float rampToward(float current, float target, float ramp_speed, float dt)
     return current + (diff > 0.0f ? step : -step);
 }
 
-void WarpHUDTravelModeSystem::update(float delta_time) {
-    if (!world_) return;
+void WarpHUDTravelModeSystem::updateComponent(ecs::Entity& entity, components::WarpHUDTravelMode& hudMode, float delta_time) {
+    auto* warpState = entity.getComponent<components::WarpState>();
+    if (!warpState) return;
 
-    for (auto* entity : world_->getEntities()) {
-        auto* warpState = entity->getComponent<components::WarpState>();
-        auto* hudMode   = entity->getComponent<components::WarpHUDTravelMode>();
-        if (!warpState || !hudMode) continue;
+    int phase = static_cast<int>(warpState->phase);
 
-        int phase = static_cast<int>(warpState->phase);
+    float te, td, tw, tp, ts;
+    computeTargets(phase, te, td, tw, tp, ts);
 
-        float te, td, tw, tp, ts;
-        computeTargets(phase, te, td, tw, tp, ts);
+    float ramp = kDefaultRampSpeed;
 
-        float ramp = kDefaultRampSpeed;
+    // Ramp current values toward targets
+    hudMode.edge_softness      = rampToward(hudMode.edge_softness,      te, ramp, delta_time);
+    hudMode.color_desaturation = rampToward(hudMode.color_desaturation, td, ramp, delta_time);
+    hudMode.warning_mute       = rampToward(hudMode.warning_mute,       tw, ramp, delta_time);
+    hudMode.safe_area_padding  = rampToward(hudMode.safe_area_padding,  tp, ramp * 30.0f, delta_time);
+    hudMode.hud_scale          = rampToward(hudMode.hud_scale,          ts, ramp * 0.05f, delta_time);
 
-        // Ramp current values toward targets
-        hudMode->edge_softness      = rampToward(hudMode->edge_softness,      te, ramp, delta_time);
-        hudMode->color_desaturation = rampToward(hudMode->color_desaturation, td, ramp, delta_time);
-        hudMode->warning_mute       = rampToward(hudMode->warning_mute,       tw, ramp, delta_time);
-        hudMode->safe_area_padding  = rampToward(hudMode->safe_area_padding,  tp, ramp * 30.0f, delta_time);
-        hudMode->hud_scale          = rampToward(hudMode->hud_scale,          ts, ramp * 0.05f, delta_time);
+    // Optional UI flair
+    if (hudMode.ui_flair_enabled && phase >= 2 && phase <= 4) {
+        float bass_level = 0.0f;
+        auto* audioCfg = entity.getComponent<components::WarpAudioProfile>();
+        if (audioCfg) bass_level = audioCfg->engine_core_volume;
 
-        // Optional UI flair
-        if (hudMode->ui_flair_enabled && phase >= 2 && phase <= 4) {
-            float bass_level = 0.0f;
-            auto* audioCfg = entity->getComponent<components::WarpAudioProfile>();
-            if (audioCfg) bass_level = audioCfg->engine_core_volume;
-
-            computeUIFlair(warpState->warp_time, bass_level,
-                           hudMode->bracket_animation,
-                           hudMode->ui_glow_intensity,
-                           hudMode->hud_parallax_offset);
-        } else {
-            hudMode->bracket_animation   = 0.0f;
-            hudMode->ui_glow_intensity   = 0.0f;
-            hudMode->hud_parallax_offset = 0.0f;
-        }
+        computeUIFlair(warpState->warp_time, bass_level,
+                       hudMode.bracket_animation,
+                       hudMode.ui_glow_intensity,
+                       hudMode.hud_parallax_offset);
+    } else {
+        hudMode.bracket_animation   = 0.0f;
+        hudMode.ui_glow_intensity   = 0.0f;
+        hudMode.hud_parallax_offset = 0.0f;
     }
 }
 
