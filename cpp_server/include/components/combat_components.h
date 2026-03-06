@@ -194,6 +194,43 @@ public:
     COMPONENT_TYPE(CombatLog)
 };
 
+// ==================== Damage Notification ====================
+
+/**
+ * @brief Tracks and queues damage notifications for HUD display
+ *
+ * Records incoming/outgoing damage events with type, weapon, and crit info.
+ * Entries expire after configurable lifetime. Provides DPS calculations.
+ */
+class DamageNotification : public ecs::Component {
+public:
+    enum DamageType { EM = 0, Thermal = 1, Kinetic = 2, Explosive = 3 };
+
+    struct DamageEntry {
+        std::string source_id;
+        float amount = 0.0f;
+        int damage_type = 0;
+        std::string weapon_name;
+        bool is_critical = false;
+        float timestamp = 0.0f;
+    };
+
+    std::vector<DamageEntry> incoming;
+    std::vector<DamageEntry> outgoing;
+    float total_damage_taken = 0.0f;
+    float total_damage_dealt = 0.0f;
+    int hits_taken = 0;
+    int hits_dealt = 0;
+    int crits_taken = 0;
+    int crits_dealt = 0;
+    int max_entries = 50;
+    float entry_lifetime = 10.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DamageNotification)
+};
+
 } // namespace components
 } // namespace atlas
 

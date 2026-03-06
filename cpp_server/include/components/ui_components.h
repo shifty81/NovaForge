@@ -381,6 +381,51 @@ public:
     COMPONENT_TYPE(DataBinding)
 };
 
+// ==================== Overview Filter ====================
+
+/**
+ * @brief Overview window entity filtering and column sorting
+ *
+ * Manages overview tab presets with type/distance/standing filters.
+ * Supports column-based sorting and entry count limits.
+ */
+class OverviewFilter : public ecs::Component {
+public:
+    struct FilterPreset {
+        std::string preset_id;
+        std::string name;
+        std::vector<std::string> shown_types;   // "Ship", "NPC", "Wreck", "Celestial", "Drone", "Structure"
+        float max_distance = 0.0f;              // 0 = unlimited
+        bool show_friendly = true;
+        bool show_neutral = true;
+        bool show_hostile = true;
+    };
+
+    struct OverviewEntry {
+        std::string entity_id;
+        std::string name;
+        std::string type;
+        float distance = 0.0f;
+        float angular_velocity = 0.0f;
+        std::string standing;    // "Friendly", "Neutral", "Hostile"
+        bool is_locked = false;
+    };
+
+    std::vector<FilterPreset> presets;
+    std::vector<OverviewEntry> entries;
+    std::string active_preset_id;
+    std::string sort_column = "distance";  // "name", "type", "distance", "angular_velocity"
+    bool sort_ascending = true;
+    int max_presets = 10;
+    int max_entries = 200;
+    int total_entries_filtered = 0;
+    float update_interval = 1.0f;
+    float update_timer = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OverviewFilter)
+};
+
 } // namespace components
 } // namespace atlas
 
