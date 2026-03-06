@@ -265,6 +265,9 @@ void run_fps_cover_system_tests();
 void run_star_system_manager_system_tests();
 void run_wallet_transaction_system_tests();
 void run_spatial_partition_system_tests();
+void run_player_session_system_tests();
+void run_save_game_system_tests();
+void run_onboarding_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -527,6 +530,9 @@ int main() {
     run_star_system_manager_system_tests();
     run_wallet_transaction_system_tests();
     run_spatial_partition_system_tests();
+    run_player_session_system_tests();
+    run_save_game_system_tests();
+    run_onboarding_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

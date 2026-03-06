@@ -266,6 +266,9 @@ set(CORE_SOURCES
     src/systems/star_system_manager_system.cpp
     src/systems/wallet_transaction_system.cpp
     src/systems/spatial_partition_system.cpp
+    src/systems/player_session_system.cpp
+    src/systems/save_game_system.cpp
+    src/systems/onboarding_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -613,6 +616,9 @@ set(SERVER_HEADERS
     include/systems/star_system_manager_system.h
     include/systems/wallet_transaction_system.h
     include/systems/spatial_partition_system.h
+    include/systems/player_session_system.h
+    include/systems/save_game_system.h
+    include/systems/onboarding_system.h
 )
 
 # Steam SDK configuration
