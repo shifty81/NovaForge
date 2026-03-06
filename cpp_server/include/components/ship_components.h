@@ -928,6 +928,36 @@ public:
     COMPONENT_TYPE(CargoManifest)
 };
 
+/**
+ * @brief Saved ship loadout for persistence and quick-swap
+ */
+class SavedLoadout : public ecs::Component {
+public:
+    struct ModuleSlot {
+        std::string module_id;
+        std::string module_name;
+        int slot_index = 0;
+        std::string slot_type;   // "high", "mid", "low", "rig"
+        bool online = true;
+    };
+
+    struct Loadout {
+        std::string loadout_id;
+        std::string loadout_name;
+        std::string ship_class;
+        float saved_at = 0.0f;
+        std::vector<ModuleSlot> modules;
+    };
+
+    int max_loadouts = 10;
+    float elapsed = 0.0f;
+    bool active = true;
+    std::string active_loadout_id;
+    std::vector<Loadout> loadouts;
+
+    COMPONENT_TYPE(SavedLoadout)
+};
+
 } // namespace components
 } // namespace atlas
 
