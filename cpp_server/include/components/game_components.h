@@ -639,6 +639,46 @@ public:
     COMPONENT_TYPE(StarSystemState)
 };
 
+/**
+ * @brief Grid-based spatial partition for efficient entity queries
+ *
+ * Divides 3D space into grid cells for O(1) neighbor lookups.
+ * Supports the 500+ entity performance target for client polish.
+ */
+class SpatialPartition : public ecs::Component {
+public:
+    struct GridEntry {
+        std::string entity_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        int cell_x = 0;
+        int cell_y = 0;
+        int cell_z = 0;
+        bool active = true;
+    };
+
+    struct CellStats {
+        int cell_x = 0;
+        int cell_y = 0;
+        int cell_z = 0;
+        int entity_count = 0;
+    };
+
+    std::vector<GridEntry> entries;
+    float cell_size = 1000.0f;  // Size of each grid cell in world units
+    int max_entries = 1000;
+    int total_inserts = 0;
+    int total_removals = 0;
+    int total_queries = 0;
+    int total_rebuilds = 0;
+    float rebuild_interval = 1.0f;  // seconds between full rebuilds
+    float rebuild_timer = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SpatialPartition)
+};
+
 } // namespace components
 } // namespace atlas
 
