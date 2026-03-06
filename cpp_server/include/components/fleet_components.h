@@ -825,6 +825,45 @@ public:
     COMPONENT_TYPE(FleetSupplyLine)
 };
 
+// ==================== Fleet Coordination ====================
+
+/**
+ * @brief Fleet-level tactical coordination with engagement orders
+ *
+ * Coordinates fleet-wide tactics including engagement orders (Hold/Engage/
+ * FocusFire/Retreat/Regroup/FreeEngage), target priority assignments,
+ * combat readiness tracking, and formation coherence degradation.
+ */
+class FleetCoordination : public ecs::Component {
+public:
+    enum class CoordinationOrder { Hold, Engage, FocusFire, Retreat, Regroup, FreeEngage };
+
+    struct TargetAssignment {
+        std::string target_id;
+        int priority = 1;            // 1 = lowest, 5 = highest
+        int assigned_ships = 0;
+    };
+
+    std::string fleet_id;
+    CoordinationOrder current_order = CoordinationOrder::Hold;
+    std::vector<TargetAssignment> target_assignments;
+    std::vector<std::string> participating_ships;
+    float formation_coherence = 1.0f;   // 0-1, degrades in combat
+    float combat_readiness = 1.0f;      // coherence × morale
+    float morale_factor = 1.0f;         // 0-1
+    float order_duration = 0.0f;
+    int max_targets = 10;
+    int max_ships = 50;
+    int total_orders_issued = 0;
+    int total_targets_assigned = 0;
+    float total_time_in_combat = 0.0f;
+    float coherence_decay_rate = 0.01f; // per second during combat
+    bool in_combat = false;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetCoordination)
+};
+
 } // namespace components
 } // namespace atlas
 

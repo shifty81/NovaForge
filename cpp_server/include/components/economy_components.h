@@ -705,6 +705,42 @@ public:
     COMPONENT_TYPE(ContractAuction)
 };
 
+// ==================== Trade Route Analytics ====================
+
+/**
+ * @brief Trade route performance tracking with volume, revenue, and congestion
+ *
+ * Monitors trade route metrics for visible supply/demand cycles.
+ * Tracks per-route volume, revenue, profit margins, and congestion levels
+ * with periodic snapshot intervals for trend analysis.
+ */
+class TradeRouteAnalytics : public ecs::Component {
+public:
+    struct TradeRoute {
+        std::string route_id;
+        std::string origin_system;
+        std::string dest_system;
+        std::string commodity;
+        float volume = 0.0f;
+        float revenue = 0.0f;
+        float cost = 0.0f;
+        int trips = 0;
+        float congestion = 0.0f;    // 0.0 = clear, 1.0 = fully congested
+        bool active = true;
+    };
+
+    std::vector<TradeRoute> routes;
+    int max_routes = 20;
+    float snapshot_interval = 60.0f;  // seconds between snapshots
+    float snapshot_timer = 0.0f;
+    int total_snapshots = 0;
+    float total_volume = 0.0f;
+    float total_revenue = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(TradeRouteAnalytics)
+};
+
 } // namespace components
 } // namespace atlas
 

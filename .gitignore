@@ -142,3 +142,4 @@ ui_layouts/
 cpp_client/build_atlas_test/
 cpp_server/build/
 build/
+cpp_server/build/

@@ -242,6 +242,9 @@ set(CORE_SOURCES
     src/systems/clone_bay_system.cpp
     src/systems/loyalty_point_store_system.cpp
     src/systems/contract_auction_system.cpp
+    src/systems/trade_route_analytics_system.cpp
+    src/systems/combat_log_system.cpp
+    src/systems/fleet_coordination_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -565,6 +568,9 @@ set(SERVER_HEADERS
     include/systems/clone_bay_system.h
     include/systems/loyalty_point_store_system.h
     include/systems/contract_auction_system.h
+    include/systems/trade_route_analytics_system.h
+    include/systems/combat_log_system.h
+    include/systems/fleet_coordination_system.h
 )
 
 # Steam SDK configuration
