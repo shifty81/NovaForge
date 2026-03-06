@@ -569,6 +569,76 @@ public:
     COMPONENT_TYPE(SnapshotReplication)
 };
 
+/**
+ * @brief Star system manager for vertical slice orchestration
+ *
+ * Manages a complete star system: celestial bodies, stations, gates, belts,
+ * and NPC presence. Enables the full fly/fight/mine/trade/dock loop.
+ */
+class StarSystemState : public ecs::Component {
+public:
+    struct CelestialBody {
+        std::string body_id;
+        std::string name;
+        std::string type;  // "Star", "Planet", "Moon", "AsteroidBelt"
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float radius = 1000.0f;
+        bool active = true;
+    };
+
+    struct StationInfo {
+        std::string station_id;
+        std::string name;
+        std::string owner_faction;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        int docked_count = 0;
+        int max_docking = 50;
+        bool has_market = true;
+        bool has_repair = true;
+        bool online = true;
+    };
+
+    struct GateLink {
+        std::string gate_id;
+        std::string destination_system;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        bool online = true;
+        int total_jumps = 0;
+    };
+
+    struct NPCPresence {
+        std::string faction;
+        int ship_count = 0;
+        float threat_level = 0.0f;  // 0.0 = none, 1.0 = max
+        bool hostile = false;
+    };
+
+    std::string system_id;
+    std::string system_name;
+    float security_status = 1.0f;  // 0.0 = null-sec, 1.0 = high-sec
+    std::vector<CelestialBody> celestials;
+    std::vector<StationInfo> stations;
+    std::vector<GateLink> gates;
+    std::vector<NPCPresence> npc_presence;
+    int max_celestials = 30;
+    int max_stations = 10;
+    int max_gates = 5;
+    int max_npc_factions = 8;
+    int total_dockings = 0;
+    int total_jumps = 0;
+    int total_npc_spawns = 0;
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(StarSystemState)
+};
+
 } // namespace components
 } // namespace atlas
 
