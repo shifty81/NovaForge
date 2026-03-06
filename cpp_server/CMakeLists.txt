@@ -275,6 +275,9 @@ set(CORE_SOURCES
     src/systems/objective_tracker_system.cpp
     src/systems/event_notification_feed_system.cpp
     src/systems/session_summary_system.cpp
+    src/systems/market_browser_system.cpp
+    src/systems/skill_queue_system.cpp
+    src/systems/ship_fitting_validation_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -631,6 +634,9 @@ set(SERVER_HEADERS
     include/systems/objective_tracker_system.h
     include/systems/event_notification_feed_system.h
     include/systems/session_summary_system.h
+    include/systems/market_browser_system.h
+    include/systems/skill_queue_system.h
+    include/systems/ship_fitting_validation_system.h
 )
 
 # Steam SDK configuration
