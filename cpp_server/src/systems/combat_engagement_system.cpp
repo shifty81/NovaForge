@@ -57,6 +57,8 @@ void CombatEngagementSystem::updateComponent(ecs::Entity& /*entity*/,
                 ce.state = CE::State::Safe;
                 ce.time_in_state = 0.0f;
                 ce.disengage_timer = 0.0f;
+                ce.warp_blocked = false;
+                ce.dock_blocked = false;
             }
             break;
     }

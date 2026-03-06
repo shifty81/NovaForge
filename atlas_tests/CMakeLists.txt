@@ -132,6 +132,14 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_renderer.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_context.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_panels.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_forms.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_hud.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_lists.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_sidebar.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_cards.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_effects.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_widgets_menus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/ui/atlas/atlas_hud.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/pcg_manager.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/ship_generator.cpp
@@ -171,6 +179,12 @@ endif()
 add_executable(AtlasTests ${ATLAS_TEST_SOURCES})
 
 target_compile_definitions(AtlasTests PRIVATE ATLAS_HEADLESS=1)
+# Prevent server ECS World from conflicting with engine ECS World (same
+# reason as editor — see editor/CMakeLists.txt).
+target_compile_definitions(AtlasTests PRIVATE
+    NOVAFORGE_ECS_WORLD_H
+    NOVAFORGE_ECS_ENTITY_H
+)
 if(NOT glm_FOUND AND NOT GLM_FOUND)
     target_compile_definitions(AtlasTests PRIVATE ATLAS_NO_GLM=1)
 endif()

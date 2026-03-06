@@ -57,18 +57,24 @@ inline std::string resolvePath(const std::string& filePath) {
     std::string exeDir = getExecutableDir();
     if (!exeDir.empty()) {
         std::filesystem::path exeDirPath(exeDir);
+
+        // Check exe directory itself
         std::filesystem::path resolved = exeDirPath / filePath;
         if (std::filesystem::exists(resolved)) {
             return resolved.string();
         }
 
-        // For multi-config generators (e.g., Visual Studio) the executable
-        // may be in a configuration subdirectory such as bin/Release/ or
-        // bin/Debug/ while resources are placed in the parent bin/ directory.
-        // Check the parent directory as well.
-        resolved = exeDirPath.parent_path() / filePath;
-        if (std::filesystem::exists(resolved)) {
-            return resolved.string();
+        // Walk up parent directories (handles multi-config generators like
+        // Visual Studio where the exe may be in bin/Release/ or bin/Debug/
+        // while resources are at the project root).
+        std::filesystem::path parent = exeDirPath;
+        for (int i = 0; i < 4; ++i) {
+            parent = parent.parent_path();
+            if (parent.empty() || parent == parent.parent_path()) break;
+            resolved = parent / filePath;
+            if (std::filesystem::exists(resolved)) {
+                return resolved.string();
+            }
         }
     }
 

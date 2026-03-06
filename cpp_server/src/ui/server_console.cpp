@@ -95,7 +95,39 @@ namespace {
 bool ServerConsole::init(Server& server, const ServerConfig& config) {
     server_ = &server;
     config_ = &config;
-    
+    m_initialized = true;
+
+    // Register built-in commands so they appear in the help listing
+    // and are dispatched via the command map.
+    registerCommand("help", "List available commands",
+        [this](const std::vector<std::string>&) -> std::string {
+            return handleHelpCommand();
+        });
+    registerCommand("status", "Show server status summary",
+        [this](const std::vector<std::string>&) -> std::string {
+            return handleStatusCommand();
+        });
+    registerCommand("players", "List connected players",
+        [this](const std::vector<std::string>&) -> std::string {
+            return handlePlayersCommand();
+        });
+    registerCommand("metrics", "Show detailed performance metrics",
+        [this](const std::vector<std::string>&) -> std::string {
+            return handleMetricsCommand();
+        });
+    registerCommand("save", "Save world state",
+        [this](const std::vector<std::string>&) -> std::string {
+            return handleSaveCommand();
+        });
+    registerCommand("load", "Load world state",
+        [this](const std::vector<std::string>&) -> std::string {
+            return handleLoadCommand();
+        });
+    registerCommand("stop", "Gracefully stop the server",
+        [this](const std::vector<std::string>&) -> std::string {
+            return handleStopCommand();
+        });
+
     if (m_interactive) {
         setNonBlockingStdin(true);
         std::cout << "\n=== Atlas Server Console ===\n";
@@ -234,6 +266,7 @@ std::string ServerConsole::handleHelpCommand() {
 }
 
 std::string ServerConsole::handleStatusCommand() {
+    if (!server_) return "Server not available";
     std::ostringstream oss;
     oss << "Server Status:\n";
     oss << "  Running: " << (server_->isRunning() ? "Yes" : "No") << "\n";
@@ -248,6 +281,7 @@ std::string ServerConsole::handleStatusCommand() {
 }
 
 std::string ServerConsole::handlePlayersCommand() {
+    if (!server_) return "Server not available";
     int count = server_->getPlayerCount();
     std::ostringstream oss;
     oss << "Connected players: " << count;
@@ -265,6 +299,7 @@ std::string ServerConsole::handlePlayersCommand() {
 }
 
 std::string ServerConsole::handleKickCommand(const std::string& player_name) {
+    if (!server_) return "Server not available";
     if (player_name.empty()) {
         return "Usage: kick <player_name>";
     }
@@ -277,17 +312,20 @@ std::string ServerConsole::handleKickCommand(const std::string& player_name) {
 }
 
 std::string ServerConsole::handleStopCommand() {
+    if (!server_) return "Server not available";
     utils::Logger::instance().info("Stop command received from console");
     server_->stop();
     return "Shutting down server...";
 }
 
 std::string ServerConsole::handleMetricsCommand() {
+    if (!server_) return "Server not available";
     const auto& metrics = server_->getMetrics();
     return metrics.summary();
 }
 
 std::string ServerConsole::handleSaveCommand() {
+    if (!server_) return "Server not available";
     if (server_->saveWorld()) {
         return "World saved successfully";
     } else {
@@ -296,6 +334,7 @@ std::string ServerConsole::handleSaveCommand() {
 }
 
 std::string ServerConsole::handleLoadCommand() {
+    if (!server_) return "Server not available";
     if (server_->loadWorld()) {
         return "World loaded successfully";
     } else {
