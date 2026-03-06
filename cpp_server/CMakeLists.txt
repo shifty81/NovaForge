@@ -272,6 +272,9 @@ set(CORE_SOURCES
     src/systems/star_system_populator_system.cpp
     src/systems/session_progression_system.cpp
     src/systems/encounter_spawner_system.cpp
+    src/systems/objective_tracker_system.cpp
+    src/systems/event_notification_feed_system.cpp
+    src/systems/session_summary_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -625,6 +628,9 @@ set(SERVER_HEADERS
     include/systems/star_system_populator_system.h
     include/systems/session_progression_system.h
     include/systems/encounter_spawner_system.h
+    include/systems/objective_tracker_system.h
+    include/systems/event_notification_feed_system.h
+    include/systems/session_summary_system.h
 )
 
 # Steam SDK configuration

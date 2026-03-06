@@ -995,6 +995,102 @@ public:
     COMPONENT_TYPE(EncounterState)
 };
 
+/**
+ * @brief Real-time objective tracking with waypoints and completion for HUD
+ */
+class ObjectiveTrackerState : public ecs::Component {
+public:
+    struct TrackedObjective {
+        std::string objective_id;
+        std::string description;
+        std::string category; // "Mission", "Tutorial", "Exploration", "Combat"
+        float target_x = 0.0f;
+        float target_y = 0.0f;
+        float progress = 0.0f; // 0.0–1.0
+        bool completed = false;
+        float completed_at = 0.0f;
+    };
+
+    std::string player_id;
+
+    std::vector<TrackedObjective> objectives;
+    int max_objectives = 30;
+    std::string active_objective_id;
+
+    float player_x = 0.0f;
+    float player_y = 0.0f;
+
+    int completed_count = 0;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ObjectiveTrackerState)
+};
+
+/**
+ * @brief Centralized notification feed for player-facing gameplay events
+ */
+class EventNotificationFeed : public ecs::Component {
+public:
+    struct Notification {
+        std::string event_id;
+        std::string category; // "Combat", "Trade", "Mining", "Docking", "Mission", "System"
+        std::string message;
+        int priority = 1;     // 1 (low) – 5 (critical)
+        float lifetime = 0.0f; // 0 = permanent until dismissed
+        float age = 0.0f;
+        bool read = false;
+    };
+
+    std::string player_id;
+
+    std::vector<Notification> notifications;
+    int max_notifications = 50;
+
+    int total_pushed = 0;
+    int total_expired = 0;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(EventNotificationFeed)
+};
+
+/**
+ * @brief End-of-session summary with stats, grades, and derived metrics
+ */
+class SessionSummaryState : public ecs::Component {
+public:
+    struct SummaryStat {
+        std::string stat_key;
+        double value = 0.0;
+    };
+
+    struct CategoryStats {
+        std::string category; // "Combat", "Economy", "Exploration", "Mission"
+        std::vector<SummaryStat> entries;
+    };
+
+    std::string player_id;
+
+    std::vector<SummaryStat> stats;
+    std::vector<CategoryStats> categories;
+
+    int max_stats = 50;
+    int max_categories = 10;
+    int max_category_entries = 20;
+
+    float session_start_time = 0.0f;
+    float session_end_time = 0.0f;
+    bool finalized = false;
+
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SessionSummaryState)
+};
+
 } // namespace components
 } // namespace atlas
 

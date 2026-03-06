@@ -271,6 +271,9 @@ void run_onboarding_system_tests();
 void run_star_system_populator_system_tests();
 void run_session_progression_system_tests();
 void run_encounter_spawner_system_tests();
+void run_objective_tracker_system_tests();
+void run_event_notification_feed_system_tests();
+void run_session_summary_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -539,6 +542,9 @@ int main() {
     run_star_system_populator_system_tests();
     run_session_progression_system_tests();
     run_encounter_spawner_system_tests();
+    run_objective_tracker_system_tests();
+    run_event_notification_feed_system_tests();
+    run_session_summary_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
