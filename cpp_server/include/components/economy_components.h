@@ -796,6 +796,33 @@ public:
     COMPONENT_TYPE(WalletLedger)
 };
 
+/**
+ * @brief Station-side repair service state
+ *
+ * Tracks ongoing repair jobs for entities docked at a station.
+ * Shield, armor, and hull are restored over time at a cost proportional
+ * to the missing HP and the station's repair rate.
+ */
+class StationRepairService : public ecs::Component {
+public:
+    enum class RepairPhase { Idle, RepairingShield, RepairingArmor, RepairingHull, Complete };
+
+    RepairPhase phase = RepairPhase::Idle;
+    std::string station_id;
+    float shield_to_repair = 0.0f;
+    float armor_to_repair = 0.0f;
+    float hull_to_repair = 0.0f;
+    float repair_rate = 50.0f;       // HP per second
+    float cost_per_hp = 1.5f;
+    float total_cost = 0.0f;
+    float total_hp_repaired = 0.0f;
+    float elapsed = 0.0f;
+    bool auto_repair = false;        // if true, begin repair immediately on dock
+    bool active = true;
+
+    COMPONENT_TYPE(StationRepairService)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -956,6 +956,37 @@ public:
     COMPONENT_TYPE(MiningLaserCycle)
 };
 
+/**
+ * @brief Tracks ore processing / refining state per entity
+ *
+ * When raw ore is mined, it enters a processing queue. Each tick the
+ * system converts queued ore into refined materials at a configurable
+ * efficiency rate, depositing results into the entity's cargo manifest.
+ */
+class OreProcessing : public ecs::Component {
+public:
+    struct OreJob {
+        std::string ore_type;
+        float raw_amount = 0.0f;
+        float refined_amount = 0.0f;
+        float progress = 0.0f;        // 0.0 to 1.0
+        float processing_time = 30.0f; // seconds per batch
+        bool completed = false;
+    };
+
+    std::vector<OreJob> jobs;
+    float efficiency = 0.75f;           // 75% yield by default
+    float processing_speed = 1.0f;     // multiplier on processing rate
+    int max_concurrent_jobs = 2;
+    int total_batches_completed = 0;
+    float total_raw_processed = 0.0f;
+    float total_refined_output = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OreProcessing)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -285,6 +285,10 @@ void run_combat_engagement_system_tests();
 void run_warp_disruption_system_tests();
 void run_invulnerability_timer_system_tests();
 void run_mining_laser_cycle_system_tests();
+void run_entity_builder_tests();
+void run_ore_processing_system_tests();
+void run_station_repair_service_system_tests();
+void run_combat_reward_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -567,6 +571,10 @@ int main() {
     run_warp_disruption_system_tests();
     run_invulnerability_timer_system_tests();
     run_mining_laser_cycle_system_tests();
+    run_entity_builder_tests();
+    run_ore_processing_system_tests();
+    run_station_repair_service_system_tests();
+    run_combat_reward_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

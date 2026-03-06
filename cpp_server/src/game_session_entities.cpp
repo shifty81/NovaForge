@@ -8,6 +8,7 @@
 #include "pcg/salvage_system.h"
 #include "pcg/snappable_grid.h"
 #include "utils/logger.h"
+#include "utils/entity_builder.h"
 #include <sstream>
 #include <chrono>
 
@@ -163,88 +164,53 @@ std::string GameSession::createPlayerEntity(const std::string& player_id,
     const data::ShipTemplate* tmpl = ship_db_.getShip(ship_type);
 
     // Position – spawn near origin with spacing per player
-    auto pos = std::make_unique<components::Position>();
-    pos->x = static_cast<float>(id_num) * PLAYER_SPAWN_SPACING_X;
-    pos->y = 0.0f;
-    pos->z = static_cast<float>(id_num) * PLAYER_SPAWN_SPACING_Z;
-    entity->addComponent(std::move(pos));
-
     // Velocity
-    auto vel = std::make_unique<components::Velocity>();
-    vel->max_speed = tmpl ? tmpl->max_velocity : 300.0f;
-    entity->addComponent(std::move(vel));
-
-    // Health
-    auto hp = std::make_unique<components::Health>();
-    hp->shield_hp  = hp->shield_max  = tmpl ? tmpl->shield_hp : 450.0f;
-    hp->armor_hp   = hp->armor_max   = tmpl ? tmpl->armor_hp  : 350.0f;
-    hp->hull_hp    = hp->hull_max    = tmpl ? tmpl->hull_hp   : 300.0f;
-    hp->shield_recharge_rate = tmpl ? (tmpl->shield_hp / tmpl->shield_recharge_time) : 3.5f;
-    if (tmpl) {
-        hp->shield_em_resist        = tmpl->shield_resists.em;
-        hp->shield_thermal_resist   = tmpl->shield_resists.thermal;
-        hp->shield_kinetic_resist   = tmpl->shield_resists.kinetic;
-        hp->shield_explosive_resist = tmpl->shield_resists.explosive;
-        hp->armor_em_resist         = tmpl->armor_resists.em;
-        hp->armor_thermal_resist    = tmpl->armor_resists.thermal;
-        hp->armor_kinetic_resist    = tmpl->armor_resists.kinetic;
-        hp->armor_explosive_resist  = tmpl->armor_resists.explosive;
-        hp->hull_em_resist          = tmpl->hull_resists.em;
-        hp->hull_thermal_resist     = tmpl->hull_resists.thermal;
-        hp->hull_kinetic_resist     = tmpl->hull_resists.kinetic;
-        hp->hull_explosive_resist   = tmpl->hull_resists.explosive;
-    }
-    entity->addComponent(std::move(hp));
-
-    // Ship info
-    auto ship = std::make_unique<components::Ship>();
-    ship->ship_name  = tmpl ? tmpl->name       : "Fang";
-    ship->ship_class = tmpl ? tmpl->ship_class  : "Frigate";
-    ship->ship_type  = tmpl ? tmpl->name        : "Fang";
-    ship->race       = tmpl ? tmpl->race        : "Keldari";
-    ship->cpu_max    = tmpl ? tmpl->cpu          : 125.0f;
-    ship->powergrid_max = tmpl ? tmpl->powergrid : 37.0f;
-    ship->signature_radius    = tmpl ? tmpl->signature_radius    : 35.0f;
-    ship->scan_resolution     = tmpl ? tmpl->scan_resolution     : 400.0f;
-    ship->max_locked_targets  = tmpl ? tmpl->max_locked_targets  : 4;
-    ship->max_targeting_range = tmpl ? tmpl->max_targeting_range : 18000.0f;
-    entity->addComponent(std::move(ship));
-
-    // Target component (for target locking)
-    entity->addComponent(std::make_unique<components::Target>());
-
-    // Player tag
-    auto player = std::make_unique<components::Player>();
-    player->player_id      = player_id;
-    player->character_name = character_name;
-    entity->addComponent(std::move(player));
-
     // Faction
-    auto faction = std::make_unique<components::Faction>();
-    faction->faction_name = tmpl ? tmpl->race : "Keldari";
-    entity->addComponent(std::move(faction));
-
-    // Standings - Initialize with default faction standings
-    auto standings = std::make_unique<components::Standings>();
-    // Set default standings for major factions (-10 to +10)
-    // Player starts neutral with most factions
-    standings->faction_standings["Veyren"] = 0.0f;
-    standings->faction_standings["Aurelian"] = 0.0f;
-    standings->faction_standings["Solari"] = 0.0f;
-    standings->faction_standings["Keldari"] = 0.0f;
-    // Pirate factions are hostile by default
-    standings->faction_standings["Venom Syndicate"] = -5.0f;
-    standings->faction_standings["Iron Corsairs"] = -5.0f;
-    standings->faction_standings["Crimson Order"] = -5.0f;
-    standings->faction_standings["Hollow Collective"] = -5.0f;
-    entity->addComponent(std::move(standings));
-
+    // Target
+    // Player tag
+    // Default faction standings
     // Capacitor
-    auto cap = std::make_unique<components::Capacitor>();
-    cap->capacitor_max = tmpl ? tmpl->capacitor : 250.0f;
-    cap->capacitor     = cap->capacitor_max;
-    cap->recharge_rate = tmpl ? (tmpl->capacitor / tmpl->capacitor_recharge_time) : 3.0f;
-    entity->addComponent(std::move(cap));
+    utils::EntityBuilder builder(entity);
+    builder.withPosition(static_cast<float>(id_num) * PLAYER_SPAWN_SPACING_X,
+                         0.0f,
+                         static_cast<float>(id_num) * PLAYER_SPAWN_SPACING_Z)
+           .withVelocity(tmpl ? tmpl->max_velocity : 300.0f)
+           .withTarget()
+           .withPlayer(player_id, character_name)
+           .withFaction(tmpl ? tmpl->race : "Keldari")
+           .withDefaultPlayerStandings()
+           .withCapacitor(tmpl ? tmpl->capacitor : 250.0f,
+                          tmpl ? (tmpl->capacitor / tmpl->capacitor_recharge_time) : 3.0f);
+
+    // Health — requires per-layer resistance data from template
+    if (tmpl) {
+        builder.withHealthResists(
+            tmpl->shield_hp, tmpl->armor_hp, tmpl->hull_hp,
+            tmpl->shield_hp / tmpl->shield_recharge_time,
+            tmpl->shield_resists.em, tmpl->shield_resists.thermal,
+            tmpl->shield_resists.kinetic, tmpl->shield_resists.explosive,
+            tmpl->armor_resists.em, tmpl->armor_resists.thermal,
+            tmpl->armor_resists.kinetic, tmpl->armor_resists.explosive,
+            tmpl->hull_resists.em, tmpl->hull_resists.thermal,
+            tmpl->hull_resists.kinetic, tmpl->hull_resists.explosive);
+    } else {
+        builder.withHealth(450.0f, 350.0f, 300.0f, 3.5f);
+    }
+
+    // Ship info — full fitting stats
+    builder.withShipFull(
+        tmpl ? tmpl->name       : "Fang",
+        tmpl ? tmpl->ship_class : "Frigate",
+        tmpl ? tmpl->name       : "Fang",
+        tmpl ? tmpl->race       : "Keldari",
+        tmpl ? tmpl->cpu          : 125.0f,
+        tmpl ? tmpl->powergrid    : 37.0f,
+        tmpl ? tmpl->signature_radius    : 35.0f,
+        tmpl ? tmpl->scan_resolution     : 400.0f,
+        tmpl ? tmpl->max_locked_targets  : 4,
+        tmpl ? tmpl->max_targeting_range : 18000.0f);
+
+    builder.build();
 
     return entity_id;
 }
@@ -271,35 +237,23 @@ void GameSession::spawnInitialNPCs() {
 
             auto* entity = world_->createEntity("pcg_capital_wreck_1");
             if (entity) {
-                auto pos = std::make_unique<components::Position>();
-                pos->x = 3000.0f; pos->y = 200.0f; pos->z = -2000.0f;
-                entity->addComponent(std::move(pos));
-
-                auto hp = std::make_unique<components::Health>();
-                hp->hull_hp = 0.0f; hp->hull_max = 50000.0f;
-                hp->armor_hp = 0.0f; hp->armor_max = 30000.0f;
-                hp->shield_hp = 0.0f; hp->shield_max = 20000.0f;
-                entity->addComponent(std::move(hp));
-
-                auto ship = std::make_unique<components::Ship>();
-                ship->ship_name = "Derelict Battleship";
-                ship->ship_class = "Battleship";
-                ship->ship_type = "Capital_Wreck";
-                entity->addComponent(std::move(ship));
+                int rooms = 0;
+                for (const auto& d : capShip.decks) rooms += static_cast<int>(d.rooms.size());
 
                 auto interior = std::make_unique<components::ProceduralInterior>();
                 interior->shipClass = capShip.shipClass;
                 interior->deckCount = static_cast<int>(capShip.decks.size());
-                int rooms = 0;
-                for (const auto& d : capShip.decks) rooms += static_cast<int>(d.rooms.size());
                 interior->roomCount = rooms;
                 interior->elevatorCount = static_cast<int>(capShip.elevators.size());
                 interior->pcgSeed = ctx.seed;
-                entity->addComponent(std::move(interior));
 
-                auto fac = std::make_unique<components::Faction>();
-                fac->faction_name = "Ancient Fleet";
-                entity->addComponent(std::move(fac));
+                utils::EntityBuilder(entity)
+                    .withPosition(3000.0f, 200.0f, -2000.0f)
+                    .withDestroyedHealth(20000.0f, 30000.0f, 50000.0f)
+                    .withShip("Derelict Battleship", "Battleship", "Capital_Wreck")
+                    .withComponent(std::move(interior))
+                    .withFaction("Ancient Fleet")
+                    .build();
 
                 atlas::utils::Logger::instance().info(
                     "[PCG] Spawned capital wreck: " + std::to_string(capShip.decks.size()) +
@@ -316,26 +270,18 @@ void GameSession::spawnInitialNPCs() {
 
             auto* entity = world_->createEntity("pcg_station_1");
             if (entity) {
-                auto pos = std::make_unique<components::Position>();
-                pos->x = -2000.0f; pos->y = 0.0f; pos->z = 1500.0f;
-                entity->addComponent(std::move(pos));
-
-                auto hp = std::make_unique<components::Health>();
-                hp->hull_hp = hp->hull_max = 100000.0f;
-                hp->armor_hp = hp->armor_max = 80000.0f;
-                hp->shield_hp = hp->shield_max = 60000.0f;
-                entity->addComponent(std::move(hp));
-
                 auto stComp = std::make_unique<components::ProceduralStation>();
                 stComp->moduleCount = static_cast<int>(station.modules.size());
                 stComp->totalPowerConsumption = station.totalPowerConsumption;
                 stComp->totalPowerProduction = station.totalPowerProduction;
                 stComp->pcgSeed = ctx.seed;
-                entity->addComponent(std::move(stComp));
 
-                auto fac = std::make_unique<components::Faction>();
-                fac->faction_name = "Independent";
-                entity->addComponent(std::move(fac));
+                utils::EntityBuilder(entity)
+                    .withPosition(-2000.0f, 0.0f, 1500.0f)
+                    .withHealth(60000.0f, 80000.0f, 100000.0f)
+                    .withComponent(std::move(stComp))
+                    .withFaction("Independent")
+                    .build();
 
                 atlas::utils::Logger::instance().info(
                     "[PCG] Spawned station: " + std::to_string(station.modules.size()) +
@@ -352,25 +298,22 @@ void GameSession::spawnInitialNPCs() {
 
             auto* entity = world_->createEntity("pcg_salvage_field_1");
             if (entity) {
-                auto pos = std::make_unique<components::Position>();
-                pos->x = 5000.0f; pos->y = -100.0f; pos->z = 4000.0f;
-                entity->addComponent(std::move(pos));
-
                 auto sf = std::make_unique<components::SalvageFieldComponent>();
                 sf->totalNodes = field.totalNodes;
                 sf->hiddenNodes = field.hiddenNodes;
                 sf->totalValue = pcg::SalvageSystem::calculateTotalValue(field);
                 sf->pcgSeed = ctx.seed;
-                entity->addComponent(std::move(sf));
 
-                auto fac = std::make_unique<components::Faction>();
-                fac->faction_name = "None";
-                entity->addComponent(std::move(fac));
+                utils::EntityBuilder(entity)
+                    .withPosition(5000.0f, -100.0f, 4000.0f)
+                    .withComponent(std::move(sf))
+                    .withFaction("None")
+                    .build();
 
                 atlas::utils::Logger::instance().info(
                     "[PCG] Spawned salvage field: " + std::to_string(field.totalNodes) +
                     " nodes (" + std::to_string(field.hiddenNodes) + " hidden), value " +
-                    std::to_string(sf->totalValue));
+                    std::to_string(entity->getComponent<components::SalvageFieldComponent>()->totalValue));
             }
         }
 
@@ -391,10 +334,6 @@ void GameSession::spawnInitialNPCs() {
 
             auto* entity = world_->createEntity("pcg_asteroid_belt_1");
             if (entity) {
-                auto pos = std::make_unique<components::Position>();
-                pos->x = -4000.0f; pos->y = 0.0f; pos->z = -3000.0f;
-                entity->addComponent(std::move(pos));
-
                 auto sg = std::make_unique<components::SectorGrid>();
                 sg->gridWidth = 16;
                 sg->gridHeight = 8;
@@ -402,7 +341,11 @@ void GameSession::spawnInitialNPCs() {
                 sg->cellSize = 50.0f;
                 sg->occupiedCells = occupied;
                 sg->pcgSeed = ctx.seed;
-                entity->addComponent(std::move(sg));
+
+                utils::EntityBuilder(entity)
+                    .withPosition(-4000.0f, 0.0f, -3000.0f)
+                    .withComponent(std::move(sg))
+                    .build();
 
                 atlas::utils::Logger::instance().info(
                     "[PCG] Spawned asteroid belt: 16x8x16 grid, " +
@@ -419,60 +362,27 @@ void GameSession::spawnNPC(const std::string& id, const std::string& name,
     auto* entity = world_->createEntity(id);
     if (!entity) return;
 
-    auto pos = std::make_unique<components::Position>();
-    pos->x = x;  pos->y = y;  pos->z = z;
-    entity->addComponent(std::move(pos));
+    bool is_pirate = (faction_name == "Venom Syndicate" || faction_name == "Iron Corsairs" ||
+                      faction_name == "Crimson Order"   || faction_name == "Hollow Collective");
 
-    auto vel = std::make_unique<components::Velocity>();
-    vel->max_speed = 250.0f;
-    entity->addComponent(std::move(vel));
+    auto builder = utils::EntityBuilder(entity)
+        .withPosition(x, y, z)
+        .withVelocity(250.0f)
+        .withHealth(300.0f, 250.0f, 200.0f)
+        .withShip(ship_name, "Frigate", ship_name)
+        .withFaction(faction_name);
 
-    auto hp = std::make_unique<components::Health>();
-    hp->shield_hp = hp->shield_max = 300.0f;
-    hp->armor_hp  = hp->armor_max  = 250.0f;
-    hp->hull_hp   = hp->hull_max   = 200.0f;
-    entity->addComponent(std::move(hp));
-
-    auto ship = std::make_unique<components::Ship>();
-    ship->ship_name  = ship_name;
-    ship->ship_class = "Frigate";
-    ship->ship_type  = ship_name;
-    entity->addComponent(std::move(ship));
-
-    auto fac = std::make_unique<components::Faction>();
-    fac->faction_name = faction_name;
-    entity->addComponent(std::move(fac));
-
-    // Standings - NPCs have faction standings based on their faction
-    auto standings = std::make_unique<components::Standings>();
-    // Pirate NPCs are hostile to players
-    if (faction_name == "Venom Syndicate" || faction_name == "Iron Corsairs" || 
-        faction_name == "Crimson Order" || faction_name == "Hollow Collective") {
-        // Hostile to all empire factions
-        standings->faction_standings["Veyren"] = -5.0f;
-        standings->faction_standings["Aurelian"] = -5.0f;
-        standings->faction_standings["Solari"] = -5.0f;
-        standings->faction_standings["Keldari"] = -5.0f;
+    if (is_pirate) {
+        builder.withPirateStandings();
     } else {
-        // Empire NPCs are neutral to players by default
-        standings->faction_standings["Veyren"] = 0.0f;
-        standings->faction_standings["Aurelian"] = 0.0f;
-        standings->faction_standings["Solari"] = 0.0f;
-        standings->faction_standings["Keldari"] = 0.0f;
+        builder.withEmpireStandings();
     }
-    entity->addComponent(std::move(standings));
 
-    auto ai = std::make_unique<components::AI>();
-    ai->behavior = components::AI::Behavior::Aggressive;
-    ai->state    = components::AI::State::Idle;
-    ai->awareness_range = NPC_AWARENESS_RANGE;
-    entity->addComponent(std::move(ai));
-
-    auto weapon = std::make_unique<components::Weapon>();
-    weapon->damage       = 12.0f;
-    weapon->optimal_range = 5000.0f;
-    weapon->rate_of_fire  = 4.0f;
-    entity->addComponent(std::move(weapon));
+    builder.withAI(components::AI::Behavior::Aggressive,
+                   components::AI::State::Idle,
+                   NPC_AWARENESS_RANGE)
+           .withWeapon(12.0f, 5000.0f, 4.0f)
+           .build();
 
     atlas::utils::Logger::instance().info(
         "[GameSession] Spawned NPC: " + name + " (" + faction_name + " " + ship_name + ")");

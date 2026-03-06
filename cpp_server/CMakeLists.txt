@@ -294,6 +294,9 @@ set(CORE_SOURCES
     src/data/world_deserializer.cpp
     src/data/persistence_json_utils.cpp
     src/data/world_persistence_compressed.cpp
+    src/systems/ore_processing_system.cpp
+    src/systems/station_repair_service_system.cpp
+    src/systems/combat_reward_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -648,6 +651,10 @@ set(SERVER_HEADERS
     include/systems/combat_after_action_system.h
     include/systems/transit_planner_system.h
     include/systems/fleet_readiness_system.h
+    include/utils/entity_builder.h
+    include/systems/ore_processing_system.h
+    include/systems/station_repair_service_system.h
+    include/systems/combat_reward_system.h
 )
 
 # Steam SDK configuration
