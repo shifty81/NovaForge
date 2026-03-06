@@ -766,6 +766,36 @@ public:
     COMPONENT_TYPE(PlayerWallet)
 };
 
+/**
+ * @brief Player wallet with ISK transaction ledger
+ *
+ * Tracks player balance with deposit/withdrawal operations and
+ * maintains a transaction history for audit trail. Supports the
+ * full trade loop in the vertical slice.
+ */
+class WalletLedger : public ecs::Component {
+public:
+    struct Transaction {
+        std::string tx_id;
+        std::string description;
+        std::string category;  // "Trade", "Bounty", "Insurance", "Mission", "Tax", "Transfer"
+        double amount = 0.0;   // positive = credit, negative = debit
+        double balance_after = 0.0;
+        float timestamp = 0.0f;
+    };
+
+    double balance = 0.0;
+    double total_earned = 0.0;
+    double total_spent = 0.0;
+    std::vector<Transaction> transactions;
+    int max_transactions = 100;
+    int total_tx_count = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(WalletLedger)
+};
+
 } // namespace components
 } // namespace atlas
 

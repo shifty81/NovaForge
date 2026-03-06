@@ -262,6 +262,9 @@ void run_fps_stealth_system_tests();
 void run_fps_companion_system_tests();
 void run_fps_terminal_hack_system_tests();
 void run_fps_cover_system_tests();
+void run_star_system_manager_system_tests();
+void run_wallet_transaction_system_tests();
+void run_spatial_partition_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -521,6 +524,9 @@ int main() {
     run_fps_companion_system_tests();
     run_fps_terminal_hack_system_tests();
     run_fps_cover_system_tests();
+    run_star_system_manager_system_tests();
+    run_wallet_transaction_system_tests();
+    run_spatial_partition_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

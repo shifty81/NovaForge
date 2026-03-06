@@ -569,6 +569,116 @@ public:
     COMPONENT_TYPE(SnapshotReplication)
 };
 
+/**
+ * @brief Star system manager for vertical slice orchestration
+ *
+ * Manages a complete star system: celestial bodies, stations, gates, belts,
+ * and NPC presence. Enables the full fly/fight/mine/trade/dock loop.
+ */
+class StarSystemState : public ecs::Component {
+public:
+    struct CelestialBody {
+        std::string body_id;
+        std::string name;
+        std::string type;  // "Star", "Planet", "Moon", "AsteroidBelt"
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float radius = 1000.0f;
+        bool active = true;
+    };
+
+    struct StationInfo {
+        std::string station_id;
+        std::string name;
+        std::string owner_faction;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        int docked_count = 0;
+        int max_docking = 50;
+        bool has_market = true;
+        bool has_repair = true;
+        bool online = true;
+    };
+
+    struct GateLink {
+        std::string gate_id;
+        std::string destination_system;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        bool online = true;
+        int total_jumps = 0;
+    };
+
+    struct NPCPresence {
+        std::string faction;
+        int ship_count = 0;
+        float threat_level = 0.0f;  // 0.0 = none, 1.0 = max
+        bool hostile = false;
+    };
+
+    std::string system_id;
+    std::string system_name;
+    float security_status = 1.0f;  // 0.0 = null-sec, 1.0 = high-sec
+    std::vector<CelestialBody> celestials;
+    std::vector<StationInfo> stations;
+    std::vector<GateLink> gates;
+    std::vector<NPCPresence> npc_presence;
+    int max_celestials = 30;
+    int max_stations = 10;
+    int max_gates = 5;
+    int max_npc_factions = 8;
+    int total_dockings = 0;
+    int total_jumps = 0;
+    int total_npc_spawns = 0;
+    float elapsed_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(StarSystemState)
+};
+
+/**
+ * @brief Grid-based spatial partition for efficient entity queries
+ *
+ * Divides 3D space into grid cells for O(1) neighbor lookups.
+ * Supports the 500+ entity performance target for client polish.
+ */
+class SpatialPartition : public ecs::Component {
+public:
+    struct GridEntry {
+        std::string entity_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        int cell_x = 0;
+        int cell_y = 0;
+        int cell_z = 0;
+        bool active = true;
+    };
+
+    struct CellStats {
+        int cell_x = 0;
+        int cell_y = 0;
+        int cell_z = 0;
+        int entity_count = 0;
+    };
+
+    std::vector<GridEntry> entries;
+    float cell_size = 1000.0f;  // Size of each grid cell in world units
+    int max_entries = 1000;
+    int total_inserts = 0;
+    int total_removals = 0;
+    int total_queries = 0;
+    int total_rebuilds = 0;
+    float rebuild_interval = 1.0f;  // seconds between full rebuilds
+    float rebuild_timer = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SpatialPartition)
+};
+
 } // namespace components
 } // namespace atlas
 
