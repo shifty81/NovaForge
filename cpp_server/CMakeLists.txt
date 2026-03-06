@@ -245,6 +245,9 @@ set(CORE_SOURCES
     src/systems/trade_route_analytics_system.cpp
     src/systems/combat_log_system.cpp
     src/systems/fleet_coordination_system.cpp
+    src/systems/npc_schedule_system.cpp
+    src/systems/jitter_buffer_system.cpp
+    src/systems/entity_lifecycle_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp
@@ -571,6 +574,9 @@ set(SERVER_HEADERS
     include/systems/trade_route_analytics_system.h
     include/systems/combat_log_system.h
     include/systems/fleet_coordination_system.h
+    include/systems/npc_schedule_system.h
+    include/systems/jitter_buffer_system.h
+    include/systems/entity_lifecycle_system.h
 )
 
 # Steam SDK configuration

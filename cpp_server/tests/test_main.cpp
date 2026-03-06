@@ -244,6 +244,9 @@ void run_contract_auction_system_tests();
 void run_trade_route_analytics_system_tests();
 void run_combat_log_system_tests();
 void run_fleet_coordination_system_tests();
+void run_npc_schedule_system_tests();
+void run_jitter_buffer_system_tests();
+void run_entity_lifecycle_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -485,6 +488,9 @@ int main() {
     run_trade_route_analytics_system_tests();
     run_combat_log_system_tests();
     run_fleet_coordination_system_tests();
+    run_npc_schedule_system_tests();
+    run_jitter_buffer_system_tests();
+    run_entity_lifecycle_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
