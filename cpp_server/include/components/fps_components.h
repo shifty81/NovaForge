@@ -1054,6 +1054,71 @@ public:
     COMPONENT_TYPE(FPSCover)
 };
 
+// ==================== Fleet Command Terminal ====================
+
+/**
+ * @brief Buildable / placeable fleet command terminal for RTS fleet control
+ *
+ * The primary interface between FPS gameplay and fleet-level RTS commands.
+ * Players build or place a Fleet Command Terminal on structures (stations,
+ * ships, habitats).  Interacting with it in FPS mode switches to an RTS
+ * fleet command view where the player can issue fleet-wide orders, assign
+ * targets, manage formations, and monitor fleet status.
+ *
+ * This is the bridge between FPS-first gameplay and fleet management.
+ */
+class FleetCommandTerminal : public ecs::Component {
+public:
+    enum class TerminalState { Offline, Idle, Booting, Active, CommandMode, Cooldown, Damaged };
+    enum class FleetOrder { None, Hold, Engage, FocusFire, Retreat, Regroup, FormUp, Patrol, Escort, Warp };
+
+    struct IssuedOrder {
+        FleetOrder order = FleetOrder::None;
+        std::string target_id;
+        float issued_at = 0.0f;
+        bool acknowledged = false;
+    };
+
+    TerminalState state = TerminalState::Offline;
+    std::string owner_id;                // player who placed/owns this terminal
+    std::string structure_id;            // structure it's placed on (station/ship/habitat)
+    std::string active_user_id;          // player currently using it (empty = nobody)
+    std::string linked_fleet_id;         // fleet entity being commanded
+
+    // Boot sequence
+    float boot_time = 3.0f;             // seconds to boot up
+    float boot_progress = 0.0f;
+
+    // Command state
+    std::vector<IssuedOrder> order_history;
+    FleetOrder current_order = FleetOrder::None;
+    std::string current_target_id;
+    float command_range = 50000.0f;      // maximum fleet command range (metres)
+    float cooldown_time = 2.0f;          // seconds between orders
+    float cooldown_remaining = 0.0f;
+
+    // Fleet info cache (updated when terminal is active)
+    int fleet_ship_count = 0;
+    float fleet_readiness = 0.0f;        // 0-1 readiness score
+    float fleet_morale = 100.0f;         // 0-100
+
+    // Placement & construction
+    bool placed = false;                 // has been placed on a structure
+    bool powered = true;                 // requires power to function
+    float integrity = 100.0f;            // 0-100, damaged below 50 = unreliable
+    float damage_threshold = 50.0f;      // below this integrity, terminal is Damaged
+
+    // Limits & tracking
+    int max_orders_history = 50;
+    int total_orders_issued = 0;
+    int total_sessions = 0;              // times a player has entered command mode
+    int total_boots = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetCommandTerminal)
+};
+
 } // namespace components
 } // namespace atlas
 

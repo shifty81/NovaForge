@@ -706,6 +706,45 @@ public:
     COMPONENT_TYPE(NPCPatrolRoute)
 };
 
+// ==================== System Traffic Monitor ====================
+
+/**
+ * @brief Monitors NPC and player traffic in a star system
+ *
+ * Tracks entity counts by category (player ships, NPC traders, NPC
+ * miners, NPC pirates, NPC security), computes density, detects
+ * congestion, and provides traffic snapshots for situational awareness.
+ */
+class SystemTrafficMonitor : public ecs::Component {
+public:
+    enum class TrafficCategory { PlayerShip, NPCTrader, NPCMiner, NPCPirate, NPCSecurity };
+
+    struct TrafficEntry {
+        std::string entity_id;
+        TrafficCategory category = TrafficCategory::PlayerShip;
+        float time_in_system = 0.0f;
+    };
+
+    std::vector<TrafficEntry> entries;
+    std::string system_id;
+    int player_count = 0;
+    int npc_trader_count = 0;
+    int npc_miner_count = 0;
+    int npc_pirate_count = 0;
+    int npc_security_count = 0;
+    float congestion_threshold = 50.0f;  // entity count above which congestion triggers
+    bool congested = false;
+    float snapshot_interval = 30.0f;     // seconds between traffic snapshots
+    float snapshot_timer = 0.0f;
+    int total_snapshots = 0;
+    int total_entities_tracked = 0;
+    int max_entries = 200;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SystemTrafficMonitor)
+};
+
 } // namespace components
 } // namespace atlas
 

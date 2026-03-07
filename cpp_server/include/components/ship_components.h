@@ -1013,6 +1013,43 @@ public:
     COMPONENT_TYPE(ModulePowerGrid)
 };
 
+// ==================== Ship Repair Cost ====================
+
+/**
+ * @brief Tracks cumulative repair costs from combat damage
+ *
+ * As a ship takes damage, repair cost accumulates based on damage type
+ * and layer (shield/armor/hull).  Upon docking, costs can be applied
+ * to the player's wallet.  Hull repairs cost more than armor, which
+ * costs more than shield.
+ */
+class ShipRepairCost : public ecs::Component {
+public:
+    struct DamageRecord {
+        std::string source_id;
+        float shield_damage = 0.0f;
+        float armor_damage = 0.0f;
+        float hull_damage = 0.0f;
+        float timestamp = 0.0f;
+    };
+
+    std::vector<DamageRecord> damage_records;
+    float shield_cost_rate = 1.0f;       // ISC per point of shield damage
+    float armor_cost_rate = 3.0f;        // ISC per point of armor damage
+    float hull_cost_rate = 10.0f;        // ISC per point of hull damage
+    double total_repair_cost = 0.0;      // accumulated repair ISC cost
+    double total_isc_spent_on_repairs = 0.0;
+    float discount_rate = 0.0f;          // 0.0 = no discount, 0.5 = 50% off
+    bool docked = false;                 // repair only applies when docked
+    int total_repairs_completed = 0;
+    int total_damage_events = 0;
+    int max_records = 100;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ShipRepairCost)
+};
+
 } // namespace components
 } // namespace atlas
 
