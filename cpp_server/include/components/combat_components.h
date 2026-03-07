@@ -481,6 +481,37 @@ public:
     COMPONENT_TYPE(CombatLootDrop)
 };
 
+/**
+ * @brief Ship damage resistance profile with type-specific mitigation and hardener stacking
+ *
+ * Base resistances per damage type (EM, Thermal, Kinetic, Explosive) are
+ * augmented by active hardener modules that stack with diminishing returns.
+ * Individual resistances are capped at 85%.  Active hardeners consume
+ * charge each tick.
+ */
+class DamageResistanceProfile : public ecs::Component {
+public:
+    struct Hardener {
+        std::string hardener_id;
+        std::string damage_type;  // em, thermal, kinetic, explosive
+        float bonus = 0.0f;      // 0.0–0.5
+        bool is_active = false;
+    };
+
+    float base_em = 0.0f;
+    float base_thermal = 0.0f;
+    float base_kinetic = 0.0f;
+    float base_explosive = 0.0f;
+    std::vector<Hardener> hardeners;
+    int max_hardeners = 8;
+    float total_damage_mitigated = 0.0f;
+    float charge_consumed = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DamageResistanceProfile)
+};
+
 } // namespace components
 } // namespace atlas
 

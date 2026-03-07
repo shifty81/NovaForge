@@ -325,6 +325,10 @@ void run_cargo_hold_management_system_tests();
 void run_market_trade_execution_system_tests();
 void run_ship_approach_orbit_system_tests();
 void run_combat_loot_drop_system_tests();
+void run_damage_resistance_profile_system_tests();
+void run_npc_spawn_scheduler_system_tests();
+void run_skill_training_system_tests();
+void run_warp_charge_sequence_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -647,6 +651,10 @@ int main() {
     run_market_trade_execution_system_tests();
     run_ship_approach_orbit_system_tests();
     run_combat_loot_drop_system_tests();
+    run_damage_resistance_profile_system_tests();
+    run_npc_spawn_scheduler_system_tests();
+    run_skill_training_system_tests();
+    run_warp_charge_sequence_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
