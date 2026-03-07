@@ -229,6 +229,21 @@ cmake --build . --config Release --target test_systems -j$(nproc)
 ./bin/test_systems
 ```
 
+### Per-System Tests (Fast Iteration)
+
+Each `test_*.cpp` file also builds as its own standalone executable.
+After the initial `novaforge_core` library build, per-system tests compile
+in ~10 seconds instead of ~15 minutes for the monolithic binary.
+
+```bash
+# Build and run a single system's tests:
+cmake --build . --config Release --target test_capacitor_system -j$(nproc)
+./bin/test_capacitor_system
+
+# Use CTest to filter by name pattern:
+ctest -R cargo_hold --output-on-failure
+```
+
 ### Engine Tests Only
 
 ```bash
