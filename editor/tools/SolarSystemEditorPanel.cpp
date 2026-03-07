@@ -230,8 +230,9 @@ void SolarSystemEditorPanel::Draw() {
     y += rowH + pad;
 
     // Orbit slot listing.
+    static constexpr int MAX_DISPLAYED_ORBIT_SLOTS = 12;
     if (m_system.valid) {
-        for (int i = 0; i < OrbitSlotCount() && i < 12; ++i) {
+        for (int i = 0; i < OrbitSlotCount() && i < MAX_DISPLAYED_ORBIT_SLOTS; ++i) {
             const auto& slot = m_system.orbitSlots[i];
             std::string slotInfo =
                 "#" + std::to_string(i) + "  "
