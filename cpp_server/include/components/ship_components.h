@@ -1337,6 +1337,36 @@ public:
     COMPONENT_TYPE(CargoHoldState)
 };
 
+/**
+ * @brief Skill training queue with SP accrual and level completion tracking
+ *
+ * Skills have 5 levels; SP required = base_sp_cost × level².  The front
+ * skill in the queue accrues SP each tick.  When complete, training moves
+ * to the next entry.  Supports pause/resume and a max queue size of 10.
+ */
+class SkillTrainingState : public ecs::Component {
+public:
+    struct SkillEntry {
+        std::string skill_id;
+        int target_level = 1;    // 1–5
+        int current_level = 0;
+        int base_sp_cost = 1000;
+        float accumulated_sp = 0.0f;
+        bool completed = false;
+    };
+
+    std::vector<SkillEntry> queue;
+    int max_queue_size = 10;
+    float sp_per_second = 10.0f;
+    int total_skills_completed = 0;
+    float total_sp_earned = 0.0f;
+    bool paused = false;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SkillTrainingState)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -1618,6 +1618,45 @@ void test_live_edit_effective_scale_slow();
 void test_live_edit_effective_scale_full();
 void test_live_edit_edit_count();
 
+// ModelImportPanel tests
+void test_model_import_defaults();
+void test_model_import_categories();
+void test_model_import_add();
+void test_model_import_add_duplicate();
+void test_model_import_remove();
+void test_model_import_selection();
+void test_model_import_category_filter();
+void test_model_import_search_filter();
+void test_model_import_set_category();
+void test_model_import_set_tags();
+void test_model_import_validate();
+void test_model_import_json_roundtrip();
+void test_model_import_scan_directory();
+void test_model_import_statistics();
+void test_model_import_headless_draw();
+
+// StationEditorPanel tests
+void test_station_editor_defaults();
+void test_station_editor_identity();
+void test_station_editor_add_segment();
+void test_station_editor_remove_segment();
+void test_station_editor_segment_types();
+void test_station_editor_add_docking_port();
+void test_station_editor_remove_docking_port();
+void test_station_editor_docking_port_sizes();
+void test_station_editor_docking_capacity();
+void test_station_editor_undock_clearance();
+void test_station_editor_add_service();
+void test_station_editor_remove_service();
+void test_station_editor_toggle_service();
+void test_station_editor_service_cost();
+void test_station_editor_service_types();
+void test_station_editor_max_segments();
+void test_station_editor_max_docking_ports();
+void test_station_editor_max_services();
+void test_station_editor_export_json();
+void test_station_editor_headless_draw();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -3380,6 +3419,47 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_live_edit_effective_scale_slow);
     RUN_TEST(test_live_edit_effective_scale_full);
     RUN_TEST(test_live_edit_edit_count);
+
+    // ModelImportPanel
+    log.BeginSection("ModelImportPanel");
+    RUN_TEST(test_model_import_defaults);
+    RUN_TEST(test_model_import_categories);
+    RUN_TEST(test_model_import_add);
+    RUN_TEST(test_model_import_add_duplicate);
+    RUN_TEST(test_model_import_remove);
+    RUN_TEST(test_model_import_selection);
+    RUN_TEST(test_model_import_category_filter);
+    RUN_TEST(test_model_import_search_filter);
+    RUN_TEST(test_model_import_set_category);
+    RUN_TEST(test_model_import_set_tags);
+    RUN_TEST(test_model_import_validate);
+    RUN_TEST(test_model_import_json_roundtrip);
+    RUN_TEST(test_model_import_scan_directory);
+    RUN_TEST(test_model_import_statistics);
+    RUN_TEST(test_model_import_headless_draw);
+
+    // StationEditorPanel
+    log.BeginSection("StationEditorPanel");
+    RUN_TEST(test_station_editor_defaults);
+    RUN_TEST(test_station_editor_identity);
+    RUN_TEST(test_station_editor_add_segment);
+    RUN_TEST(test_station_editor_remove_segment);
+    RUN_TEST(test_station_editor_segment_types);
+    RUN_TEST(test_station_editor_add_docking_port);
+    RUN_TEST(test_station_editor_remove_docking_port);
+    RUN_TEST(test_station_editor_docking_port_sizes);
+    RUN_TEST(test_station_editor_docking_capacity);
+    RUN_TEST(test_station_editor_undock_clearance);
+    RUN_TEST(test_station_editor_add_service);
+    RUN_TEST(test_station_editor_remove_service);
+    RUN_TEST(test_station_editor_toggle_service);
+    RUN_TEST(test_station_editor_service_cost);
+    RUN_TEST(test_station_editor_service_types);
+    RUN_TEST(test_station_editor_max_segments);
+    RUN_TEST(test_station_editor_max_docking_ports);
+    RUN_TEST(test_station_editor_max_services);
+    RUN_TEST(test_station_editor_export_json);
+    RUN_TEST(test_station_editor_headless_draw);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);

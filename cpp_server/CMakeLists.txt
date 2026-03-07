@@ -333,6 +333,10 @@ set(CORE_SOURCES
     src/systems/market_trade_execution_system.cpp
     src/systems/ship_approach_orbit_system.cpp
     src/systems/combat_loot_drop_system.cpp
+    src/systems/damage_resistance_profile_system.cpp
+    src/systems/npc_spawn_scheduler_system.cpp
+    src/systems/skill_training_system.cpp
+    src/systems/warp_charge_sequence_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -722,6 +726,10 @@ set(SERVER_HEADERS
     include/systems/market_trade_execution_system.h
     include/systems/ship_approach_orbit_system.h
     include/systems/combat_loot_drop_system.h
+    include/systems/damage_resistance_profile_system.h
+    include/systems/npc_spawn_scheduler_system.h
+    include/systems/skill_training_system.h
+    include/systems/warp_charge_sequence_system.h
 )
 
 # Steam SDK configuration

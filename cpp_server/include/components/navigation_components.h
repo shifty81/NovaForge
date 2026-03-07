@@ -856,6 +856,31 @@ public:
     COMPONENT_TYPE(ApproachOrbitState)
 };
 
+/**
+ * @brief Warp drive charge-up state with alignment gating and disruption
+ *
+ * Charge time = base_charge_time × mass_factor.  Charging only progresses
+ * while the ship is aligned.  A disruption resets progress.  After a
+ * successful warp, the drive enters a cooldown period (default 10s).
+ */
+class WarpChargeState : public ecs::Component {
+public:
+    float base_charge_time = 5.0f;  // seconds
+    float mass_factor = 1.0f;
+    float charge_progress = 0.0f;   // 0.0–1.0
+    float cooldown_duration = 10.0f;
+    float cooldown_remaining = 0.0f;
+    std::string destination_id;
+    bool charging = false;
+    bool aligned = false;
+    int total_warps_completed = 0;
+    int total_disruptions = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(WarpChargeState)
+};
+
 } // namespace components
 } // namespace atlas
 

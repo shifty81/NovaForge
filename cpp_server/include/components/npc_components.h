@@ -375,6 +375,36 @@ public:
     COMPONENT_TYPE(AggroTable)
 };
 
+/**
+ * @brief NPC spawn schedule for asteroid belts, gate camps, and mission pockets
+ *
+ * Manages a cyclic wave table with a population cap and respawn interval.
+ * When the live count drops below cap, the next wave spawns after the
+ * timer elapses.  Supports pausing and tracks total spawned/killed.
+ */
+class NpcSpawnSchedule : public ecs::Component {
+public:
+    struct WaveEntry {
+        std::string npc_type;
+        int count = 1;
+    };
+
+    std::vector<WaveEntry> wave_entries;
+    int max_wave_entries = 10;
+    int population_cap = 10;
+    float respawn_interval = 30.0f;  // seconds
+    float respawn_timer = 0.0f;
+    int current_wave_index = 0;
+    int live_count = 0;
+    int total_spawned = 0;
+    int total_killed = 0;
+    bool paused = false;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(NpcSpawnSchedule)
+};
+
 
 } // namespace components
 } // namespace atlas
