@@ -63,7 +63,7 @@ bool LoyaltyPointStoreSystem::initialize(const std::string& entity_id,
 
 bool LoyaltyPointStoreSystem::addItem(const std::string& entity_id,
     const std::string& item_id, const std::string& name, const std::string& category,
-    int lp_cost, float isk_cost, int tier) {
+    int lp_cost, float isc_cost, int tier) {
     auto* store = getComponentFor(entity_id);
     if (!store) return false;
     if (static_cast<int>(store->items.size()) >= store->max_items) return false;
@@ -74,7 +74,7 @@ bool LoyaltyPointStoreSystem::addItem(const std::string& entity_id,
     item.name = name;
     item.category = category;
     item.lp_cost = lp_cost;
-    item.isk_cost = isk_cost;
+    item.isc_cost = isc_cost;
     item.tier = tier;
     store->items.push_back(item);
     return true;
@@ -133,7 +133,7 @@ bool LoyaltyPointStoreSystem::purchaseItem(const std::string& entity_id,
     bal->total_spent += item->lp_cost;
     item->times_purchased++;
     store->total_purchases++;
-    store->isk_collected += item->isk_cost;
+    store->isc_collected += item->isc_cost;
     return true;
 }
 
@@ -160,9 +160,9 @@ int LoyaltyPointStoreSystem::getTotalPurchases(const std::string& entity_id) con
     return store ? store->total_purchases : 0;
 }
 
-float LoyaltyPointStoreSystem::getTotalISKCollected(const std::string& entity_id) const {
+float LoyaltyPointStoreSystem::getTotalISCCollected(const std::string& entity_id) const {
     auto* store = getComponentFor(entity_id);
-    return store ? store->isk_collected : 0.0f;
+    return store ? store->isc_collected : 0.0f;
 }
 
 int LoyaltyPointStoreSystem::getItemsByCategory(const std::string& entity_id,

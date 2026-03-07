@@ -860,7 +860,7 @@ void testMissionRmlInfo() {
     UI::RmlUiManager::MissionRmlInfo mission;
     assertTrue(mission.title.empty(), "MissionRmlInfo title defaults to empty");
     assertTrue(mission.objectives.empty(), "MissionRmlInfo objectives defaults to empty");
-    assertClose(mission.iskReward, 0.0f, "MissionRmlInfo iskReward defaults to 0");
+    assertClose(mission.iscReward, 0.0f, "MissionRmlInfo iscReward defaults to 0");
     assertTrue(mission.lpReward == 0, "MissionRmlInfo lpReward defaults to 0");
 
     mission.title = "Crimson Order Assault";
@@ -869,8 +869,8 @@ void testMissionRmlInfo() {
     mission.description = "Eliminate hostiles near Keldari station.";
     mission.objectives.push_back({"Warp to site", true});
     mission.objectives.push_back({"Destroy vessels", false});
-    mission.iskReward = 450000.0f;
-    mission.bonusIsk = 150000.0f;
+    mission.iscReward = 450000.0f;
+    mission.bonusIsc = 150000.0f;
     mission.standingReward = "+0.15 Keldari Navy";
     mission.lpReward = 800;
 
@@ -878,7 +878,7 @@ void testMissionRmlInfo() {
     assertTrue(mission.objectives.size() == 2, "MissionRmlInfo has 2 objectives");
     assertTrue(mission.objectives[0].complete == true, "Objective 0 is complete");
     assertTrue(mission.objectives[1].complete == false, "Objective 1 is incomplete");
-    assertClose(mission.iskReward, 450000.0f, "MissionRmlInfo iskReward set correctly");
+    assertClose(mission.iscReward, 450000.0f, "MissionRmlInfo iscReward set correctly");
     assertTrue(mission.lpReward == 800, "MissionRmlInfo lpReward set correctly");
 }
 
@@ -2090,7 +2090,7 @@ void testMissionData() {
     mission.type = "combat";
     mission.agentName = "Agent Karde";
     mission.level = 3;
-    mission.iskReward = 500000.0f;
+    mission.iscReward = 500000.0f;
     mission.lpReward = 350.0f;
     mission.timeLimitHours = 4.0f;
     mission.timeElapsedHours = 1.5f;
@@ -2103,7 +2103,7 @@ void testMissionData() {
     assertTrue(hud.getMissionInfo().type == "combat", "Mission type correct");
     assertTrue(hud.getMissionInfo().agentName == "Agent Karde", "Agent name correct");
     assertTrue(hud.getMissionInfo().level == 3, "Mission level correct");
-    assertClose(hud.getMissionInfo().iskReward, 500000.0f, "Credits reward correct");
+    assertClose(hud.getMissionInfo().iscReward, 500000.0f, "Credits reward correct");
     assertClose(hud.getMissionInfo().lpReward, 350.0f, "LP reward correct");
     assertTrue(hud.getMissionInfo().objectives.size() == 2, "2 objectives");
     assertTrue(!hud.getMissionInfo().objectives[0].completed, "Objective 0 incomplete");
@@ -2141,7 +2141,7 @@ void testMissionPanelRendering() {
     mission.name = "Worlds Collide";
     mission.type = "combat";
     mission.level = 4;
-    mission.iskReward = 2000000.0f;
+    mission.iscReward = 2000000.0f;
     mission.lpReward = 1200.0f;
     mission.timeLimitHours = 8.0f;
     mission.timeElapsedHours = 7.5f;  // nearly expired!

@@ -43,7 +43,7 @@ static void testLeaderboardMultiplePlayers() {
     assertTrue(lbSys.getPlayerKills("board_1", "p2") == 1, "Bob has 1 kill");
 }
 
-static void testLeaderboardIskTracking() {
+static void testLeaderboardIscTracking() {
     std::cout << "\n=== Leaderboard Credits Tracking ===" << std::endl;
     ecs::World world;
     systems::LeaderboardSystem lbSys(&world);
@@ -51,10 +51,10 @@ static void testLeaderboardIskTracking() {
     auto* board = world.createEntity("board_1");
     addComp<components::Leaderboard>(board);
 
-    lbSys.recordIskEarned("board_1", "p1", "Alice", 50000.0);
-    lbSys.recordIskEarned("board_1", "p1", "Alice", 25000.0);
+    lbSys.recordIscEarned("board_1", "p1", "Alice", 50000.0);
+    lbSys.recordIscEarned("board_1", "p1", "Alice", 25000.0);
 
-    assertTrue(approxEqual(static_cast<float>(lbSys.getPlayerIskEarned("board_1", "p1")), 75000.0f), "Credits earned is 75K");
+    assertTrue(approxEqual(static_cast<float>(lbSys.getPlayerIscEarned("board_1", "p1")), 75000.0f), "Credits earned is 75K");
 }
 
 static void testLeaderboardMissionTracking() {
@@ -151,7 +151,7 @@ static void testLeaderboardNonexistentPlayer() {
     addComp<components::Leaderboard>(board);
 
     assertTrue(lbSys.getPlayerKills("board_1", "fake") == 0, "Zero kills for nonexistent");
-    assertTrue(approxEqual(static_cast<float>(lbSys.getPlayerIskEarned("board_1", "fake")), 0.0f), "Zero Credits for nonexistent");
+    assertTrue(approxEqual(static_cast<float>(lbSys.getPlayerIscEarned("board_1", "fake")), 0.0f), "Zero Credits for nonexistent");
     assertTrue(lbSys.getPlayerMissions("board_1", "fake") == 0, "Zero missions for nonexistent");
 }
 
@@ -181,7 +181,7 @@ static void testLeaderboardDamageTracking() {
 void run_leaderboard_system_tests() {
     testLeaderboardRecordKill();
     testLeaderboardMultiplePlayers();
-    testLeaderboardIskTracking();
+    testLeaderboardIscTracking();
     testLeaderboardMissionTracking();
     testLeaderboardRanking();
     testLeaderboardAchievementDefine();

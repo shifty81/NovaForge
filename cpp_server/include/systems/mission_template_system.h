@@ -53,8 +53,8 @@ private:
                      const std::string& required_faction,
                      float min_standing,
                      const std::vector<components::MissionTemplate::ObjectiveTemplate>& objectives,
-                     double base_isk,
-                     double isk_per_level,
+                     double base_isc,
+                     double isc_per_level,
                      float base_standing_reward,
                      float standing_per_level,
                      float base_time_limit);

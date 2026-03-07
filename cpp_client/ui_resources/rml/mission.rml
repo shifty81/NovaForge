@@ -196,7 +196,7 @@
             color: #78E1F0;
         }
 
-        .reward-isk {
+        .reward-isc {
             color: #FFD040;
         }
 
@@ -296,12 +296,12 @@
             <!-- Rewards -->
             <div class="section-label">Rewards</div>
             <div class="reward-row">
-                <span class="reward-label">ISK Reward:</span>
-                <span class="reward-value reward-isk" id="reward-isk">450,000 ISK</span>
+                <span class="reward-label">ISC Reward:</span>
+                <span class="reward-value reward-isc" id="reward-isc">450,000 ISC</span>
             </div>
             <div class="reward-row">
-                <span class="reward-label">Bonus ISK:</span>
-                <span class="reward-value reward-isk" id="reward-bonus">150,000 ISK</span>
+                <span class="reward-label">Bonus ISC:</span>
+                <span class="reward-value reward-isc" id="reward-bonus">150,000 ISC</span>
             </div>
             <div class="reward-row">
                 <span class="reward-label">Standing:</span>

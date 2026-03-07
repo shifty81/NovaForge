@@ -26,8 +26,8 @@ void MissionTemplateSystem::addTemplate(
         const std::string& required_faction,
         float min_standing,
         const std::vector<components::MissionTemplate::ObjectiveTemplate>& objectives,
-        double base_isk,
-        double isk_per_level,
+        double base_isc,
+        double isc_per_level,
         float base_standing_reward,
         float standing_per_level,
         float base_time_limit) {
@@ -47,8 +47,8 @@ void MissionTemplateSystem::addTemplate(
     tpl->required_faction      = required_faction;
     tpl->min_standing          = min_standing;
     tpl->objective_templates   = objectives;
-    tpl->base_isk              = base_isk;
-    tpl->isk_per_level         = isk_per_level;
+    tpl->base_isc              = base_isc;
+    tpl->isc_per_level         = isc_per_level;
     tpl->base_standing_reward  = base_standing_reward;
     tpl->standing_per_level    = standing_per_level;
     tpl->base_time_limit       = base_time_limit;
@@ -205,7 +205,7 @@ MissionTemplateSystem::generateMissionFromTemplate(
     mission.agent_faction = tpl->required_faction;
 
     // Rewards
-    mission.isk_reward      = tpl->base_isk + tpl->level * tpl->isk_per_level;
+    mission.isc_reward      = tpl->base_isc + tpl->level * tpl->isc_per_level;
     mission.standing_reward = tpl->base_standing_reward + tpl->level * tpl->standing_per_level;
     mission.time_remaining  = tpl->base_time_limit;
 

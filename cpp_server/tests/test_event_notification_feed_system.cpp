@@ -29,7 +29,7 @@ static void testNotifFeedPushAndQuery() {
     world.createEntity("p1");
     sys.initialize("p1", "player_001");
     assertTrue(sys.pushNotification("p1", "e1", "Combat", "Shield hit!", 3, 10.0f), "Push e1");
-    assertTrue(sys.pushNotification("p1", "e2", "Trade", "Ore sold for 5000 ISK", 2, 15.0f), "Push e2");
+    assertTrue(sys.pushNotification("p1", "e2", "Trade", "Ore sold for 5000 ISC", 2, 15.0f), "Push e2");
     assertTrue(sys.getNotificationCount("p1") == 2, "2 notifications");
     assertTrue(sys.hasNotification("p1", "e1"), "Has e1");
     assertTrue(sys.hasNotification("p1", "e2"), "Has e2");

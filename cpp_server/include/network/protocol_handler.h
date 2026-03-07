@@ -109,7 +109,7 @@ public:
     std::string createSalvageResult(bool success, const std::string& wreck_id,
                                     int items_recovered);
     std::string createLootResult(bool success, const std::string& wreck_id,
-                                 int items_collected, double isk_gained);
+                                 int items_collected, double isc_gained);
 
     // Mining messages
     std::string createMiningResult(bool success, const std::string& deposit_id,

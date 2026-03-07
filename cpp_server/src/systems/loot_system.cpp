@@ -43,7 +43,7 @@ std::string LootSystem::generateLoot(const std::string& entity_id) {
 
     // Add LootTable to wreck so we can store Credits bounty
     auto wreck_lt = std::make_unique<components::LootTable>();
-    wreck_lt->isk_drop = loot_table->isk_drop;
+    wreck_lt->isc_drop = loot_table->isc_drop;
 
     // Roll for each entry
     for (const auto& entry : loot_table->entries) {
@@ -115,7 +115,7 @@ bool LootSystem::collectLoot(const std::string& wreck_id,
     // Add Credits bounty
     auto* wreck_lt = wreck->getComponent<components::LootTable>();
     if (wreck_lt && player_comp) {
-        player_comp->credits += wreck_lt->isk_drop;
+        player_comp->credits += wreck_lt->isc_drop;
     }
 
     return true;

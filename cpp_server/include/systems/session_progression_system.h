@@ -11,7 +11,7 @@ namespace systems {
 /**
  * @brief Tracks cumulative player progress metrics across the vertical slice
  *
- * Records gameplay milestones and statistics during a session: ISK earned,
+ * Records gameplay milestones and statistics during a session: ISC earned,
  * asteroids mined, NPCs destroyed, items traded, jumps completed, etc.
  * Integrates with the OnboardingSystem for phase-completion detection.
  */

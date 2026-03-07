@@ -32,7 +32,7 @@ public:
 
     bool recordKill(const std::string& war_entity_id,
                     const std::string& killer_side,
-                    double isk_value);
+                    double isc_value);
 
     std::string getWarStatus(const std::string& war_entity_id);
 

@@ -33,7 +33,7 @@ public:
     /**
      * @brief Record Credits earned by a player
      */
-    void recordIskEarned(const std::string& entity_id,
+    void recordIscEarned(const std::string& entity_id,
                          const std::string& player_id,
                          const std::string& player_name,
                          double amount);
@@ -69,7 +69,7 @@ public:
     /**
      * @brief Get total Credits earned by a player
      */
-    double getPlayerIskEarned(const std::string& entity_id,
+    double getPlayerIscEarned(const std::string& entity_id,
                               const std::string& player_id);
 
     /**

@@ -39,14 +39,14 @@ static void testAIEconomicActorEarnSpend() {
     auto* intent = addComp<components::SimNPCIntent>(entity);
     intent->wallet = 5000.0;
 
-    sys.earnISK("npc_miner_1", 3000.0);
+    sys.earnISC("npc_miner_1", 3000.0);
     assertTrue(intent->wallet == 8000.0, "Earned 3000 Credits");
 
-    bool spent = sys.spendISK("npc_miner_1", 2000.0);
+    bool spent = sys.spendISC("npc_miner_1", 2000.0);
     assertTrue(spent, "Spend succeeds with sufficient funds");
     assertTrue(intent->wallet == 6000.0, "Wallet after spend");
 
-    bool fail = sys.spendISK("npc_miner_1", 99999.0);
+    bool fail = sys.spendISC("npc_miner_1", 99999.0);
     assertTrue(!fail, "Spend fails with insufficient funds");
     assertTrue(intent->wallet == 6000.0, "Wallet unchanged after failed spend");
 }
@@ -134,7 +134,7 @@ static void testAIEconomicActorTotalEconomy() {
     auto* i2 = addComp<components::SimNPCIntent>(e2);
     i2->wallet = 30000.0;
 
-    double total = sys.getTotalEconomyISK();
+    double total = sys.getTotalEconomyISC();
     assertTrue(total == 80000.0, "Total economy Credits correct");
 
     auto low = sys.getLowFundsActors(40000.0);

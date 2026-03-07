@@ -12,7 +12,7 @@ namespace systems {
  * @brief Post-combat engagement report system with damage statistics and casualty tracking
  *
  * Records per-engagement data: damage dealt/received, time-to-kill, DPS,
- * ISK destroyed, ships lost. Supports engagement lifecycle (start, record hits,
+ * ISC destroyed, ships lost. Supports engagement lifecycle (start, record hits,
  * finalize) and aggregate queries across all engagements.
  */
 class CombatAfterActionSystem : public ecs::SingleComponentSystem<components::CombatAfterActionState> {
@@ -31,7 +31,7 @@ public:
     bool recordHit(const std::string& entity_id, const std::string& engagement_id,
                    double damage, bool is_incoming);
     bool finalizeEngagement(const std::string& entity_id, const std::string& engagement_id,
-                            float duration, double isk_destroyed);
+                            float duration, double isc_destroyed);
     int getEngagementCount(const std::string& entity_id) const;
 
     // Per-engagement queries
@@ -44,14 +44,14 @@ public:
 
     // Casualty tracking
     bool recordCasualty(const std::string& entity_id, const std::string& ship_name,
-                        double isk_value);
+                        double isc_value);
     int getCasualtyCount(const std::string& entity_id) const;
-    double getTotalIskLost(const std::string& entity_id) const;
+    double getTotalIscLost(const std::string& entity_id) const;
 
     // Aggregates
     double getTotalDamageDealt(const std::string& entity_id) const;
     double getTotalDamageReceived(const std::string& entity_id) const;
-    double getTotalIskDestroyed(const std::string& entity_id) const;
+    double getTotalIscDestroyed(const std::string& entity_id) const;
     double getAverageDPS(const std::string& entity_id) const;
 
 protected:

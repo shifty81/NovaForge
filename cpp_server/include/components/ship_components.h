@@ -129,7 +129,7 @@ public:
     };
 
     std::vector<LootEntry> entries;
-    double isk_drop = 0.0;     // Credits bounty
+    double isc_drop = 0.0;     // Credits bounty
 
     COMPONENT_TYPE(LootTable)
 };

@@ -19,7 +19,7 @@ static void testRewardAdd() {
     assertTrue(sys.addReward("player_1", "m_001", 50000.0, "caldari", 0.5, "item_1", 10), "Add reward succeeds");
     assertTrue(sys.hasReward("player_1", "m_001"), "Reward exists");
     assertTrue(sys.getPendingCount("player_1") == 1, "1 pending reward");
-    assertTrue(approxEqual(static_cast<float>(sys.getRewardIsk("player_1", "m_001")), 50000.0f), "ISK is 50000");
+    assertTrue(approxEqual(static_cast<float>(sys.getRewardIsc("player_1", "m_001")), 50000.0f), "ISC is 50000");
     assertTrue(sys.getRewardItemId("player_1", "m_001") == "item_1", "Item ID correct");
     assertTrue(sys.getRewardItemQuantity("player_1", "m_001") == 10, "Item qty is 10");
 }
@@ -36,7 +36,7 @@ static void testRewardCollect() {
     assertTrue(sys.collectReward("player_1", "m_001"), "Collect succeeds");
     assertTrue(sys.isCollected("player_1", "m_001"), "Marked as collected");
     assertTrue(sys.getTotalCollected("player_1") == 1, "1 total collected");
-    assertTrue(approxEqual(static_cast<float>(sys.getTotalIskEarned("player_1")), 50000.0f), "50K ISK earned");
+    assertTrue(approxEqual(static_cast<float>(sys.getTotalIscEarned("player_1")), 50000.0f), "50K ISC earned");
     assertTrue(approxEqual(static_cast<float>(sys.getTotalStandingGained("player_1")), 0.5f), "0.5 standing gained");
 }
 
@@ -52,7 +52,7 @@ static void testRewardDoubleCollect() {
     sys.collectReward("player_1", "m_001");
     assertTrue(!sys.collectReward("player_1", "m_001"), "Double collect rejected");
     assertTrue(sys.getTotalCollected("player_1") == 1, "Still 1 collected");
-    assertTrue(approxEqual(static_cast<float>(sys.getTotalIskEarned("player_1")), 50000.0f), "ISK not doubled");
+    assertTrue(approxEqual(static_cast<float>(sys.getTotalIscEarned("player_1")), 50000.0f), "ISC not doubled");
 }
 
 static void testRewardDuplicateMission() {
@@ -65,7 +65,7 @@ static void testRewardDuplicateMission() {
 
     sys.addReward("player_1", "m_001", 50000.0, "caldari", 0.5, "", 0);
     assertTrue(!sys.addReward("player_1", "m_001", 100000.0, "caldari", 1.0, "", 0), "Duplicate mission rejected");
-    assertTrue(approxEqual(static_cast<float>(sys.getRewardIsk("player_1", "m_001")), 50000.0f), "Original ISK unchanged");
+    assertTrue(approxEqual(static_cast<float>(sys.getRewardIsc("player_1", "m_001")), 50000.0f), "Original ISC unchanged");
 }
 
 static void testRewardMultiple() {
@@ -85,7 +85,7 @@ static void testRewardMultiple() {
     sys.collectReward("player_1", "m_003");
     assertTrue(sys.getPendingCount("player_1") == 1, "1 still pending");
     assertTrue(sys.getTotalCollected("player_1") == 2, "2 collected");
-    assertTrue(approxEqual(static_cast<float>(sys.getTotalIskEarned("player_1")), 40000.0f), "40K ISK total");
+    assertTrue(approxEqual(static_cast<float>(sys.getTotalIscEarned("player_1")), 40000.0f), "40K ISC total");
     assertTrue(approxEqual(static_cast<float>(sys.getTotalStandingGained("player_1")), 0.4f), "0.4 standing total");
 }
 
@@ -129,7 +129,7 @@ static void testRewardMissingEntity() {
     assertTrue(!sys.isCollected("nonexistent", "m"), "Not collected on missing");
     assertTrue(sys.getPendingCount("nonexistent") == 0, "0 pending on missing");
     assertTrue(sys.getTotalCollected("nonexistent") == 0, "0 collected on missing");
-    assertTrue(approxEqual(static_cast<float>(sys.getTotalIskEarned("nonexistent")), 0.0f), "0 ISK on missing");
+    assertTrue(approxEqual(static_cast<float>(sys.getTotalIscEarned("nonexistent")), 0.0f), "0 ISC on missing");
     assertTrue(!sys.hasReward("nonexistent", "m"), "No reward on missing");
 }
 

@@ -32,10 +32,10 @@ public:
     // --- API ---
 
     /** Record an NPC earning Credits (from trade, mining, bounty) */
-    void earnISK(const std::string& entity_id, double amount);
+    void earnISC(const std::string& entity_id, double amount);
 
     /** Record an NPC spending Credits (on repairs, modules, etc.) */
-    bool spendISK(const std::string& entity_id, double amount);
+    bool spendISC(const std::string& entity_id, double amount);
 
     /** Handle ship destruction — NPC tries to buy replacement or permanently dies */
     bool handleShipDestruction(const std::string& entity_id);
@@ -50,7 +50,7 @@ public:
     std::vector<std::string> getLowFundsActors(double threshold) const;
 
     /** Get total economy Credits across all actors */
-    double getTotalEconomyISK() const;
+    double getTotalEconomyISC() const;
 };
 
 } // namespace systems

@@ -15,7 +15,7 @@ void MissionRewardSystem::updateComponent(ecs::Entity& /*entity*/,
 }
 
 bool MissionRewardSystem::addReward(const std::string& entity_id,
-    const std::string& mission_id, double isk_amount, const std::string& faction_id,
+    const std::string& mission_id, double isc_amount, const std::string& faction_id,
     double standing_change, const std::string& item_id, int item_quantity) {
     auto* reward = getComponentFor(entity_id);
     if (!reward) return false;
@@ -34,7 +34,7 @@ bool MissionRewardSystem::addReward(const std::string& entity_id,
 
     components::MissionReward::RewardEntry entry;
     entry.mission_id = mission_id;
-    entry.isk_amount = isk_amount;
+    entry.isc_amount = isc_amount;
     entry.faction_id = faction_id;
     entry.standing_change = standing_change;
     entry.item_id = item_id;
@@ -54,7 +54,7 @@ bool MissionRewardSystem::collectReward(const std::string& entity_id,
             r.collected = true;
             r.collected_at = reward->elapsed;
             reward->total_collected++;
-            reward->total_isk_earned += r.isk_amount;
+            reward->total_isc_earned += r.isc_amount;
             reward->total_standing_gained += r.standing_change;
             return true;
         }
@@ -87,9 +87,9 @@ int MissionRewardSystem::getTotalCollected(const std::string& entity_id) const {
     return reward ? reward->total_collected : 0;
 }
 
-double MissionRewardSystem::getTotalIskEarned(const std::string& entity_id) const {
+double MissionRewardSystem::getTotalIscEarned(const std::string& entity_id) const {
     auto* reward = getComponentFor(entity_id);
-    return reward ? reward->total_isk_earned : 0.0;
+    return reward ? reward->total_isc_earned : 0.0;
 }
 
 double MissionRewardSystem::getTotalStandingGained(const std::string& entity_id) const {
@@ -97,12 +97,12 @@ double MissionRewardSystem::getTotalStandingGained(const std::string& entity_id)
     return reward ? reward->total_standing_gained : 0.0;
 }
 
-double MissionRewardSystem::getRewardIsk(const std::string& entity_id,
+double MissionRewardSystem::getRewardIsc(const std::string& entity_id,
     const std::string& mission_id) const {
     auto* reward = getComponentFor(entity_id);
     if (!reward) return 0.0;
     for (const auto& r : reward->rewards) {
-        if (r.mission_id == mission_id) return r.isk_amount;
+        if (r.mission_id == mission_id) return r.isc_amount;
     }
     return 0.0;
 }

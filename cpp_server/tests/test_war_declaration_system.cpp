@@ -122,9 +122,9 @@ static void testWarRecordKill() {
     auto* war = world.getEntity(warId)->getComponent<components::WarDeclaration>();
     assertTrue(war->aggressor_kills == 1, "Aggressor has 1 kill");
     assertTrue(war->defender_kills == 1, "Defender has 1 kill");
-    assertTrue(approxEqual(war->aggressor_isk_destroyed, 50000000.0),
+    assertTrue(approxEqual(war->aggressor_isc_destroyed, 50000000.0),
                "Aggressor Credits destroyed correct");
-    assertTrue(approxEqual(war->defender_isk_destroyed, 30000000.0),
+    assertTrue(approxEqual(war->defender_isc_destroyed, 30000000.0),
                "Defender Credits destroyed correct");
 }
 

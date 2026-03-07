@@ -35,7 +35,7 @@ public:
                        int level,
                        const std::string& type,
                        const std::string& agent_faction,
-                       double isk_reward,
+                       double isc_reward,
                        float standing_reward,
                        float time_limit = -1.0f);
 

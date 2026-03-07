@@ -277,7 +277,7 @@
             </div>
             <div class="station-detail">
                 <span>Repair Cost</span>
-                <span class="value" id="repair-rate">1.0 ISK/HP</span>
+                <span class="value" id="repair-rate">1.0 ISC/HP</span>
             </div>
         </div>
 
@@ -320,7 +320,7 @@
         <div class="repair-info">
             <div class="repair-cost">
                 <span>Estimated Cost</span>
-                <span class="value" id="repair-cost">0 ISK</span>
+                <span class="value" id="repair-cost">0 ISC</span>
             </div>
             <div class="repair-message" id="repair-message"></div>
         </div>

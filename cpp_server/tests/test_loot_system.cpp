@@ -20,7 +20,7 @@ static void testLootGenerate() {
 
     auto* npc = world.createEntity("pirate1");
     auto* lt = addComp<components::LootTable>(npc);
-    lt->isk_drop = 15000.0;
+    lt->isc_drop = 15000.0;
 
     components::LootTable::LootEntry entry1;
     entry1.item_id     = "scrap_metal";
@@ -54,7 +54,7 @@ static void testLootGenerate() {
 
     auto* wreck_lt = wreck->getComponent<components::LootTable>();
     assertTrue(wreck_lt != nullptr, "Wreck has LootTable for Credits");
-    assertTrue(approxEqual(static_cast<float>(wreck_lt->isk_drop), 15000.0f),
+    assertTrue(approxEqual(static_cast<float>(wreck_lt->isc_drop), 15000.0f),
                "Credits bounty preserved on wreck");
 }
 
@@ -68,7 +68,7 @@ static void testLootCollect() {
     // Create NPC with loot
     auto* npc = world.createEntity("pirate2");
     auto* lt = addComp<components::LootTable>(npc);
-    lt->isk_drop = 25000.0;
+    lt->isc_drop = 25000.0;
 
     components::LootTable::LootEntry entry;
     entry.item_id     = "hybrid_charges";
@@ -105,7 +105,7 @@ static void testLootEmptyTable() {
 
     auto* npc = world.createEntity("pirate3");
     auto* lt = addComp<components::LootTable>(npc);
-    lt->isk_drop = 0.0;
+    lt->isc_drop = 0.0;
     // No entries
 
     std::string wreck_id = lootSys.generateLoot("pirate3");

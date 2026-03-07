@@ -30,7 +30,7 @@ void test_station_panel_defaults() {
     assert(data.shieldPct == 1.0f);
     assert(data.armorPct == 1.0f);
     assert(data.hullPct == 1.0f);
-    assert(data.repairCostIsk == 0.0f);
+    assert(data.repairCostIsc == 0.0f);
 
 }
 
@@ -58,7 +58,7 @@ void test_station_panel_set_data() {
     data.shieldPct = 0.8f;
     data.armorPct = 0.5f;
     data.hullPct = 1.0f;
-    data.repairCostIsk = 25000.0f;
+    data.repairCostIsc = 25000.0f;
 
     hud.setStationData(data);
 
@@ -69,7 +69,7 @@ void test_station_panel_set_data() {
     assert(d.shieldPct == 0.8f);
     assert(d.armorPct == 0.5f);
     assert(d.hullPct == 1.0f);
-    assert(d.repairCostIsk == 25000.0f);
+    assert(d.repairCostIsc == 25000.0f);
 
 }
 

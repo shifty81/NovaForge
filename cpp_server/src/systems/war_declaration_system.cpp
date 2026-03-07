@@ -101,16 +101,16 @@ bool WarDeclarationSystem::retractWar(const std::string& war_entity_id,
 
 bool WarDeclarationSystem::recordKill(const std::string& war_entity_id,
                                       const std::string& killer_side,
-                                      double isk_value) {
+                                      double isc_value) {
     auto* war = getComponentFor(war_entity_id);
     if (!war) return false;
 
     if (killer_side == "aggressor") {
         war->aggressor_kills++;
-        war->aggressor_isk_destroyed += isk_value;
+        war->aggressor_isc_destroyed += isc_value;
     } else if (killer_side == "defender") {
         war->defender_kills++;
-        war->defender_isk_destroyed += isk_value;
+        war->defender_isc_destroyed += isc_value;
     } else {
         return false;
     }

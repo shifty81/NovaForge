@@ -205,7 +205,7 @@ static void testCombatDeathCallbackWithLoot() {
     entry.max_quantity = 1;
     entry.volume = 5.0f;
     lt->entries.push_back(entry);
-    lt->isk_drop = 5000.0;
+    lt->isc_drop = 5000.0;
 
     combatSys.applyDamage("npc_loot", 100.0f, "em");
 

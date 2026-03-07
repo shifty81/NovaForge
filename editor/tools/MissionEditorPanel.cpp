@@ -186,8 +186,8 @@ bool MissionEditorPanel::ValidateTemplate(const MissionTemplateEntry& entry,
             return false;
         }
     }
-    if (entry.baseIsk < 0.0) {
-        errorOut = "Base ISK reward must be non-negative";
+    if (entry.baseIsc < 0.0) {
+        errorOut = "Base ISC reward must be non-negative";
         return false;
     }
     errorOut.clear();
@@ -250,8 +250,8 @@ std::string MissionEditorPanel::ExportToJson() const {
            << " \"level\": " << t.level << ","
            << " \"faction\": \"" << jsonEscape(t.faction) << "\","
            << " \"min_standing\": " << t.minStanding << ","
-           << " \"base_isk\": " << t.baseIsk << ","
-           << " \"isk_per_level\": " << t.iskPerLevel << ","
+           << " \"base_isc\": " << t.baseIsc << ","
+           << " \"isc_per_level\": " << t.iscPerLevel << ","
            << " \"base_standing_reward\": " << t.baseStandingReward << ","
            << " \"standing_per_level\": " << t.standingPerLevel << ","
            << " \"base_time_limit\": " << t.baseTimeLimit << ","

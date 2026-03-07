@@ -26,7 +26,7 @@ Expected output: `✅ ALL MARKET TESTS PASSED!`
 
 #### 2. Order Placement (4 tests)
 - `test_place_buy_order` - Buy orders with 3% broker fee escrow
-- `test_place_buy_order_insufficient_isk` - Error handling for insufficient Credits
+- `test_place_buy_order_insufficient_isc` - Error handling for insufficient Credits
 - `test_place_sell_order` - Sell orders with item escrow
 - `test_place_sell_order_insufficient_items` - Error handling for insufficient items
 
