@@ -246,9 +246,7 @@ mv Hull.mtl fang.mtl
 
 ```bash
 cd NOVAFORGE
-./scripts/build.sh          # Linux/macOS
-# or
-scripts\build.bat           # Windows
+./scripts/build_all.sh
 ```
 
 ### Step 2 — Run the Client

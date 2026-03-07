@@ -43,34 +43,35 @@ vcpkg install glfw3:x64-windows-static glm:x64-windows-static glew:x64-windows-s
 
 ### Using the Build Script
 
-The easiest way to build is using the provided batch script:
+The easiest way to build is using the cross-platform build script via Git Bash:
 
-```cmd
+```bash
 # From repository root
-scripts\build_vs.bat
+./scripts/build_all.sh
 ```
 
 This will:
-1. Generate Visual Studio solution files
-2. Build the Release configuration
-3. Show the location of the executable
+1. Auto-detect Visual Studio and vcpkg
+2. Generate Visual Studio solution files
+3. Build all targets in Release mode
+4. Show the location of the executables
 
 ### Build Script Options
 
-```cmd
-scripts\build_vs.bat --clean      # Clean rebuild (deletes build directory)
-scripts\build_vs.bat --debug      # Build Debug configuration instead of Release
-scripts\build_vs.bat --open       # Open Visual Studio after generating solution
+```bash
+./scripts/build_all.sh --clean      # Clean rebuild (deletes build directory)
+./scripts/build_all.sh --debug      # Build Debug configuration instead of Release
+./scripts/build_all.sh --test       # Run tests after building
 ```
 
 ### Example Usage
 
-```cmd
-# Clean Debug build and open in Visual Studio
-scripts\build_vs.bat --clean --debug --open
+```bash
+# Clean Debug build with tests
+./scripts/build_all.sh --clean --debug --test
 
 # Quick Release build
-scripts\build_vs.bat --release
+./scripts/build_all.sh
 ```
 
 ## Manual Visual Studio Setup

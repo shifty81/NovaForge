@@ -20,12 +20,12 @@ python build_and_test.py --install
 
 ### Option 2: Convenience Scripts
 
-**Windows:**
-```cmd
-scripts\build.bat
+**All platforms (recommended):**
+```bash
+./scripts/build_all.sh
 ```
 
-**Linux/macOS:**
+**Linux/macOS (alternative):**
 ```bash
 chmod +x scripts/build.sh
 ./scripts/build.sh
@@ -422,6 +422,7 @@ pip install -r requirements.txt
 **Solution**: Make scripts executable
 
 ```bash
+chmod +x scripts/build_all.sh
 chmod +x scripts/build.sh
 chmod +x setup_hooks.py
 ```

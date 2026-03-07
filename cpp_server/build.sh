@@ -1,5 +1,12 @@
 #!/bin/bash
 # Build script for Nova Forge C++ Dedicated Server
+#
+# NOTE: For a full build (engine + editor + client + server + tests),
+# prefer the top-level cross-platform script instead:
+#
+#   ./scripts/build_all.sh
+#
+# This script remains available for server-only builds.
 
 set -e
 

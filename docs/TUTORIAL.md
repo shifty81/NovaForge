@@ -31,13 +31,13 @@ Welcome to Atlas! This tutorial will guide you through your first steps in the g
 ./build/bin/atlas_client "YourName"
 ```
 
-**Windows:**
-```cmd
-REM Build first (if not already done):
-scripts\build_all.bat
+**Windows (Git Bash):**
+```bash
+# Build first (if not already done):
+./scripts/build_all.sh
 
-REM Run the client:
-build\bin\atlas_client.exe YourName
+# Run the client:
+./build/bin/atlas_client.exe "YourName"
 ```
 
 ### Connecting to Server

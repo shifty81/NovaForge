@@ -93,16 +93,16 @@ brew install cmake glfw glm glew nlohmann-json openal-soft freetype
 
 ### Windows
 
-```cmd
-:: Install dependencies via vcpkg (one time)
-vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows ^
+```bash
+# Install dependencies via vcpkg (one time)
+vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows \
               nlohmann-json:x64-windows freetype:x64-windows
 
-:: Build everything
-scripts\build_all.bat
+# Build everything (use Git Bash on Windows)
+./scripts/build_all.sh
 
-:: Run the client
-build\bin\atlas_client.exe "YourName"
+# Run the client
+./build/bin/atlas_client.exe "YourName"
 ```
 
 ### Makefile shortcuts
@@ -151,10 +151,12 @@ NovaForge/
 │   ├── universe/          #   Solar systems, stargates, stations
 │   └── ...                #   Skills, NPCs, market, industry, etc.
 ├── scripts/               # Build scripts
-│   ├── build_all.sh / .bat#   ★ Full build (engine+editor+client+server+tests)
-│   ├── build.sh / .bat    #   Quick build (Release or Debug)
-│   ├── build_vs.bat       #   Visual Studio client build
-│   └── generate_solution.bat # Generate VS solution
+│   ├── build_all.sh       #   ★ Full build (engine+editor+client+server+tests)
+│   ├── build.sh           #   Quick build (Release or Debug)
+│   ├── build_all.bat      #   Deprecated — forwards to build_all.sh
+│   ├── build.bat          #   Deprecated — forwards to build_all.sh
+│   ├── build_vs.bat       #   Deprecated — forwards to build_all.sh
+│   └── generate_solution.bat # Deprecated — forwards to build_all.sh
 ├── assets/                # Raw reference models & archives (.blend, .zip)
 ├── docs/                  # Documentation
 │   ├── ATLAS_INTEGRATION.md # ★ Atlas Engine integration guide

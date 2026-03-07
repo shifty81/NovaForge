@@ -69,44 +69,31 @@ If you want a standalone executable with no external DLL dependencies:
 
 #### Method 1: Automated Build Script (Easiest)
 
-**Option A: Build just the C++ client**
+> **Note:** All `.bat` scripts are deprecated. Use `build_all.sh` via Git Bash.
 
-From the repository root directory:
+From the repository root directory in Git Bash:
 
-```cmd
+```bash
 # Navigate to repository root
-cd C:\path\to\NovaForge
+cd /c/path/to/NovaForge
 
-# Run the build script
-scripts\build_vs.bat
+# Build all targets (engine, editor, client, server, tests)
+./scripts/build_all.sh
 
 # Or for a clean build:
-scripts\build_vs.bat --clean
+./scripts/build_all.sh --clean
 
-# Or to open Visual Studio after building:
-scripts\build_vs.bat --open
+# Or build with tests:
+./scripts/build_all.sh --test
 ```
 
 This will:
-1. Generate the Visual Studio 2022 solution for the C++ client
-2. Build the project in Release mode
-3. Show you where the executable is located
+1. Auto-detect your Visual Studio installation and vcpkg
+2. Generate the Visual Studio solution
+3. Build all targets in Release mode
+4. Show you where the executables are located
 
-The solution file will be created at: `cpp_client\build_vs\EVEOfflineClient.sln`
-
-**Option B: Build both C++ client and server (unified solution)**
-
-From the repository root directory:
-
-```cmd
-# Generate a unified solution with both client and server
-scripts\generate_solution.bat
-
-# Or to open Visual Studio after generation:
-scripts\generate_solution.bat --open
-```
-
-This creates a single solution at: `build_vs\EVEOffline.sln` that includes both the C++ client and server projects.
+The solution file will be created at: `build/Atlas.sln`
 
 #### Method 2: Manual CMake Configuration
 
@@ -194,7 +181,7 @@ NovaForge/
 ├── server/                    # Python server
 ├── engine/                    # Python game engine
 ├── data/                      # Game data (JSON files)
-└── scripts\build_vs.bat      # VS2022 build script
+└── scripts/build_all.sh       # Cross-platform build script
 ```
 
 ## Troubleshooting
@@ -261,7 +248,7 @@ Then re-run CMake configuration.
 
 Make sure you're opening the correct file:
 - Location: `cpp_client\build_vs\EVEOfflineClient.sln`
-- If it doesn't exist, run `scripts\build_vs.bat` first to generate it
+- If it doesn't exist, run `./scripts/build_all.sh` first to generate it
 
 ### For more detailed troubleshooting
 
@@ -350,28 +337,16 @@ The server executable will be at: `cpp_server\build\bin\Release\eve_dedicated_se
 
 ## Quick Reference Commands
 
-```cmd
+```bash
 # Clone repository
 git clone https://github.com/shifty81/NovaForge.git
 cd NovaForge
 
-# Build C++ client only
-scripts\build_vs.bat
-
-# Build both client and server (unified solution)
-scripts\generate_solution.bat
+# Build all targets (use Git Bash on Windows)
+./scripts/build_all.sh
 
 # Open solution in VS2022
-start cpp_client\build_vs\EVEOfflineClient.sln
-# or (if using unified solution)
-start build_vs\EVEOffline.sln
-
-# Run Python server
-python server/server.py
-
-# Run Python demos
-python launcher.py
-python gui_demo.py
+start build/Atlas.sln
 ```
 
 ## Getting Help

@@ -37,17 +37,14 @@ cd cpp_client/build/bin
 
 ### Windows
 
-#### Option 1: Visual Studio (Recommended)
+#### Option 1: Cross-Platform Build Script (Recommended)
 
-```batch
-REM Install dependencies with vcpkg first:
-REM vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows nlohmann-json:x64-windows openal-soft:x64-windows
+```bash
+# Install dependencies with vcpkg first:
+# vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows nlohmann-json:x64-windows openal-soft:x64-windows
 
-REM Generate Visual Studio solution and build
-scripts\build_vs.bat
-
-REM Or open in Visual Studio
-scripts\build_vs.bat --open
+# Build all targets (use Git Bash on Windows)
+./scripts/build_all.sh
 ```
 
 #### Option 2: Python Script
@@ -269,8 +266,8 @@ python3 build_cpp_client.py --debug --clean --verbose
 cd cpp_client/build/bin
 ./eve_client "YourName"
 
-# Visual Studio (Windows)
-scripts\build_vs.bat --open
+# Visual Studio (Windows — use Git Bash)
+./scripts/build_all.sh
 ```
 
 **That's it!** The automated build script handles everything else.
