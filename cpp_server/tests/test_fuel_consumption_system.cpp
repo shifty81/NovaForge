@@ -101,7 +101,7 @@ static void testFuelConsumptionRefuel() {
     // Refuel beyond max capacity
     assertTrue(sys.refuel("ship1", 50.0), "Refuel 50 but capped");
     assertTrue(approxEqual(sys.getCurrentFuel("ship1"), 100.0), "Capped at max");
-    assertTrue(sys.getTotalFuelPurchased("ship1") == 50.0, "Only 20 actually added");
+    assertTrue(sys.getTotalFuelPurchased("ship1") == 50.0, "Total 50 purchased (30 + 20 capped)");
 }
 
 static void testFuelConsumptionRefuelInvalid() {
