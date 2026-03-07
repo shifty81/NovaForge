@@ -405,6 +405,45 @@ public:
     COMPONENT_TYPE(ModuleOverheat)
 };
 
+// ==================== System Security Response ====================
+
+/**
+ * @brief Star-system security force response to criminal activity
+ *
+ * Tracks criminal offences reported within a star system.  Each offence
+ * raises the response level.  When the response level exceeds a
+ * threshold the security force spawns response ships.  Response level
+ * decays over time once offences stop.
+ */
+class SystemSecurityResponse : public ecs::Component {
+public:
+    enum class SecurityLevel { HighSec, LowSec, NullSec };
+    enum class ResponseState { Idle, Alerted, Responding, Engaged };
+
+    struct Offence {
+        std::string offender_id;
+        std::string offence_type;        // "assault", "theft", "smuggling"
+        float severity = 1.0f;           // 0.0–10.0
+        float timestamp = 0.0f;
+    };
+
+    std::string system_id;
+    SecurityLevel security_level = SecurityLevel::HighSec;
+    ResponseState state = ResponseState::Idle;
+    std::vector<Offence> offences;
+    float response_level = 0.0f;          // 0.0–100.0
+    float alert_threshold = 20.0f;        // triggers Alerted state
+    float respond_threshold = 50.0f;      // triggers Responding state
+    float decay_rate = 2.0f;              // per second when no new offences
+    int max_offences = 50;
+    int response_ships_dispatched = 0;
+    int total_responses = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SystemSecurityResponse)
+};
+
 } // namespace components
 } // namespace atlas
 
