@@ -821,8 +821,8 @@ public:
     std::string station_id;
     Phase phase = Phase::Idle;
     float approach_distance = 0.0f;
-    float docking_range = 2500.0f;     // metres — must be within this range to request
-    float tether_progress = 0.0f;       // 0..1  — fills while granted
+    float docking_range = 2500.0f;     // meters — must be within this range to request
+    float tether_progress = 0.0f;       // 0..1 — fills while granted
     float tether_speed = 0.5f;          // fraction per second
     int total_dockings = 0;
     int denied_count = 0;

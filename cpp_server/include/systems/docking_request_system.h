@@ -12,7 +12,7 @@ namespace systems {
  * @brief Manages the docking workflow: Idle → Approach → Requested → Granted → Docked
  *
  * Ships within docking range may request permission.  Once granted the
- * tether progress fills each tick.  At 100 % the ship is Docked.
+ * tether progress fills each tick.  At 100% the ship is Docked.
  */
 class DockingRequestSystem : public ecs::SingleComponentSystem<components::DockingRequest> {
 public:

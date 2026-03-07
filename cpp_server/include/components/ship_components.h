@@ -1195,7 +1195,7 @@ public:
 class TractorBeam : public ecs::Component {
 public:
     std::string target_id;
-    float range = 20000.0f;          // metres — max pull range
+    float range = 20000.0f;          // meters — max pull range
     float pull_speed = 500.0f;       // m/s toward ship
     float current_distance = 0.0f;
     float collection_distance = 50.0f;  // auto-collect threshold
