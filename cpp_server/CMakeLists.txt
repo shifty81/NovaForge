@@ -325,6 +325,10 @@ set(CORE_SOURCES
     src/systems/tractor_beam_system.cpp
     src/systems/contract_board_system.cpp
     src/systems/module_overheat_system.cpp
+    src/systems/asteroid_mining_laser_system.cpp
+    src/systems/system_security_response_system.cpp
+    src/systems/power_grid_management_system.cpp
+    src/systems/salvage_drone_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -706,6 +710,10 @@ set(SERVER_HEADERS
     include/systems/tractor_beam_system.h
     include/systems/contract_board_system.h
     include/systems/module_overheat_system.h
+    include/systems/asteroid_mining_laser_system.h
+    include/systems/system_security_response_system.h
+    include/systems/power_grid_management_system.h
+    include/systems/salvage_drone_system.h
 )
 
 # Steam SDK configuration

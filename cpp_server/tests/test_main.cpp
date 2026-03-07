@@ -317,6 +317,10 @@ void run_docking_request_system_tests();
 void run_tractor_beam_system_tests();
 void run_contract_board_system_tests();
 void run_module_overheat_system_tests();
+void run_asteroid_mining_laser_system_tests();
+void run_system_security_response_system_tests();
+void run_power_grid_management_system_tests();
+void run_salvage_drone_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -631,6 +635,10 @@ int main() {
     run_tractor_beam_system_tests();
     run_contract_board_system_tests();
     run_module_overheat_system_tests();
+    run_asteroid_mining_laser_system_tests();
+    run_system_security_response_system_tests();
+    run_power_grid_management_system_tests();
+    run_salvage_drone_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

@@ -162,7 +162,7 @@ std::tuple<float, float, float> FPSCharacterControllerSystem::getPosition(
         const std::string& player_id) const {
     std::string entity_id = std::string(FPS_CHAR_PREFIX) + player_id;
     auto* state = getComponentFor(entity_id);
-    if (!state) return {0, 0, 0};
+    if (!state) return {0.0f, 0.0f, 0.0f};
     return {state->pos_x, state->pos_y, state->pos_z};
 }
 
@@ -170,7 +170,7 @@ std::pair<float, float> FPSCharacterControllerSystem::getLookDirection(
         const std::string& player_id) const {
     std::string entity_id = std::string(FPS_CHAR_PREFIX) + player_id;
     auto* state = getComponentFor(entity_id);
-    if (!state) return {0, 0};
+    if (!state) return {0.0f, 0.0f};
     return {state->yaw, state->pitch};
 }
 

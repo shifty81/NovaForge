@@ -1208,6 +1208,106 @@ public:
     COMPONENT_TYPE(TractorBeam)
 };
 
+// ==================== Asteroid Mining Laser ====================
+
+/**
+ * @brief Active mining laser state — ore extraction and yield tracking
+ *
+ * Manages a set of mining lasers fitted to a ship.  Each laser has a
+ * cycle time, yield per cycle, and an optional crystal that modifies
+ * yield.  The update tick advances active cycles and accumulates ore
+ * mined into the hold (up to cargo capacity).
+ */
+class AsteroidMiningLaser : public ecs::Component {
+public:
+    struct MiningLaser {
+        std::string laser_id;
+        std::string crystal_id;          // empty = no crystal
+        float yield_per_cycle = 10.0f;   // m3 ore per cycle
+        float crystal_bonus = 0.0f;      // multiplier bonus (e.g. 0.625 = +62.5%)
+        float cycle_time = 60.0f;        // seconds per cycle
+        float cycle_progress = 0.0f;     // 0.0–cycle_time
+        bool cycling = false;
+    };
+
+    std::vector<MiningLaser> lasers;
+    std::string target_asteroid_id;
+    int max_lasers = 3;
+    double ore_hold_capacity = 5000.0;   // m3
+    double ore_hold_current = 0.0;       // m3
+    double total_ore_mined = 0.0;
+    int total_cycles_completed = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(AsteroidMiningLaser)
+};
+
+// ==================== Power Grid Management ====================
+
+/**
+ * @brief Ship power grid budget tracking
+ *
+ * Tracks total powergrid (MW) output and per-module power draw.
+ * Modules may be onlined/offlined.  Overloaded grid triggers an
+ * automatic module shutdown (lowest-priority first) each tick.
+ */
+class PowerGridState : public ecs::Component {
+public:
+    struct FittedModule {
+        std::string module_id;
+        float power_draw = 0.0f;    // MW
+        int priority = 5;           // 1 = lowest, 10 = highest
+        bool online = false;
+    };
+
+    std::vector<FittedModule> modules;
+    int max_modules = 12;
+    float total_output = 1000.0f;   // MW available
+    float total_draw = 0.0f;        // MW currently consumed
+    int total_overloads = 0;
+    int total_onlined = 0;
+    int total_offlined = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(PowerGridState)
+};
+
+// ==================== Salvage Drone ====================
+
+/**
+ * @brief Salvage drone bay — autonomous wreck salvaging
+ *
+ * Manages a bay of salvage drones that can be deployed to wrecks.
+ * Each drone locks a wreck, cycles a salvage attempt, and on success
+ * deposits the recovered material into the ship's hold.
+ */
+class SalvageDroneBay : public ecs::Component {
+public:
+    enum class DroneState { Idle, Deployed, Salvaging, Returning };
+
+    struct SalvageDrone {
+        std::string drone_id;
+        std::string wreck_target_id;
+        DroneState state = DroneState::Idle;
+        float cycle_time = 10.0f;        // seconds per salvage attempt
+        float cycle_progress = 0.0f;
+        float success_chance = 0.5f;     // 0.0–1.0
+        int successful_salvages = 0;
+    };
+
+    std::vector<SalvageDrone> drones;
+    int max_drones = 5;
+    int total_salvages = 0;
+    int total_failures = 0;
+    int total_deployed = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SalvageDroneBay)
+};
+
 } // namespace components
 } // namespace atlas
 
