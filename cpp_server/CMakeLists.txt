@@ -309,6 +309,10 @@ set(CORE_SOURCES
     src/systems/ship_repair_cost_system.cpp
     src/systems/system_traffic_monitor_system.cpp
     src/systems/fleet_command_terminal_system.cpp
+    src/systems/insurance_claim_system.cpp
+    src/systems/safe_zone_system.cpp
+    src/systems/ore_compression_system.cpp
+    src/systems/crew_management_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -674,6 +678,10 @@ set(SERVER_HEADERS
     include/systems/ship_repair_cost_system.h
     include/systems/system_traffic_monitor_system.h
     include/systems/fleet_command_terminal_system.h
+    include/systems/insurance_claim_system.h
+    include/systems/safe_zone_system.h
+    include/systems/ore_compression_system.h
+    include/systems/crew_management_system.h
 )
 
 # Steam SDK configuration
