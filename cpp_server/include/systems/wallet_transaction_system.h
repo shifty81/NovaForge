@@ -11,7 +11,7 @@ namespace systems {
 /**
  * @brief Player wallet transaction ledger system
  *
- * Manages player ISK balances with deposit/withdrawal operations and
+ * Manages player ISC balances with deposit/withdrawal operations and
  * full transaction history. Supports the trade/economy loop in the
  * vertical slice end-to-end gameplay.
  */

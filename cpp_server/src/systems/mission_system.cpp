@@ -31,7 +31,7 @@ void MissionSystem::updateComponent(ecs::Entity& entity, components::MissionTrac
             // Award Credits
             auto* player = entity.getComponent<components::Player>();
             if (player) {
-                player->credits += mission.isk_reward;
+                player->credits += mission.isc_reward;
             }
 
             // Award standing
@@ -68,7 +68,7 @@ bool MissionSystem::acceptMission(const std::string& entity_id,
                                    int level,
                                    const std::string& type,
                                    const std::string& agent_faction,
-                                   double isk_reward,
+                                   double isc_reward,
                                    float standing_reward,
                                    float time_limit) {
     auto* tracker = getComponentFor(entity_id);
@@ -85,7 +85,7 @@ bool MissionSystem::acceptMission(const std::string& entity_id,
     mission.level = level;
     mission.type = type;
     mission.agent_faction = agent_faction;
-    mission.isk_reward = isk_reward;
+    mission.isc_reward = isc_reward;
     mission.standing_reward = standing_reward;
     mission.time_remaining = time_limit;
 

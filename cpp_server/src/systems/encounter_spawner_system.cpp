@@ -100,7 +100,7 @@ bool EncounterSpawnerSystem::completeEncounter(const std::string& entity_id,
             e.ended_at = timestamp;
             state->active_count--;
             state->completed_count++;
-            state->total_rewards_earned += e.isk_reward;
+            state->total_rewards_earned += e.isc_reward;
             return true;
         }
     }
@@ -150,12 +150,12 @@ int EncounterSpawnerSystem::getFailedEncounterCount(const std::string& entity_id
 }
 
 bool EncounterSpawnerSystem::setEncounterReward(const std::string& entity_id,
-    const std::string& encounter_id, double isk_reward, int loot_count) {
+    const std::string& encounter_id, double isc_reward, int loot_count) {
     auto* state = getComponentFor(entity_id);
     if (!state) return false;
     for (auto& e : state->encounters) {
         if (e.encounter_id == encounter_id) {
-            e.isk_reward = isk_reward;
+            e.isc_reward = isc_reward;
             e.loot_count = loot_count;
             return true;
         }

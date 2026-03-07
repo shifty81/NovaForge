@@ -291,7 +291,7 @@ std::string WorldPersistence::serializeEntity(
     auto* lt = entity->getComponent<components::LootTable>();
     if (lt) {
         json << ",\"loot_table\":{"
-             << "\"isk_drop\":" << lt->isk_drop
+             << "\"isc_drop\":" << lt->isc_drop
              << ",\"entries\":[";
         bool first_entry = true;
         for (const auto& entry : lt->entries) {
@@ -395,8 +395,8 @@ std::string WorldPersistence::serializeEntity(
                  << ",\"assignee_id\":\"" << escapeJson(c.assignee_id) << "\""
                  << ",\"type\":\"" << escapeJson(c.type) << "\""
                  << ",\"status\":\"" << escapeJson(c.status) << "\""
-                 << ",\"isk_reward\":" << c.isk_reward
-                 << ",\"isk_collateral\":" << c.isk_collateral
+                 << ",\"isc_reward\":" << c.isc_reward
+                 << ",\"isc_collateral\":" << c.isc_collateral
                  << ",\"duration_remaining\":" << c.duration_remaining
                  << ",\"days_to_complete\":" << c.days_to_complete
                  << ",\"items_offered\":[";

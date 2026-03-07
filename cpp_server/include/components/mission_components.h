@@ -35,7 +35,7 @@ public:
         std::string type;          // "combat", "mining", "courier"
         std::string agent_faction;
         std::vector<Objective> objectives;
-        double isk_reward = 0.0;
+        double isc_reward = 0.0;
         double lp_reward = 0.0;
         float standing_reward = 0.0f;
         float time_remaining = -1.0f;  // seconds, -1 = no limit
@@ -178,8 +178,8 @@ public:
     std::vector<ObjectiveTemplate> objective_templates;
 
     // Reward scaling
-    double base_isk = 100000.0;
-    double isk_per_level = 50000.0;
+    double base_isc = 100000.0;
+    double isc_per_level = 50000.0;
     float base_standing_reward = 0.1f;
     float standing_per_level = 0.05f;
     float base_time_limit = 3600.0f; // seconds, -1 = no limit
@@ -276,7 +276,7 @@ class MissionReward : public ecs::Component {
 public:
     struct RewardEntry {
         std::string mission_id;
-        double isk_amount = 0.0;
+        double isc_amount = 0.0;
         double standing_change = 0.0;
         std::string faction_id;
         std::string item_id;
@@ -289,7 +289,7 @@ public:
     float elapsed = 0.0f;
     bool active = true;
     int total_collected = 0;
-    double total_isk_earned = 0.0;
+    double total_isc_earned = 0.0;
     double total_standing_gained = 0.0;
     std::vector<RewardEntry> rewards;
 

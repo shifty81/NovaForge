@@ -34,7 +34,7 @@ void AIEconomicActorSystem::update(float delta_time) {
     }
 }
 
-void AIEconomicActorSystem::earnISK(const std::string& entity_id, double amount) {
+void AIEconomicActorSystem::earnISC(const std::string& entity_id, double amount) {
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return;
     auto* intent = entity->getComponent<components::SimNPCIntent>();
@@ -43,7 +43,7 @@ void AIEconomicActorSystem::earnISK(const std::string& entity_id, double amount)
     }
 }
 
-bool AIEconomicActorSystem::spendISK(const std::string& entity_id, double amount) {
+bool AIEconomicActorSystem::spendISC(const std::string& entity_id, double amount) {
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
     auto* intent = entity->getComponent<components::SimNPCIntent>();
@@ -98,7 +98,7 @@ std::vector<std::string> AIEconomicActorSystem::getLowFundsActors(double thresho
     return result;
 }
 
-double AIEconomicActorSystem::getTotalEconomyISK() const {
+double AIEconomicActorSystem::getTotalEconomyISC() const {
     double total = 0.0;
     auto entities = world_->getEntities<components::AIEconomicActor,
                                          components::SimNPCIntent>();

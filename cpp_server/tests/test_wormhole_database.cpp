@@ -41,7 +41,7 @@ static void testWormholeDatabaseGetClass() {
     if (c6) {
         assertTrue(c6->wormhole_class == 6, "C6 wormhole class is 6");
         assertTrue(c6->difficulty == "extreme", "C6 difficulty is extreme");
-        assertTrue(c6->blue_loot_isk > c1->blue_loot_isk, "C6 loot > C1 loot");
+        assertTrue(c6->blue_loot_isc > c1->blue_loot_isc, "C6 loot > C1 loot");
     } else {
         assertTrue(false, "C6 wormhole class found");
     }

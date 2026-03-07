@@ -43,7 +43,7 @@ static void testProtocolLootMessages() {
     std::string result = proto.createLootResult(true, "wreck_2", 5, 10000.0);
     assertTrue(result.find("loot_result") != std::string::npos, "Result has correct type");
     assertTrue(result.find("wreck_2") != std::string::npos, "Result contains wreck_id");
-    assertTrue(result.find("10000") != std::string::npos, "Result contains isk_gained");
+    assertTrue(result.find("10000") != std::string::npos, "Result contains isc_gained");
 }
 
 static void testProtocolMiningMessages() {
@@ -141,7 +141,7 @@ static void testProtocolLootResultParse() {
 
     atlas::network::ProtocolHandler proto;
 
-    std::string msg = "{\"message_type\":\"loot_result\",\"data\":{\"success\":true,\"wreck_id\":\"wreck_3\",\"items_collected\":2,\"isk_gained\":5000}}";
+    std::string msg = "{\"message_type\":\"loot_result\",\"data\":{\"success\":true,\"wreck_id\":\"wreck_3\",\"items_collected\":2,\"isc_gained\":5000}}";
     atlas::network::MessageType type;
     std::string data;
     bool ok = proto.parseMessage(msg, type, data);

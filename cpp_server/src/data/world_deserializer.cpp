@@ -383,7 +383,7 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
     std::string lt_json = extractObject(json, "loot_table");
     if (!lt_json.empty()) {
         auto lt = std::make_unique<components::LootTable>();
-        lt->isk_drop = extractDouble(lt_json, "isk_drop");
+        lt->isc_drop = extractDouble(lt_json, "isc_drop");
 
         // Parse entries array
         size_t arr_start = lt_json.find("[");
@@ -585,8 +585,8 @@ bool WorldPersistence::deserializeEntity(ecs::World* world,
                                 contract.assignee_id       = extractString(cj, "assignee_id");
                                 contract.type              = extractString(cj, "type");
                                 contract.status            = extractString(cj, "status");
-                                contract.isk_reward        = extractDouble(cj, "isk_reward", 0.0);
-                                contract.isk_collateral    = extractDouble(cj, "isk_collateral", 0.0);
+                                contract.isc_reward        = extractDouble(cj, "isc_reward", 0.0);
+                                contract.isc_collateral    = extractDouble(cj, "isc_collateral", 0.0);
                                 contract.duration_remaining = extractFloat(cj, "duration_remaining", -1.0f);
                                 contract.days_to_complete  = extractFloat(cj, "days_to_complete", 3.0f);
 

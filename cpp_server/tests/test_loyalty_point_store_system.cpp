@@ -18,7 +18,7 @@ static void testLPStoreCreate() {
     assertTrue(sys.getItemCount("lp1") == 0, "No items initially");
     assertTrue(sys.getPlayerCount("lp1") == 0, "No players initially");
     assertTrue(sys.getTotalPurchases("lp1") == 0, "No purchases initially");
-    assertTrue(approxEqual(sys.getTotalISKCollected("lp1"), 0.0f), "No ISK collected");
+    assertTrue(approxEqual(sys.getTotalISCCollected("lp1"), 0.0f), "No ISC collected");
 }
 
 static void testLPStoreAddItem() {
@@ -69,7 +69,7 @@ static void testLPStorePurchase() {
     assertTrue(sys.purchaseItem("lp1", "player1", "item1"), "Purchase succeeds");
     assertTrue(sys.getBalance("lp1", "player1") == 50000, "Balance reduced by 50000");
     assertTrue(sys.getTotalPurchases("lp1") == 1, "1 total purchase");
-    assertTrue(approxEqual(sys.getTotalISKCollected("lp1"), 5000000.0f), "ISK collected 5M");
+    assertTrue(approxEqual(sys.getTotalISCCollected("lp1"), 5000000.0f), "ISC collected 5M");
 }
 
 static void testLPStorePurchaseFail() {
@@ -149,7 +149,7 @@ static void testLPStoreMissing() {
     assertTrue(sys.getItemCount("nonexistent") == 0, "0 items on missing");
     assertTrue(sys.getPlayerCount("nonexistent") == 0, "0 players on missing");
     assertTrue(sys.getTotalPurchases("nonexistent") == 0, "0 purchases on missing");
-    assertTrue(approxEqual(sys.getTotalISKCollected("nonexistent"), 0.0f), "0 ISK on missing");
+    assertTrue(approxEqual(sys.getTotalISCCollected("nonexistent"), 0.0f), "0 ISC on missing");
     assertTrue(sys.getItemsByCategory("nonexistent", "Ship") == 0, "0 category on missing");
 }
 

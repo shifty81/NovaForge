@@ -1009,10 +1009,10 @@ void AtlasHUD::drawDockablePanel(AtlasContext& ctx, const char* title,
             if (y < maxY - 40.0f) {
                 r.drawText("Rewards:", Vec2(x, y), t.textPrimary, 1.0f);
                 y += 16.0f;
-                if (m_missionInfo.iskReward > 0) {
+                if (m_missionInfo.iscReward > 0) {
                     char iskBuf[64];
                     std::snprintf(iskBuf, sizeof(iskBuf), "Credits: %.0f",
-                                  m_missionInfo.iskReward);
+                                  m_missionInfo.iscReward);
                     r.drawText(iskBuf, Vec2(x + 8.0f, y), t.warning, 1.0f);
                     y += 14.0f;
                 }
@@ -1269,9 +1269,9 @@ void AtlasHUD::drawDockablePanel(AtlasContext& ctx, const char* title,
         y += 8.0f;
 
         // Repair cost
-        if (m_stationData.repairCostIsk > 0.0f) {
+        if (m_stationData.repairCostIsc > 0.0f) {
             char costBuf[64];
-            std::snprintf(costBuf, sizeof(costBuf), "Repair Cost: %.0f Credits", m_stationData.repairCostIsk);
+            std::snprintf(costBuf, sizeof(costBuf), "Repair Cost: %.0f Credits", m_stationData.repairCostIsc);
             r.drawText(costBuf, Vec2(x, y), t.warning, 1.0f);
             y += 20.0f;
         }

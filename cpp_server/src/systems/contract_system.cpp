@@ -25,7 +25,7 @@ void ContractSystem::updateComponent(ecs::Entity& entity, components::ContractBo
 bool ContractSystem::createContract(const std::string& board_entity_id,
                                     const std::string& issuer_id,
                                     const std::string& type,
-                                    double isk_reward,
+                                    double isc_reward,
                                     float duration_seconds) {
     auto* board = getComponentFor(board_entity_id);
     if (!board) return false;
@@ -34,7 +34,7 @@ bool ContractSystem::createContract(const std::string& board_entity_id,
     contract.contract_id = "contract_" + issuer_id + "_" + std::to_string(board->contracts.size());
     contract.issuer_id = issuer_id;
     contract.type = type;
-    contract.isk_reward = isk_reward;
+    contract.isc_reward = isc_reward;
     contract.duration_remaining = duration_seconds;
     contract.status = "outstanding";
 
@@ -74,7 +74,7 @@ bool ContractSystem::completeContract(const std::string& board_entity_id,
                 if (assignee) {
                     auto* player = assignee->getComponent<components::Player>();
                     if (player) {
-                        player->credits += contract.isk_reward;
+                        player->credits += contract.isc_reward;
                     }
                 }
             }

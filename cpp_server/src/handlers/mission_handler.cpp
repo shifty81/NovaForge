@@ -74,7 +74,7 @@ void MissionHandler::handleMissionList(const network::ClientConnection& client,
                       << "\"name\":\"" << m.name << "\","
                       << "\"level\":" << m.level << ","
                       << "\"type\":\"" << m.type << "\","
-                      << "\"isk_reward\":" << m.isk_reward << ","
+                      << "\"isc_reward\":" << m.isc_reward << ","
                       << "\"standing_reward\":" << m.standing_reward << "}";
     }
     missions_json << "]";

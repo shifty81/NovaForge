@@ -767,7 +767,7 @@ tbody td {
     color: #E6EDF3;
 }
 
-.reward-isk {
+.reward-isc {
     color: #FFB833;
 }
 

@@ -38,12 +38,12 @@ static void testInsuranceClaim() {
     player->credits = 1000000.0;
 
     insSys.purchaseInsurance("player_ship", "standard", 500000.0);
-    double isk_after_purchase = player->credits;
+    double isc_after_purchase = player->credits;
 
     double payout = insSys.claimInsurance("player_ship");
     assertTrue(payout > 0.0, "Claim returns positive payout");
     assertTrue(approxEqual(static_cast<float>(payout), 350000.0f), "Standard pays 70% of ship value");
-    assertTrue(approxEqual(static_cast<float>(player->credits), static_cast<float>(isk_after_purchase + payout)),
+    assertTrue(approxEqual(static_cast<float>(player->credits), static_cast<float>(isc_after_purchase + payout)),
                "Credits increased by payout");
 
     auto* policy = ship->getComponent<components::InsurancePolicy>();

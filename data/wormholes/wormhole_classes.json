@@ -29,7 +29,7 @@
       }
     ],
     "salvage_value_multiplier": 1.0,
-    "blue_loot_isk": 150000
+    "blue_loot_isc": 150000
   },
   "c2": {
     "name": "Class 2 Wormhole",
@@ -62,7 +62,7 @@
       }
     ],
     "salvage_value_multiplier": 1.5,
-    "blue_loot_isk": 300000
+    "blue_loot_isc": 300000
   },
   "c3": {
     "name": "Class 3 Wormhole",
@@ -101,7 +101,7 @@
       }
     ],
     "salvage_value_multiplier": 2.0,
-    "blue_loot_isk": 600000
+    "blue_loot_isc": 600000
   },
   "c4": {
     "name": "Class 4 Wormhole",
@@ -141,7 +141,7 @@
       }
     ],
     "salvage_value_multiplier": 3.0,
-    "blue_loot_isk": 1200000
+    "blue_loot_isc": 1200000
   },
   "c5": {
     "name": "Class 5 Wormhole",
@@ -180,7 +180,7 @@
       }
     ],
     "salvage_value_multiplier": 5.0,
-    "blue_loot_isk": 3000000
+    "blue_loot_isc": 3000000
   },
   "c6": {
     "name": "Class 6 Wormhole",
@@ -219,6 +219,6 @@
       }
     ],
     "salvage_value_multiplier": 8.0,
-    "blue_loot_isk": 6000000
+    "blue_loot_isc": 6000000
   }
 }

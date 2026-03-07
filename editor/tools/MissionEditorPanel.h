@@ -33,8 +33,8 @@ struct MissionTemplateEntry {
     std::vector<ObjectiveEntry> objectives;
 
     // Reward scaling
-    double baseIsk           = 100000.0;
-    double iskPerLevel       = 50000.0;
+    double baseIsc           = 100000.0;
+    double iscPerLevel       = 50000.0;
     float  baseStandingReward = 0.1f;
     float  standingPerLevel   = 0.05f;
     float  baseTimeLimit      = 3600.0f; ///< seconds, -1 = no limit
@@ -46,7 +46,7 @@ struct MissionTemplateEntry {
  * Allows designers to:
  *   - Create / edit / delete mission templates
  *   - Add objectives with type, target, and count range
- *   - Configure reward scaling (ISK, standing)
+ *   - Configure reward scaling (ISC, standing)
  *   - Filter templates by type or level
  *   - Validate templates before export
  *   - Export templates to JSON for the mission system

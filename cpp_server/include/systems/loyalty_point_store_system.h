@@ -12,7 +12,7 @@ namespace systems {
  * @brief Loyalty point store system for faction LP rewards and purchases
  *
  * Manages LP earning from missions, store inventory, and purchasing
- * unique faction items with LP and ISK costs.
+ * unique faction items with LP and ISC costs.
  */
 class LoyaltyPointStoreSystem : public ecs::SingleComponentSystem<components::LoyaltyPointStore> {
 public:
@@ -25,7 +25,7 @@ public:
                     const std::string& faction_id);
     bool addItem(const std::string& entity_id, const std::string& item_id,
                  const std::string& name, const std::string& category,
-                 int lp_cost, float isk_cost, int tier);
+                 int lp_cost, float isc_cost, int tier);
     bool removeItem(const std::string& entity_id, const std::string& item_id);
     bool registerPlayer(const std::string& entity_id, const std::string& player_id);
     bool earnLP(const std::string& entity_id, const std::string& player_id, int amount);
@@ -35,7 +35,7 @@ public:
     int getItemCount(const std::string& entity_id) const;
     int getPlayerCount(const std::string& entity_id) const;
     int getTotalPurchases(const std::string& entity_id) const;
-    float getTotalISKCollected(const std::string& entity_id) const;
+    float getTotalISCCollected(const std::string& entity_id) const;
     int getItemsByCategory(const std::string& entity_id, const std::string& category) const;
 
 protected:

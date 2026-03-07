@@ -109,7 +109,7 @@
             "possible_loot": [
               "small_hybrid_ammo",
               "light_shield_booster",
-              "isk_bounty"
+              "isc_bounty"
             ]
           }
         ]
@@ -168,7 +168,7 @@
             "possible_loot": [
               "medium_missile_ammo",
               "shield_extender",
-              "isk_bounty",
+              "isc_bounty",
               "blueprint_copy"
             ]
           }
@@ -243,7 +243,7 @@
             "possible_loot": [
               "energy_turret_upgrade",
               "armor_hardener",
-              "isk_bounty",
+              "isc_bounty",
               "faction_module"
             ]
           }
@@ -333,7 +333,7 @@
             "possible_loot": [
               "faction_module",
               "deadspace_module",
-              "isk_bounty",
+              "isc_bounty",
               "implant"
             ]
           }
@@ -439,7 +439,7 @@
               "faction_module",
               "deadspace_module",
               "officer_module",
-              "isk_bounty",
+              "isc_bounty",
               "implant",
               "blueprint_original"
             ]

@@ -127,8 +127,8 @@ static void testSerializeDeserializeContractBoard() {
     c.assignee_id = "p2";
     c.type = "courier";
     c.status = "in_progress";
-    c.isk_reward = 50000.0;
-    c.isk_collateral = 10000.0;
+    c.isc_reward = 50000.0;
+    c.isc_collateral = 10000.0;
     c.duration_remaining = 100.0f;
     c.days_to_complete = 7.0f;
 
@@ -162,8 +162,8 @@ static void testSerializeDeserializeContractBoard() {
     assertTrue(board2->contracts[0].assignee_id == "p2", "assignee_id preserved");
     assertTrue(board2->contracts[0].type == "courier", "type preserved");
     assertTrue(board2->contracts[0].status == "in_progress", "status preserved");
-    assertTrue(approxEqual(static_cast<float>(board2->contracts[0].isk_reward), 50000.0f), "isk_reward preserved");
-    assertTrue(approxEqual(static_cast<float>(board2->contracts[0].isk_collateral), 10000.0f), "isk_collateral preserved");
+    assertTrue(approxEqual(static_cast<float>(board2->contracts[0].isc_reward), 50000.0f), "isc_reward preserved");
+    assertTrue(approxEqual(static_cast<float>(board2->contracts[0].isc_collateral), 10000.0f), "isc_collateral preserved");
     assertTrue(approxEqual(board2->contracts[0].duration_remaining, 100.0f), "duration_remaining preserved");
     assertTrue(approxEqual(board2->contracts[0].days_to_complete, 7.0f), "days_to_complete preserved");
     assertTrue(board2->contracts[0].items_offered.size() == 1, "items_offered count preserved");

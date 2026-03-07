@@ -48,7 +48,7 @@ public:
 
     // Reward tracking
     bool setEncounterReward(const std::string& entity_id, const std::string& encounter_id,
-                            double isk_reward, int loot_count);
+                            double isc_reward, int loot_count);
     double getTotalRewardsEarned(const std::string& entity_id) const;
 
 protected:

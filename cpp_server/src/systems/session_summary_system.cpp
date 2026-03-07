@@ -144,23 +144,23 @@ float SessionSummarySystem::getSessionDuration(const std::string& entity_id) con
     return state->elapsed_time;
 }
 
-double SessionSummarySystem::getIskPerHour(const std::string& entity_id) const {
+double SessionSummarySystem::getIscPerHour(const std::string& entity_id) const {
     auto* state = getComponentFor(entity_id);
     if (!state) return 0.0;
-    double isk = getStat(entity_id, "isk_earned");
+    double isc = getStat(entity_id, "isc_earned");
     float duration = getSessionDuration(entity_id);
     if (duration <= 0.0f) return 0.0;
-    return isk / (static_cast<double>(duration) / 3600.0);
+    return isc / (static_cast<double>(duration) / 3600.0);
 }
 
 std::string SessionSummarySystem::getPerformanceGrade(const std::string& entity_id) const {
     auto* state = getComponentFor(entity_id);
     if (!state) return "F";
-    // Grade based on objectives completed + ISK earned + kills
+    // Grade based on objectives completed + ISC earned + kills
     double score = 0.0;
     score += getStat(entity_id, "objectives_completed") * 20.0;
     score += getStat(entity_id, "kills") * 10.0;
-    score += getStat(entity_id, "isk_earned") / 10000.0;
+    score += getStat(entity_id, "isc_earned") / 10000.0;
     if (score >= 100.0) return "S";
     if (score >= 80.0) return "A";
     if (score >= 60.0) return "B";

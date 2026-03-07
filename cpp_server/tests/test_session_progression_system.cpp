@@ -57,14 +57,14 @@ static void testProgressionStatistics() {
     systems::SessionProgressionSystem sys(&world);
     world.createEntity("sp1");
     sys.initialize("sp1", "player_001");
-    assertTrue(sys.addStatistic("sp1", "isk_earned", 1000.0), "Add ISK earned");
+    assertTrue(sys.addStatistic("sp1", "isc_earned", 1000.0), "Add ISC earned");
     assertTrue(sys.addStatistic("sp1", "asteroids_mined", 5.0), "Add asteroids mined");
     assertTrue(sys.getStatisticCount("sp1") == 2, "2 statistics");
-    assertTrue(approxEqual(sys.getStatistic("sp1", "isk_earned"), 1000.0), "ISK = 1000");
+    assertTrue(approxEqual(sys.getStatistic("sp1", "isc_earned"), 1000.0), "ISC = 1000");
     assertTrue(approxEqual(sys.getStatistic("sp1", "asteroids_mined"), 5.0), "Mined = 5");
     // Accumulate
-    assertTrue(sys.addStatistic("sp1", "isk_earned", 500.0), "Accumulate ISK");
-    assertTrue(approxEqual(sys.getStatistic("sp1", "isk_earned"), 1500.0), "ISK = 1500");
+    assertTrue(sys.addStatistic("sp1", "isc_earned", 500.0), "Accumulate ISC");
+    assertTrue(approxEqual(sys.getStatistic("sp1", "isc_earned"), 1500.0), "ISC = 1500");
     assertTrue(sys.getStatisticCount("sp1") == 2, "Still 2 statistics");
     // Missing stat
     assertTrue(approxEqual(sys.getStatistic("sp1", "nonexistent"), 0.0), "Missing stat = 0");
@@ -78,7 +78,7 @@ static void testProgressionActivities() {
     sys.initialize("sp1", "player_001");
     assertTrue(sys.logActivity("sp1", "undock", "Undocked from Jita", 5.0f), "Log undock");
     assertTrue(sys.logActivity("sp1", "mine", "Mined Veldspar", 30.0f), "Log mine");
-    assertTrue(sys.logActivity("sp1", "trade", "Sold ore for 500 ISK", 60.0f), "Log trade");
+    assertTrue(sys.logActivity("sp1", "trade", "Sold ore for 500 ISC", 60.0f), "Log trade");
     assertTrue(sys.getActivityCount("sp1") == 3, "3 activities");
     assertTrue(sys.getLastActivityType("sp1") == "trade", "Last activity is trade");
 }

@@ -297,13 +297,13 @@ std::string ProtocolHandler::createSalvageResult(bool success, const std::string
 }
 
 std::string ProtocolHandler::createLootResult(bool success, const std::string& wreck_id,
-                                               int items_collected, double isk_gained) {
+                                               int items_collected, double isc_gained) {
     std::ostringstream json;
     json << "{\"message_type\":\"loot_result\",\"data\":{";
     json << "\"success\":" << (success ? "true" : "false") << ",";
     json << "\"wreck_id\":\"" << wreck_id << "\",";
     json << "\"items_collected\":" << items_collected << ",";
-    json << "\"isk_gained\":" << isk_gained;
+    json << "\"isc_gained\":" << isc_gained;
     json << "}}";
     return json.str();
 }

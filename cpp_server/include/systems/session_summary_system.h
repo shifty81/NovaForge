@@ -12,7 +12,7 @@ namespace systems {
  * @brief Produces an end-of-session after-action report with performance metrics
  *
  * Aggregates combat, economy, exploration, and mission data into a structured
- * summary: ISK/hour, kills, damage dealt/received, objectives completed, and
+ * summary: ISC/hour, kills, damage dealt/received, objectives completed, and
  * letter-grade performance rating. Triggers when the session is finalized.
  */
 class SessionSummarySystem : public ecs::SingleComponentSystem<components::SessionSummaryState> {
@@ -43,7 +43,7 @@ public:
     float getSessionDuration(const std::string& entity_id) const;
 
     // Derived metrics
-    double getIskPerHour(const std::string& entity_id) const;
+    double getIscPerHour(const std::string& entity_id) const;
     std::string getPerformanceGrade(const std::string& entity_id) const;
     double getTotalDamageDealt(const std::string& entity_id) const;
     double getTotalDamageReceived(const std::string& entity_id) const;

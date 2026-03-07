@@ -975,7 +975,7 @@ public:
         float started_at = 0.0f;
         float ended_at = 0.0f;
         Status status = Status::Pending;
-        double isk_reward = 0.0;
+        double isc_reward = 0.0;
         int loot_count = 0;
     };
 
@@ -1208,13 +1208,13 @@ public:
         double damage_dealt = 0.0;
         double damage_received = 0.0;
         float duration = 0.0f;
-        double isk_destroyed = 0.0;
+        double isc_destroyed = 0.0;
         bool finalized = false;
     };
 
     struct Casualty {
         std::string ship_name;
-        double isk_value = 0.0;
+        double isc_value = 0.0;
     };
 
     std::string player_id;

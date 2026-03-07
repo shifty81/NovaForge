@@ -93,7 +93,7 @@ int WormholeDatabase::loadClasses(const std::string& filepath) {
         tmpl.max_wormhole_stability  = static_cast<double>(extractFloat(block, "max_wormhole_stability", 500000000.0f));
         tmpl.max_wormhole_lifetime_hours = extractFloat(block, "max_wormhole_lifetime_hours", 24.0f);
         tmpl.salvage_value_multiplier = extractFloat(block, "salvage_value_multiplier", 1.0f);
-        tmpl.blue_loot_isk           = static_cast<double>(extractFloat(block, "blue_loot_isk", 150000.0f));
+        tmpl.blue_loot_isc           = static_cast<double>(extractFloat(block, "blue_loot_isc", 150000.0f));
 
         // Static connections
         std::string sc_arr = json::extractArray(block, "static_connections");

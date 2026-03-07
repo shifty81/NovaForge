@@ -18,7 +18,7 @@ public:
     bool createContract(const std::string& board_entity_id,
                         const std::string& issuer_id,
                         const std::string& type,
-                        double isk_reward,
+                        double isc_reward,
                         float duration_seconds);
 
     bool acceptContract(const std::string& board_entity_id,

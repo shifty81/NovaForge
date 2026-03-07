@@ -42,7 +42,7 @@ void LeaderboardSystem::recordKill(const std::string& entity_id,
     board->entries[idx].total_kills++;
 }
 
-void LeaderboardSystem::recordIskEarned(const std::string& entity_id,
+void LeaderboardSystem::recordIscEarned(const std::string& entity_id,
                                          const std::string& player_id,
                                          const std::string& player_name,
                                          double amount) {
@@ -50,7 +50,7 @@ void LeaderboardSystem::recordIskEarned(const std::string& entity_id,
     if (idx < 0) return;
 
     auto* board = getComponentFor(entity_id);
-    board->entries[idx].total_isk_earned += amount;
+    board->entries[idx].total_isc_earned += amount;
 }
 
 void LeaderboardSystem::recordMissionComplete(const std::string& entity_id,
@@ -95,13 +95,13 @@ int LeaderboardSystem::getPlayerKills(const std::string& entity_id,
     return 0;
 }
 
-double LeaderboardSystem::getPlayerIskEarned(const std::string& entity_id,
+double LeaderboardSystem::getPlayerIscEarned(const std::string& entity_id,
                                               const std::string& player_id) {
     auto* board = getComponentFor(entity_id);
     if (!board) return 0.0;
 
     for (const auto& e : board->entries) {
-        if (e.player_id == player_id) return e.total_isk_earned;
+        if (e.player_id == player_id) return e.total_isc_earned;
     }
     return 0.0;
 }
@@ -169,7 +169,7 @@ int LeaderboardSystem::checkAchievements(const std::string& entity_id,
         else if (ach.stat_key == "missions_completed") stat_value = pe->missions_completed;
         else if (ach.stat_key == "tournaments_won") stat_value = pe->tournaments_won;
         else if (ach.stat_key == "ships_destroyed") stat_value = pe->ships_destroyed;
-        else if (ach.stat_key == "total_isk_earned") stat_value = static_cast<int>(pe->total_isk_earned);
+        else if (ach.stat_key == "total_isc_earned") stat_value = static_cast<int>(pe->total_isc_earned);
         else if (ach.stat_key == "total_damage_dealt") stat_value = static_cast<int>(pe->total_damage_dealt);
 
         if (stat_value >= ach.requirement) {

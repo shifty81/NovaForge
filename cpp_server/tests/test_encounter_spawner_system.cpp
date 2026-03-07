@@ -70,7 +70,7 @@ static void testEncounterLifecycleComplete() {
     assertTrue(sys.getEncounterStatus("enc1", "e1") == 2, "Status is Completed (2)");
     assertTrue(sys.getActiveEncounterCount("enc1") == 0, "0 active");
     assertTrue(sys.getCompletedEncounterCount("enc1") == 1, "1 completed");
-    assertTrue(approxEqual(sys.getTotalRewardsEarned("enc1"), 5000.0), "5000 ISK earned");
+    assertTrue(approxEqual(sys.getTotalRewardsEarned("enc1"), 5000.0), "5000 ISC earned");
     assertTrue(!sys.completeEncounter("enc1", "e1", 55.0f), "Double complete fails");
 }
 
@@ -117,7 +117,7 @@ static void testEncounterRewards() {
     sys.completeEncounter("enc1", "e1", 50.0f);
     sys.activateEncounter("enc1", "e2", 60.0f);
     sys.completeEncounter("enc1", "e2", 100.0f);
-    assertTrue(approxEqual(sys.getTotalRewardsEarned("enc1"), 4500.0), "4500 ISK total");
+    assertTrue(approxEqual(sys.getTotalRewardsEarned("enc1"), 4500.0), "4500 ISC total");
 }
 
 static void testEncounterExpiry() {

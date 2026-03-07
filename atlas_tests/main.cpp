@@ -584,7 +584,7 @@ void test_mission_editor_validate_empty_type();
 void test_mission_editor_validate_bad_level();
 void test_mission_editor_validate_no_objectives();
 void test_mission_editor_validate_bad_objective();
-void test_mission_editor_validate_negative_isk();
+void test_mission_editor_validate_negative_isc();
 void test_mission_editor_validate_all();
 void test_mission_editor_export_json();
 void test_mission_editor_import_json();
@@ -2509,7 +2509,7 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_mission_editor_validate_bad_level);
     RUN_TEST(test_mission_editor_validate_no_objectives);
     RUN_TEST(test_mission_editor_validate_bad_objective);
-    RUN_TEST(test_mission_editor_validate_negative_isk);
+    RUN_TEST(test_mission_editor_validate_negative_isc);
     RUN_TEST(test_mission_editor_validate_all);
     RUN_TEST(test_mission_editor_export_json);
     RUN_TEST(test_mission_editor_import_json);

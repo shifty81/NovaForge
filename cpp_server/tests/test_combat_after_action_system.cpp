@@ -110,7 +110,7 @@ static void testCombatAfterActionCasualties() {
     assertTrue(sys.recordCasualty("p1", "Rifter", 5000000.0), "Record casualty");
     assertTrue(sys.recordCasualty("p1", "Venture", 2000000.0), "Record another");
     assertTrue(sys.getCasualtyCount("p1") == 2, "2 casualties");
-    assertTrue(approxEqual(sys.getTotalIskLost("p1"), 7000000.0), "7M ISK lost");
+    assertTrue(approxEqual(sys.getTotalIscLost("p1"), 7000000.0), "7M ISC lost");
 }
 
 static void testCombatAfterActionCasualtyMax() {
@@ -144,7 +144,7 @@ static void testCombatAfterActionAggregates() {
     sys.finalizeEngagement("p1", "eng2", 20.0f, 80000.0);
     assertTrue(approxEqual(sys.getTotalDamageDealt("p1"), 3000.0), "3000 total dealt");
     assertTrue(approxEqual(sys.getTotalDamageReceived("p1"), 700.0), "700 total received");
-    assertTrue(approxEqual(sys.getTotalIskDestroyed("p1"), 130000.0), "130k ISK destroyed");
+    assertTrue(approxEqual(sys.getTotalIscDestroyed("p1"), 130000.0), "130k ISC destroyed");
     // Average DPS: eng1=100, eng2=100 → avg=100
     assertTrue(approxEqual(sys.getAverageDPS("p1"), 100.0), "100 avg DPS");
 }
@@ -176,10 +176,10 @@ static void testCombatAfterActionMissing() {
     assertTrue(approxEqual(sys.getEngagementDPS("nonexistent", "e"), 0.0), "0 DPS");
     assertTrue(!sys.recordCasualty("nonexistent", "s", 0), "recordCasualty fails");
     assertTrue(sys.getCasualtyCount("nonexistent") == 0, "0 casualties");
-    assertTrue(approxEqual(sys.getTotalIskLost("nonexistent"), 0.0), "0 ISK lost");
+    assertTrue(approxEqual(sys.getTotalIscLost("nonexistent"), 0.0), "0 ISC lost");
     assertTrue(approxEqual(sys.getTotalDamageDealt("nonexistent"), 0.0), "0 total dealt");
     assertTrue(approxEqual(sys.getTotalDamageReceived("nonexistent"), 0.0), "0 total received");
-    assertTrue(approxEqual(sys.getTotalIskDestroyed("nonexistent"), 0.0), "0 ISK destroyed");
+    assertTrue(approxEqual(sys.getTotalIscDestroyed("nonexistent"), 0.0), "0 ISC destroyed");
     assertTrue(approxEqual(sys.getAverageDPS("nonexistent"), 0.0), "0 avg DPS");
 }
 

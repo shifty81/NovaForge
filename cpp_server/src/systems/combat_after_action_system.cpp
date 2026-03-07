@@ -63,7 +63,7 @@ bool CombatAfterActionSystem::recordHit(const std::string& entity_id,
 }
 
 bool CombatAfterActionSystem::finalizeEngagement(const std::string& entity_id,
-    const std::string& engagement_id, float duration, double isk_destroyed) {
+    const std::string& engagement_id, float duration, double isc_destroyed) {
     auto* state = getComponentFor(entity_id);
     if (!state) return false;
     for (auto& e : state->engagements) {
@@ -71,7 +71,7 @@ bool CombatAfterActionSystem::finalizeEngagement(const std::string& entity_id,
             if (e.finalized) return false;
             e.finalized = true;
             e.duration = duration;
-            e.isk_destroyed = isk_destroyed;
+            e.isc_destroyed = isc_destroyed;
             return true;
         }
     }
@@ -117,13 +117,13 @@ double CombatAfterActionSystem::getEngagementDPS(const std::string& entity_id,
 }
 
 bool CombatAfterActionSystem::recordCasualty(const std::string& entity_id,
-    const std::string& ship_name, double isk_value) {
+    const std::string& ship_name, double isc_value) {
     auto* state = getComponentFor(entity_id);
     if (!state) return false;
     if (static_cast<int>(state->casualties.size()) >= state->max_casualties) return false;
     CA::Casualty cas;
     cas.ship_name = ship_name;
-    cas.isk_value = isk_value;
+    cas.isc_value = isc_value;
     state->casualties.push_back(cas);
     return true;
 }
@@ -133,12 +133,12 @@ int CombatAfterActionSystem::getCasualtyCount(const std::string& entity_id) cons
     return state ? static_cast<int>(state->casualties.size()) : 0;
 }
 
-double CombatAfterActionSystem::getTotalIskLost(const std::string& entity_id) const {
+double CombatAfterActionSystem::getTotalIscLost(const std::string& entity_id) const {
     auto* state = getComponentFor(entity_id);
     if (!state) return 0.0;
     double total = 0.0;
     for (const auto& c : state->casualties) {
-        total += c.isk_value;
+        total += c.isc_value;
     }
     return total;
 }
@@ -163,12 +163,12 @@ double CombatAfterActionSystem::getTotalDamageReceived(const std::string& entity
     return total;
 }
 
-double CombatAfterActionSystem::getTotalIskDestroyed(const std::string& entity_id) const {
+double CombatAfterActionSystem::getTotalIscDestroyed(const std::string& entity_id) const {
     auto* state = getComponentFor(entity_id);
     if (!state) return 0.0;
     double total = 0.0;
     for (const auto& e : state->engagements) {
-        total += e.isk_destroyed;
+        total += e.isc_destroyed;
     }
     return total;
 }

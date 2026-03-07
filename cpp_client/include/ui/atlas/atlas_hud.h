@@ -261,7 +261,7 @@ public:
         std::string agentName;
         int level = 1;
         std::vector<MissionObjectiveInfo> objectives;
-        float iskReward = 0.0f;
+        float iscReward = 0.0f;
         float lpReward  = 0.0f;
         float timeLimitHours = 0.0f;
         float timeElapsedHours = 0.0f;
@@ -319,7 +319,7 @@ public:
         float shieldPct = 1.0f;
         float armorPct = 1.0f;
         float hullPct = 1.0f;
-        float repairCostIsk = 0.0f;
+        float repairCostIsc = 0.0f;
     };
 
     // ── Inventory data ──────────────────────────────────────────────

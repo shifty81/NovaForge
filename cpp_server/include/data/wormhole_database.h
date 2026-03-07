@@ -37,7 +37,7 @@ struct WormholeClassTemplate {
     float max_wormhole_lifetime_hours = 24.0f;
     std::vector<DormantSpawn> dormant_spawns;
     float salvage_value_multiplier = 1.0f;
-    double blue_loot_isk = 150000.0;
+    double blue_loot_isc = 150000.0;
 };
 
 /**

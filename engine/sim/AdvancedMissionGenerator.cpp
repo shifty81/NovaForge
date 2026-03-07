@@ -213,8 +213,8 @@ GeneratedMission AdvancedMissionGenerator::buildMission(
     m.difficulty     = ComputeDifficulty(playerLevel, 0.5f);
     m.timeLimitSec   = tpl.baseTimeLimitSec + tpl.timePerLevel * playerLevel;
 
-    float rawReward  = tpl.baseRewardISK + tpl.rewardPerLevel * playerLevel;
-    m.rewardISK      = ScaleRewardByDifficulty(rawReward, m.difficulty);
+    float rawReward  = tpl.baseRewardISC + tpl.rewardPerLevel * playerLevel;
+    m.rewardISC      = ScaleRewardByDifficulty(rawReward, m.difficulty);
     m.standingReward = tpl.baseStanding + tpl.standingPerLevel * playerLevel;
 
     // Build objectives, scaling target counts by level
@@ -226,7 +226,7 @@ GeneratedMission AdvancedMissionGenerator::buildMission(
         // Base count 3-8, scaled by player level
         uint32_t base = 3 + (objSeed % 6);
         obj.targetCount = base + playerLevel;
-        obj.bonusISK    = (objSeed % 2 == 0) ? tpl.rewardPerLevel * 0.25f : 0.0f;
+        obj.bonusISC    = (objSeed % 2 == 0) ? tpl.rewardPerLevel * 0.25f : 0.0f;
 
         switch (objType) {
             case ObjectiveType::DestroyTargets:  obj.description = "Destroy hostile targets"; break;

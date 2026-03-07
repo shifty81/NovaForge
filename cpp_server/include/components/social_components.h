@@ -197,7 +197,7 @@ public:
         std::string player_id;
         std::string player_name;
         int total_kills = 0;
-        double total_isk_earned = 0.0;
+        double total_isc_earned = 0.0;
         int missions_completed = 0;
         int tournaments_won = 0;
         double total_bounty = 0.0;
@@ -270,8 +270,8 @@ public:
     double war_cost = 100000000.0; // Credits cost to declare war (100M)
     int aggressor_kills = 0;
     int defender_kills = 0;
-    double aggressor_isk_destroyed = 0.0;
-    double defender_isk_destroyed = 0.0;
+    double aggressor_isc_destroyed = 0.0;
+    double defender_isc_destroyed = 0.0;
     bool is_mutual = false;
     COMPONENT_TYPE(WarDeclaration)
 };

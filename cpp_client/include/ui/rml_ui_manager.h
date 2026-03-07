@@ -194,8 +194,8 @@ public:
         std::string level;
         std::string description;
         std::vector<MissionObjectiveInfo> objectives;
-        float iskReward = 0.0f;
-        float bonusIsk = 0.0f;
+        float iscReward = 0.0f;
+        float bonusIsc = 0.0f;
         std::string standingReward;
         int lpReward = 0;
     };

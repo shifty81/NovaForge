@@ -93,7 +93,7 @@ void test_mission_gen_generate_for_system() {
         assert(m.missionId > 0);
         assert(m.systemId == 1);
         assert(m.playerLevel == 5);
-        assert(m.rewardISK > 0.0f);
+        assert(m.rewardISC > 0.0f);
         assert(!m.objectives.empty());
         assert(!m.title.empty());
     }

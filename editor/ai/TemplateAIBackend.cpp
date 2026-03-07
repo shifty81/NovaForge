@@ -93,25 +93,25 @@ void TemplateAIBackend::InstallDefaults() {
     AddTemplate("combat mission",
         "Suggested combat mission: 3-5 waves of hostile NPCs, "
         "escalating difficulty. Objectives: destroy all hostiles. "
-        "Reward: 150K-500K ISK based on level. Time limit: 1 hour.",
+        "Reward: 150K-500K ISC based on level. Time limit: 1 hour.",
         0.7f);
 
     AddTemplate("mining mission",
         "Suggested mining mission: mine 500-2000 units of ore "
-        "from designated asteroid belt. Reward: 100K-300K ISK. "
+        "from designated asteroid belt. Reward: 100K-300K ISC. "
         "Time limit: 2 hours. Bonus for rare ore types.",
         0.7f);
 
     AddTemplate("courier mission",
         "Suggested courier mission: transport 100-1000 m3 of cargo "
-        "between two stations (1-3 jumps). Reward: 50K-200K ISK. "
+        "between two stations (1-3 jumps). Reward: 50K-200K ISC. "
         "Time limit: 30 minutes per jump.",
         0.7f);
 
     AddTemplate("exploration",
         "Suggested exploration mission: scan down 1-3 cosmic signatures "
         "in target system. Hack relic/data sites for loot. "
-        "Reward: 200K-800K ISK. No time limit.",
+        "Reward: 200K-800K ISC. No time limit.",
         0.65f);
 
     // Formation suggestions

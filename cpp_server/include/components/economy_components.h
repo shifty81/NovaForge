@@ -93,8 +93,8 @@ public:
         std::string status;          // "outstanding", "in_progress", "completed", "expired", "failed"
         std::vector<ContractItem> items_offered;
         std::vector<ContractItem> items_requested;
-        double isk_reward = 0.0;
-        double isk_collateral = 0.0;
+        double isc_reward = 0.0;
+        double isc_collateral = 0.0;
         float duration_remaining = -1.0f;
         float days_to_complete = 3.0f;
     };
@@ -634,7 +634,7 @@ public:
         std::string name;
         std::string category;
         int lp_cost = 0;
-        float isk_cost = 0.0f;
+        float isc_cost = 0.0f;
         int tier = 1;
         bool in_stock = true;
         int times_purchased = 0;
@@ -654,7 +654,7 @@ public:
     int max_items = 50;
     int max_players = 100;
     int total_purchases = 0;
-    float isk_collected = 0.0f;
+    float isc_collected = 0.0f;
     bool active = true;
 
     COMPONENT_TYPE(LoyaltyPointStore)
@@ -767,7 +767,7 @@ public:
 };
 
 /**
- * @brief Player wallet with ISK transaction ledger
+ * @brief Player wallet with ISC transaction ledger
  *
  * Tracks player balance with deposit/withdrawal operations and
  * maintains a transaction history for audit trail. Supports the

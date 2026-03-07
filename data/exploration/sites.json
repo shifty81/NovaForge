@@ -15,7 +15,7 @@
         "salvage_material": 20,
         "datacores": 2
       },
-      "isk_reward": 500000
+      "isc_reward": 500000
     },
     "combat_venom_syndicate_base": {
       "signature_type": "combat",
@@ -33,7 +33,7 @@
         "datacores": 3,
         "blueprint_copy": 1
       },
-      "isk_reward": 1000000
+      "isc_reward": 1000000
     },
     "relic_ancient_ruins": {
       "signature_type": "relic",
@@ -46,7 +46,7 @@
         "salvage_material": 15,
         "datacores": 3
       },
-      "isk_reward": 750000
+      "isc_reward": 750000
     },
     "data_research_facility": {
       "signature_type": "data",
@@ -62,7 +62,7 @@
         "salvage_material": 10,
         "blueprint_copy": 1
       },
-      "isk_reward": 1200000
+      "isc_reward": 1200000
     },
     "gas_cloud_small": {
       "signature_type": "gas",
@@ -73,7 +73,7 @@
       "loot_table": {
         "nebuline_c28": 100
       },
-      "isk_reward": 300000
+      "isc_reward": 300000
     },
     "gas_cloud_large": {
       "signature_type": "gas",
@@ -87,7 +87,7 @@
         "nebuline_c28": 250,
         "nebuline_c32": 50
       },
-      "isk_reward": 800000
+      "isc_reward": 800000
     },
     "combat_crimson_order_refuge": {
       "signature_type": "combat",
@@ -103,7 +103,7 @@
         "salvage_material": 15,
         "frequency_crystals": 5
       },
-      "isk_reward": 350000
+      "isc_reward": 350000
     },
     "combat_angel_hideaway": {
       "signature_type": "combat",
@@ -119,7 +119,7 @@
         "salvage_material": 12,
         "projectile_ammo": 8
       },
-      "isk_reward": 400000
+      "isc_reward": 400000
     },
     "combat_hollow_den": {
       "signature_type": "combat",
@@ -136,7 +136,7 @@
         "datacores": 3,
         "frequency_crystals": 8
       },
-      "isk_reward": 650000
+      "isc_reward": 650000
     },
     "combat_venom_syndicate_fortress": {
       "signature_type": "combat",
@@ -156,7 +156,7 @@
         "blueprint_copy": 2,
         "faction_module": 1
       },
-      "isk_reward": 5000000
+      "isc_reward": 5000000
     },
     "combat_iron_corsairs_haven": {
       "signature_type": "combat",
@@ -176,7 +176,7 @@
         "blueprint_copy": 3,
         "faction_module": 2
       },
-      "isk_reward": 12000000
+      "isc_reward": 12000000
     },
     "relic_dormant_enclave": {
       "signature_type": "relic",
@@ -190,7 +190,7 @@
         "datacores": 5,
         "dormant_components": 3
       },
-      "isk_reward": 1500000
+      "isc_reward": 1500000
     },
     "relic_forgotten_rimward": {
       "signature_type": "relic",
@@ -204,7 +204,7 @@
         "datacores": 8,
         "blueprint_copy": 2
       },
-      "isk_reward": 3000000
+      "isc_reward": 3000000
     },
     "data_unsecured_frontier": {
       "signature_type": "data",
@@ -217,7 +217,7 @@
         "salvage_material": 8,
         "decryptors": 2
       },
-      "isk_reward": 900000
+      "isc_reward": 900000
     },
     "data_central_iron_corsairs_survey": {
       "signature_type": "data",
@@ -234,7 +234,7 @@
         "blueprint_copy": 2,
         "decryptors": 3
       },
-      "isk_reward": 1800000
+      "isc_reward": 1800000
     },
     "data_venom_syndicate_lookout": {
       "signature_type": "data",
@@ -251,7 +251,7 @@
         "blueprint_copy": 3,
         "decryptors": 5
       },
-      "isk_reward": 2500000
+      "isc_reward": 2500000
     },
     "wormhole_anomaly_rimward": {
       "signature_type": "wormhole",
@@ -260,7 +260,7 @@
       "difficulty": 3,
       "npc_spawns": [],
       "loot_table": {},
-      "isk_reward": 0,
+      "isc_reward": 0,
       "destination_class": "C1-C3"
     },
     "wormhole_anomaly_deep": {
@@ -270,7 +270,7 @@
       "difficulty": 5,
       "npc_spawns": [],
       "loot_table": {},
-      "isk_reward": 0,
+      "isc_reward": 0,
       "destination_class": "C4-C6"
     }
   },

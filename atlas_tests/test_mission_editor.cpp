@@ -26,7 +26,7 @@ static MissionTemplateEntry makeValidTemplate(const std::string& id,
     entry.type = type;
     entry.level = level;
     entry.objectives.push_back({"destroy", "pirate_frigate", 1, 5});
-    entry.baseIsk = 100000.0;
+    entry.baseIsc = 100000.0;
     return entry;
 }
 
@@ -222,9 +222,9 @@ void test_mission_editor_validate_bad_objective() {
     assert(!MissionEditorPanel::ValidateTemplate(entry, err));
 }
 
-void test_mission_editor_validate_negative_isk() {
+void test_mission_editor_validate_negative_isc() {
     auto entry = makeValidTemplate("test", "combat", 1);
-    entry.baseIsk = -100.0;
+    entry.baseIsc = -100.0;
     std::string err;
     assert(!MissionEditorPanel::ValidateTemplate(entry, err));
 }

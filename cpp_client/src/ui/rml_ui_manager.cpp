@@ -1127,12 +1127,12 @@ void RmlUiManager::UpdateMissionDetail(const MissionRmlInfo& mission) {
     // Rewards
     detailRml += "<div class=\"section-label\">Rewards</div>";
     char buf[64];
-    std::snprintf(buf, sizeof(buf), "%.0f Credits", mission.iskReward);
+    std::snprintf(buf, sizeof(buf), "%.0f Credits", mission.iscReward);
     detailRml += "<div class=\"reward-row\"><span class=\"reward-label\">Credits Reward:</span>"
                  "<span class=\"reward-value reward-credits\">" + std::string(buf) + "</span></div>";
 
-    if (mission.bonusIsk > 0.0f) {
-        std::snprintf(buf, sizeof(buf), "%.0f Credits", mission.bonusIsk);
+    if (mission.bonusIsc > 0.0f) {
+        std::snprintf(buf, sizeof(buf), "%.0f Credits", mission.bonusIsc);
         detailRml += "<div class=\"reward-row\"><span class=\"reward-label\">Bonus Credits:</span>"
                      "<span class=\"reward-value reward-credits\">" + std::string(buf) + "</span></div>";
     }

@@ -37,7 +37,7 @@ struct MissionObjective {
     ObjectiveType type       = ObjectiveType::DestroyTargets;
     uint32_t      targetCount = 1;         // how many to complete
     uint32_t      progress    = 0;         // current progress
-    float         bonusISK    = 0.0f;      // optional bonus reward
+    float         bonusISC    = 0.0f;      // optional bonus reward
     std::string   description;
 };
 
@@ -47,7 +47,7 @@ struct MissionObjective {
 struct BranchChoice {
     std::string label;                     // e.g. "Help the miners"
     float       standingChange  = 0.0f;    // faction standing delta
-    float       bonusReward     = 0.0f;    // ISK bonus for choosing this
+    float       bonusReward     = 0.0f;    // ISC bonus for choosing this
     uint32_t    nextTemplateIdx = 0;       // follow-up mission template
 };
 
@@ -59,7 +59,7 @@ struct GeneratedMission {
     std::string                 title;
     std::string                 briefing;
     DifficultyTier              difficulty    = DifficultyTier::Normal;
-    float                       rewardISK     = 0.0f;
+    float                       rewardISC     = 0.0f;
     float                       standingReward = 0.0f;
     float                       timeLimitSec  = 0.0f;
     std::vector<MissionObjective> objectives;
@@ -76,7 +76,7 @@ struct MissionTemplate {
     std::string                 namePattern;       // e.g. "Strike: {target}"
     std::string                 category;          // Combat, Mining, Courier, etc.
     std::vector<ObjectiveType>  objectiveTypes;    // objectives to generate
-    float                       baseRewardISK     = 1000.0f;
+    float                       baseRewardISC     = 1000.0f;
     float                       rewardPerLevel    = 500.0f;
     float                       baseStanding      = 0.05f;
     float                       standingPerLevel  = 0.01f;
@@ -150,7 +150,7 @@ public:
                                             float systemSecurity);
 
     /**
-     * Scale reward ISK by difficulty tier.
+     * Scale reward ISC by difficulty tier.
      */
     static float ScaleRewardByDifficulty(float baseReward,
                                          DifficultyTier tier);

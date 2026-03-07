@@ -903,7 +903,7 @@ public:
         std::string category;    // "Module", "Ammo", "Ore", "Salvage", "DataCore"
         int quantity = 1;
         float volume = 1.0f;     // m3 per unit
-        float value = 0.0f;      // estimated ISK value
+        float value = 0.0f;      // estimated ISC value
     };
 
     std::string container_id;
