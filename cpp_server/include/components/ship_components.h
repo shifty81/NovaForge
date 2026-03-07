@@ -958,6 +958,30 @@ public:
     COMPONENT_TYPE(SavedLoadout)
 };
 
+/**
+ * @brief Tracks per-entity heat state for module thermal management
+ *
+ * Weapons and active modules generate heat each cycle.  The system dissipates
+ * heat each tick based on the entity's radiator capacity.  At high heat levels
+ * penalties apply: accuracy degrades above 75% and modules force-offline at 100%.
+ */
+class ThermalState : public ecs::Component {
+public:
+    float current_heat = 0.0f;
+    float max_heat = 100.0f;
+    float dissipation_rate = 5.0f;      // heat units per second
+    float heat_warning_threshold = 0.75f; // fraction of max_heat
+    float overheat_threshold = 1.0f;     // fraction of max_heat
+    int modules_overheated = 0;
+    int total_overheat_events = 0;
+    float total_heat_generated = 0.0f;
+    float total_heat_dissipated = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ThermalState)
+};
+
 } // namespace components
 } // namespace atlas
 
