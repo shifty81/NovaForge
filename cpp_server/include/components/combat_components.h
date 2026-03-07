@@ -322,6 +322,32 @@ public:
     COMPONENT_TYPE(CombatReward)
 };
 
+/**
+ * @brief Tracks bounty collection state for a player entity
+ *
+ * When an NPC with a bounty is destroyed, the kill is recorded here.
+ * The system processes pending kills each tick and awards credits.
+ */
+class BountyCollection : public ecs::Component {
+public:
+    struct BountyKill {
+        std::string target_id;
+        std::string target_type;
+        double bounty_amount = 0.0;
+        float timestamp = 0.0f;
+        bool paid = false;
+    };
+
+    std::vector<BountyKill> pending_kills;
+    double total_bounties_collected = 0.0;
+    int total_kills_claimed = 0;
+    int max_pending = 50;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(BountyCollection)
+};
+
 } // namespace components
 } // namespace atlas
 
