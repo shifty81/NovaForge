@@ -289,6 +289,11 @@ void run_entity_builder_tests();
 void run_ore_processing_system_tests();
 void run_station_repair_service_system_tests();
 void run_combat_reward_system_tests();
+void run_thermal_management_system_tests();
+void run_aggro_table_system_tests();
+void run_cargo_transfer_system_tests();
+void run_bounty_collection_system_tests();
+void run_module_power_grid_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -575,6 +580,11 @@ int main() {
     run_ore_processing_system_tests();
     run_station_repair_service_system_tests();
     run_combat_reward_system_tests();
+    run_thermal_management_system_tests();
+    run_aggro_table_system_tests();
+    run_cargo_transfer_system_tests();
+    run_bounty_collection_system_tests();
+    run_module_power_grid_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

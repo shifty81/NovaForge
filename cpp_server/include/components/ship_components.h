@@ -958,6 +958,61 @@ public:
     COMPONENT_TYPE(SavedLoadout)
 };
 
+/**
+ * @brief Tracks per-entity heat state for module thermal management
+ *
+ * Weapons and active modules generate heat each cycle.  The system dissipates
+ * heat each tick based on the entity's radiator capacity.  At high heat levels
+ * penalties apply: accuracy degrades above 75% and modules force-offline at 100%.
+ */
+class ThermalState : public ecs::Component {
+public:
+    float current_heat = 0.0f;
+    float max_heat = 100.0f;
+    float dissipation_rate = 5.0f;      // heat units per second
+    float heat_warning_threshold = 0.75f; // fraction of max_heat
+    float overheat_threshold = 1.0f;     // fraction of max_heat
+    int modules_overheated = 0;
+    int total_overheat_events = 0;
+    float total_heat_generated = 0.0f;
+    float total_heat_dissipated = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ThermalState)
+};
+
+/**
+ * @brief Tracks runtime CPU and powergrid budget for fitted modules
+ *
+ * Enforces that active modules do not exceed the ship's available CPU
+ * and powergrid.  Modules that would push the budget over limit are
+ * rejected.  If a reactor is damaged and total PG drops, excess modules
+ * are forced offline.
+ */
+class ModulePowerGrid : public ecs::Component {
+public:
+    struct FittedModule {
+        std::string module_id;
+        std::string module_name;
+        float cpu_usage = 0.0f;
+        float pg_usage = 0.0f;
+        bool online = true;
+    };
+
+    std::vector<FittedModule> modules;
+    float total_cpu = 100.0f;
+    float total_pg = 200.0f;
+    float cpu_used = 0.0f;
+    float pg_used = 0.0f;
+    int modules_forced_offline = 0;
+    int total_overload_events = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ModulePowerGrid)
+};
+
 } // namespace components
 } // namespace atlas
 

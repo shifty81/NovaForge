@@ -286,6 +286,11 @@ set(CORE_SOURCES
     src/systems/warp_disruption_system.cpp
     src/systems/invulnerability_timer_system.cpp
     src/systems/mining_laser_cycle_system.cpp
+    src/systems/thermal_management_system.cpp
+    src/systems/aggro_table_system.cpp
+    src/systems/cargo_transfer_system.cpp
+    src/systems/bounty_collection_system.cpp
+    src/systems/module_power_grid_system.cpp
     src/data/ship_database.cpp
     src/data/npc_database.cpp
     src/data/wormhole_database.cpp

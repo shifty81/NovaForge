@@ -349,6 +349,32 @@ public:
     COMPONENT_TYPE(NPCSchedule)
 };
 
+/**
+ * @brief Per-entity aggro table for NPC AI targeting decisions
+ *
+ * Tracks accumulated threat from each attacker.  Each tick the system decays
+ * old entries and exposes the highest-threat attacker for AI targeting.
+ */
+class AggroTable : public ecs::Component {
+public:
+    struct AggroEntry {
+        std::string attacker_id;
+        float threat = 0.0f;
+        float last_hit_time = 0.0f;
+    };
+
+    std::vector<AggroEntry> entries;
+    float decay_rate = 2.0f;        // threat units per second
+    float decay_delay = 5.0f;       // seconds after last hit before decay starts
+    int max_entries = 20;
+    int total_threat_events = 0;
+    float total_threat_accumulated = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(AggroTable)
+};
+
 
 } // namespace components
 } // namespace atlas
