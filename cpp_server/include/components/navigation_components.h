@@ -745,6 +745,35 @@ public:
     COMPONENT_TYPE(SystemTrafficMonitor)
 };
 
+/**
+ * @brief Safe zone around stations where weapons are disabled
+ *
+ * Defines a protection perimeter around a station or structure.
+ * Entities inside the zone cannot activate weapons and receive a
+ * tethering speed bonus.  The zone can be toggled on/off and
+ * tracks how many entities are currently sheltered.
+ */
+class SafeZone : public ecs::Component {
+public:
+    enum class ZoneState { Disabled, Active, Reinforced };
+
+    std::string zone_id;
+    std::string station_id;
+    ZoneState state = ZoneState::Active;
+    float radius = 5000.0f;              // metres from station centre
+    float tether_speed_bonus = 0.5f;     // 50 % speed boost while tethered
+    int entities_inside = 0;
+    int max_entities = 200;
+    bool weapons_disabled = true;
+    int total_entries = 0;
+    int total_exits = 0;
+    int total_weapons_blocked = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SafeZone)
+};
+
 } // namespace components
 } // namespace atlas
 

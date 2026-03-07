@@ -920,6 +920,41 @@ public:
     COMPONENT_TYPE(StationServiceRegistry)
 };
 
+/**
+ * @brief Ore compression facility for efficient transport
+ *
+ * Compresses raw ore into compressed blocks at a configurable ratio,
+ * reducing cargo volume for hauling.  Each ore type may have a different
+ * compression ratio.  Processing takes time and consumes a small ISC fee.
+ */
+class OreCompression : public ecs::Component {
+public:
+    enum class CompressionState { Idle, Compressing, Complete, Failed };
+
+    struct OreType {
+        std::string ore_name;
+        float compression_ratio = 10.0f;   // 10 raw → 1 compressed
+        float process_time = 5.0f;         // seconds per batch
+        double cost_per_batch = 50.0;      // ISC per batch
+    };
+
+    std::vector<OreType> ore_types;
+    CompressionState state = CompressionState::Idle;
+    std::string current_ore;
+    int raw_units_queued = 0;
+    int compressed_units_produced = 0;
+    float process_timer = 0.0f;
+    double total_isc_spent = 0.0;
+    int total_batches_processed = 0;
+    int total_raw_consumed = 0;
+    int total_compressed_produced = 0;
+    int max_queue = 1000;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OreCompression)
+};
+
 } // namespace components
 } // namespace atlas
 

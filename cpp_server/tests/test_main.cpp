@@ -301,6 +301,10 @@ void run_anomaly_escalation_system_tests();
 void run_ship_repair_cost_system_tests();
 void run_system_traffic_monitor_system_tests();
 void run_fleet_command_terminal_system_tests();
+void run_insurance_claim_system_tests();
+void run_safe_zone_system_tests();
+void run_ore_compression_system_tests();
+void run_crew_management_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -599,6 +603,10 @@ int main() {
     run_ship_repair_cost_system_tests();
     run_system_traffic_monitor_system_tests();
     run_fleet_command_terminal_system_tests();
+    run_insurance_claim_system_tests();
+    run_safe_zone_system_tests();
+    run_ore_compression_system_tests();
+    run_crew_management_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

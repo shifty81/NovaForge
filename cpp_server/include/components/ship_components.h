@@ -1050,6 +1050,80 @@ public:
     COMPONENT_TYPE(ShipRepairCost)
 };
 
+/**
+ * @brief Ship insurance policy tracking
+ *
+ * Players can purchase insurance on their ship.  If the ship is destroyed
+ * while the policy is active the insured payout is awarded.  Policies
+ * expire after a configurable duration and only one tier may be active
+ * at a time.
+ */
+class InsuranceClaim : public ecs::Component {
+public:
+    enum class PolicyState { Uninsured, Active, ClaimPending, ClaimPaid, Expired };
+
+    struct PolicyTier {
+        std::string tier_name;       // e.g. "Basic", "Standard", "Platinum"
+        double premium_cost = 0.0;   // ISC cost to buy
+        double payout_amount = 0.0;  // ISC received on destruction
+        float duration = 3600.0f;    // seconds the policy lasts
+    };
+
+    std::vector<PolicyTier> available_tiers;
+    PolicyState state = PolicyState::Uninsured;
+    std::string active_tier_name;
+    double active_payout = 0.0;
+    double active_premium_paid = 0.0;
+    float policy_time_remaining = 0.0f;
+    std::string ship_id;
+    std::string owner_id;
+    double total_premiums_paid = 0.0;
+    double total_payouts_received = 0.0;
+    int total_claims = 0;
+    int total_policies_purchased = 0;
+    int total_policies_expired = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(InsuranceClaim)
+};
+
+/**
+ * @brief Ship crew management with hiring, morale and role bonuses
+ *
+ * Tracks crew members assigned to a ship, their roles, morale levels,
+ * and the aggregate bonuses they provide to ship performance.  Low
+ * morale reduces efficiency; high morale grants bonus multipliers.
+ */
+class CrewManagement : public ecs::Component {
+public:
+    enum class CrewRole { Pilot, Engineer, Gunner, Navigator, Medic, ScienceOfficer };
+    enum class MoraleLevel { Mutinous, Low, Normal, High, Exceptional };
+
+    struct CrewMember {
+        std::string name;
+        CrewRole role = CrewRole::Pilot;
+        int skill_level = 1;         // 1-10
+        float morale = 0.5f;         // 0.0 = mutinous, 1.0 = exceptional
+        float salary_per_hour = 10.0f;
+        bool assigned = false;
+    };
+
+    std::vector<CrewMember> crew;
+    int max_crew = 10;
+    float average_morale = 0.5f;
+    float efficiency_multiplier = 1.0f;  // derived from morale + skills
+    double total_salary_paid = 0.0;
+    int total_hired = 0;
+    int total_dismissed = 0;
+    float salary_timer = 0.0f;
+    float salary_interval = 3600.0f;     // pay every hour (game time)
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CrewManagement)
+};
+
 } // namespace components
 } // namespace atlas
 
