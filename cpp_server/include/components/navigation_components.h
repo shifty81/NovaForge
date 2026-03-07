@@ -664,6 +664,48 @@ public:
     COMPONENT_TYPE(InvulnerabilityTimer)
 };
 
+// ==================== NPC Patrol Route ====================
+
+/**
+ * @brief Waypoint-based patrol route for security and pirate NPCs
+ *
+ * Defines a sequence of patrol waypoints with idle times and alert
+ * radii.  The system advances the NPC through waypoints, handles idle
+ * pauses, detects hostiles within the alert radius, and optionally
+ * loops the route.
+ */
+class NPCPatrolRoute : public ecs::Component {
+public:
+    enum class PatrolState { Idle, Travelling, Waiting, Alert, Complete };
+
+    struct PatrolWaypoint {
+        std::string waypoint_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float idle_time = 5.0f;       // seconds to wait at waypoint
+        float alert_radius = 1000.0f; // metres — trigger alert if hostile within
+    };
+
+    std::vector<PatrolWaypoint> waypoints;
+    PatrolState state = PatrolState::Idle;
+    int current_waypoint_index = 0;
+    float idle_timer = 0.0f;
+    float travel_speed = 100.0f;      // m/s
+    float distance_to_next = 0.0f;
+    bool loop = true;                 // restart route after last waypoint
+    bool hostile_detected = false;
+    std::string detected_hostile_id;
+    int max_waypoints = 20;
+    int total_patrols_completed = 0;
+    int total_alerts_triggered = 0;
+    int waypoints_visited = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(NPCPatrolRoute)
+};
+
 } // namespace components
 } // namespace atlas
 
