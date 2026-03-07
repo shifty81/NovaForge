@@ -337,6 +337,7 @@ set(CORE_SOURCES
     src/systems/npc_spawn_scheduler_system.cpp
     src/systems/skill_training_system.cpp
     src/systems/warp_charge_sequence_system.cpp
+    src/systems/hyperspace_routing_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -730,6 +731,7 @@ set(SERVER_HEADERS
     include/systems/npc_spawn_scheduler_system.h
     include/systems/skill_training_system.h
     include/systems/warp_charge_sequence_system.h
+    include/systems/hyperspace_routing_system.h
 )
 
 # Steam SDK configuration

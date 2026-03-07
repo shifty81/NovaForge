@@ -881,6 +881,42 @@ public:
     COMPONENT_TYPE(WarpChargeState)
 };
 
+/**
+ * @brief Hyperspace route state for multi-system navigation
+ *
+ * Tracks calculated routes, waypoints, and route analytics for
+ * hyperspace navigation between star systems via jump gates.
+ */
+class HyperspaceRoute : public ecs::Component {
+public:
+    struct Waypoint {
+        std::string system_id;
+        std::string gate_id;
+        float estimated_travel_time = 0.0f;
+        bool visited = false;
+    };
+
+    std::string origin_system;
+    std::string destination_system;
+    std::vector<Waypoint> waypoints;
+    int current_waypoint_index = -1;
+    float total_estimated_time = 0.0f;
+    float elapsed_travel_time = 0.0f;
+    int total_routes_calculated = 0;
+    int total_jumps_completed = 0;
+    bool route_active = false;
+    bool route_valid = true;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    int remainingJumps() const {
+        if (current_waypoint_index < 0) return static_cast<int>(waypoints.size());
+        return std::max(0, static_cast<int>(waypoints.size()) - current_waypoint_index - 1);
+    }
+
+    COMPONENT_TYPE(HyperspaceRoute)
+};
+
 } // namespace components
 } // namespace atlas
 
