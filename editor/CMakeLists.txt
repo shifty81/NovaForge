@@ -48,6 +48,7 @@ add_executable(AtlasEditor
     tools/AssetPalettePanel.cpp
     tools/PhysicsTunerPanel.cpp
     tools/NPCEditorPanel.cpp
+    tools/SolarSystemEditorPanel.cpp
     ai/AIAggregator.cpp
     ai/TemplateAIBackend.cpp
     ui/UndoStack.cpp
@@ -68,6 +69,7 @@ add_executable(AtlasEditor
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_placement_system.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/turret_generator.cpp
     ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/galaxy_generator.cpp
+    ${CMAKE_SOURCE_DIR}/cpp_server/src/pcg/star_system_generator.cpp
     # Character mesh system used by Character Select panel
     ${CMAKE_SOURCE_DIR}/cpp_client/src/characters/character_mesh_system.cpp
     # Window (GLFW) used by editor for the GUI window

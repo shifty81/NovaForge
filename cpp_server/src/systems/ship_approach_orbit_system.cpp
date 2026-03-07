@@ -23,7 +23,13 @@ void ShipApproachOrbitSystem::updateComponent(ecs::Entity& entity,
             float close_rate = std::min(comp.max_speed * delta_time,
                                         comp.current_distance - comp.desired_distance);
             comp.current_distance -= close_rate;
-            comp.current_speed = close_rate / delta_time;
+            // Speed is zero when arrival occurs this tick
+            if (comp.current_distance <= comp.desired_distance) {
+                comp.current_distance = comp.desired_distance;
+                comp.current_speed = 0.0f;
+            } else {
+                comp.current_speed = close_rate / delta_time;
+            }
         } else {
             comp.current_speed = 0.0f;
         }
