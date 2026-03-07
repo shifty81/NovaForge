@@ -308,6 +308,7 @@ set(CORE_SOURCES
     src/systems/anomaly_escalation_system.cpp
     src/systems/ship_repair_cost_system.cpp
     src/systems/system_traffic_monitor_system.cpp
+    src/systems/fleet_command_terminal_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -672,6 +673,7 @@ set(SERVER_HEADERS
     include/systems/anomaly_escalation_system.h
     include/systems/ship_repair_cost_system.h
     include/systems/system_traffic_monitor_system.h
+    include/systems/fleet_command_terminal_system.h
 )
 
 # Steam SDK configuration

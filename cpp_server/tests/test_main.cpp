@@ -300,6 +300,7 @@ void run_module_power_grid_system_tests();
 void run_anomaly_escalation_system_tests();
 void run_ship_repair_cost_system_tests();
 void run_system_traffic_monitor_system_tests();
+void run_fleet_command_terminal_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -597,6 +598,7 @@ int main() {
     run_anomaly_escalation_system_tests();
     run_ship_repair_cost_system_tests();
     run_system_traffic_monitor_system_tests();
+    run_fleet_command_terminal_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
