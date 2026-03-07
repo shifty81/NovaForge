@@ -19,6 +19,8 @@
 #include "tools/GalaxyMapPanel.h"
 #include "tools/FleetFormationPanel.h"
 #include "tools/SolarSystemEditorPanel.h"
+#include "tools/ModelImportPanel.h"
+#include "tools/StationEditorPanel.h"
 #include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
 #include "ui/KeybindManager.h"
@@ -68,6 +70,8 @@ int main() {
     atlas::editor::GalaxyMapPanel galaxyMap;
     atlas::editor::FleetFormationPanel fleetFormation;
     atlas::editor::SolarSystemEditorPanel solarSystemEditor;
+    atlas::editor::ModelImportPanel modelImport;
+    atlas::editor::StationEditorPanel stationEditor;
 
     // ── Keyboard shortcut manager ────────────────────────────────
     atlas::editor::KeybindManager keybinds;
@@ -220,6 +224,8 @@ int main() {
     layout.RegisterPanel(&galaxyMap);
     layout.RegisterPanel(&fleetFormation);
     layout.RegisterPanel(&solarSystemEditor);
+    layout.RegisterPanel(&modelImport);
+    layout.RegisterPanel(&stationEditor);
 
     // Root: horizontal split — left (viewport area) | right (tool panels)
     auto& root = layout.Root();
@@ -253,7 +259,7 @@ int main() {
     root.b->a->b = std::make_unique<atlas::editor::DockNode>();
     root.b->a->a->split = atlas::editor::DockSplit::Tab;
     root.b->a->a->tabs = {&pcgPreview, &characterSelect, &missionEditor, &galaxyMap,
-                          &solarSystemEditor};
+                          &solarSystemEditor, &modelImport, &stationEditor};
     root.b->a->a->activeTab = 0;
     root.b->a->b->split = atlas::editor::DockSplit::Vertical;
     root.b->a->b->splitRatio = 0.50f;
@@ -273,7 +279,8 @@ int main() {
     std::cout << "[Editor] Layout built with " << layout.Panels().size()
               << " panels" << std::endl;
     std::cout << "[Editor] Panels: Viewport, PCG Preview, Character Select, "
-              << "Mission Editor, Galaxy Map, Solar System Editor, Scene Graph, "
+              << "Mission Editor, Galaxy Map, Solar System Editor, Model Import, "
+              << "Station Editor, Scene Graph, "
               << "Generation Style, Asset Style, Ship Archetype, ECS Inspector, "
               << "Net Inspector, Console, Game Packager, Live Scene Manager, "
               << "Data Browser, Module Editor, NPC Editor, Fleet Formation"
@@ -392,6 +399,11 @@ int main() {
     // where they left off.
     liveScene.LoadOverrides("data/pcg_overrides.json");
     liveScene.PopulateDefaultScene();
+
+    // ── Scan reference models for the model import panel ─────────
+    modelImport.ScanDirectory("cpp_client/assets/reference_models");
+    std::cout << "[Editor] Model catalogue: "
+              << modelImport.ModelCount() << " reference models" << std::endl;
 
     std::cout << "[Editor] Viewport populated with "
               << viewport.ObjectCount() << " objects" << std::endl;

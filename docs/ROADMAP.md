@@ -41,7 +41,7 @@ If it fails any one → it doesn't ship.
 | **Networking** | TCP Client/Server, Interpolation, Delta Compression, Snapshot Replication, Jitter Buffer | ✅ Complete |
 | **Rendering** | OpenGL, Deferred Pipeline, Shadow Mapping, Post-Processing | ✅ Complete |
 | **Atlas UI** | Widgets, Panels, Docking (DockNode tree), Photon Dark Theme | ✅ Complete |
-| **Atlas Editor** | 17 Panels, PCG Tools, Dock Layout, Debug Console | ✅ Complete |
+| **Atlas Editor** | 19 Panels, PCG Tools, Dock Layout, Debug Console | ✅ Complete |
 | **Editor Tool Layer** | 32 ITool implementations, EditorCommandBus, UndoableCommandBus, DeltaEditStore | ✅ Complete |
 | **Ship HUD** | Control Ring (shield/armor/hull arcs), Capacitor Bar, Module Rack, Target Brackets | ✅ Complete |
 | **PCG Ship Generation** | Spine-based Hulls, Turrets, Faction Shape Language, Procedural Materials | ✅ Complete |

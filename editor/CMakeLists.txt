@@ -49,6 +49,8 @@ add_executable(AtlasEditor
     tools/PhysicsTunerPanel.cpp
     tools/NPCEditorPanel.cpp
     tools/SolarSystemEditorPanel.cpp
+    tools/ModelImportPanel.cpp
+    tools/StationEditorPanel.cpp
     ai/AIAggregator.cpp
     ai/TemplateAIBackend.cpp
     ui/UndoStack.cpp
