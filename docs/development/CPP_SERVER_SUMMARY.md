@@ -51,8 +51,8 @@ A production-ready dedicated server written in C++17 with the following features
   - Dependency management
 
 - **Build Scripts**:
-  - `build.sh`: Unix/Linux/macOS build script
-  - `build.bat`: Windows build script
+  - `build.sh`: Unix/Linux/macOS build script (server-only)
+  - `build.bat`: Deprecated — forwards to `build.sh`
   - Arguments for Steam/Debug builds
 
 #### Configuration Files
@@ -208,7 +208,7 @@ mission = NameGenerator.generate_mission_name()
 #### C++ Server (23 files)
 - `cpp_server/CMakeLists.txt`
 - `cpp_server/build.sh`
-- `cpp_server/build.bat`
+- `cpp_server/build.bat` (deprecated — forwards to build.sh)
 - `cpp_server/README.md`
 - `cpp_server/config/server.json`
 - `cpp_server/config/whitelist.json`

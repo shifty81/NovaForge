@@ -190,25 +190,22 @@ cmake --build . --config Release -j$(nproc)
 
 ## Windows — Visual Studio
 
-### Generate & Open Solution
-
-```cmd
-scripts\generate_solution.bat --open
-```
-
-This creates `build_vs\Atlas.sln` with all targets.
-
-### Build from VS Solution
-
-```cmd
-scripts\build_vs.bat
-scripts\build_vs.bat --debug --open   # Debug + open VS
-```
+All `.bat` scripts are **deprecated** and now forward to the cross-platform
+`scripts/build_all.sh`.  Use Git Bash on Windows:
 
 ### Build All Targets (Recommended)
 
 ```bash
 ./scripts/build_all.sh --test
+```
+
+### Generate & Open Solution
+
+The VS solution is generated automatically by `build_all.sh`.  After a
+successful build, open the solution with:
+
+```cmd
+start build\Atlas.sln
 ```
 
 ---

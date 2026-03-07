@@ -1,263 +1,59 @@
 @echo off
-REM Nova Forge C++ Client - Visual Studio Build Script
-REM Generates Visual Studio solution and builds the project
+REM ============================================================
+REM  DEPRECATED – use the cross-platform shell script instead:
+REM
+REM    bash scripts/build_all.sh %*
+REM
+REM  build_all.sh auto-detects Visual Studio and vcpkg on Windows
+REM  and builds all targets (engine, editor, client, server, tests).
+REM  This wrapper attempts to locate bash and forward automatically.
+REM ============================================================
 
 setlocal
 
-REM --- Resolve project root (parent of scripts/) ---
 set "SCRIPT_DIR=%~dp0"
-set "PROJECT_ROOT=%SCRIPT_DIR%.."
-pushd "%PROJECT_ROOT%"
-set "PROJECT_ROOT=%CD%"
-popd
 
-REM --- Logging Setup ---
-if not exist "%PROJECT_ROOT%\logs" mkdir "%PROJECT_ROOT%\logs"
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set "datetime=%%I"
-set "LOG_FILE=%PROJECT_ROOT%\logs\build_vs_%datetime:~0,8%_%datetime:~8,6%.log"
-echo Build log will be saved to: %LOG_FILE%
-call :main %* > "%LOG_FILE%" 2>&1
-set "EXIT_CODE=%ERRORLEVEL%"
-echo Build finished. Log saved to: %LOG_FILE%
-pause
-exit /b %EXIT_CODE%
-
-:main
-echo Log file: %LOG_FILE%
-echo.
-
-echo ================================================
-echo Nova Forge C++ Client - Visual Studio Build
-echo ================================================
-echo.
-
-REM Check for CMake
-where cmake >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: CMake not found!
-    echo Please install CMake from https://cmake.org/download/
-    exit /b 1
+REM --- Try Git Bash (typical Windows install) ---
+where bash >nul 2>&1
+if not errorlevel 1 (
+    echo [build_vs.bat] DEPRECATED: forwarding to build_all.sh ...
+    bash "%SCRIPT_DIR%build_all.sh" %*
+    exit /b %ERRORLEVEL%
 )
 
-REM Check for Visual Studio (VS 2022, 2019, or 2017)
-set "VS_FOUND=0"
-
-REM Check VS 2022
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-
-REM Check VS 2019
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-
-REM Check VS 2017
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-if exist "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_FOUND=1")
-
-REM Also check if msbuild is in PATH
-where msbuild >nul 2>&1
-if %ERRORLEVEL% EQU 0 (set "VS_FOUND=1")
-
-if %VS_FOUND% EQU 0 (
-    echo ERROR: Visual Studio not found!
-    echo Please install Visual Studio 2017/2019/2022 with C++ desktop development
-    echo.
-    echo Installation paths checked:
-    echo   - C:\Program Files\Microsoft Visual Studio\2022\
-    echo   - C:\Program Files ^(x86^)\Microsoft Visual Studio\2019\
-    echo   - C:\Program Files ^(x86^)\Microsoft Visual Studio\2017\
-    echo.
-    exit /b 1
+REM --- Try common Git-for-Windows paths ---
+if exist "C:\Program Files\Git\bin\bash.exe" (
+    echo [build_vs.bat] DEPRECATED: forwarding to build_all.sh ...
+    "C:\Program Files\Git\bin\bash.exe" "%SCRIPT_DIR%build_all.sh" %*
+    exit /b %ERRORLEVEL%
+)
+if exist "C:\Program Files (x86)\Git\bin\bash.exe" (
+    echo [build_vs.bat] DEPRECATED: forwarding to build_all.sh ...
+    "C:\Program Files (x86)\Git\bin\bash.exe" "%SCRIPT_DIR%build_all.sh" %*
+    exit /b %ERRORLEVEL%
 )
 
-REM Parse command line arguments
-set "BUILD_TYPE=Release"
-set "CLEAN_BUILD=0"
-set "OPEN_VS=0"
-
-:parse_args
-if "%~1"=="" goto end_parse
-if /i "%~1"=="--debug" (set "BUILD_TYPE=Debug")
-if /i "%~1"=="--release" (set "BUILD_TYPE=Release")
-if /i "%~1"=="--clean" (set "CLEAN_BUILD=1")
-if /i "%~1"=="--open" (set "OPEN_VS=1")
-shift
-goto parse_args
-:end_parse
-
-echo Build Type: %BUILD_TYPE%
+REM --- Could not find bash ---
 echo.
-
-REM Navigate to cpp_client directory
-cd /d "%PROJECT_ROOT%\cpp_client"
-
-REM Clean build if requested
-if %CLEAN_BUILD% EQU 1 (
-    echo Cleaning previous build...
-    if exist build_vs rmdir /s /q build_vs
-    echo.
-)
-
-REM Create build directory
-if not exist build_vs mkdir build_vs
-cd build_vs
-
-REM Configure CMake for Visual Studio
-echo Configuring CMake for Visual Studio...
+echo ================================================================
+echo  build_vs.bat is DEPRECATED
+echo ================================================================
 echo.
-
-REM Check for vcpkg and set toolchain file if found
-set "VCPKG_TOOLCHAIN="
-set "VCPKG_FOUND=0"
-
-REM Check common vcpkg locations
-REM Note: Using backslashes for Windows file checks, forward slashes for CMake (CMake prefers forward slashes)
-if exist "C:\vcpkg\scripts\buildsystems\vcpkg.cmake" (
-    set "VCPKG_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    set "VCPKG_FOUND=1"
-    echo Found vcpkg at C:\vcpkg
-    echo.
-) else if exist "%USERPROFILE%\vcpkg\scripts\buildsystems\vcpkg.cmake" (
-    set "VCPKG_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=%USERPROFILE%/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    set "VCPKG_FOUND=1"
-    echo Found vcpkg at %USERPROFILE%\vcpkg
-    echo.
-) else if defined VCPKG_ROOT (
-    if exist "%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" (
-        set "VCPKG_TOOLCHAIN=-DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake"
-        set "VCPKG_FOUND=1"
-        echo Found vcpkg at %VCPKG_ROOT%
-        echo.
-    )
-)
-
-if %VCPKG_FOUND% EQU 0 (
-    echo WARNING: vcpkg not found. Dependencies ^(GLEW, GLFW, GLM^) must be installed manually.
-    echo          Or install vcpkg and dependencies first - see docs/guides/VS2022_SETUP_GUIDE.md
-    echo.
-)
-
-REM Always clean CMake cache before configuring to avoid generator mismatch errors
-REM (e.g., switching between VS 2022 and VS 2019 in the same build directory)
-if exist CMakeCache.txt (
-    echo Cleaning old CMake cache to avoid generator conflicts...
-    del /f CMakeCache.txt
-    if exist CMakeFiles rmdir /s /q CMakeFiles
-    echo.
-)
-
-REM Detect which Visual Studio generator to use
-set "VS_GENERATOR="
-
-REM Check VS 2022 first
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 17 2022")
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 17 2022")
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 17 2022")
-if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 17 2022")
-
-REM If VS 2022 not found, check VS 2019
-if "%VS_GENERATOR%"=="" (
-    if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 16 2019")
-    if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 16 2019")
-    if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 16 2019")
-    if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (set "VS_GENERATOR=Visual Studio 16 2019")
-)
-
-if "%VS_GENERATOR%"=="" (
-    echo ERROR: Could not detect Visual Studio installation.
-    echo Please install Visual Studio 2019 or 2022 with "Desktop development with C++" workload.
-    exit /b 1
-)
-
-echo Using generator: %VS_GENERATOR%
+echo  This script has been replaced by the cross-platform build
+echo  script scripts/build_all.sh, which auto-detects Visual Studio
+echo  and vcpkg on Windows (via Git Bash or MSYS2).
 echo.
-
-cmake .. ^
-    -G "%VS_GENERATOR%" ^
-    -A x64 ^
-    -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
-    -DUSE_SYSTEM_LIBS=ON ^
-    -DBUILD_TESTS=ON ^
-    %VCPKG_TOOLCHAIN%
-
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo ERROR: CMake configuration failed!
-    echo.
-    echo Generator used: %VS_GENERATOR%
-    echo.
-    echo Most likely cause: Missing dependencies.
-    echo.
-    echo SOLUTION: Install ALL required dependencies using vcpkg:
-    echo.
-    echo   Step 1 - Install vcpkg ^(if not already installed^):
-    echo      cd C:\
-    echo      git clone https://github.com/microsoft/vcpkg.git
-    echo      cd vcpkg
-    echo      .\bootstrap-vcpkg.bat
-    echo.
-    echo   Step 2 - Install required dependencies:
-    echo      .\vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows nlohmann-json:x64-windows
-
-    echo.
-    echo   Step 3 - Optional audio support:
-    echo      .\vcpkg install openal-soft:x64-windows
-    echo.
-    echo   Step 4 - Run this script again
-    echo.
-    echo For more information, see: docs/guides/VS2022_SETUP_GUIDE.md
-    echo.
-    echo CMake version:
-    cmake --version
-    echo.
-    exit /b 1
-)
-
+echo  To build Nova Forge on Windows:
 echo.
-echo CMake configuration successful!
+echo    1. Install Git for Windows (https://gitforwindows.org/)
+echo    2. Open Git Bash and run:
 echo.
-
-REM Build the project
-echo Building project...
+echo         ./scripts/build_all.sh
 echo.
-
-cmake --build . --config %BUILD_TYPE% -- /m
-
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo ERROR: Build failed!
-    exit /b 1
-)
-
+echo  All flags are supported:
+echo    ./scripts/build_all.sh --debug
+echo    ./scripts/build_all.sh --clean
+echo    ./scripts/build_all.sh --test
+echo    ./scripts/build_all.sh --clean --debug --test
 echo.
-echo ================================================
-echo BUILD SUCCESSFUL
-echo ================================================
-echo.
-echo Executable location: build_vs\bin\%BUILD_TYPE%\nova_forge.exe
-echo.
-
-REM Open Visual Studio if requested
-if %OPEN_VS% EQU 1 (
-    echo Opening Visual Studio...
-    start NovaForge.sln
-)
-
-REM List built executables
-echo Built files:
-dir /b bin\%BUILD_TYPE%\*.exe 2>nul
-
-echo.
-echo To open the project in Visual Studio, run:
-echo   build_vs\NovaForge.sln
-echo.
-echo Or rebuild using this script with:
-echo   build_vs.bat --clean          # Clean rebuild
-echo   build_vs.bat --debug          # Debug build
-echo   build_vs.bat --open           # Open in Visual Studio after build
-echo.
-
-exit /b 0
+exit /b 1

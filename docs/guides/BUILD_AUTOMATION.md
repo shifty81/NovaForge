@@ -15,12 +15,11 @@ This works on Linux, macOS, and Windows!
 
 ### Windows Visual Studio
 
-```batch
-# Generate Visual Studio solution and build
-scripts\build_vs.bat
+> **Note:** All `.bat` scripts are deprecated. Use `build_all.sh` via Git Bash.
 
-# Or open in Visual Studio after generation
-scripts\build_vs.bat --open
+```bash
+# Build all targets (engine, editor, client, server, tests)
+./scripts/build_all.sh
 ```
 
 ## What's Included
@@ -34,10 +33,10 @@ scripts\build_vs.bat --open
    - Runs tests
    - Works on Linux, macOS, Windows
 
-2. **`scripts\build_vs.bat`** - Windows Visual Studio build script
-   - Generates Visual Studio solution
-   - Builds using MSBuild
-   - Optionally opens Visual Studio
+2. **`scripts/build_all.sh`** - Cross-platform build script (recommended)
+   - Auto-detects Visual Studio and vcpkg on Windows
+   - Builds all targets
+   - Works on Linux, macOS, and Windows (Git Bash)
 
 ### CI/CD
 

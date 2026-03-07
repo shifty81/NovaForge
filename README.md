@@ -151,10 +151,12 @@ NovaForge/
 │   ├── universe/          #   Solar systems, stargates, stations
 │   └── ...                #   Skills, NPCs, market, industry, etc.
 ├── scripts/               # Build scripts
-│   ├── build_all.sh / .bat#   ★ Full build (engine+editor+client+server+tests)
-│   ├── build.sh / .bat    #   Quick build (Release or Debug)
-│   ├── build_vs.bat       #   Visual Studio client build
-│   └── generate_solution.bat # Generate VS solution
+│   ├── build_all.sh       #   ★ Full build (engine+editor+client+server+tests)
+│   ├── build.sh           #   Quick build (Release or Debug)
+│   ├── build_all.bat      #   Deprecated — forwards to build_all.sh
+│   ├── build.bat          #   Deprecated — forwards to build_all.sh
+│   ├── build_vs.bat       #   Deprecated — forwards to build_all.sh
+│   └── generate_solution.bat # Deprecated — forwards to build_all.sh
 ├── assets/                # Raw reference models & archives (.blend, .zip)
 ├── docs/                  # Documentation
 │   ├── ATLAS_INTEGRATION.md # ★ Atlas Engine integration guide

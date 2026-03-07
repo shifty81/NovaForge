@@ -16,18 +16,14 @@ This document provides solutions to common issues when building Nova Forge in Vi
 
 ### "\Microsoft was unexpected at this time"
 
-**Symptoms**: Running `scripts\build_vs.bat` fails immediately with this error.
+**Symptoms**: Running a build script fails immediately with this error.
 
 **Cause**: Batch file syntax issue with paths containing parentheses (e.g., "Program Files (x86)").
 
-**Solution**: This has been fixed in the latest version. Update your files:
-```cmd
-git pull origin main
+**Solution**: All `.bat` scripts are now deprecated. Use the cross-platform `build_all.sh` via Git Bash instead:
+```bash
+./scripts/build_all.sh
 ```
-
-If still experiencing issues, the problem might be with your local modifications. Verify the batch file has proper syntax:
-- All `set` commands should use quotes: `set "VAR=value"`
-- IF statements with SET should use parentheses: `if condition (set "VAR=value")`
 
 ---
 
@@ -38,9 +34,9 @@ If still experiencing issues, the problem might be with your local modifications
 **Cause**: Script is being run from the wrong directory.
 
 **Solution**: Always run from the repository root:
-```cmd
-cd C:\path\to\NovaForge
-.\scripts\build_vs.bat
+```bash
+cd /c/path/to/NovaForge
+./scripts/build_all.sh
 ```
 
 ---
@@ -103,12 +99,9 @@ git pull origin main
 ```
 
 If you need to manually fix it:
-```cmd
-cd build_vs
-del /f CMakeCache.txt
-rmdir /s /q CMakeFiles
-cd ..
-.\scripts\generate_solution.bat
+```bash
+rm -rf build
+./scripts/build_all.sh
 ```
 
 ---
@@ -365,8 +358,8 @@ test_lighting.exe
 
 **Solution 1 - Use Release build**:
 Debug builds are 5-10x slower. Always use Release for testing:
-```cmd
-.\scripts\build_vs.bat --release
+```bash
+./scripts/build_all.sh
 ```
 
 Or in Visual Studio: Select "Release" from the configuration dropdown.
