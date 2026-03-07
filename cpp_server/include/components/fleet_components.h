@@ -864,6 +864,37 @@ public:
     COMPONENT_TYPE(FleetCoordination)
 };
 
+/**
+ * @brief Fleet formation flight slot and cohesion tracking
+ *
+ * Each entity in a fleet formation holds a slot with a relative
+ * position offset from the formation leader.  The system tracks
+ * how well each member maintains their assigned position and
+ * applies cohesion bonuses when the formation holds tight.
+ */
+class FormationFlight : public ecs::Component {
+public:
+    enum class FormationType { Line, Wedge, Sphere, Wall, Echelon };
+    enum class SlotStatus { Holding, Drifting, Broken, Reforming };
+
+    std::string fleet_id;
+    std::string leader_id;
+    FormationType formation = FormationType::Wedge;
+    int slot_index = 0;
+    double offset_x = 0.0, offset_y = 0.0, offset_z = 0.0;
+    double actual_x = 0.0, actual_y = 0.0, actual_z = 0.0;
+    float cohesion = 1.0f;             // 0.0–1.0, how well position is held
+    float cohesion_bonus = 0.0f;       // performance bonus from cohesion
+    float max_drift = 50.0f;           // max distance before slot is "Broken"
+    SlotStatus status = SlotStatus::Holding;
+    int formation_breaks = 0;
+    int formation_reforms = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FormationFlight)
+};
+
 } // namespace components
 } // namespace atlas
 

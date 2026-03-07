@@ -313,6 +313,10 @@ set(CORE_SOURCES
     src/systems/safe_zone_system.cpp
     src/systems/ore_compression_system.cpp
     src/systems/crew_management_system.cpp
+    src/systems/ship_maintenance_system.cpp
+    src/systems/fuel_consumption_system.cpp
+    src/systems/beacon_navigation_system.cpp
+    src/systems/formation_flight_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -682,6 +686,10 @@ set(SERVER_HEADERS
     include/systems/safe_zone_system.h
     include/systems/ore_compression_system.h
     include/systems/crew_management_system.h
+    include/systems/ship_maintenance_system.h
+    include/systems/fuel_consumption_system.h
+    include/systems/beacon_navigation_system.h
+    include/systems/formation_flight_system.h
 )
 
 # Steam SDK configuration
