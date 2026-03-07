@@ -313,6 +313,10 @@ void run_asteroid_respawn_system_tests();
 void run_bounty_payout_system_tests();
 void run_npc_trader_scheduler_system_tests();
 void run_npc_fleet_composition_system_tests();
+void run_docking_request_system_tests();
+void run_tractor_beam_system_tests();
+void run_contract_board_system_tests();
+void run_module_overheat_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -623,6 +627,10 @@ int main() {
     run_bounty_payout_system_tests();
     run_npc_trader_scheduler_system_tests();
     run_npc_fleet_composition_system_tests();
+    run_docking_request_system_tests();
+    run_tractor_beam_system_tests();
+    run_contract_board_system_tests();
+    run_module_overheat_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

@@ -321,6 +321,10 @@ set(CORE_SOURCES
     src/systems/bounty_payout_system.cpp
     src/systems/npc_trader_scheduler_system.cpp
     src/systems/npc_fleet_composition_system.cpp
+    src/systems/docking_request_system.cpp
+    src/systems/tractor_beam_system.cpp
+    src/systems/contract_board_system.cpp
+    src/systems/module_overheat_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -698,6 +702,10 @@ set(SERVER_HEADERS
     include/systems/bounty_payout_system.h
     include/systems/npc_trader_scheduler_system.h
     include/systems/npc_fleet_composition_system.h
+    include/systems/docking_request_system.h
+    include/systems/tractor_beam_system.h
+    include/systems/contract_board_system.h
+    include/systems/module_overheat_system.h
 )
 
 # Steam SDK configuration

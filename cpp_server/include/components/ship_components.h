@@ -1190,6 +1190,24 @@ public:
     COMPONENT_TYPE(FuelTank)
 };
 
+// ==================== Tractor Beam ====================
+
+class TractorBeam : public ecs::Component {
+public:
+    std::string target_id;
+    float range = 20000.0f;          // meters — max pull range
+    float pull_speed = 500.0f;       // m/s toward ship
+    float current_distance = 0.0f;
+    float collection_distance = 50.0f;  // auto-collect threshold
+    int items_collected = 0;
+    int items_failed = 0;
+    bool locked = false;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(TractorBeam)
+};
+
 } // namespace components
 } // namespace atlas
 
