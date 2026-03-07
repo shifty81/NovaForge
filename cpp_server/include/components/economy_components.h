@@ -997,6 +997,41 @@ public:
     COMPONENT_TYPE(NpcTraderSchedule)
 };
 
+// ==================== Market Trade Execution ====================
+
+/**
+ * @brief Market trade order queue and execution state
+ *
+ * Holds a queue of buy/sell orders waiting to be processed, along with
+ * a configurable broker fee rate.  Each tick, queued orders are validated
+ * and executed with partial fill support.  Completed trades update the
+ * cumulative fee and volume counters.
+ */
+class MarketTradeState : public ecs::Component {
+public:
+    struct TradeOrder {
+        std::string order_type;          // "buy" or "sell"
+        std::string item_id;
+        int quantity = 0;
+        double price_per_unit = 0.0;
+        double available_balance = 0.0;  // buyer's ISC balance (buy orders)
+        int available_stock = 0;         // seller's quantity (sell orders)
+        int filled_quantity = 0;         // actual quantity traded
+    };
+
+    std::vector<TradeOrder> queued_orders;
+    int max_queued_orders = 100;
+    double broker_fee_rate = 0.02;       // 0.0–1.0 fraction
+    double total_broker_fees = 0.0;
+    double total_volume_traded = 0.0;    // ISC value of all completed trades
+    int completed_trades = 0;
+    int partial_fills = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MarketTradeState)
+};
+
 } // namespace components
 } // namespace atlas
 

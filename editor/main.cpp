@@ -18,6 +18,7 @@
 #include "tools/NPCEditorPanel.h"
 #include "tools/GalaxyMapPanel.h"
 #include "tools/FleetFormationPanel.h"
+#include "tools/SolarSystemEditorPanel.h"
 #include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
 #include "ui/KeybindManager.h"
@@ -66,6 +67,7 @@ int main() {
     atlas::editor::NPCEditorPanel npcEditor;
     atlas::editor::GalaxyMapPanel galaxyMap;
     atlas::editor::FleetFormationPanel fleetFormation;
+    atlas::editor::SolarSystemEditorPanel solarSystemEditor;
 
     // ── Keyboard shortcut manager ────────────────────────────────
     atlas::editor::KeybindManager keybinds;
@@ -217,6 +219,7 @@ int main() {
     layout.RegisterPanel(&npcEditor);
     layout.RegisterPanel(&galaxyMap);
     layout.RegisterPanel(&fleetFormation);
+    layout.RegisterPanel(&solarSystemEditor);
 
     // Root: horizontal split — left (viewport area) | right (tool panels)
     auto& root = layout.Root();
@@ -249,7 +252,8 @@ int main() {
     root.b->a->a = std::make_unique<atlas::editor::DockNode>();
     root.b->a->b = std::make_unique<atlas::editor::DockNode>();
     root.b->a->a->split = atlas::editor::DockSplit::Tab;
-    root.b->a->a->tabs = {&pcgPreview, &characterSelect, &missionEditor, &galaxyMap};
+    root.b->a->a->tabs = {&pcgPreview, &characterSelect, &missionEditor, &galaxyMap,
+                          &solarSystemEditor};
     root.b->a->a->activeTab = 0;
     root.b->a->b->split = atlas::editor::DockSplit::Vertical;
     root.b->a->b->splitRatio = 0.50f;
@@ -269,9 +273,9 @@ int main() {
     std::cout << "[Editor] Layout built with " << layout.Panels().size()
               << " panels" << std::endl;
     std::cout << "[Editor] Panels: Viewport, PCG Preview, Character Select, "
-              << "Mission Editor, Galaxy Map, Scene Graph, Generation Style, "
-              << "Asset Style, Ship Archetype, ECS Inspector, Net Inspector, "
-              << "Console, Game Packager, Live Scene Manager, "
+              << "Mission Editor, Galaxy Map, Solar System Editor, Scene Graph, "
+              << "Generation Style, Asset Style, Ship Archetype, ECS Inspector, "
+              << "Net Inspector, Console, Game Packager, Live Scene Manager, "
               << "Data Browser, Module Editor, NPC Editor, Fleet Formation"
               << std::endl;
 

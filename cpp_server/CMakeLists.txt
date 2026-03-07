@@ -329,6 +329,10 @@ set(CORE_SOURCES
     src/systems/system_security_response_system.cpp
     src/systems/power_grid_management_system.cpp
     src/systems/salvage_drone_system.cpp
+    src/systems/cargo_hold_management_system.cpp
+    src/systems/market_trade_execution_system.cpp
+    src/systems/ship_approach_orbit_system.cpp
+    src/systems/combat_loot_drop_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -714,6 +718,10 @@ set(SERVER_HEADERS
     include/systems/system_security_response_system.h
     include/systems/power_grid_management_system.h
     include/systems/salvage_drone_system.h
+    include/systems/cargo_hold_management_system.h
+    include/systems/market_trade_execution_system.h
+    include/systems/ship_approach_orbit_system.h
+    include/systems/combat_loot_drop_system.h
 )
 
 # Steam SDK configuration
@@ -774,11 +782,13 @@ message(STATUS "  Steam Integration: ${USE_STEAM_SDK}")
 message(STATUS "  Build Tests: ${BUILD_TESTS}")
 message(STATUS "")
 
-# Test executable — split per-system test files
+# Test executables
 if(BUILD_TESTS)
     file(GLOB TEST_SOURCES tests/test_*.cpp)
     list(APPEND TEST_SOURCES tests/test_main.cpp)
     list(REMOVE_DUPLICATES TEST_SOURCES)
+
+    # ── Monolithic test binary (all suites in one executable) ────
     add_executable(test_systems ${TEST_SOURCES})
     target_include_directories(test_systems PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tests
@@ -788,13 +798,40 @@ if(BUILD_TESTS)
         target_compile_options(test_systems PRIVATE /bigobj)
     endif()
 
-    # CTest integration — one test per source file
+    # ── Per-system test binaries ─────────────────────────────────
+    # Each test_*.cpp file becomes its own executable that compiles
+    # only that one test plus a tiny main (test_single_main.cpp).
+    # Build with: cmake --build . --target test_capacitor_system
+    # This avoids recompiling 300+ other test files on every change.
     enable_testing()
     foreach(TEST_SRC ${TEST_SOURCES})
         get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
-        if(NOT TEST_NAME STREQUAL "test_main")
-            # Register as a CTest so `ctest -R capacitor` works
-            add_test(NAME ${TEST_NAME} COMMAND test_systems)
+        if(NOT TEST_NAME STREQUAL "test_main" AND NOT TEST_NAME STREQUAL "test_single_main")
+            # Derive the run_*_tests() function name from the file name.
+            # Convention: test_foo.cpp  →  run_foo_tests()
+            string(REGEX REPLACE "^test_" "" SUITE_NAME "${TEST_NAME}")
+            set(FUNC_NAME "run_${SUITE_NAME}_tests")
+
+            add_executable(${TEST_NAME}
+                tests/test_single_main.cpp
+                ${TEST_SRC}
+            )
+            target_include_directories(${TEST_NAME} PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests
+            )
+            target_link_libraries(${TEST_NAME} novaforge_core)
+            target_compile_definitions(${TEST_NAME} PRIVATE
+                "NOVAFORGE_TEST_FUNC=${FUNC_NAME}"
+            )
+            if(MSVC)
+                target_compile_options(${TEST_NAME} PRIVATE /bigobj)
+            endif()
+            set_target_properties(${TEST_NAME} PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+            )
+
+            # CTest: run the per-system binary (faster than monolithic)
+            add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
         endif()
     endforeach()
 endif()
