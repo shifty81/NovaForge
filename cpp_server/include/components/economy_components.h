@@ -955,6 +955,48 @@ public:
     COMPONENT_TYPE(OreCompression)
 };
 
+// ==================== NPC Trader Scheduler System ====================
+
+/**
+ * @brief Schedules NPC hauler/trader routes between stations
+ *
+ * Maintains a list of trade routes that NPC haulers follow
+ * autonomously.  Each route specifies origin/destination stations,
+ * cargo type, and schedule.  The system spawns haulers at intervals,
+ * tracks their progress, and records completed deliveries.
+ */
+class NpcTraderSchedule : public ecs::Component {
+public:
+    enum class RouteState { Waiting, Loading, InTransit, Unloading, Complete };
+
+    struct TradeRoute {
+        std::string route_id;
+        std::string origin_station;
+        std::string destination_station;
+        std::string cargo_type;         // "ore", "goods", "equipment"
+        float cargo_volume = 100.0f;    // m3
+        double cargo_value = 1000.0;    // ISC value
+        RouteState state = RouteState::Waiting;
+        float travel_time = 120.0f;     // seconds for full trip
+        float progress = 0.0f;          // 0.0-1.0
+        float load_time = 10.0f;        // seconds to load/unload
+        float load_progress = 0.0f;
+    };
+
+    std::string scheduler_id;
+    std::vector<TradeRoute> routes;
+    int active_haulers = 0;
+    int max_haulers = 10;
+    float spawn_interval = 60.0f;       // seconds between hauler spawns
+    float spawn_timer = 0.0f;
+    int total_deliveries = 0;
+    double total_cargo_value_delivered = 0.0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(NpcTraderSchedule)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -317,6 +317,10 @@ set(CORE_SOURCES
     src/systems/fuel_consumption_system.cpp
     src/systems/beacon_navigation_system.cpp
     src/systems/formation_flight_system.cpp
+    src/systems/asteroid_respawn_system.cpp
+    src/systems/bounty_payout_system.cpp
+    src/systems/npc_trader_scheduler_system.cpp
+    src/systems/npc_fleet_composition_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -690,6 +694,10 @@ set(SERVER_HEADERS
     include/systems/fuel_consumption_system.h
     include/systems/beacon_navigation_system.h
     include/systems/formation_flight_system.h
+    include/systems/asteroid_respawn_system.h
+    include/systems/bounty_payout_system.h
+    include/systems/npc_trader_scheduler_system.h
+    include/systems/npc_fleet_composition_system.h
 )
 
 # Steam SDK configuration

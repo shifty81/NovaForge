@@ -1028,6 +1028,38 @@ public:
     COMPONENT_TYPE(AnomalyEscalation)
 };
 
+// ==================== Asteroid Respawn System ====================
+
+/**
+ * @brief Manages asteroid belt regeneration over time
+ *
+ * Tracks depletion percentage per belt and gradually respawns asteroids
+ * so the mining loop is sustainable.  Respawn rate is configurable per
+ * belt and scales with total depletion.
+ */
+class AsteroidRespawn : public ecs::Component {
+public:
+    enum class RespawnState { Active, Depleted, Regenerating, Full };
+
+    std::string belt_id;
+    std::string system_id;
+    RespawnState state = RespawnState::Full;
+    int total_asteroids = 20;           // current count
+    int max_asteroids = 20;             // belt capacity
+    int depleted_count = 0;             // how many are depleted
+    float depletion_pct = 0.0f;         // 0.0-1.0 fraction of belt mined
+    float respawn_rate = 0.01f;         // asteroids per second regeneration
+    float respawn_accumulator = 0.0f;   // fractional respawn accumulator
+    float regeneration_delay = 60.0f;   // seconds after depletion before respawn starts
+    float delay_timer = 0.0f;           // current delay countdown
+    int total_respawned = 0;            // lifetime count of respawned asteroids
+    int total_depleted = 0;             // lifetime count of mined-out asteroids
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(AsteroidRespawn)
+};
+
 } // namespace components
 } // namespace atlas
 

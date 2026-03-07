@@ -348,6 +348,39 @@ public:
     COMPONENT_TYPE(BountyCollection)
 };
 
+// ==================== Bounty Payout System ====================
+
+/**
+ * @brief Automatic bounty payout on NPC destruction
+ *
+ * When an NPC is destroyed, a payout entry is queued.  The system
+ * processes the queue each tick, awards ISC to the killer's wallet,
+ * and maintains running totals.  Supports payout multipliers from
+ * security status or faction standing.
+ */
+class BountyPayout : public ecs::Component {
+public:
+    struct PayoutEntry {
+        std::string killer_id;
+        std::string victim_id;
+        std::string victim_type;    // "pirate", "rogue_drone", "sleeper"
+        double base_bounty = 0.0;
+        double final_payout = 0.0;
+        float timestamp = 0.0f;
+        bool processed = false;
+    };
+
+    std::vector<PayoutEntry> pending_payouts;
+    double total_isc_paid = 0.0;
+    int total_payouts_processed = 0;
+    float payout_multiplier = 1.0f;     // from security status, standings, etc.
+    int max_pending = 100;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(BountyPayout)
+};
+
 } // namespace components
 } // namespace atlas
 
