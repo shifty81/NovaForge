@@ -823,6 +823,34 @@ public:
     COMPONENT_TYPE(StationRepairService)
 };
 
+/**
+ * @brief Tracks active cargo transfers between docked entities
+ *
+ * When two entities are docked at the same station, cargo can be moved
+ * between them at a configurable transfer speed.  Each tick the system
+ * advances active transfers and marks them complete when done.
+ */
+class CargoTransfer : public ecs::Component {
+public:
+    struct TransferJob {
+        std::string target_id;
+        std::string item_type;
+        float amount = 0.0f;
+        float transferred = 0.0f;
+        float transfer_speed = 100.0f;  // units per second
+        bool completed = false;
+    };
+
+    std::vector<TransferJob> jobs;
+    int max_concurrent_transfers = 3;
+    int total_transfers_completed = 0;
+    float total_units_transferred = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CargoTransfer)
+};
+
 } // namespace components
 } // namespace atlas
 
