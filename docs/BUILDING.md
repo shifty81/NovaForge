@@ -62,11 +62,14 @@ and Tests) into a single `build/bin/` directory that can be zipped and shared.
 ./scripts/build_all.sh
 ```
 
-### Windows (Git Bash or cmd)
+### Windows (Git Bash)
 
-```cmd
-scripts\build_all.bat
+```bash
+./scripts/build_all.sh
 ```
+
+> **Note:** `build_all.bat` is deprecated and now forwards to `build_all.sh`.
+> Install [Git for Windows](https://gitforwindows.org/) to get Git Bash.
 
 ### What `build_all` produces
 
@@ -204,8 +207,8 @@ scripts\build_vs.bat --debug --open   # Debug + open VS
 
 ### Build All Targets (Recommended)
 
-```cmd
-scripts\build_all.bat --test
+```bash
+./scripts/build_all.sh --test
 ```
 
 ---

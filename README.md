@@ -93,16 +93,16 @@ brew install cmake glfw glm glew nlohmann-json openal-soft freetype
 
 ### Windows
 
-```cmd
-:: Install dependencies via vcpkg (one time)
-vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows ^
+```bash
+# Install dependencies via vcpkg (one time)
+vcpkg install glfw3:x64-windows glm:x64-windows glew:x64-windows \
               nlohmann-json:x64-windows freetype:x64-windows
 
-:: Build everything
-scripts\build_all.bat
+# Build everything (use Git Bash on Windows)
+./scripts/build_all.sh
 
-:: Run the client
-build\bin\atlas_client.exe "YourName"
+# Run the client
+./build/bin/atlas_client.exe "YourName"
 ```
 
 ### Makefile shortcuts
