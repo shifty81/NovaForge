@@ -987,6 +987,47 @@ public:
     COMPONENT_TYPE(OreProcessing)
 };
 
+// ==================== Anomaly Escalation ====================
+
+/**
+ * @brief Tracks combat anomaly escalation for PvE content progression
+ *
+ * When a player clears an anomaly site, the system may trigger a harder
+ * follow-up site (escalation).  Each escalation tier increases NPC
+ * difficulty, reward multiplier, and may change site type.
+ */
+class AnomalyEscalation : public ecs::Component {
+public:
+    enum class EscalationState { Idle, SiteActive, Cleared, Escalating, EscalationReady, Failed };
+
+    struct EscalationTier {
+        int tier = 0;                    // 0 = base, 1-5 = escalation tiers
+        std::string site_type;           // e.g. "Combat", "Relic", "Data"
+        float difficulty_multiplier = 1.0f;
+        float reward_multiplier = 1.0f;
+        int npc_count = 5;
+        bool completed = false;
+    };
+
+    std::vector<EscalationTier> tiers;
+    EscalationState state = EscalationState::Idle;
+    int current_tier = 0;
+    float escalation_chance = 0.3f;      // 30% chance to escalate per clear
+    float escalation_timer = 0.0f;       // countdown until escalation spawns
+    float escalation_delay = 10.0f;      // seconds before escalation spawns
+    std::string system_id;               // star system this anomaly is in
+    std::string owner_id;                // player who triggered escalation
+    int max_tiers = 5;
+    int total_sites_cleared = 0;
+    int total_escalations_triggered = 0;
+    int total_escalations_completed = 0;
+    int total_escalations_failed = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(AnomalyEscalation)
+};
+
 } // namespace components
 } // namespace atlas
 
