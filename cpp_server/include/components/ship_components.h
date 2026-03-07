@@ -982,6 +982,37 @@ public:
     COMPONENT_TYPE(ThermalState)
 };
 
+/**
+ * @brief Tracks runtime CPU and powergrid budget for fitted modules
+ *
+ * Enforces that active modules do not exceed the ship's available CPU
+ * and powergrid.  Modules that would push the budget over limit are
+ * rejected.  If a reactor is damaged and total PG drops, excess modules
+ * are forced offline.
+ */
+class ModulePowerGrid : public ecs::Component {
+public:
+    struct FittedModule {
+        std::string module_id;
+        std::string module_name;
+        float cpu_usage = 0.0f;
+        float pg_usage = 0.0f;
+        bool online = true;
+    };
+
+    std::vector<FittedModule> modules;
+    float total_cpu = 100.0f;
+    float total_pg = 200.0f;
+    float cpu_used = 0.0f;
+    float pg_used = 0.0f;
+    int modules_forced_offline = 0;
+    int total_overload_events = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ModulePowerGrid)
+};
+
 } // namespace components
 } // namespace atlas
 
