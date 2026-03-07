@@ -895,6 +895,45 @@ public:
     COMPONENT_TYPE(FormationFlight)
 };
 
+// ==================== NPC Fleet Composition System ====================
+
+/**
+ * @brief Defines and spawns NPC fleet templates with mixed ship roles
+ *
+ * Each composition template specifies ship types, roles, and counts.
+ * The system spawns fleets from templates, assigns roles (DPS, tank,
+ * support, commander), and scales difficulty by security level.
+ */
+class NpcFleetComposition : public ecs::Component {
+public:
+    enum class ShipRole { DPS, Tank, Support, Commander, Scout };
+    enum class DifficultyTier { Easy, Medium, Hard, Elite };
+
+    struct ShipEntry {
+        std::string ship_type;       // "frigate", "cruiser", "battleship"
+        ShipRole role = ShipRole::DPS;
+        float threat_value = 1.0f;   // contribution to fleet threat
+        bool is_commander = false;
+    };
+
+    std::string template_id;
+    std::string template_name;       // "Pirate Patrol", "Mining Escort"
+    DifficultyTier difficulty = DifficultyTier::Easy;
+    std::vector<ShipEntry> ship_roster;
+    int max_ships = 5;
+    float total_threat = 0.0f;       // sum of all ship threat values
+    float security_level = 1.0f;     // system security 0.0-1.0
+    float difficulty_scale = 1.0f;   // multiplier applied to threat
+    int fleets_spawned = 0;
+    int fleets_destroyed = 0;
+    float spawn_cooldown = 300.0f;   // seconds between spawns
+    float cooldown_timer = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(NpcFleetComposition)
+};
+
 } // namespace components
 } // namespace atlas
 
