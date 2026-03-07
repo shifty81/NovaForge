@@ -245,6 +245,9 @@ set(CORE_SOURCES
     src/systems/trade_route_analytics_system.cpp
     src/systems/combat_log_system.cpp
     src/systems/fleet_coordination_system.cpp
+    src/systems/npc_patrol_route_system.cpp
+    src/systems/mining_belt_populator_system.cpp
+    src/systems/station_service_registry_system.cpp
     src/systems/npc_schedule_system.cpp
     src/systems/jitter_buffer_system.cpp
     src/systems/entity_lifecycle_system.cpp
@@ -620,6 +623,9 @@ set(SERVER_HEADERS
     include/systems/trade_route_analytics_system.h
     include/systems/combat_log_system.h
     include/systems/fleet_coordination_system.h
+    include/systems/npc_patrol_route_system.h
+    include/systems/mining_belt_populator_system.h
+    include/systems/station_service_registry_system.h
     include/systems/npc_schedule_system.h
     include/systems/jitter_buffer_system.h
     include/systems/entity_lifecycle_system.h

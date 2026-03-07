@@ -851,6 +851,75 @@ public:
     COMPONENT_TYPE(CargoTransfer)
 };
 
+// ==================== Mining Belt Populator ====================
+
+/**
+ * @brief Asteroid belt population management with depletion and respawn
+ *
+ * Spawns and tracks asteroid entities within a mining belt.  Each
+ * asteroid has an ore type, initial quantity, remaining quantity and
+ * an optional richness bonus.  Depleted asteroids are tracked and
+ * respawned after a configurable interval.
+ */
+class MiningBeltPopulator : public ecs::Component {
+public:
+    struct AsteroidEntry {
+        std::string asteroid_id;
+        std::string ore_type;
+        float initial_quantity = 1000.0f;
+        float remaining_quantity = 1000.0f;
+        float richness = 1.0f;         // yield multiplier
+        bool depleted = false;
+    };
+
+    std::vector<AsteroidEntry> asteroids;
+    float respawn_interval = 3600.0f;   // seconds between respawn cycles
+    float respawn_timer = 0.0f;
+    int max_asteroids = 30;
+    int total_mined = 0;
+    int total_respawned = 0;
+    float total_ore_extracted = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MiningBeltPopulator)
+};
+
+// ==================== Station Service Registry ====================
+
+/**
+ * @brief Station service availability, pricing, and usage tracking
+ *
+ * Manages the set of services available at a station (repair, refine,
+ * market, clone bay, etc.).  Each service has a cost, an availability
+ * flag, and an optional cooldown.  Usage is tracked per service for
+ * analytics.
+ */
+class StationServiceRegistry : public ecs::Component {
+public:
+    enum class ServiceCategory { Repair, Refine, Market, CloneBay, Insurance, Fitting, Reprocessing };
+
+    struct ServiceEntry {
+        std::string service_id;
+        std::string name;
+        ServiceCategory category = ServiceCategory::Repair;
+        float cost = 0.0f;
+        float cooldown = 0.0f;         // seconds between uses, 0 = no cooldown
+        float cooldown_remaining = 0.0f;
+        int times_used = 0;
+        bool available = true;
+    };
+
+    std::vector<ServiceEntry> services;
+    int max_services = 20;
+    int total_uses = 0;
+    float total_revenue = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(StationServiceRegistry)
+};
+
 } // namespace components
 } // namespace atlas
 
