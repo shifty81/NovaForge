@@ -1308,6 +1308,35 @@ public:
     COMPONENT_TYPE(SalvageDroneBay)
 };
 
+// ==================== Cargo Hold Management ====================
+
+/**
+ * @brief Cargo hold capacity and item tracking
+ *
+ * Manages a ship's cargo bay with per-item volume accounting.  Items
+ * stack by item_id.  Adding items that exceed remaining capacity is
+ * rejected.  Items can be jettisoned (removed and flagged for space
+ * loot spawning).
+ */
+class CargoHoldState : public ecs::Component {
+public:
+    struct CargoItem {
+        std::string item_id;
+        int quantity = 0;
+        float volume_per_unit = 1.0f;   // m³ per unit
+    };
+
+    std::vector<CargoItem> items;
+    int max_item_stacks = 50;
+    float max_volume = 500.0f;          // m³ total capacity
+    float used_volume = 0.0f;           // m³ currently used
+    int total_jettisoned = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CargoHoldState)
+};
+
 } // namespace components
 } // namespace atlas
 

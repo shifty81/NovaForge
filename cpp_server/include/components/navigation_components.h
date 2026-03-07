@@ -832,6 +832,30 @@ public:
     COMPONENT_TYPE(DockingRequest)
 };
 
+// ==================== Ship Approach / Orbit ====================
+
+/**
+ * @brief Ship navigation command state for approach, orbit, and keep-at-range
+ *
+ * Holds the current navigation command (approach / orbit / keep_at_range /
+ * none), target entity, distance tracking, and orbit angle.  Only one
+ * command is active at a time — issuing a new command replaces the old one.
+ */
+class ApproachOrbitState : public ecs::Component {
+public:
+    std::string command_type = "none";   // "none", "approach", "orbit", "keep_at_range"
+    std::string target_id;
+    float current_distance = 0.0f;      // meters to target
+    float desired_distance = 0.0f;      // meters (orbit radius, keep range, 0 for approach)
+    float max_speed = 100.0f;           // m/s
+    float current_speed = 0.0f;         // m/s
+    float orbit_angle = 0.0f;           // degrees (0-360)
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ApproachOrbitState)
+};
+
 } // namespace components
 } // namespace atlas
 

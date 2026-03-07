@@ -329,6 +329,10 @@ set(CORE_SOURCES
     src/systems/system_security_response_system.cpp
     src/systems/power_grid_management_system.cpp
     src/systems/salvage_drone_system.cpp
+    src/systems/cargo_hold_management_system.cpp
+    src/systems/market_trade_execution_system.cpp
+    src/systems/ship_approach_orbit_system.cpp
+    src/systems/combat_loot_drop_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -714,6 +718,10 @@ set(SERVER_HEADERS
     include/systems/system_security_response_system.h
     include/systems/power_grid_management_system.h
     include/systems/salvage_drone_system.h
+    include/systems/cargo_hold_management_system.h
+    include/systems/market_trade_execution_system.h
+    include/systems/ship_approach_orbit_system.h
+    include/systems/combat_loot_drop_system.h
 )
 
 # Steam SDK configuration

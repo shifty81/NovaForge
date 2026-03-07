@@ -444,6 +444,43 @@ public:
     COMPONENT_TYPE(SystemSecurityResponse)
 };
 
+// ==================== Combat Loot Drop ====================
+
+/**
+ * @brief Loot drop table and pending drop tracking for combat kills
+ *
+ * Each entity with this component has a configurable drop table of items
+ * with drop chances, quantity ranges, and rarity tiers.  When a kill
+ * triggers a drop, a pending entry is created and resolved on the next
+ * tick using a deterministic roll.
+ */
+class CombatLootDrop : public ecs::Component {
+public:
+    struct DropEntry {
+        std::string item_id;
+        float drop_chance = 0.5f;        // 0.0–1.0
+        int min_qty = 1;
+        int max_qty = 1;
+        std::string rarity = "common";   // common, uncommon, rare, epic
+    };
+
+    struct PendingDrop {
+        std::string source_id;           // entity that was destroyed
+        bool resolved = false;
+    };
+
+    std::vector<DropEntry> drop_table;
+    std::vector<PendingDrop> pending_drops;
+    int max_drop_entries = 20;
+    int total_drops_triggered = 0;
+    int total_items_dropped = 0;
+    std::string last_drop_source;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CombatLootDrop)
+};
+
 } // namespace components
 } // namespace atlas
 

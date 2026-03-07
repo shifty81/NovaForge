@@ -321,6 +321,10 @@ void run_asteroid_mining_laser_system_tests();
 void run_system_security_response_system_tests();
 void run_power_grid_management_system_tests();
 void run_salvage_drone_system_tests();
+void run_cargo_hold_management_system_tests();
+void run_market_trade_execution_system_tests();
+void run_ship_approach_orbit_system_tests();
+void run_combat_loot_drop_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -639,6 +643,10 @@ int main() {
     run_system_security_response_system_tests();
     run_power_grid_management_system_tests();
     run_salvage_drone_system_tests();
+    run_cargo_hold_management_system_tests();
+    run_market_trade_execution_system_tests();
+    run_ship_approach_orbit_system_tests();
+    run_combat_loot_drop_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
