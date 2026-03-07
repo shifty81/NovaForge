@@ -1124,6 +1124,72 @@ public:
     COMPONENT_TYPE(CrewManagement)
 };
 
+/**
+ * @brief Ship maintenance and wear tracking
+ *
+ * Tracks hull and module degradation over time.  Ships accumulate
+ * wear from combat, warping, and normal operation.  When wear
+ * exceeds threshold levels the ship suffers performance penalties.
+ * Repairs are scheduled at stations for an ISC cost.
+ */
+class ShipMaintenance : public ecs::Component {
+public:
+    enum class Condition { Pristine, Good, Fair, Poor, Critical };
+
+    struct RepairOrder {
+        std::string module_name;
+        double cost = 0.0;
+        float time_required = 0.0f;
+        float time_elapsed = 0.0f;
+        bool completed = false;
+    };
+
+    std::string ship_id;
+    Condition condition = Condition::Pristine;
+    float hull_integrity = 1.0f;           // 0.0–1.0
+    float wear_rate = 0.001f;              // wear per second while active
+    float combat_wear_rate = 0.01f;        // additional wear per second in combat
+    float performance_penalty = 0.0f;      // 0.0–1.0, derived from condition
+    std::vector<RepairOrder> repair_queue;
+    double total_repair_cost = 0.0;
+    int total_repairs_completed = 0;
+    float elapsed = 0.0f;
+    bool in_combat = false;
+    bool docked = false;
+    bool active = true;
+
+    COMPONENT_TYPE(ShipMaintenance)
+};
+
+/**
+ * @brief Ship fuel tank and consumption tracking
+ *
+ * Manages fuel levels for ships.  Warp drives and thrusters consume
+ * fuel at different rates.  Ships with empty tanks cannot warp and
+ * have reduced thruster output.  Fuel is purchased at stations.
+ */
+class FuelTank : public ecs::Component {
+public:
+    enum class FuelType { Standard, HighGrade, Experimental };
+
+    std::string ship_id;
+    FuelType fuel_type = FuelType::Standard;
+    double current_fuel = 100.0;         // current units
+    double max_fuel = 100.0;             // capacity
+    double warp_consumption_rate = 5.0;  // units per warp second
+    double thrust_consumption_rate = 0.5;// units per thrust second
+    double idle_consumption_rate = 0.01; // units per second idling
+    bool warping = false;
+    bool thrusting = false;
+    double total_fuel_consumed = 0.0;
+    double total_fuel_purchased = 0.0;
+    int refuel_count = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FuelTank)
+};
+
 } // namespace components
 } // namespace atlas
 

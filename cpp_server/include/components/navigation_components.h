@@ -774,6 +774,38 @@ public:
     COMPONENT_TYPE(SafeZone)
 };
 
+/**
+ * @brief Navigation beacon for waypoints and fleet warp destinations
+ *
+ * Placed in star systems to provide navigational reference points.
+ * Beacons can be public (visible to all) or private (owner only).
+ * Fleet commanders use beacons as fleet warp targets.  Beacons
+ * degrade over time and require maintenance to stay online.
+ */
+class NavigationBeacon : public ecs::Component {
+public:
+    enum class BeaconType { Waypoint, FleetWarp, Emergency, Survey };
+    enum class BeaconState { Online, Degraded, Offline, Destroyed };
+
+    std::string beacon_id;
+    std::string owner_id;
+    std::string system_id;
+    std::string label;
+    BeaconType type = BeaconType::Waypoint;
+    BeaconState state = BeaconState::Online;
+    double x = 0.0, y = 0.0, z = 0.0;
+    float signal_strength = 1.0f;      // 0.0–1.0, degrades over time
+    float degradation_rate = 0.0001f;  // per second
+    float scan_range = 1000.0f;        // detection range
+    bool is_public = true;
+    int total_warps_to = 0;            // times used as warp destination
+    int total_scans = 0;               // times scanned
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(NavigationBeacon)
+};
+
 } // namespace components
 } // namespace atlas
 

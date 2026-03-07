@@ -305,6 +305,10 @@ void run_insurance_claim_system_tests();
 void run_safe_zone_system_tests();
 void run_ore_compression_system_tests();
 void run_crew_management_system_tests();
+void run_ship_maintenance_system_tests();
+void run_fuel_consumption_system_tests();
+void run_beacon_navigation_system_tests();
+void run_formation_flight_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -607,6 +611,10 @@ int main() {
     run_safe_zone_system_tests();
     run_ore_compression_system_tests();
     run_crew_management_system_tests();
+    run_ship_maintenance_system_tests();
+    run_fuel_consumption_system_tests();
+    run_beacon_navigation_system_tests();
+    run_formation_flight_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
