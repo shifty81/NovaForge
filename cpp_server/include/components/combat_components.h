@@ -381,6 +381,30 @@ public:
     COMPONENT_TYPE(BountyPayout)
 };
 
+// ==================== Module Overheat ====================
+
+class ModuleOverheat : public ecs::Component {
+public:
+    struct ModuleSlot {
+        std::string module_id;
+        float heat_level = 0.0f;         // 0..100
+        float heat_per_cycle = 5.0f;     // heat gained per activation cycle
+        float dissipation_rate = 2.0f;   // heat lost per second when not overheating
+        float damage_threshold = 80.0f;  // heat % at which module takes damage
+        float damage_accumulated = 0.0f;
+        bool overheating = false;
+        bool burned_out = false;
+    };
+
+    std::vector<ModuleSlot> modules;
+    int max_modules = 8;
+    int total_burnouts = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ModuleOverheat)
+};
+
 } // namespace components
 } // namespace atlas
 

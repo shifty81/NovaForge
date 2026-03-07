@@ -806,6 +806,32 @@ public:
     COMPONENT_TYPE(NavigationBeacon)
 };
 
+// ==================== Docking Request ====================
+
+class DockingRequest : public ecs::Component {
+public:
+    enum class Phase {
+        Idle,       // No docking in progress
+        Approach,   // Moving toward station
+        Requested,  // Permission sent
+        Granted,    // Station accepted; tether extending
+        Docked      // Fully docked
+    };
+
+    std::string station_id;
+    Phase phase = Phase::Idle;
+    float approach_distance = 0.0f;
+    float docking_range = 2500.0f;     // metres — must be within this range to request
+    float tether_progress = 0.0f;       // 0..1  — fills while granted
+    float tether_speed = 0.5f;          // fraction per second
+    int total_dockings = 0;
+    int denied_count = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DockingRequest)
+};
+
 } // namespace components
 } // namespace atlas
 
