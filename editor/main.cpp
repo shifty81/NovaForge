@@ -21,6 +21,8 @@
 #include "tools/SolarSystemEditorPanel.h"
 #include "tools/ModelImportPanel.h"
 #include "tools/StationEditorPanel.h"
+#include "tools/TradeRoutePanel.h"
+#include "tools/CombatLogPanel.h"
 #include "ai/AIAggregator.h"
 #include "ai/TemplateAIBackend.h"
 #include "ui/KeybindManager.h"
@@ -72,6 +74,8 @@ int main() {
     atlas::editor::SolarSystemEditorPanel solarSystemEditor;
     atlas::editor::ModelImportPanel modelImport;
     atlas::editor::StationEditorPanel stationEditor;
+    atlas::editor::TradeRoutePanel tradeRoute;
+    atlas::editor::CombatLogPanel combatLog;
 
     // ── Keyboard shortcut manager ────────────────────────────────
     atlas::editor::KeybindManager keybinds;
@@ -226,6 +230,8 @@ int main() {
     layout.RegisterPanel(&solarSystemEditor);
     layout.RegisterPanel(&modelImport);
     layout.RegisterPanel(&stationEditor);
+    layout.RegisterPanel(&tradeRoute);
+    layout.RegisterPanel(&combatLog);
 
     // Root: horizontal split — left (viewport area) | right (tool panels)
     auto& root = layout.Root();
@@ -259,7 +265,8 @@ int main() {
     root.b->a->b = std::make_unique<atlas::editor::DockNode>();
     root.b->a->a->split = atlas::editor::DockSplit::Tab;
     root.b->a->a->tabs = {&pcgPreview, &characterSelect, &missionEditor, &galaxyMap,
-                          &solarSystemEditor, &modelImport, &stationEditor};
+                          &solarSystemEditor, &modelImport, &stationEditor,
+                          &tradeRoute, &combatLog};
     root.b->a->a->activeTab = 0;
     root.b->a->b->split = atlas::editor::DockSplit::Vertical;
     root.b->a->b->splitRatio = 0.50f;

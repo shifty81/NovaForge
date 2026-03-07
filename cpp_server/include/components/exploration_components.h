@@ -1060,6 +1060,32 @@ public:
     COMPONENT_TYPE(AsteroidRespawn)
 };
 
+/**
+ * @brief Sector map fog-of-war discovery state
+ *
+ * Tracks which sectors have been discovered (visibility 0=hidden,
+ * 1=partial, 2=full) and visit counts for exploration metrics.
+ */
+class SectorMapDiscovery : public ecs::Component {
+public:
+    struct DiscoveredSector {
+        std::string sector_id;
+        std::string sector_name;
+        int visibility = 0;     // 0=hidden, 1=partial, 2=full
+        int visit_count = 0;
+        float discovery_time = 0.0f;
+    };
+
+    std::vector<DiscoveredSector> sectors;
+    int max_sectors = 100;
+    int total_discoveries = 0;
+    int total_visits = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SectorMapDiscovery)
+};
+
 } // namespace components
 } // namespace atlas
 

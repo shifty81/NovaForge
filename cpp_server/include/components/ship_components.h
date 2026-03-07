@@ -1367,6 +1367,34 @@ public:
     COMPONENT_TYPE(SkillTrainingState)
 };
 
+/**
+ * @brief Ship loadout preset storage
+ *
+ * Stores named presets of module configurations for quick fitting swaps.
+ */
+class ShipLoadoutPresets : public ecs::Component {
+public:
+    struct LoadoutPreset {
+        struct ModuleSlot {
+            std::string module_name;
+            std::string slot;  // "high_1", "mid_2", "low_3", "rig_1", etc.
+        };
+
+        std::string preset_name;
+        std::string ship_type;
+        std::vector<ModuleSlot> modules;
+    };
+
+    std::vector<LoadoutPreset> presets;
+    int max_presets = 20;
+    int max_modules_per_preset = 16;
+    int total_presets_saved = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ShipLoadoutPresets)
+};
+
 } // namespace components
 } // namespace atlas
 

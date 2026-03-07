@@ -1289,6 +1289,35 @@ public:
     COMPONENT_TYPE(FleetReadinessState)
 };
 
+/**
+ * @brief Player progression tracking data
+ *
+ * Stores milestones, ISC totals, combat stats, and gameplay metrics
+ * to prove the vertical-slice loop is playable end-to-end.
+ */
+class PlayerProgressionTracking : public ecs::Component {
+public:
+    struct Milestone {
+        std::string milestone_id;
+        std::string description;
+        float timestamp = 0.0f;
+    };
+
+    std::vector<Milestone> milestones;
+    int max_milestones = 50;
+    float isc_earned = 0.0f;
+    float isc_spent = 0.0f;
+    int kills = 0;
+    int deaths = 0;
+    int docks = 0;
+    int jumps = 0;
+    float mining_yield = 0.0f;
+    float play_time = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(PlayerProgressionTracking)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -75,6 +75,8 @@ set(ATLAS_TEST_SOURCES
     test_physics_tuner_panel.cpp
     test_model_import_panel.cpp
     test_station_editor_panel.cpp
+    test_trade_route_panel.cpp
+    test_combat_log_panel.cpp
     test_environment_control_tool.cpp
     test_npc_spawner_tool.cpp
     test_resource_balancer_tool.cpp
@@ -125,6 +127,8 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/PhysicsTunerPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/ModelImportPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/StationEditorPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/TradeRoutePanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/CombatLogPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
     ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp
