@@ -1367,6 +1367,39 @@ public:
     COMPONENT_TYPE(SkillTrainingState)
 };
 
+/**
+ * @brief Per-player per-station hangar inventory
+ *
+ * Tracks items stored in a player's station hangar, capacity
+ * limits, and item transfer analytics.
+ */
+class PlayerHangarInventory : public ecs::Component {
+public:
+    struct HangarItem {
+        std::string item_id;
+        std::string item_name;
+        std::string item_type;      // "module", "ammo", "ore", "ship", "blueprint"
+        int quantity = 1;
+        double volume_per_unit = 1.0; // m3
+        double estimated_value = 0.0; // ISC
+    };
+
+    std::string player_id;
+    std::string station_id;
+    std::vector<HangarItem> items;
+    double max_volume = 1000.0;     // m3 capacity
+    double used_volume = 0.0;       // m3 currently used
+    int total_deposits = 0;
+    int total_withdrawals = 0;
+    double total_value_stored = 0.0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    double remainingVolume() const { return max_volume - used_volume; }
+
+    COMPONENT_TYPE(PlayerHangarInventory)
+};
+
 } // namespace components
 } // namespace atlas
 
