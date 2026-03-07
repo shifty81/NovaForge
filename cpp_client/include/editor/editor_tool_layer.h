@@ -33,6 +33,9 @@ class AtlasContext;
 struct InputState;
 } // namespace atlas
 
+// AI classes live in atlas::ai, not atlas::editor::ai
+namespace atlas::ai { class AIAggregator; class TemplateAIBackend; }
+
 namespace atlas::editor {
 
 // Forward declarations — keeps this header lightweight
@@ -60,8 +63,6 @@ class AssetPalettePanel;
 class PhysicsTunerPanel;
 class SceneBookmarkManager;
 class LayerTagSystem;
-
-namespace ai { class AIAggregator; class TemplateAIBackend; }
 
 /**
  * Editor overlay that lives inside the game client.
@@ -150,8 +151,8 @@ private:
     std::unique_ptr<UndoStack>         m_undoStack;
 
     // ── AI ──────────────────────────────────────────────────────────
-    std::unique_ptr<ai::AIAggregator>      m_aiAggregator;
-    std::unique_ptr<ai::TemplateAIBackend> m_templateAI;
+    std::unique_ptr<::atlas::ai::AIAggregator>      m_aiAggregator;
+    std::unique_ptr<::atlas::ai::TemplateAIBackend> m_templateAI;
 
     // ── Panels (owned here, registered with layout) ─────────────────
     std::unique_ptr<ViewportPanel>          m_viewport;

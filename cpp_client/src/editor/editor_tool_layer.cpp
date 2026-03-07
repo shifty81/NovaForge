@@ -67,8 +67,8 @@ void EditorToolLayer::init() {
     }
 
     // ── AI backend ───────────────────────────────────────────────
-    m_aiAggregator = std::make_unique<ai::AIAggregator>();
-    m_templateAI   = std::make_unique<ai::TemplateAIBackend>();
+    m_aiAggregator = std::make_unique<::atlas::ai::AIAggregator>();
+    m_templateAI   = std::make_unique<::atlas::ai::TemplateAIBackend>();
     m_aiAggregator->RegisterBackend(m_templateAI.get());
 
     // ── Create standalone editor panels ──────────────────────────

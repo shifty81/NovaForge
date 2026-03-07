@@ -10,6 +10,13 @@
 namespace atlas {
 namespace ecs {
 
+// Forward declaration — entity.h may be excluded in editor / atlas-test builds
+// via include-guard pre-definition (see editor/CMakeLists.txt).  The forward
+// declaration is enough for the reference and pointer parameters below; the
+// full definition is only required when template members are instantiated
+// (i.e. inside the server build where entity.h is included normally).
+class Entity;
+
 /**
  * @brief Template base for systems that operate on a single component type.
  *
