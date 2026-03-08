@@ -222,8 +222,11 @@ void Application::render() {
                 if (cel) {
                     atlasSelected.name = cel->name;
                     float dist = glm::distance(playerEntity->getPosition(), cel->position);
-                    if (dist >= 149597870.7f) {
-                        atlasSelected.distance = dist / 149597870700.0f;
+                    // 1 AU = 149,597,870,700 m; display in AU when above 0.01 AU
+                    static constexpr float AU_IN_METERS = 149597870700.0f;
+                    static constexpr float AU_DISPLAY_THRESHOLD = 0.01f * AU_IN_METERS;
+                    if (dist >= AU_DISPLAY_THRESHOLD) {
+                        atlasSelected.distance = dist / AU_IN_METERS;
                         atlasSelected.distanceUnit = "AU";
                     } else if (dist >= 1000.0f) {
                         atlasSelected.distance = dist / 1000.0f;

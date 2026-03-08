@@ -592,6 +592,13 @@ void Renderer::setEngineTrailState(bool emitting, float intensity,
 void Renderer::renderCelestials(Camera& camera) {
     if (m_sunVAO == 0 || !m_entityShader || m_celestialRenderData.empty()) return;
 
+    // Minimum apparent size: ensures distant celestials remain visible as
+    // a small disc regardless of actual radius, matching Astralis behaviour.
+    static constexpr float MIN_APPARENT_SIZE_FACTOR = 0.003f;
+    // Brightness boost applied to each celestial's colour so the lit sphere
+    // stands out against the dark space background.
+    static constexpr float CELESTIAL_COLOR_BRIGHTNESS = 1.2f;
+
     m_entityShader->use();
     m_entityShader->setMat4("view", camera.getViewMatrix());
     m_entityShader->setMat4("projection", camera.getProjectionMatrix());
@@ -607,9 +614,8 @@ void Renderer::renderCelestials(Camera& camera) {
     glEnable(GL_DEPTH_TEST);
 
     for (const auto& cel : m_celestialRenderData) {
-        // Enforce a minimum apparent size so distant celestials remain visible
         float dist = glm::length(camera.getPosition() - cel.position);
-        float minApparentRadius = dist * 0.003f;  // ~0.3% of distance
+        float minApparentRadius = dist * MIN_APPARENT_SIZE_FACTOR;
         float renderRadius = std::max(cel.radius, minApparentRadius);
 
         glm::mat4 model = glm::mat4(1.0f);
@@ -619,7 +625,7 @@ void Renderer::renderCelestials(Camera& camera) {
 
         // Override light color with the celestial's own color tint so
         // the sphere appears coloured without requiring a separate shader.
-        m_entityShader->setVec3("lightColor", cel.color * 1.2f);
+        m_entityShader->setVec3("lightColor", cel.color * CELESTIAL_COLOR_BRIGHTNESS);
 
         glBindVertexArray(m_sunVAO);
         glDrawElements(GL_TRIANGLES, m_sunIndexCount, GL_UNSIGNED_INT, 0);
