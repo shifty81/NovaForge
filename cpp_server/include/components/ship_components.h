@@ -1451,6 +1451,44 @@ public:
     COMPONENT_TYPE(FleetCoordinationState)
 };
 
+// ==================== Hull Class Capability Profile ====================
+
+/**
+ * @brief Defines per-hull-class capability slots and internal spaces
+ *
+ * Maps hull class to required bays, hangars, and support modules.
+ * Destroyer+ ships gain ship hangars, rover bays, grav bike bays,
+ * survival modules, and rig lockers. Scales with hull size.
+ */
+class HullClassCapabilityProfile : public ecs::Component {
+public:
+    std::string hull_class;             // "Frigate", "Destroyer", "Cruiser", etc.
+
+    // Bay counts (0 = not available for this hull class)
+    int rover_bay_count = 0;
+    int grav_bike_bay_count = 0;
+    int ship_hangar_count = 0;
+
+    // Bay size classes: "S", "M", "L", "XL" (empty = no bay)
+    std::string rover_bay_class;
+    std::string grav_bike_bay_class;
+    std::string ship_hangar_class;
+
+    // Required modules
+    bool has_survival_module = false;
+    bool has_rig_locker = false;         // Always present if rover_bay_count > 0
+
+    // Structural budgets
+    float max_power_grid = 100.0f;       // MW
+    float max_cpu = 200.0f;              // TF
+    int max_module_slots = 4;
+    float max_cargo_volume = 500.0f;     // m³
+
+    bool active = true;
+
+    COMPONENT_TYPE(HullClassCapabilityProfile)
+};
+
 } // namespace components
 } // namespace atlas
 

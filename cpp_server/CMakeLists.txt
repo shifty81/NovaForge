@@ -378,6 +378,7 @@ set(CORE_SOURCES
     src/systems/hangar_transition_system.cpp
     src/systems/control_mode_context_system.cpp
     src/systems/construction_placement_system.cpp
+    src/systems/hull_class_capability_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -812,6 +813,7 @@ set(SERVER_HEADERS
     include/systems/hangar_transition_system.h
     include/systems/control_mode_context_system.h
     include/systems/construction_placement_system.h
+    include/systems/hull_class_capability_system.h
 )
 
 # Steam SDK configuration
