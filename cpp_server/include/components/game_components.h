@@ -1513,6 +1513,164 @@ public:
     COMPONENT_TYPE(DockingBayAllocationState)
 };
 
+/**
+ * @brief Fleet warp coordination state
+ *
+ * Tracks fleet member alignment, readiness, and synchronized warp
+ * initiation.  The fleet commander initiates a warp; each member
+ * must align and reach readiness before the fleet warps together.
+ */
+class FleetWarpCoordinatorState : public ecs::Component {
+public:
+    struct FleetMember {
+        std::string ship_id;
+        float align_progress = 0.0f;   // 0.0-1.0
+        float align_time = 5.0f;       // seconds to align
+        bool ready = false;
+        bool warping = false;
+    };
+
+    std::string fleet_id;
+    std::string commander_id;
+    std::string destination;
+
+    std::vector<FleetMember> members;
+    int max_members = 50;
+
+    bool warp_initiated = false;
+    bool warp_active = false;
+    float warp_countdown = 0.0f;
+    float warp_countdown_duration = 3.0f;
+    int total_fleet_warps = 0;
+    int total_members_warped = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetWarpCoordinatorState)
+};
+
+/**
+ * @brief Mining laser state for ore extraction
+ *
+ * Tracks mining laser activation, extraction rate, target asteroid,
+ * cumulative yield, and cycle timing.  Each cycle extracts ore based
+ * on laser strength and asteroid composition.
+ */
+class MiningLaserState : public ecs::Component {
+public:
+    struct OreYield {
+        std::string ore_type;
+        float amount = 0.0f;
+    };
+
+    std::string target_asteroid;
+    std::string laser_type;        // "strip", "deep_core", "ice"
+    float mining_strength = 1.0f;  // multiplier
+    float cycle_duration = 10.0f;  // seconds per cycle
+    float cycle_progress = 0.0f;   // 0.0-1.0
+    float range = 15.0f;           // km
+    float optimal_range = 10.0f;   // km
+    bool mining_active = false;
+
+    std::vector<OreYield> cumulative_yield;
+    int max_ore_types = 10;
+
+    float total_ore_mined = 0.0f;
+    int total_cycles = 0;
+    int failed_cycles = 0;
+    float asteroid_remaining = 100.0f;  // percentage
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MiningLaserState)
+};
+
+/**
+ * @brief NPC behavior scheduler state
+ *
+ * Manages NPC daily schedule with patrol, trade, idle, dock, and
+ * combat behavior states.  NPCs transition between states based on
+ * time-of-day, threat level, and market conditions.
+ */
+class NPCBehaviorSchedulerState : public ecs::Component {
+public:
+    enum class Behavior {
+        Idle = 0,
+        Patrol,
+        Trade,
+        Mine,
+        Dock,
+        Combat,
+        Flee
+    };
+
+    struct ScheduleEntry {
+        std::string label;
+        int behavior = static_cast<int>(Behavior::Idle);
+        float start_hour = 0.0f;    // 0-24 game hours
+        float duration_hours = 1.0f;
+    };
+
+    std::string npc_id;
+    std::string faction;
+    int current_behavior = static_cast<int>(Behavior::Idle);
+    int previous_behavior = static_cast<int>(Behavior::Idle);
+
+    std::vector<ScheduleEntry> schedule;
+    int max_schedule_entries = 24;
+
+    float current_game_hour = 0.0f;  // 0-24
+    float threat_level = 0.0f;       // 0-1, triggers combat/flee
+    float threat_threshold = 0.5f;   // above this → combat
+
+    int total_transitions = 0;
+    int total_combat_entries = 0;
+    int total_trade_trips = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(NPCBehaviorSchedulerState)
+};
+
+/**
+ * @brief Capacitor warfare state for energy neutralizer/nosferatu
+ *
+ * Tracks energy drain/transfer between ships.  Neutralizers drain
+ * both target and self; nosferatu drain target and transfer to self.
+ * Includes drain resistance calculations and warfare statistics.
+ */
+class CapacitorWarfareState : public ecs::Component {
+public:
+    struct WarfareModule {
+        std::string module_id;
+        std::string module_type;     // "neutralizer", "nosferatu"
+        std::string target_id;
+        float drain_rate = 10.0f;    // GJ/s
+        float optimal_range = 10.0f; // km
+        float cycle_time = 12.0f;    // seconds
+        float cycle_progress = 0.0f;
+        bool active_cycling = false;
+    };
+
+    std::vector<WarfareModule> modules;
+    int max_modules = 8;
+
+    float drain_resistance = 0.0f;    // 0-1, reduces incoming drain
+    float total_energy_drained = 0.0f;
+    float total_energy_received = 0.0f;
+    float total_energy_lost = 0.0f;   // from enemy warfare
+    int total_cycles_completed = 0;
+    int total_targets_capped = 0;     // targets emptied
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CapacitorWarfareState)
+};
+
 } // namespace components
 } // namespace atlas
 

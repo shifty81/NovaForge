@@ -361,6 +361,10 @@ set(CORE_SOURCES
     src/systems/trade_route_optimizer_system.cpp
     src/systems/scan_probe_deployment_system.cpp
     src/systems/docking_bay_allocation_system.cpp
+    src/systems/fleet_warp_coordinator_system.cpp
+    src/systems/mining_laser_system.cpp
+    src/systems/npc_behavior_scheduler_system.cpp
+    src/systems/capacitor_warfare_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -778,6 +782,10 @@ set(SERVER_HEADERS
     include/systems/trade_route_optimizer_system.h
     include/systems/scan_probe_deployment_system.h
     include/systems/docking_bay_allocation_system.h
+    include/systems/fleet_warp_coordinator_system.h
+    include/systems/mining_laser_system.h
+    include/systems/npc_behavior_scheduler_system.h
+    include/systems/capacitor_warfare_system.h
 )
 
 # Steam SDK configuration
