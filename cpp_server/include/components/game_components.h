@@ -1351,6 +1351,423 @@ public:
     COMPONENT_TYPE(ServerTickMetrics)
 };
 
+/**
+ * @brief Shield harmonics state for frequency tuning and resonance
+ *
+ * Tracks shield frequency, harmonic profiles, and damage resistance
+ * modifiers.  Tuning the frequency toward an incoming damage type
+ * increases resistance but leaves other types more vulnerable.
+ */
+class ShieldHarmonicsState : public ecs::Component {
+public:
+    struct HarmonicProfile {
+        std::string damage_type;      // em, thermal, kinetic, explosive
+        float base_resistance = 0.0f; // 0.0-1.0
+        float tuned_bonus = 0.0f;     // bonus from frequency alignment
+        float effective_resistance = 0.0f;
+    };
+
+    float frequency = 50.0f;          // Current shield frequency (0-100)
+    float optimal_frequency = 50.0f;  // Optimal frequency for current threat
+    float tuning_speed = 5.0f;        // Frequency change per second
+    float resonance_strength = 0.0f;  // 0.0-1.0, how well-tuned the shield is
+    float max_bonus = 0.3f;           // Maximum resistance bonus from tuning
+
+    std::vector<HarmonicProfile> profiles;
+    int max_profiles = 4;
+
+    int total_retunings = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ShieldHarmonicsState)
+};
+
+/**
+ * @brief Trade route optimization state for multi-hop profit calculation
+ *
+ * Stores station market snapshots and computes optimal buy/sell routes
+ * across multiple hops to maximize profit per unit of cargo volume.
+ */
+class TradeRouteOptimizerState : public ecs::Component {
+public:
+    struct MarketEntry {
+        std::string station_id;
+        std::string commodity;
+        float buy_price = 0.0f;   // price to buy at this station
+        float sell_price = 0.0f;  // price to sell at this station
+        int supply = 0;
+        int demand = 0;
+    };
+
+    struct TradeHop {
+        std::string from_station;
+        std::string to_station;
+        std::string commodity;
+        float buy_price = 0.0f;
+        float sell_price = 0.0f;
+        float profit_per_unit = 0.0f;
+        float travel_time = 0.0f;
+    };
+
+    std::vector<MarketEntry> market_data;
+    int max_market_entries = 200;
+
+    std::vector<TradeHop> optimized_route;
+    int max_hops = 10;
+
+    float total_estimated_profit = 0.0f;
+    float total_travel_time = 0.0f;
+    int cargo_capacity = 100;
+    int routes_calculated = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(TradeRouteOptimizerState)
+};
+
+/**
+ * @brief Scan probe deployment state for anomaly discovery
+ *
+ * Manages deployed scan probes that gradually resolve signatures
+ * in a star system.  Each probe has a scan radius and strength;
+ * overlapping probes increase resolution speed.
+ */
+class ScanProbeDeploymentState : public ecs::Component {
+public:
+    struct ScanProbe {
+        std::string probe_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float scan_radius = 4.0f;  // AU
+        float scan_strength = 1.0f;
+        float lifetime = 300.0f;   // seconds before auto-recall
+        float age = 0.0f;
+        bool recalled = false;
+    };
+
+    struct Signature {
+        std::string sig_id;
+        std::string sig_type;       // "anomaly", "wormhole", "data", "relic", "gas"
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float scan_progress = 0.0f; // 0.0-1.0
+        bool resolved = false;
+    };
+
+    std::vector<ScanProbe> probes;
+    int max_probes = 8;
+
+    std::vector<Signature> signatures;
+    int max_signatures = 30;
+
+    int total_probes_launched = 0;
+    int total_signatures_resolved = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ScanProbeDeploymentState)
+};
+
+/**
+ * @brief Docking bay allocation state for station capacity management
+ *
+ * Tracks per-station docking bays, assignments, wait queues, and
+ * service timers.  Ships request bays, get assigned when available,
+ * and release bays on undock.
+ */
+class DockingBayAllocationState : public ecs::Component {
+public:
+    struct DockingBay {
+        std::string bay_id;
+        std::string assigned_ship;
+        std::string bay_size;      // "small", "medium", "large"
+        float service_timer = 0.0f;
+        bool occupied = false;
+    };
+
+    struct QueueEntry {
+        std::string ship_id;
+        std::string required_size;
+        float wait_time = 0.0f;
+        int priority = 0;          // higher = more urgent
+    };
+
+    std::string station_id;
+
+    std::vector<DockingBay> bays;
+    int max_bays = 20;
+
+    std::vector<QueueEntry> wait_queue;
+    int max_queue = 50;
+
+    int total_dockings = 0;
+    int total_undockings = 0;
+    int total_queue_timeouts = 0;
+    float avg_wait_time = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DockingBayAllocationState)
+};
+
+/**
+ * @brief Fleet warp coordination state
+ *
+ * Tracks fleet member alignment, readiness, and synchronized warp
+ * initiation.  The fleet commander initiates a warp; each member
+ * must align and reach readiness before the fleet warps together.
+ */
+class FleetWarpCoordinatorState : public ecs::Component {
+public:
+    struct FleetMember {
+        std::string ship_id;
+        float align_progress = 0.0f;   // 0.0-1.0
+        float align_time = 5.0f;       // seconds to align
+        bool ready = false;
+        bool warping = false;
+    };
+
+    std::string fleet_id;
+    std::string commander_id;
+    std::string destination;
+
+    std::vector<FleetMember> members;
+    int max_members = 50;
+
+    bool warp_initiated = false;
+    bool warp_active = false;
+    float warp_countdown = 0.0f;
+    float warp_countdown_duration = 3.0f;
+    int total_fleet_warps = 0;
+    int total_members_warped = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetWarpCoordinatorState)
+};
+
+/**
+ * @brief Mining laser state for ore extraction
+ *
+ * Tracks mining laser activation, extraction rate, target asteroid,
+ * cumulative yield, and cycle timing.  Each cycle extracts ore based
+ * on laser strength and asteroid composition.
+ */
+class MiningLaserState : public ecs::Component {
+public:
+    struct OreYield {
+        std::string ore_type;
+        float amount = 0.0f;
+    };
+
+    std::string target_asteroid;
+    std::string laser_type;        // "strip", "deep_core", "ice"
+    float mining_strength = 1.0f;  // multiplier
+    float cycle_duration = 10.0f;  // seconds per cycle
+    float cycle_progress = 0.0f;   // 0.0-1.0
+    float range = 15.0f;           // km
+    float optimal_range = 10.0f;   // km
+    bool mining_active = false;
+
+    std::vector<OreYield> cumulative_yield;
+    int max_ore_types = 10;
+
+    float total_ore_mined = 0.0f;
+    int total_cycles = 0;
+    int failed_cycles = 0;
+    float asteroid_remaining = 100.0f;  // percentage
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MiningLaserState)
+};
+
+/**
+ * @brief NPC behavior scheduler state
+ *
+ * Manages NPC daily schedule with patrol, trade, idle, dock, and
+ * combat behavior states.  NPCs transition between states based on
+ * time-of-day, threat level, and market conditions.
+ */
+class NPCBehaviorSchedulerState : public ecs::Component {
+public:
+    enum class Behavior {
+        Idle = 0,
+        Patrol,
+        Trade,
+        Mine,
+        Dock,
+        Combat,
+        Flee
+    };
+
+    struct ScheduleEntry {
+        std::string label;
+        int behavior = static_cast<int>(Behavior::Idle);
+        float start_hour = 0.0f;    // 0-24 game hours
+        float duration_hours = 1.0f;
+    };
+
+    std::string npc_id;
+    std::string faction;
+    int current_behavior = static_cast<int>(Behavior::Idle);
+    int previous_behavior = static_cast<int>(Behavior::Idle);
+
+    std::vector<ScheduleEntry> schedule;
+    int max_schedule_entries = 24;
+
+    float current_game_hour = 0.0f;  // 0-24
+    float threat_level = 0.0f;       // 0-1, triggers combat/flee
+    float threat_threshold = 0.5f;   // above this → combat
+
+    int total_transitions = 0;
+    int total_combat_entries = 0;
+    int total_trade_trips = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(NPCBehaviorSchedulerState)
+};
+
+/**
+ * @brief Capacitor warfare state for energy neutralizer/nosferatu
+ *
+ * Tracks energy drain/transfer between ships.  Neutralizers drain
+ * both target and self; nosferatu drain target and transfer to self.
+ * Includes drain resistance calculations and warfare statistics.
+ */
+class CapacitorWarfareState : public ecs::Component {
+public:
+    struct WarfareModule {
+        std::string module_id;
+        std::string module_type;     // "neutralizer", "nosferatu"
+        std::string target_id;
+        float drain_rate = 10.0f;    // GJ/s
+        float optimal_range = 10.0f; // km
+        float cycle_time = 12.0f;    // seconds
+        float cycle_progress = 0.0f;
+        bool active_cycling = false;
+    };
+
+    std::vector<WarfareModule> modules;
+    int max_modules = 8;
+
+    float drain_resistance = 0.0f;    // 0-1, reduces incoming drain
+    float total_energy_drained = 0.0f;
+    float total_energy_received = 0.0f;
+    float total_energy_lost = 0.0f;   // from enemy warfare
+    int total_cycles_completed = 0;
+    int total_targets_capped = 0;     // targets emptied
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CapacitorWarfareState)
+};
+
+class SignatureAnalysisState : public ecs::Component {
+public:
+    struct SignatureReading {
+        std::string sig_id;
+        std::string sig_type;
+        float signal_strength = 0.0f;
+        float scan_resolution = 0.0f;
+        bool identified = false;
+    };
+
+    std::vector<SignatureReading> readings;
+    int max_readings = 50;
+
+    float scan_power = 1.0f;
+    float analysis_speed = 1.0f;
+    int total_identified = 0;
+    int total_scans = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SignatureAnalysisState)
+};
+
+class OverheatManagementState : public ecs::Component {
+public:
+    struct ModuleHeat {
+        std::string module_id;
+        float heat_level = 0.0f;
+        float heat_generation = 5.0f;
+        float max_heat = 100.0f;
+        float damage_threshold = 80.0f;
+        bool overheated = false;
+        bool burned_out = false;
+    };
+
+    std::vector<ModuleHeat> modules;
+    int max_modules = 16;
+
+    float heat_dissipation_rate = 2.0f;
+    float global_heat = 0.0f;
+    float max_global_heat = 100.0f;
+    int total_overheats = 0;
+    int total_burnouts = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OverheatManagementState)
+};
+
+class SalvageProcessingState : public ecs::Component {
+public:
+    struct SalvageJob {
+        std::string wreck_id;
+        std::string material_type;
+        float processing_time = 30.0f;
+        float progress = 0.0f;
+        float yield_amount = 0.0f;
+        float success_chance = 0.75f;
+        bool completed = false;
+        bool successful = false;
+    };
+
+    std::vector<SalvageJob> jobs;
+    int max_jobs = 10;
+
+    float processing_speed = 1.0f;
+    float skill_bonus = 0.0f;
+    float total_materials_salvaged = 0.0f;
+    int total_jobs_completed = 0;
+    int total_jobs_failed = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SalvageProcessingState)
+};
+
+class JumpFatigueTrackerState : public ecs::Component {
+public:
+    float blue_timer = 0.0f;
+    float orange_timer = 0.0f;
+    float max_blue_timer = 600.0f;
+    float max_orange_timer = 36000.0f;
+    float fatigue_multiplier = 1.0f;
+    float decay_rate = 1.0f;
+    int total_jumps = 0;
+    int total_fatigue_penalties = 0;
+    bool jump_restricted = false;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(JumpFatigueTrackerState)
+};
+
 } // namespace components
 } // namespace atlas
 

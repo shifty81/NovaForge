@@ -350,6 +350,18 @@ void run_hyperspace_routing_system_tests();
 void run_player_hangar_inventory_system_tests();
 void run_snapshot_replication_system2_tests();
 void run_server_tick_metrics_system_tests();
+void run_shield_harmonics_system_tests();
+void run_trade_route_optimizer_system_tests();
+void run_scan_probe_deployment_system_tests();
+void run_docking_bay_allocation_system_tests();
+void run_fleet_warp_coordinator_system_tests();
+void run_mining_laser_system_tests();
+void run_npc_behavior_scheduler_system_tests();
+void run_capacitor_warfare_system_tests();
+void run_signature_analysis_system_tests();
+void run_overheat_management_system_tests();
+void run_salvage_processing_system_tests();
+void run_jump_fatigue_tracker_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -697,6 +709,18 @@ int main() {
     run_player_hangar_inventory_system_tests();
     run_snapshot_replication_system2_tests();
     run_server_tick_metrics_system_tests();
+    run_shield_harmonics_system_tests();
+    run_trade_route_optimizer_system_tests();
+    run_scan_probe_deployment_system_tests();
+    run_docking_bay_allocation_system_tests();
+    run_fleet_warp_coordinator_system_tests();
+    run_mining_laser_system_tests();
+    run_npc_behavior_scheduler_system_tests();
+    run_capacitor_warfare_system_tests();
+    run_signature_analysis_system_tests();
+    run_overheat_management_system_tests();
+    run_salvage_processing_system_tests();
+    run_jump_fatigue_tracker_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
