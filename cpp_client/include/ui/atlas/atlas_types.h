@@ -92,8 +92,8 @@ struct Theme {
     // Backgrounds (near-black blues / gunmetal)
     Color bgPrimary   {0.05f,  0.06f,  0.08f,  0.96f};   // root background
     Color bgSecondary {0.08f,  0.10f,  0.13f,  0.94f};    // panel alt
-    Color bgPanel     {0.06f,  0.08f,  0.11f,  0.96f};    // panel fill
-    Color bgHeader    {0.039f, 0.055f, 0.078f, 1.0f};     // header bar
+    Color bgPanel     {0.06f,  0.08f,  0.11f,  0.85f};    // panel fill (semi-transparent for overlay)
+    Color bgHeader    {0.039f, 0.055f, 0.078f, 0.90f};     // header bar
     Color bgTooltip   {0.110f, 0.129f, 0.157f, 0.95f};    // tooltip fill
 
     // Accents (semantic — navigation=blue/teal, combat=orange, danger=red)

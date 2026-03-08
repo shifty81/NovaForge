@@ -84,7 +84,20 @@ float EditorMenuBar::Draw(atlas::AtlasContext* ctx, float windowW) {
     if (!ctx) return MenuBarHeight;
 
     atlas::Rect barRect = {0.0f, 0.0f, windowW, MenuBarHeight};
-    int clicked = atlas::menuBar(*ctx, barRect, m_menus, m_state);
+    atlas::menuBar(*ctx, barRect, m_menus, m_state);
+
+    // Dropdown clicks are now handled in DrawDropdown() which runs
+    // after dock panels so the dropdown draws on top.
+
+    return MenuBarHeight;
+}
+
+void EditorMenuBar::DrawDropdown(atlas::AtlasContext* ctx, float windowW) {
+    if (!ctx) return;
+    if (m_state.openMenu < 0) return;
+
+    atlas::Rect barRect = {0.0f, 0.0f, windowW, MenuBarHeight};
+    int clicked = atlas::menuBarDropdown(*ctx, barRect, m_menus, m_state);
 
     if (clicked >= 0) {
         int menuIdx = clicked / kItemsPerMenu;
@@ -115,8 +128,6 @@ float EditorMenuBar::Draw(atlas::AtlasContext* ctx, float windowW) {
             }
         }
     }
-
-    return MenuBarHeight;
 }
 
 } // namespace atlas::editor

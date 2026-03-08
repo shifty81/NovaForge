@@ -637,4 +637,16 @@ struct MenuBarState {
 int menuBar(AtlasContext& ctx, const Rect& r,
             const std::vector<Menu>& menus, MenuBarState& state);
 
+/**
+ * Draw only the dropdown overlay of a menu bar.
+ *
+ * Call this AFTER rendering dock panels so the dropdown appears on top.
+ * The bar itself (background + labels) should already have been drawn by
+ * menuBar().  This function only renders the open dropdown, if any.
+ *
+ * Returns the same encoded click index as menuBar(), or -1.
+ */
+int menuBarDropdown(AtlasContext& ctx, const Rect& r,
+                    const std::vector<Menu>& menus, MenuBarState& state);
+
 } // namespace atlas

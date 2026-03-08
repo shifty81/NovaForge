@@ -60,6 +60,12 @@ Renderer::~Renderer() {
     if (m_sunEBO != 0) {
         glDeleteBuffers(1, &m_sunEBO);
     }
+    if (m_hangarVAO != 0) {
+        glDeleteVertexArrays(1, &m_hangarVAO);
+    }
+    if (m_hangarVBO != 0) {
+        glDeleteBuffers(1, &m_hangarVBO);
+    }
 }
 
 bool Renderer::initialize() {
@@ -137,6 +143,9 @@ bool Renderer::initialize() {
     
     // Setup sun sphere
     setupSunMesh();
+
+    // Setup hangar environment
+    setupHangar();
     
     m_initialized = true;
     std::cout << "Renderer initialized successfully" << std::endl;
@@ -151,21 +160,26 @@ void Renderer::endFrame() {
     // Nothing needed here for now
 }
 
-void Renderer::renderScene(Camera& camera) {
+void Renderer::renderScene(Camera& camera, int gameState) {
     if (!m_initialized) return;
-    
-    // Render nebula background
-    renderNebula(camera);
-    
-    // Render starfield
-    renderStarfield(camera);
-    
-    // Render solar system sun (before entities, after background)
-    if (m_sunEnabled) {
-        renderSun(camera, m_sunPosition, m_sunColor, m_sunRadius);
+
+    // Game states: 0=InSpace, 1=Docking, 2=Docked, 3=StationInterior,
+    //              4=ShipInterior, 5=Cockpit
+    bool inHangar = (gameState == 2 || gameState == 3 || gameState == 4);
+
+    if (inHangar) {
+        // Render the station hangar environment
+        renderHangar(camera);
+    } else {
+        // Render space environment
+        renderNebula(camera);
+        renderStarfield(camera);
+        if (m_sunEnabled) {
+            renderSun(camera, m_sunPosition, m_sunColor, m_sunRadius);
+        }
     }
-    
-    // Render entities
+
+    // Always render entities (player ship visible in hangar too)
     renderEntities(camera);
     
     // Note: Health bars are NOT rendered in 3D space in Astralis
@@ -565,6 +579,124 @@ void Renderer::renderWarpEffect() {
     if (m_warpEffectRenderer) {
         m_warpEffectRenderer->render();
     }
+}
+
+// ── Hangar environment ──────────────────────────────────────────────
+
+void Renderer::setupHangar() {
+    // Procedural hangar: a large rectangular room with floor, ceiling, walls,
+    // and a raised landing pad in the center.
+    //
+    // Coordinate system: Y-up, the floor is at Y=0, eye level ~1.8m.
+    // Hangar dimensions: 80m wide (X), 60m deep (Z), 20m tall (Y).
+    //
+    // Each vertex: position (3f) + normal (3f) = 6 floats.
+
+    const float W = 40.0f;   // half-width  (X: -40 to +40)
+    const float D = 30.0f;   // half-depth  (Z: -30 to +30)
+    const float H = 20.0f;   // ceiling height
+    const float padW = 12.0f; // landing pad half-width
+    const float padD = 15.0f; // landing pad half-depth
+    const float padH = 0.3f;  // pad elevation
+
+    // Helper: emit two triangles for a quad (6 vertices)
+    std::vector<float> verts;
+    auto quad = [&](glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, glm::vec3 n) {
+        // Triangle 1: a-b-c
+        verts.insert(verts.end(), {a.x,a.y,a.z, n.x,n.y,n.z});
+        verts.insert(verts.end(), {b.x,b.y,b.z, n.x,n.y,n.z});
+        verts.insert(verts.end(), {c.x,c.y,c.z, n.x,n.y,n.z});
+        // Triangle 2: a-c-d
+        verts.insert(verts.end(), {a.x,a.y,a.z, n.x,n.y,n.z});
+        verts.insert(verts.end(), {c.x,c.y,c.z, n.x,n.y,n.z});
+        verts.insert(verts.end(), {d.x,d.y,d.z, n.x,n.y,n.z});
+    };
+
+    // Floor (Y=0, normal up)
+    quad({-W,0,-D}, {W,0,-D}, {W,0,D}, {-W,0,D}, {0,1,0});
+
+    // Ceiling (Y=H, normal down)
+    quad({-W,H,D}, {W,H,D}, {W,H,-D}, {-W,H,-D}, {0,-1,0});
+
+    // Back wall (Z=-D, normal +Z)
+    quad({-W,0,-D}, {-W,H,-D}, {W,H,-D}, {W,0,-D}, {0,0,1});
+
+    // Front wall (Z=+D, normal -Z) — hangar door side, half-height opening
+    float doorH = 12.0f;
+    float doorW = 20.0f;
+    // Left section
+    quad({-W,0,D}, {-W,H,D}, {-doorW/2,H,D}, {-doorW/2,0,D}, {0,0,-1});
+    // Right section
+    quad({doorW/2,0,D}, {doorW/2,H,D}, {W,H,D}, {W,0,D}, {0,0,-1});
+    // Top section (above door)
+    quad({-doorW/2,doorH,D}, {-doorW/2,H,D}, {doorW/2,H,D}, {doorW/2,doorH,D}, {0,0,-1});
+
+    // Left wall (X=-W, normal +X)
+    quad({-W,0,D}, {-W,0,-D}, {-W,H,-D}, {-W,H,D}, {1,0,0});
+
+    // Right wall (X=+W, normal -X)
+    quad({W,0,-D}, {W,0,D}, {W,H,D}, {W,H,-D}, {-1,0,0});
+
+    // Landing pad — raised platform in center (top surface, normal up)
+    quad({-padW,padH,-padD}, {padW,padH,-padD}, {padW,padH,padD}, {-padW,padH,padD}, {0,1,0});
+    // Pad front edge
+    quad({-padW,0,padD}, {padW,0,padD}, {padW,padH,padD}, {-padW,padH,padD}, {0,0,1});
+    // Pad back edge
+    quad({padW,0,-padD}, {-padW,0,-padD}, {-padW,padH,-padD}, {padW,padH,-padD}, {0,0,-1});
+    // Pad left edge
+    quad({-padW,0,-padD}, {-padW,0,padD}, {-padW,padH,padD}, {-padW,padH,-padD}, {1,0,0});
+    // Pad right edge
+    quad({padW,0,padD}, {padW,0,-padD}, {padW,padH,-padD}, {padW,padH,padD}, {-1,0,0});
+
+    // Catwalk rails along the walls (thin raised strips at waist height)
+    float railH = 1.1f;
+    float railW = 1.5f;
+    // Left catwalk
+    quad({-W,0,-D}, {-W+railW,0,-D}, {-W+railW,0,D}, {-W,0,D}, {0,1,0});
+    quad({-W,railH,-D}, {-W+railW,railH,-D}, {-W+railW,railH,D}, {-W,railH,D}, {0,1,0});
+    // Right catwalk
+    quad({W-railW,0,-D}, {W,0,-D}, {W,0,D}, {W-railW,0,D}, {0,1,0});
+    quad({W-railW,railH,-D}, {W,railH,-D}, {W,railH,D}, {W-railW,railH,D}, {0,1,0});
+
+    m_hangarVertexCount = static_cast<int>(verts.size()) / 6;
+
+    glGenVertexArrays(1, &m_hangarVAO);
+    glGenBuffers(1, &m_hangarVBO);
+    glBindVertexArray(m_hangarVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_hangarVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
+                 verts.data(), GL_STATIC_DRAW);
+    // Position: location 0
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // Normal: location 1
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+    std::cout << "  Hangar environment: " << m_hangarVertexCount << " vertices" << std::endl;
+}
+
+void Renderer::renderHangar(Camera& camera) {
+    if (m_hangarVAO == 0 || !m_entityShader) return;
+
+    m_entityShader->use();
+    m_entityShader->setMat4("view", camera.getViewMatrix());
+    m_entityShader->setMat4("projection", camera.getProjectionMatrix());
+
+    // Warm hangar lighting: overhead industrial lights
+    m_entityShader->setVec3("lightDir", glm::normalize(glm::vec3(0.2f, -1.0f, 0.1f)));
+    m_entityShader->setVec3("lightColor", glm::vec3(0.9f, 0.85f, 0.75f));
+    m_entityShader->setVec3("viewPos", camera.getPosition());
+
+    // Hangar uses identity model matrix (world-space geometry)
+    glm::mat4 model = glm::mat4(1.0f);
+    m_entityShader->setMat4("model", model);
+
+    glBindVertexArray(m_hangarVAO);
+    glDrawArrays(GL_TRIANGLES, 0, m_hangarVertexCount);
+    glBindVertexArray(0);
 }
 
 } // namespace atlas

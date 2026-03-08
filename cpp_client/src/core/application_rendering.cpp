@@ -33,8 +33,8 @@ void Application::render() {
     // Update entity visuals from game client
     m_renderer->updateEntityVisuals(m_gameClient->getEntityManager().getAllEntities());
     
-    // Render scene
-    m_renderer->renderScene(*m_camera);
+    // Render scene (pass game state so renderer knows space vs hangar)
+    m_renderer->renderScene(*m_camera, static_cast<int>(m_gameState));
     
     // Render warp tunnel overlay (after 3D scene, before UI)
     if (m_solarSystem) {
