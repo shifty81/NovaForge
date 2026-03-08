@@ -1689,6 +1689,32 @@ void test_combat_log_panel_max_engagements();
 void test_combat_log_panel_export_json();
 void test_combat_log_panel_headless_draw();
 
+// InsuranceOverviewPanel
+void test_insurance_overview_defaults();
+void test_insurance_overview_add_policy();
+void test_insurance_overview_policy_validation();
+void test_insurance_overview_tiers();
+void test_insurance_overview_remove_policy();
+void test_insurance_overview_file_claim();
+void test_insurance_overview_profit_loss();
+void test_insurance_overview_max_policies();
+void test_insurance_overview_export_json();
+void test_insurance_overview_headless_draw();
+
+// ColonyManagerPanel
+void test_colony_manager_defaults();
+void test_colony_manager_add_building();
+void test_colony_manager_building_validation();
+void test_colony_manager_remove_building();
+void test_colony_manager_toggle_building();
+void test_colony_manager_power_budget();
+void test_colony_manager_add_goods();
+void test_colony_manager_export_goods();
+void test_colony_manager_goods_validation();
+void test_colony_manager_max_buildings();
+void test_colony_manager_export_json();
+void test_colony_manager_headless_draw();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -3526,6 +3552,34 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_combat_log_panel_max_engagements);
     RUN_TEST(test_combat_log_panel_export_json);
     RUN_TEST(test_combat_log_panel_headless_draw);
+
+    // InsuranceOverviewPanel
+    log.BeginSection("InsuranceOverviewPanel");
+    RUN_TEST(test_insurance_overview_defaults);
+    RUN_TEST(test_insurance_overview_add_policy);
+    RUN_TEST(test_insurance_overview_policy_validation);
+    RUN_TEST(test_insurance_overview_tiers);
+    RUN_TEST(test_insurance_overview_remove_policy);
+    RUN_TEST(test_insurance_overview_file_claim);
+    RUN_TEST(test_insurance_overview_profit_loss);
+    RUN_TEST(test_insurance_overview_max_policies);
+    RUN_TEST(test_insurance_overview_export_json);
+    RUN_TEST(test_insurance_overview_headless_draw);
+
+    // ColonyManagerPanel
+    log.BeginSection("ColonyManagerPanel");
+    RUN_TEST(test_colony_manager_defaults);
+    RUN_TEST(test_colony_manager_add_building);
+    RUN_TEST(test_colony_manager_building_validation);
+    RUN_TEST(test_colony_manager_remove_building);
+    RUN_TEST(test_colony_manager_toggle_building);
+    RUN_TEST(test_colony_manager_power_budget);
+    RUN_TEST(test_colony_manager_add_goods);
+    RUN_TEST(test_colony_manager_export_goods);
+    RUN_TEST(test_colony_manager_goods_validation);
+    RUN_TEST(test_colony_manager_max_buildings);
+    RUN_TEST(test_colony_manager_export_json);
+    RUN_TEST(test_colony_manager_headless_draw);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);
