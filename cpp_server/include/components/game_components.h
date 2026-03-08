@@ -1671,6 +1671,103 @@ public:
     COMPONENT_TYPE(CapacitorWarfareState)
 };
 
+class SignatureAnalysisState : public ecs::Component {
+public:
+    struct SignatureReading {
+        std::string sig_id;
+        std::string sig_type;
+        float signal_strength = 0.0f;
+        float scan_resolution = 0.0f;
+        bool identified = false;
+    };
+
+    std::vector<SignatureReading> readings;
+    int max_readings = 50;
+
+    float scan_power = 1.0f;
+    float analysis_speed = 1.0f;
+    int total_identified = 0;
+    int total_scans = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SignatureAnalysisState)
+};
+
+class OverheatManagementState : public ecs::Component {
+public:
+    struct ModuleHeat {
+        std::string module_id;
+        float heat_level = 0.0f;
+        float heat_generation = 5.0f;
+        float max_heat = 100.0f;
+        float damage_threshold = 80.0f;
+        bool overheated = false;
+        bool burned_out = false;
+    };
+
+    std::vector<ModuleHeat> modules;
+    int max_modules = 16;
+
+    float heat_dissipation_rate = 2.0f;
+    float global_heat = 0.0f;
+    float max_global_heat = 100.0f;
+    int total_overheats = 0;
+    int total_burnouts = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OverheatManagementState)
+};
+
+class SalvageProcessingState : public ecs::Component {
+public:
+    struct SalvageJob {
+        std::string wreck_id;
+        std::string material_type;
+        float processing_time = 30.0f;
+        float progress = 0.0f;
+        float yield_amount = 0.0f;
+        float success_chance = 0.75f;
+        bool completed = false;
+        bool successful = false;
+    };
+
+    std::vector<SalvageJob> jobs;
+    int max_jobs = 10;
+
+    float processing_speed = 1.0f;
+    float skill_bonus = 0.0f;
+    float total_materials_salvaged = 0.0f;
+    int total_jobs_completed = 0;
+    int total_jobs_failed = 0;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SalvageProcessingState)
+};
+
+class JumpFatigueTrackerState : public ecs::Component {
+public:
+    float blue_timer = 0.0f;
+    float orange_timer = 0.0f;
+    float max_blue_timer = 600.0f;
+    float max_orange_timer = 36000.0f;
+    float fatigue_multiplier = 1.0f;
+    float decay_rate = 1.0f;
+    int total_jumps = 0;
+    int total_fatigue_penalties = 0;
+    bool jump_restricted = false;
+
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(JumpFatigueTrackerState)
+};
+
 } // namespace components
 } // namespace atlas
 

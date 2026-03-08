@@ -358,6 +358,10 @@ void run_fleet_warp_coordinator_system_tests();
 void run_mining_laser_system_tests();
 void run_npc_behavior_scheduler_system_tests();
 void run_capacitor_warfare_system_tests();
+void run_signature_analysis_system_tests();
+void run_overheat_management_system_tests();
+void run_salvage_processing_system_tests();
+void run_jump_fatigue_tracker_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -713,6 +717,10 @@ int main() {
     run_mining_laser_system_tests();
     run_npc_behavior_scheduler_system_tests();
     run_capacitor_warfare_system_tests();
+    run_signature_analysis_system_tests();
+    run_overheat_management_system_tests();
+    run_salvage_processing_system_tests();
+    run_jump_fatigue_tracker_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

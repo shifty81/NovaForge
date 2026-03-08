@@ -365,6 +365,10 @@ set(CORE_SOURCES
     src/systems/mining_laser_system.cpp
     src/systems/npc_behavior_scheduler_system.cpp
     src/systems/capacitor_warfare_system.cpp
+    src/systems/signature_analysis_system.cpp
+    src/systems/overheat_management_system.cpp
+    src/systems/salvage_processing_system.cpp
+    src/systems/jump_fatigue_tracker_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -786,6 +790,10 @@ set(SERVER_HEADERS
     include/systems/mining_laser_system.h
     include/systems/npc_behavior_scheduler_system.h
     include/systems/capacitor_warfare_system.h
+    include/systems/signature_analysis_system.h
+    include/systems/overheat_management_system.h
+    include/systems/salvage_processing_system.h
+    include/systems/jump_fatigue_tracker_system.h
 )
 
 # Steam SDK configuration
