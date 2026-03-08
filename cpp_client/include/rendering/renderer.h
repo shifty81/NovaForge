@@ -91,8 +91,9 @@ public:
 
     /**
      * Render the scene
+     * @param gameState Current game state (0=InSpace, 2=Docked, 3=StationInterior, 4=ShipInterior, 5=Cockpit)
      */
-    void renderScene(Camera& camera);
+    void renderScene(Camera& camera, int gameState = 0);
 
     /**
      * Clear screen with color
@@ -269,6 +270,24 @@ private:
     glm::vec3 m_sunPosition;
     glm::vec3 m_sunColor;
     float m_sunRadius;
+
+    /**
+     * Render the station hangar environment (floor, walls, ceiling, ship pad).
+     * Used when the player is in Docked, StationInterior, or ShipInterior state.
+     *
+     * @param camera Current camera for view/projection matrices
+     */
+    void renderHangar(Camera& camera);
+
+    /**
+     * Setup procedural hangar geometry (called once during initialize).
+     */
+    void setupHangar();
+
+    // Hangar geometry
+    unsigned int m_hangarVAO = 0;
+    unsigned int m_hangarVBO = 0;
+    int m_hangarVertexCount = 0;
 
     // Entity visuals
     std::unordered_map<std::string, EntityVisual> m_entityVisuals;

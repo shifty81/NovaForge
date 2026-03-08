@@ -214,7 +214,11 @@ void Application::initialize() {
                 // Go directly to Docked state (bypass the normal
                 // InSpace→Docking→Docked transition since we are spawning)
                 m_gameState = GameState::Docked;
-                m_camera->setViewMode(atlas::ViewMode::ORBIT);
+                m_camera->setViewMode(atlas::ViewMode::FPS);
+                // Place the player at eye level on the hangar catwalk,
+                // looking toward the landing pad and ship.
+                m_camera->setFPSPosition(glm::vec3(-30.0f, 1.8f, 0.0f),
+                                          glm::vec3(1.0f, 0.0f, 0.0f));
                 m_activeModeText = "DOCKED";
                 std::cout << "[Hangar] Player spawned docked at " << c.name << std::endl;
                 docked = true;

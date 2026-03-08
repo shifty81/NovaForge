@@ -1097,6 +1097,81 @@ public:
     COMPONENT_TYPE(StationServiceState)
 };
 
+/**
+ * @brief Ship insurance payout state for processing claims
+ *
+ * Tracks insurance policies, premium costs, and payout processing
+ * when ships are destroyed. Supports multiple policy tiers with
+ * different coverage percentages.
+ */
+class ShipInsurancePayoutState : public ecs::Component {
+public:
+    struct Policy {
+        std::string policy_id;
+        std::string ship_id;
+        std::string tier;          // "basic", "standard", "platinum"
+        float coverage = 0.5f;     // 0.0-1.0 percentage of ship value covered
+        float premium = 0.0f;      // ISC premium paid
+        float ship_value = 0.0f;   // ISC value of insured ship
+        bool claimed = false;
+        float claim_time = 0.0f;   // when the claim was filed
+    };
+
+    std::vector<Policy> policies;
+    int max_policies = 20;
+    float total_premiums_collected = 0.0f;
+    float total_payouts_issued = 0.0f;
+    int total_claims = 0;
+    int total_active_policies = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    float profitLoss() const { return total_premiums_collected - total_payouts_issued; }
+
+    COMPONENT_TYPE(ShipInsurancePayoutState)
+};
+
+/**
+ * @brief Planetary colony management state
+ *
+ * Tracks colony buildings, production chains, storage, and exports.
+ * Colonies extract raw materials, process them, and export finished
+ * goods to the market.
+ */
+class ColonyManagementState : public ecs::Component {
+public:
+    struct Building {
+        std::string building_id;
+        std::string building_type;  // "extractor", "processor", "storage", "launchpad"
+        float production_rate = 1.0f;
+        float power_usage = 10.0f;
+        bool online = true;
+    };
+
+    struct StoredGood {
+        std::string good_type;
+        float quantity = 0.0f;
+        float max_quantity = 1000.0f;
+    };
+
+    std::string colony_name;
+    std::string planet_id;
+    std::vector<Building> buildings;
+    std::vector<StoredGood> stored_goods;
+    int max_buildings = 15;
+    float power_capacity = 100.0f;
+    float power_used = 0.0f;
+    float total_exports = 0.0f;
+    float total_export_value = 0.0f;
+    int total_production_cycles = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    float remainingPower() const { return power_capacity - power_used; }
+
+    COMPONENT_TYPE(ColonyManagementState)
+};
+
 } // namespace components
 } // namespace atlas
 

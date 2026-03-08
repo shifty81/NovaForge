@@ -21,22 +21,22 @@ void EditorLayout::SetContext(atlas::AtlasContext* ctx) {
 }
 
 void EditorLayout::Draw() {
-    // Draw the menu bar at the top of the editor window.
-    // The menu bar consumes MenuBarHeight pixels from the top; dock panels
-    // render below it.  In headless mode (no context) this still returns
-    // the height so tests can verify the offset.
     float windowW = 1600.0f;
     float windowH = 900.0f;
     if (m_ctx) {
         windowW = static_cast<float>(m_ctx->input().windowW);
         windowH = static_cast<float>(m_ctx->input().windowH);
     }
+
+    // Pass 1: Draw the menu bar (background + top-level labels only)
     float menuH = m_menuBar.Draw(m_ctx, windowW);
 
-    // Compute the available area below the menu bar and pass it into
-    // the dock tree so every panel receives correct bounds.
+    // Pass 2: Draw dock panels below the menu bar
     atlas::Rect dockArea{0.0f, menuH, windowW, windowH - menuH};
     DrawNode(m_root, dockArea);
+
+    // Pass 3: Draw the menu dropdown overlay ON TOP of panels
+    m_menuBar.DrawDropdown(m_ctx, windowW);
 }
 
 void EditorLayout::BroadcastAssetReload(const std::string& assetId,

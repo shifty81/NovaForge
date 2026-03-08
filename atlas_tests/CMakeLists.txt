@@ -103,6 +103,8 @@ set(ATLAS_TEST_SOURCES
     test_pcg_snapshot_manager.cpp
     test_delta_edits_merge_tool.cpp
     test_live_edit_mode.cpp
+    test_insurance_overview_panel.cpp
+    test_colony_manager_panel.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/undoable_command_bus.cpp
     ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/editor_event_bus.cpp
@@ -129,6 +131,8 @@ set(ATLAS_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/editor/tools/StationEditorPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/TradeRoutePanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/tools/CombatLogPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/InsuranceOverviewPanel.cpp
+    ${CMAKE_SOURCE_DIR}/editor/tools/ColonyManagerPanel.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
     ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
     ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp

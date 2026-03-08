@@ -512,6 +512,40 @@ public:
     COMPONENT_TYPE(DamageResistanceProfile)
 };
 
+/**
+ * @brief Turret tracking state for rotation and target acquisition
+ *
+ * Manages turret rotation speed, tracking accuracy, and target
+ * lock state. Small fast targets are harder to track, requiring
+ * higher tracking speed to maintain accuracy.
+ */
+class TurretTrackingState : public ecs::Component {
+public:
+    std::string turret_id;
+    std::string target_id;
+    float tracking_speed = 1.0f;       // rad/s angular tracking speed
+    float optimal_range = 10000.0f;    // meters
+    float falloff_range = 5000.0f;     // meters beyond optimal
+    float current_angle = 0.0f;        // radians, current turret angle
+    float target_angle = 0.0f;         // radians, angle to target
+    float angular_velocity = 0.0f;     // target angular velocity in rad/s
+    float accuracy = 0.0f;             // 0.0-1.0, computed hit probability
+    float damage_multiplier = 0.0f;    // based on tracking vs angular velocity
+    int total_shots_fired = 0;
+    int total_hits = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+    bool locked = false;               // true when turret is locked on target
+
+    float hitRate() const {
+        return total_shots_fired > 0
+            ? static_cast<float>(total_hits) / static_cast<float>(total_shots_fired)
+            : 0.0f;
+    }
+
+    COMPONENT_TYPE(TurretTrackingState)
+};
+
 } // namespace components
 } // namespace atlas
 

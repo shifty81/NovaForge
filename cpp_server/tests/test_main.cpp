@@ -337,6 +337,10 @@ void run_mining_yield_optimizer_system_tests();
 void run_fleet_coordination_broadcast_system_tests();
 void run_station_service_broker_system_tests();
 void run_jump_gate_activation_system_tests();
+void run_asteroid_scanner_system_tests();
+void run_ship_insurance_payout_system_tests();
+void run_turret_tracking_system_tests();
+void run_colony_management_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -671,6 +675,10 @@ int main() {
     run_fleet_coordination_broadcast_system_tests();
     run_station_service_broker_system_tests();
     run_jump_gate_activation_system_tests();
+    run_asteroid_scanner_system_tests();
+    run_ship_insurance_payout_system_tests();
+    run_turret_tracking_system_tests();
+    run_colony_management_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

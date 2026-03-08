@@ -940,6 +940,38 @@ public:
     COMPONENT_TYPE(JumpGateState)
 };
 
+/**
+ * @brief Asteroid scanner state for revealing ore composition
+ *
+ * Tracks scan progress, resolution, and discovered ore types for
+ * an asteroid entity. Higher scan resolution reveals rarer ore types.
+ */
+class AsteroidScannerState : public ecs::Component {
+public:
+    struct OreReading {
+        std::string ore_type;       // "Veldspar", "Scordite", "Pyroxeres", etc.
+        float concentration = 0.0f; // 0.0-1.0
+        float estimated_value = 0.0f;
+    };
+
+    std::string target_asteroid_id;
+    float scan_duration = 5.0f;       // seconds for full scan
+    float scan_progress = 0.0f;       // 0.0-1.0
+    float scan_resolution = 1.0f;     // 1.0 = standard, 2.0 = deep scan
+    std::vector<OreReading> readings;
+    int max_readings = 10;
+    int total_scans_completed = 0;
+    float total_value_scanned = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+    bool scanning = false;
+    bool scan_complete = false;
+
+    bool isScanning() const { return scanning && !scan_complete; }
+
+    COMPONENT_TYPE(AsteroidScannerState)
+};
+
 } // namespace components
 } // namespace atlas
 

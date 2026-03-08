@@ -41,6 +41,15 @@ public:
      */
     float Draw(atlas::AtlasContext* ctx, float windowW);
 
+    /**
+     * Draw the dropdown overlay for the currently open menu.
+     * Call AFTER dock panels so the dropdown renders on top.
+     *
+     * @param ctx     Atlas UI context (may be null in headless/test mode).
+     * @param windowW Current window width.
+     */
+    void DrawDropdown(atlas::AtlasContext* ctx, float windowW);
+
     /** Read-only access to registered panels. */
     const std::vector<EditorPanel*>& Panels() const { return m_panels; }
 

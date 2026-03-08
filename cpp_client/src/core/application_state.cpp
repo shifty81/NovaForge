@@ -153,7 +153,11 @@ void Application::requestStateTransition(GameState newState) {
             m_activeModeText = "DOCKING";
             break;
         case GameState::Docked:
-            m_camera->setViewMode(atlas::ViewMode::ORBIT);
+            m_camera->setViewMode(atlas::ViewMode::FPS);
+            // Place the player at eye level on the hangar catwalk,
+            // looking toward the landing pad and ship.
+            m_camera->setFPSPosition(glm::vec3(-30.0f, 1.8f, 0.0f),
+                                      glm::vec3(1.0f, 0.0f, 0.0f));
             m_activeModeText = "DOCKED";
             break;
         case GameState::StationInterior:

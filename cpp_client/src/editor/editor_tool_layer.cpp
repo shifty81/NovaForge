@@ -303,6 +303,16 @@ void EditorToolLayer::draw(atlas::AtlasContext& ctx) {
 
     m_layout->SetContext(&ctx);
 
+    // Draw a semi-transparent scrim so the game scene is visible underneath
+    // the editor panels.  This replaces the old fully-opaque panel coverage
+    // that produced a black-screen effect.
+    {
+        float w = static_cast<float>(ctx.input().windowW);
+        float h = static_cast<float>(ctx.input().windowH);
+        atlas::Rect fullScreen{0.0f, 0.0f, w, h};
+        ctx.renderer().drawRect(fullScreen, atlas::Color(0.0f, 0.0f, 0.0f, 0.45f));
+    }
+
     // Process any queued commands
     m_commandBus.ProcessCommands();
     m_undoableCommandBus.ProcessCommands();

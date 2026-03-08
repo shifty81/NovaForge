@@ -53,6 +53,8 @@ add_executable(AtlasEditor
     tools/StationEditorPanel.cpp
     tools/TradeRoutePanel.cpp
     tools/CombatLogPanel.cpp
+    tools/InsuranceOverviewPanel.cpp
+    tools/ColonyManagerPanel.cpp
     ai/AIAggregator.cpp
     ai/TemplateAIBackend.cpp
     ui/UndoStack.cpp
