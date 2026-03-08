@@ -159,6 +159,14 @@ public:
     /** Set the currently active movement mode text (empty to hide). */
     void setModeIndicator(const std::string& text) { m_modeText = text; }
 
+    // ── System info (displayed top-left, below sidebar) ─────────────
+
+    /** Set the current solar system name and security level. */
+    void setSystemInfo(const std::string& name, float security) {
+        m_systemName = name;
+        m_securityLevel = security;
+    }
+
     // ── Skill queue (sidebar progress bar) ──────────────────────────
 
     /** Set the skill queue progress (0.0–1.0). */
@@ -505,6 +513,10 @@ private:
     // Mode indicator
     std::string m_modeText;
 
+    // System info (top-left display)
+    std::string m_systemName;
+    float m_securityLevel = 1.0f;
+
     // Skill queue progress for sidebar display
     float m_skillQueuePct = 0.35f;  // default: ~35% through current skill
 
@@ -579,6 +591,7 @@ private:
     void drawDamageFlashes(AtlasContext& ctx, Vec2 hudCentre, float hudRadius);
     void drawDroneStatus(AtlasContext& ctx);
     void drawFleetBroadcasts(AtlasContext& ctx);
+    void drawSystemInfo(AtlasContext& ctx);
 };
 
 } // namespace atlas

@@ -177,6 +177,8 @@ void Renderer::renderScene(Camera& camera, int gameState) {
         if (m_sunEnabled) {
             renderSun(camera, m_sunPosition, m_sunColor, m_sunRadius);
         }
+        // Render celestial objects (planets, stations, gates, belts)
+        renderCelestials(camera);
     }
 
     // Always render entities (player ship visible in hangar too)
@@ -573,6 +575,59 @@ void Renderer::updateWarpEffect(int phase, float progress, float intensity,
     if (m_warpEffectRenderer) {
         m_warpEffectRenderer->update(deltaTime, phase, progress, intensity, direction);
     }
+}
+
+void Renderer::setCelestials(const std::vector<CelestialRenderData>& celestials) {
+    m_celestialRenderData = celestials;
+}
+
+void Renderer::setEngineTrailState(bool emitting, float intensity,
+                                    const glm::vec3& position, const glm::vec3& velocity) {
+    m_engineTrailEmitting = emitting;
+    m_engineTrailIntensity = intensity;
+    m_engineTrailPos = position;
+    m_engineTrailVelocity = velocity;
+}
+
+void Renderer::renderCelestials(Camera& camera) {
+    if (m_sunVAO == 0 || !m_entityShader || m_celestialRenderData.empty()) return;
+
+    m_entityShader->use();
+    m_entityShader->setMat4("view", camera.getViewMatrix());
+    m_entityShader->setMat4("projection", camera.getProjectionMatrix());
+
+    // Light direction from the sun toward celestials
+    glm::vec3 sunDir = m_sunEnabled
+        ? glm::normalize(-m_sunPosition)
+        : glm::normalize(glm::vec3(-0.5f, -1.0f, -0.3f));
+    m_entityShader->setVec3("lightDir", sunDir);
+    m_entityShader->setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.9f));
+    m_entityShader->setVec3("viewPos", camera.getPosition());
+
+    glEnable(GL_DEPTH_TEST);
+
+    for (const auto& cel : m_celestialRenderData) {
+        // Enforce a minimum apparent size so distant celestials remain visible
+        float dist = glm::length(camera.getPosition() - cel.position);
+        float minApparentRadius = dist * 0.003f;  // ~0.3% of distance
+        float renderRadius = std::max(cel.radius, minApparentRadius);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, cel.position);
+        model = glm::scale(model, glm::vec3(renderRadius));
+        m_entityShader->setMat4("model", model);
+
+        // Override light color with the celestial's own color tint so
+        // the sphere appears coloured without requiring a separate shader.
+        m_entityShader->setVec3("lightColor", cel.color * 1.2f);
+
+        glBindVertexArray(m_sunVAO);
+        glDrawElements(GL_TRIANGLES, m_sunIndexCount, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
+
+    // Restore default light color
+    m_entityShader->setVec3("lightColor", glm::vec3(1.0f, 0.95f, 0.9f));
 }
 
 void Renderer::renderWarpEffect() {

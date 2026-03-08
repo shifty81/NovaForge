@@ -178,6 +178,9 @@ void AtlasHUD::update(AtlasContext& ctx,
     // 12. Damage flashes (on top of everything)
     float winW = static_cast<float>(ctx.input().windowW);
     float winH = static_cast<float>(ctx.input().windowH);
+
+    // 13. System info (top-left, to the right of sidebar)
+    drawSystemInfo(ctx);
     Vec2 hudCentre = {winW * 0.5f, winH - 110.0f};
     drawDamageFlashes(ctx, hudCentre, 80.0f);
 }
@@ -1375,6 +1378,39 @@ void AtlasHUD::drawDockablePanel(AtlasContext& ctx, const char* title,
     }
 
     panelEnd(ctx);
+}
+
+// ── System Info (top-left, to the right of sidebar) ─────────────────
+
+void AtlasHUD::drawSystemInfo(AtlasContext& ctx) {
+    if (m_systemName.empty()) return;
+
+    auto& r = ctx.renderer();
+    const Theme& t = ctx.theme();
+
+    float x = m_sidebarWidth + 10.0f;
+    float y = 8.0f;
+
+    // Security level color: green for 1.0 → red for 0.0
+    Color secColor;
+    if (m_securityLevel >= 0.8f) {
+        secColor = {0.0f, 1.0f, 0.0f, 1.0f};       // bright green (high sec)
+    } else if (m_securityLevel >= 0.5f) {
+        secColor = {1.0f, 1.0f, 0.0f, 1.0f};       // yellow (mid sec)
+    } else if (m_securityLevel >= 0.1f) {
+        secColor = {1.0f, 0.5f, 0.0f, 1.0f};       // orange (low sec)
+    } else {
+        secColor = {1.0f, 0.1f, 0.1f, 1.0f};       // red (null sec)
+    }
+
+    // Draw security level number
+    char secBuf[16];
+    std::snprintf(secBuf, sizeof(secBuf), "%.1f", m_securityLevel);
+    label(ctx, Vec2(x, y), secBuf, secColor);
+
+    // Draw system name next to security level
+    float nameX = x + 32.0f;
+    label(ctx, Vec2(nameX, y), m_systemName, t.textPrimary);
 }
 
 } // namespace atlas
