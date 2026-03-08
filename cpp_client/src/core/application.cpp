@@ -695,6 +695,11 @@ void Application::update(float deltaTime) {
         updateLocalMovement(deltaTime);
     }
 
+    // Update FPS character movement when on foot
+    if (isInFPSMode()) {
+        updateFPSMovement(deltaTime);
+    }
+
     // Docking animation timer
     if (m_gameState == GameState::Docking) {
         m_dockingTimer -= deltaTime;
