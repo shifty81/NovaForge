@@ -74,18 +74,42 @@ struct JumpGate {
     int      orbitIndex;
 };
 
+// ── Celestial body (style-generation detail) ────────────────────────
+struct GeneratedCelestialBody {
+    uint32_t    bodyId;
+    std::string name;
+    float       orbitRadius;   ///< AU from the star.
+    float       orbitAngle;    ///< Radians.
+    float       radius;        ///< Body radius (km).
+    int         bodyType;      ///< 0=barren, 1=temperate, 2=oceanic, 3=gas.
+};
+
+// ── Stargate (style-generation detail) ──────────────────────────────
+struct GeneratedStargate {
+    uint32_t    gateId;
+    std::string name;
+    float       posX, posY, posZ;
+};
+
 // ── Full generated star system ──────────────────────────────────────
 struct GeneratedStarSystem {
     uint64_t                  systemId;
     uint64_t                  seed;
+    std::string               systemName;
     StarData                  star;
     std::vector<OrbitSlot>    orbitSlots;
     std::vector<SystemStation> stations;
     std::vector<JumpGate>     gates;
+    std::vector<GeneratedCelestialBody> planets;   ///< Style-generated planet data.
+    std::vector<GeneratedStargate>      stargates; ///< Style-generated stargate data.
     float                     securityLevel;   ///< 0.0 (null) – 1.0 (high).
     uint64_t                  constellationId;
     int                       totalPlanets;
     int                       totalBelts;
+    int                       starType;        ///< Simple star type index for style gen.
+    float                     starLuminosity;  ///< Convenience luminosity for style gen.
+    int                       beltCount;
+    int                       stationCount;
     bool                      valid;
 };
 

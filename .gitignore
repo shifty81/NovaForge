@@ -40,6 +40,7 @@ env/
 # Logs
 *.log
 logs/
+build_all_*
 errorlog*.txt
 error_log*.txt
 errors*.txt
