@@ -383,6 +383,7 @@ void run_fleet_progression_system_tests();
 void run_hangar_environment_system_tests();
 void run_titan_assembly_system_tests();
 void run_station_deployment_system_tests();
+void run_hull_class_capability_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -763,6 +764,7 @@ int main() {
     run_hangar_environment_system_tests();
     run_titan_assembly_system_tests();
     run_station_deployment_system_tests();
+    run_hull_class_capability_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
