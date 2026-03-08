@@ -366,6 +366,10 @@ void run_fleet_hangar_system_tests();
 void run_mission_consequence_system_tests();
 void run_supply_demand_system_tests();
 void run_market_order_system_tests();
+void run_ancient_module_discovery_system_tests();
+void run_eva_airlock_exit_system_tests();
+void run_salvage_exploration_system_tests();
+void run_warp_performance_budget_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -729,6 +733,10 @@ int main() {
     run_mission_consequence_system_tests();
     run_supply_demand_system_tests();
     run_market_order_system_tests();
+    run_ancient_module_discovery_system_tests();
+    run_eva_airlock_exit_system_tests();
+    run_salvage_exploration_system_tests();
+    run_warp_performance_budget_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
