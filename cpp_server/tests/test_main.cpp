@@ -362,6 +362,10 @@ void run_signature_analysis_system_tests();
 void run_overheat_management_system_tests();
 void run_salvage_processing_system_tests();
 void run_jump_fatigue_tracker_system_tests();
+void run_fleet_hangar_system_tests();
+void run_mission_consequence_system_tests();
+void run_supply_demand_system_tests();
+void run_market_order_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -721,6 +725,10 @@ int main() {
     run_overheat_management_system_tests();
     run_salvage_processing_system_tests();
     run_jump_fatigue_tracker_system_tests();
+    run_fleet_hangar_system_tests();
+    run_mission_consequence_system_tests();
+    run_supply_demand_system_tests();
+    run_market_order_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
