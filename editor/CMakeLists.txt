@@ -51,6 +51,8 @@ add_executable(AtlasEditor
     tools/SolarSystemEditorPanel.cpp
     tools/ModelImportPanel.cpp
     tools/StationEditorPanel.cpp
+    tools/TradeRoutePanel.cpp
+    tools/CombatLogPanel.cpp
     ai/AIAggregator.cpp
     ai/TemplateAIBackend.cpp
     ui/UndoStack.cpp

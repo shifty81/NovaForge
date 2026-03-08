@@ -337,8 +337,10 @@ set(CORE_SOURCES
     src/systems/npc_spawn_scheduler_system.cpp
     src/systems/skill_training_system.cpp
     src/systems/warp_charge_sequence_system.cpp
-    src/systems/hyperspace_routing_system.cpp
-    src/systems/player_hangar_inventory_system.cpp
+    src/systems/player_progression_tracking_system.cpp
+    src/systems/sector_map_discovery_system.cpp
+    src/systems/ship_loadout_preset_system.cpp
+    src/systems/mining_yield_optimizer_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -732,8 +734,10 @@ set(SERVER_HEADERS
     include/systems/npc_spawn_scheduler_system.h
     include/systems/skill_training_system.h
     include/systems/warp_charge_sequence_system.h
-    include/systems/hyperspace_routing_system.h
-    include/systems/player_hangar_inventory_system.h
+    include/systems/player_progression_tracking_system.h
+    include/systems/sector_map_discovery_system.h
+    include/systems/ship_loadout_preset_system.h
+    include/systems/mining_yield_optimizer_system.h
 )
 
 # Steam SDK configuration

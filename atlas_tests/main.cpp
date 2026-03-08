@@ -1657,6 +1657,38 @@ void test_station_editor_max_services();
 void test_station_editor_export_json();
 void test_station_editor_headless_draw();
 
+// TradeRoutePanel tests
+void test_trade_route_defaults();
+void test_trade_route_add();
+void test_trade_route_add_validation();
+void test_trade_route_remove();
+void test_trade_route_volume();
+void test_trade_route_revenue();
+void test_trade_route_congestion();
+void test_trade_route_toggle();
+void test_trade_route_total_stats();
+void test_trade_route_disabled_excluded();
+void test_trade_route_max_routes();
+void test_trade_route_export_json();
+void test_trade_route_headless_draw();
+
+// CombatLogPanel tests
+void test_combat_log_panel_defaults();
+void test_combat_log_panel_add_entry();
+void test_combat_log_panel_entry_validation();
+void test_combat_log_panel_damage_types();
+void test_combat_log_panel_remove_entry();
+void test_combat_log_panel_add_engagement();
+void test_combat_log_panel_engagement_validation();
+void test_combat_log_panel_remove_engagement();
+void test_combat_log_panel_engagement_dps();
+void test_combat_log_panel_engagement_accuracy();
+void test_combat_log_panel_hit_miss_stats();
+void test_combat_log_panel_max_entries();
+void test_combat_log_panel_max_engagements();
+void test_combat_log_panel_export_json();
+void test_combat_log_panel_headless_draw();
+
 int main(int argc, char* argv[]) {
     std::string logPath;
     for (int i = 1; i < argc; ++i) {
@@ -3460,6 +3492,40 @@ int main(int argc, char* argv[]) {
     RUN_TEST(test_station_editor_max_services);
     RUN_TEST(test_station_editor_export_json);
     RUN_TEST(test_station_editor_headless_draw);
+
+    // TradeRoutePanel
+    log.BeginSection("TradeRoutePanel");
+    RUN_TEST(test_trade_route_defaults);
+    RUN_TEST(test_trade_route_add);
+    RUN_TEST(test_trade_route_add_validation);
+    RUN_TEST(test_trade_route_remove);
+    RUN_TEST(test_trade_route_volume);
+    RUN_TEST(test_trade_route_revenue);
+    RUN_TEST(test_trade_route_congestion);
+    RUN_TEST(test_trade_route_toggle);
+    RUN_TEST(test_trade_route_total_stats);
+    RUN_TEST(test_trade_route_disabled_excluded);
+    RUN_TEST(test_trade_route_max_routes);
+    RUN_TEST(test_trade_route_export_json);
+    RUN_TEST(test_trade_route_headless_draw);
+
+    // CombatLogPanel
+    log.BeginSection("CombatLogPanel");
+    RUN_TEST(test_combat_log_panel_defaults);
+    RUN_TEST(test_combat_log_panel_add_entry);
+    RUN_TEST(test_combat_log_panel_entry_validation);
+    RUN_TEST(test_combat_log_panel_damage_types);
+    RUN_TEST(test_combat_log_panel_remove_entry);
+    RUN_TEST(test_combat_log_panel_add_engagement);
+    RUN_TEST(test_combat_log_panel_engagement_validation);
+    RUN_TEST(test_combat_log_panel_remove_engagement);
+    RUN_TEST(test_combat_log_panel_engagement_dps);
+    RUN_TEST(test_combat_log_panel_engagement_accuracy);
+    RUN_TEST(test_combat_log_panel_hit_miss_stats);
+    RUN_TEST(test_combat_log_panel_max_entries);
+    RUN_TEST(test_combat_log_panel_max_engagements);
+    RUN_TEST(test_combat_log_panel_export_json);
+    RUN_TEST(test_combat_log_panel_headless_draw);
 
     if (!logPath.empty()) {
         log.WriteLogFile(logPath);

@@ -329,8 +329,10 @@ void run_damage_resistance_profile_system_tests();
 void run_npc_spawn_scheduler_system_tests();
 void run_skill_training_system_tests();
 void run_warp_charge_sequence_system_tests();
-void run_hyperspace_routing_system_tests();
-void run_player_hangar_inventory_system_tests();
+void run_player_progression_tracking_system_tests();
+void run_sector_map_discovery_system_tests();
+void run_ship_loadout_preset_system_tests();
+void run_mining_yield_optimizer_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -657,8 +659,10 @@ int main() {
     run_npc_spawn_scheduler_system_tests();
     run_skill_training_system_tests();
     run_warp_charge_sequence_system_tests();
-    run_hyperspace_routing_system_tests();
-    run_player_hangar_inventory_system_tests();
+    run_player_progression_tracking_system_tests();
+    run_sector_map_discovery_system_tests();
+    run_ship_loadout_preset_system_tests();
+    run_mining_yield_optimizer_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

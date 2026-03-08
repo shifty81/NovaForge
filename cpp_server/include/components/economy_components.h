@@ -1032,6 +1032,27 @@ public:
     COMPONENT_TYPE(MarketTradeState)
 };
 
+/**
+ * @brief Mining yield optimizer state
+ *
+ * Aggregates yield multipliers from skills, modules, and environment
+ * to produce a final mining yield multiplier.
+ */
+class MiningYieldState : public ecs::Component {
+public:
+    float skill_bonus = 0.0f;         // e.g. 0.25 = +25% from skills
+    float module_bonus = 0.0f;        // e.g. 0.15 = +15% from mining upgrades
+    float environment_bonus = 0.0f;   // e.g. 0.10 = +10% from rich belt
+    float security_modifier = 1.0f;   // 0.1-2.0, lower sec = higher yield
+    float final_multiplier = 1.0f;    // computed each tick
+    float total_yield = 0.0f;
+    int cycle_count = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MiningYieldState)
+};
+
 } // namespace components
 } // namespace atlas
 
