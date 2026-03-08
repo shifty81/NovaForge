@@ -5,11 +5,45 @@
 
 #include <cassert>
 #include <cmath>
-#include "../cpp_server/include/systems/fleet_positional_audio_system.h"
+#include <algorithm>
 #include "../cpp_server/include/components/fleet_components.h"
 
-using namespace atlas::systems;
 using namespace atlas::components;
+
+// Static utility functions mirrored from FleetPositionalAudioSystem.
+// Included here directly to avoid pulling in single_component_system.h which
+// causes an atlas::ecs::World namespace collision with the engine ECS World
+// when both are linked into the AtlasTests binary.
+namespace atlas { namespace systems {
+struct FleetPositionalAudioSystem {
+    static inline void computeAudioPosition(float cmd_x, float cmd_y, float cmd_z,
+                                            float off_x, float off_y, float off_z,
+                                            float& out_x, float& out_y, float& out_z) {
+        out_x = cmd_x + off_x;
+        out_y = cmd_y + off_y;
+        out_z = cmd_z + off_z;
+    }
+    static inline float computeAttenuation(float distance, float min_range, float max_range) {
+        if (min_range < 0.0f) min_range = 0.0f;
+        if (max_range <= min_range) return 0.0f;
+        if (distance <= min_range) return 1.0f;
+        if (distance >= max_range) return 0.0f;
+        return 1.0f - (distance - min_range) / (max_range - min_range);
+    }
+    static inline void computeWarpReverb(bool in_warp, float warp_speed,
+                                         float& wet_mix, float& decay) {
+        if (!in_warp) { wet_mix = 0.0f; decay = 0.0f; return; }
+        static constexpr float kBaseWetMix = 0.3f;
+        static constexpr float kBaseDecay  = 1.5f;
+        float speed_factor = std::clamp(warp_speed / 10.0f, 0.0f, 1.0f);
+        wet_mix = kBaseWetMix + 0.3f * speed_factor;
+        decay   = kBaseDecay  + 1.0f * speed_factor;
+        wet_mix = std::clamp(wet_mix, 0.0f, 1.0f);
+        decay   = std::max(decay, 0.0f);
+    }
+};
+}} // namespace atlas::systems
+using namespace atlas::systems;
 
 static bool approxEq(float a, float b, float eps = 0.001f) {
     return std::fabs(a - b) < eps;

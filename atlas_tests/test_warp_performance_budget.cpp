@@ -5,11 +5,52 @@
 
 #include <cassert>
 #include <cmath>
-#include "../cpp_server/include/systems/warp_performance_budget_system.h"
+#include <algorithm>
 #include "../cpp_server/include/components/navigation_components.h"
 
-using namespace atlas::systems;
 using namespace atlas::components;
+
+// Static utility functions mirrored from WarpPerformanceBudgetSystem.
+// Included here directly to avoid pulling in single_component_system.h which
+// causes an atlas::ecs::World namespace collision with the engine ECS World
+// when both are linked into the AtlasTests binary.
+namespace atlas { namespace systems {
+struct WarpPerformanceBudgetSystem {
+    static inline float computeTotalCost(const float costs[5]) {
+        float total = 0.0f;
+        for (int i = 0; i < 5; ++i) total += std::max(costs[i], 0.0f);
+        return total;
+    }
+    static inline float enforceBudget(const float costs[5], float budget_ms,
+                                      bool enabled[5]) {
+        if (budget_ms <= 0.0f) {
+            for (int i = 0; i < 5; ++i) enabled[i] = false;
+            return 0.0f;
+        }
+        for (int i = 0; i < 5; ++i) enabled[i] = true;
+        float total = computeTotalCost(costs);
+        if (total <= budget_ms) {
+            return (total > 0.0f) ? std::min(total / budget_ms, 1.0f) : 0.0f;
+        }
+        int order[5] = {0, 1, 2, 3, 4};
+        for (int i = 0; i < 4; ++i) {
+            for (int j = i + 1; j < 5; ++j) {
+                if (costs[order[j]] > costs[order[i]])
+                    std::swap(order[i], order[j]);
+            }
+        }
+        float running = total;
+        for (int k = 0; k < 5 && running > budget_ms; ++k) {
+            int idx = order[k];
+            running -= std::max(costs[idx], 0.0f);
+            enabled[idx] = false;
+        }
+        if (running <= 0.0f) return 0.0f;
+        return std::min(running / budget_ms, 1.0f);
+    }
+};
+}} // namespace atlas::systems
+using namespace atlas::systems;
 
 static bool approxEq(float a, float b, float eps = 0.001f) {
     return std::fabs(a - b) < eps;

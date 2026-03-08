@@ -809,6 +809,7 @@ message(STATUS "")
 # Test executables
 if(BUILD_TESTS)
     file(GLOB TEST_SOURCES tests/test_*.cpp)
+    list(REMOVE_ITEM TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_single_main.cpp")
     list(APPEND TEST_SOURCES tests/test_main.cpp)
     list(REMOVE_DUPLICATES TEST_SOURCES)
 

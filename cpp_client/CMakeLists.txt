@@ -476,7 +476,7 @@ if(NOVAFORGE_EDITOR_TOOLS)
         ${CMAKE_SOURCE_DIR}/editor/tools/LiveSceneManager.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/AssetPalettePanel.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/PhysicsTunerPanel.cpp
-        ${CMAKE_SOURCE_DIR}/editor/tools/SceneBookmarkManager.cpp
+        ${CMAKE_SOURCE_DIR}/cpp_client/src/editor/scene_bookmark_manager.cpp
         ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
         ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
         # PCG sources used by editor panels
