@@ -141,6 +141,13 @@ void Application::requestStateTransition(GameState newState) {
 
     m_gameState = newState;
 
+    // ── Cursor capture: lock cursor in FPS modes, release in others ──
+    if (isInFPSMode()) {
+        captureFPSCursor();
+    } else {
+        releaseFPSCursor();
+    }
+
     // Apply camera mode appropriate for the new state
     switch (m_gameState) {
         case GameState::InSpace:

@@ -33,6 +33,24 @@ void Application::handleKeyInput(int key, int action, int mods) {
         return;
     }
 
+    // ── Escape always works: release cursor in FPS, open pause menu ──
+    if (key == GLFW_KEY_ESCAPE) {
+        if (isInFPSMode() && m_fpsCursorCaptured) {
+            releaseFPSCursor();
+            return;
+        }
+        // Fall through to pause menu handling by other systems
+    }
+
+    // ── FPS Mode Controls ─────────────────────────────────────────────
+    // When on foot (Docked, StationInterior, ShipInterior), WASD/Space/etc.
+    // drive first-person movement instead of tactical fleet commands.
+    if (isInFPSMode()) {
+        handleFPSKeyInput(key, action, mods);
+        return;
+    }
+
+    // ── Tactical / Space Mode Controls ────────────────────────────────
     // Module activation (F1-F8) — Astralis standard
     if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F8) {
         int slot = key - GLFW_KEY_F1 + 1;  // F1 = slot 1
@@ -119,7 +137,86 @@ void Application::handleKeyInput(int key, int action, int mods) {
     }
 }
 
+void Application::handleFPSKeyInput(int key, int /*action*/, int /*mods*/) {
+    // FPS-mode key press events (one-shot actions)
+    // Continuous WASD movement is handled in updateFPSMovement() via key polling.
+    switch (key) {
+        case GLFW_KEY_SPACE:
+            // Jump — request one jump per press
+            std::cout << "[FPS] Jump" << std::endl;
+            m_fpsJumpRequested = true;
+            break;
+
+        case GLFW_KEY_E:
+            // Interact with nearest object
+            std::cout << "[FPS] Interact" << std::endl;
+            // TODO: dispatch interaction to nearest interactable entity
+            break;
+
+        case GLFW_KEY_V:
+            // Toggle view mode (FPS ↔ Cockpit if in ship)
+            toggleViewMode();
+            break;
+
+        case GLFW_KEY_R:
+            // Reload / context action
+            std::cout << "[FPS] Reload" << std::endl;
+            break;
+
+        case GLFW_KEY_F:
+            // Toggle flashlight
+            std::cout << "[FPS] Toggle flashlight" << std::endl;
+            m_fpsFlashlightOn = !m_fpsFlashlightOn;
+            break;
+
+        case GLFW_KEY_TAB:
+            // Open inventory
+            std::cout << "[FPS] Inventory toggle" << std::endl;
+            break;
+
+        case GLFW_KEY_F1:
+            // FPS quick-slot 1 (re-purposing F1-F4 for FPS item slots)
+            std::cout << "[FPS] Quick slot 1" << std::endl;
+            break;
+
+        case GLFW_KEY_F2:
+            std::cout << "[FPS] Quick slot 2" << std::endl;
+            break;
+
+        case GLFW_KEY_F3:
+            std::cout << "[FPS] Quick slot 3" << std::endl;
+            break;
+
+        case GLFW_KEY_F4:
+            std::cout << "[FPS] Quick slot 4" << std::endl;
+            break;
+
+        default:
+            break;
+    }
+}
+
 void Application::handleMouseButton(int button, int action, int mods, double x, double y) {
+    // ── FPS Mode: mouse buttons have different behaviour ──────────────
+    if (isInFPSMode()) {
+        // In FPS mode, clicking re-captures cursor if it was released (e.g. after Escape)
+        if (!m_fpsCursorCaptured && action == GLFW_PRESS) {
+            captureFPSCursor();
+            return;  // Don't process this click as gameplay input
+        }
+
+        // Left-click = primary action (interact / use / fire)
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            std::cout << "[FPS] Primary action" << std::endl;
+        }
+        // Right-click = secondary action (aim / alt-fire / block)
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+            std::cout << "[FPS] Secondary action" << std::endl;
+        }
+        return;  // Don't fall through to tactical handlers
+    }
+
+    // ── Tactical / Space Mode: original Astralis-style handling ───────
     // Track button state for camera control
     if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         if (action == GLFW_PRESS) {
@@ -266,6 +363,27 @@ void Application::handleMouseButton(int button, int action, int mods, double x, 
 }
 
 void Application::handleMouseMove(double x, double y, double deltaX, double deltaY) {
+    // ── FPS Mode: free mouse look (no button hold required) ───────────
+    if (isInFPSMode() && m_fpsCursorCaptured) {
+        float sensitivity = 0.15f;
+        m_fpsYaw   += static_cast<float>(deltaX) * sensitivity;
+        m_fpsPitch -= static_cast<float>(deltaY) * sensitivity;
+
+        // Clamp pitch to prevent flipping
+        if (m_fpsPitch >  89.0f) m_fpsPitch =  89.0f;
+        if (m_fpsPitch < -89.0f) m_fpsPitch = -89.0f;
+
+        // Wrap yaw
+        if (m_fpsYaw >  360.0f) m_fpsYaw -= 360.0f;
+        if (m_fpsYaw < -360.0f) m_fpsYaw += 360.0f;
+
+        // Apply to camera
+        m_camera->rotateFPS(static_cast<float>(deltaX) * sensitivity,
+                            static_cast<float>(-deltaY) * sensitivity);
+        return;  // Don't fall through to tactical camera
+    }
+
+    // ── Tactical / Space Mode: original handling ─────────────────────
     // Update radial menu if open
     if (m_radialMenuOpen && m_radialMenu) {
         m_radialMenu->UpdateMousePosition(static_cast<float>(x), static_cast<float>(y));
@@ -410,6 +528,111 @@ void Application::handleScroll(double xoffset, double yoffset) {
     if (!m_atlasConsumedMouse) {
         m_camera->zoom(static_cast<float>(yoffset));
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  FPS Mode Helpers
+// ═══════════════════════════════════════════════════════════════════════
+
+bool Application::isInFPSMode() const {
+    return m_gameState == GameState::Docked ||
+           m_gameState == GameState::StationInterior ||
+           m_gameState == GameState::ShipInterior;
+}
+
+void Application::captureFPSCursor() {
+    if (m_fpsCursorCaptured) return;
+    if (m_window && m_window->getHandle()) {
+        glfwSetInputMode(m_window->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        m_fpsCursorCaptured = true;
+        std::cout << "[FPS] Cursor captured" << std::endl;
+    }
+}
+
+void Application::releaseFPSCursor() {
+    if (!m_fpsCursorCaptured) return;
+    if (m_window && m_window->getHandle()) {
+        glfwSetInputMode(m_window->getHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        m_fpsCursorCaptured = false;
+        std::cout << "[FPS] Cursor released" << std::endl;
+    }
+}
+
+void Application::updateFPSMovement(float deltaTime) {
+    if (!m_window || !m_window->getHandle()) return;
+
+    GLFWwindow* win = m_window->getHandle();
+
+    // ── Poll WASD for continuous movement ──────────────────────────────
+    float moveX = 0.0f;  // strafe: -1 = left, +1 = right
+    float moveZ = 0.0f;  // forward: -1 = backward, +1 = forward
+
+    if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) moveZ += 1.0f;
+    if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) moveZ -= 1.0f;
+    if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) moveX -= 1.0f;
+    if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) moveX += 1.0f;
+
+    // ── Sprint / crouch stance ─────────────────────────────────────────
+    bool sprintHeld = (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+    bool crouchHeld = (glfwGetKey(win, GLFW_KEY_C) == GLFW_PRESS) ||
+                      (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
+
+    // Determine movement speed based on stance
+    float speed = FPS_WALK_SPEED;
+    if (sprintHeld && !crouchHeld && (moveX != 0.0f || moveZ != 0.0f)) {
+        speed = FPS_SPRINT_SPEED;
+        m_activeModeText = "SPRINTING";
+    } else if (crouchHeld) {
+        speed = FPS_CROUCH_SPEED;
+        m_activeModeText = "CROUCHING";
+    } else if (moveX != 0.0f || moveZ != 0.0f) {
+        m_activeModeText = "WALKING";
+    } else {
+        m_activeModeText.clear();
+    }
+
+    // ── Compute world-space movement direction from yaw ────────────────
+    float yawRad = glm::radians(m_fpsYaw);
+    float sinYaw = std::sin(yawRad);
+    float cosYaw = std::cos(yawRad);
+
+    // Forward vector (XZ plane) rotated by yaw
+    glm::vec3 forward(sinYaw, 0.0f, cosYaw);
+    glm::vec3 right(cosYaw, 0.0f, -sinYaw);
+
+    glm::vec3 moveDir = forward * moveZ + right * moveX;
+    if (glm::length(moveDir) > 0.01f) {
+        moveDir = glm::normalize(moveDir);
+    }
+
+    glm::vec3 velocity = moveDir * speed;
+
+    // ── Jump ───────────────────────────────────────────────────────────
+    if (m_fpsJumpRequested && m_fpsGrounded) {
+        m_fpsVelY = FPS_JUMP_IMPULSE;
+        m_fpsGrounded = false;
+    }
+    m_fpsJumpRequested = false;
+
+    // ── Gravity ────────────────────────────────────────────────────────
+    if (!m_fpsGrounded) {
+        m_fpsVelY -= FPS_GRAVITY * deltaTime;
+    }
+
+    // ── Apply position ─────────────────────────────────────────────────
+    glm::vec3 camPos = m_camera->getPosition();
+    camPos += velocity * deltaTime;
+    camPos.y += m_fpsVelY * deltaTime;
+
+    // Floor collision
+    float eyeHeight = crouchHeld ? FPS_CROUCH_EYE_HEIGHT : FPS_STAND_EYE_HEIGHT;
+    if (camPos.y < eyeHeight) {
+        camPos.y = eyeHeight;
+        m_fpsVelY = 0.0f;
+        m_fpsGrounded = true;
+    }
+
+    m_camera->setFPSPosition(camPos, m_camera->getFPSForward());
 }
 
 } // namespace atlas

@@ -349,6 +349,7 @@ set(CORE_SOURCES
     src/systems/ship_insurance_payout_system.cpp
     src/systems/turret_tracking_system.cpp
     src/systems/colony_management_system.cpp
+    src/systems/fps_input_context_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -754,6 +755,7 @@ set(SERVER_HEADERS
     include/systems/ship_insurance_payout_system.h
     include/systems/turret_tracking_system.h
     include/systems/colony_management_system.h
+    include/systems/fps_input_context_system.h
 )
 
 # Steam SDK configuration

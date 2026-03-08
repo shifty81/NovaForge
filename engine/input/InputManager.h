@@ -18,7 +18,13 @@ enum class InputAction : uint32_t {
     Sprint,
     Interact,
     PrimaryAction,
-    SecondaryAction
+    SecondaryAction,
+    // FPS-specific actions
+    Reload,
+    ToggleFlashlight,
+    Inventory,
+    BoardShip,
+    ExitToStation
 };
 
 enum class InputDevice : uint8_t {

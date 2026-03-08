@@ -288,6 +288,13 @@ private:
     void handleMouseButton(int button, int action, int mods, double x, double y);
     void handleMouseMove(double x, double y, double deltaX, double deltaY);
     void handleScroll(double xoffset, double yoffset);
+
+    // FPS mode input handling
+    void handleFPSKeyInput(int key, int action, int mods);
+    bool isInFPSMode() const;
+    void updateFPSMovement(float deltaTime);
+    void captureFPSCursor();
+    void releaseFPSCursor();
     
     // Astralis-style right-click context menu
     void showSpaceContextMenu(double x, double y);
@@ -418,6 +425,24 @@ private:
     // ── Input thresholds ───────────────────────────────────────────
     static constexpr double MAX_DRAG_THRESHOLD_PX      = 10.0;     // Pixels — max mouse drift to still open radial menu
     static constexpr float  MAX_FPS_INTERACTION_RANGE   = 4.0f;    // Meters — max distance to interact on foot
+
+    // ── FPS movement state ─────────────────────────────────────────
+    bool  m_fpsCursorCaptured = false;    // Whether the cursor is hidden/locked for FPS look
+    float m_fpsYaw   = 0.0f;             // Horizontal look angle (degrees)
+    float m_fpsPitch = 0.0f;             // Vertical look angle (degrees, ±89 clamped)
+    float m_fpsVelY  = 0.0f;             // Vertical velocity (jump/fall)
+    bool  m_fpsGrounded = true;           // On the ground
+    bool  m_fpsJumpRequested = false;     // Jump input this frame
+    bool  m_fpsFlashlightOn = false;      // Flashlight toggle
+
+    // ── FPS movement constants ─────────────────────────────────────
+    static constexpr float FPS_WALK_SPEED       = 4.0f;     // m/s
+    static constexpr float FPS_SPRINT_SPEED     = 7.0f;     // m/s
+    static constexpr float FPS_CROUCH_SPEED     = 2.0f;     // m/s
+    static constexpr float FPS_JUMP_IMPULSE     = 5.0f;     // m/s upward
+    static constexpr float FPS_GRAVITY          = 9.81f;    // m/s²
+    static constexpr float FPS_STAND_EYE_HEIGHT = 1.8f;     // metres
+    static constexpr float FPS_CROUCH_EYE_HEIGHT= 1.0f;     // metres
 };
 
 } // namespace atlas
