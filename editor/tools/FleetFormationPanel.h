@@ -1,7 +1,7 @@
 #pragma once
 #include "../ui/EditorPanel.h"
 #include "../../cpp_server/include/pcg/generation_style.h"
-#include "../../cpp_server/include/systems/fleet_formation_system.h"
+#include "../../cpp_server/include/components/fleet_components.h"
 #include "../../cpp_client/include/ui/atlas/atlas_widgets.h"
 #include <vector>
 #include <string>
