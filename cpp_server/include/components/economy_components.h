@@ -1172,6 +1172,36 @@ public:
     COMPONENT_TYPE(ColonyManagementState)
 };
 
+/**
+ * @brief Resource respawn tracking for minable asteroids, sites, and NPC spawns
+ *
+ * Manages the lifecycle of depletable resources: once consumed they enter a
+ * cooldown, then respawn (possibly with a different yield).  Enables the
+ * persistent "living world" loop.
+ */
+class ResourceRespawnState : public ecs::Component {
+public:
+    struct RespawnEntry {
+        std::string resource_id;
+        std::string resource_type;    // "asteroid", "site", "npc_spawn"
+        float cooldown_remaining = 0.0f;
+        float cooldown_total = 60.0f; // seconds until respawn
+        float yield_multiplier = 1.0f;
+        bool depleted = false;
+        bool respawned = false;
+    };
+
+    std::string zone_id;
+    std::vector<RespawnEntry> entries;
+    int max_entries = 100;
+    int total_respawns = 0;
+    int total_depletions = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ResourceRespawnState)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -350,6 +350,10 @@ set(CORE_SOURCES
     src/systems/turret_tracking_system.cpp
     src/systems/colony_management_system.cpp
     src/systems/fps_input_context_system.cpp
+    src/systems/encounter_balance_system.cpp
+    src/systems/network_quality_monitor_system.cpp
+    src/systems/loot_table_system.cpp
+    src/systems/resource_respawn_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -756,6 +760,10 @@ set(SERVER_HEADERS
     include/systems/turret_tracking_system.h
     include/systems/colony_management_system.h
     include/systems/fps_input_context_system.h
+    include/systems/encounter_balance_system.h
+    include/systems/network_quality_monitor_system.h
+    include/systems/loot_table_system.h
+    include/systems/resource_respawn_system.h
 )
 
 # Steam SDK configuration

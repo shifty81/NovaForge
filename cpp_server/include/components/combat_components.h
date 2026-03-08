@@ -546,6 +546,66 @@ public:
     COMPONENT_TYPE(TurretTrackingState)
 };
 
+/**
+ * @brief Dynamic encounter balance state for difficulty and reward scaling
+ *
+ * Tracks player progression metrics and adjusts encounter difficulty multiplier
+ * and reward scaling so the game stays challenging but fair for solo and co-op.
+ * The system recalculates modifiers each tick based on fleet size, average ship
+ * class, and total kill count.
+ */
+class EncounterBalanceState : public ecs::Component {
+public:
+    std::string encounter_id;
+    float difficulty_multiplier = 1.0f;  // 0.5 (easy) – 3.0 (brutal)
+    float reward_multiplier = 1.0f;      // scales ISC/loot payout
+    int player_count = 1;                // fleet size for scaling
+    int avg_ship_class = 1;              // 1=frigate … 5=capital
+    int total_kills = 0;                 // cumulative kills for progression
+    float base_difficulty = 1.0f;        // designer-authored baseline
+    float base_reward = 100.0f;          // baseline ISC reward
+    float elapsed = 0.0f;
+    bool active = true;
+    int recalc_count = 0;               // how many times balance was recalculated
+
+    COMPONENT_TYPE(EncounterBalanceState)
+};
+
+/**
+ * @brief Configurable weighted loot table for encounters, missions, and exploration
+ *
+ * Maintains a list of possible loot entries each with a weight, rarity tier,
+ * and quantity range.  The system selects drops via weighted random and tracks
+ * how many rolls / drops have occurred.
+ */
+class LootTableState : public ecs::Component {
+public:
+    struct LootEntry {
+        std::string item_id;
+        std::string rarity;      // "common","uncommon","rare","epic","legendary"
+        float weight = 1.0f;     // relative drop weight
+        int min_quantity = 1;
+        int max_quantity = 1;
+    };
+
+    std::string table_id;
+    std::vector<LootEntry> entries;
+    int max_entries = 50;
+    int total_rolls = 0;
+    int total_drops = 0;
+    float luck_modifier = 1.0f;  // multiplied into rare weights
+    float elapsed = 0.0f;
+    bool active = true;
+
+    float totalWeight() const {
+        float w = 0.0f;
+        for (const auto& e : entries) w += e.weight;
+        return w;
+    }
+
+    COMPONENT_TYPE(LootTableState)
+};
+
 } // namespace components
 } // namespace atlas
 

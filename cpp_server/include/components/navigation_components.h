@@ -972,6 +972,32 @@ public:
     COMPONENT_TYPE(AsteroidScannerState)
 };
 
+/**
+ * @brief Per-connection network quality metrics
+ *
+ * Tracks latency, jitter, and packet loss for a player connection so the
+ * server can adapt snapshot rate and interpolation delay.  Updated each
+ * time a measurement sample arrives.
+ */
+class NetworkQualityState : public ecs::Component {
+public:
+    std::string connection_id;
+    float latency_ms = 0.0f;          // smoothed round-trip time
+    float jitter_ms = 0.0f;           // variance in RTT
+    float packet_loss_pct = 0.0f;     // 0-100
+    float snapshot_rate_hz = 20.0f;   // adaptive snapshot send rate
+    int samples_received = 0;
+    int packets_lost = 0;
+    int packets_total = 0;
+    float min_latency_ms = 999.0f;
+    float max_latency_ms = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+    bool degraded = false;            // true when quality drops below threshold
+
+    COMPONENT_TYPE(NetworkQualityState)
+};
+
 } // namespace components
 } // namespace atlas
 
