@@ -1053,6 +1053,50 @@ public:
     COMPONENT_TYPE(MiningYieldState)
 };
 
+class AsteroidDepletionState : public ecs::Component {
+public:
+    float total_ore_volume = 10000.0f;     // initial ore volume in m3
+    float remaining_ore = 10000.0f;        // current remaining ore
+    float depletion_rate = 0.0f;           // ore removed per second (when being mined)
+    float respawn_rate = 10.0f;            // ore respawned per second
+    float respawn_delay = 300.0f;          // seconds before respawn starts after depletion
+    float time_since_depletion = 0.0f;     // timer for respawn delay
+    int times_depleted = 0;                // how many times fully depleted
+    int active_miners = 0;                 // number of miners currently extracting
+    float security_bonus = 1.0f;           // 0.5 (highsec) to 2.0 (nullsec) volume modifier
+    float elapsed = 0.0f;
+    bool active = true;
+    bool depleted = false;                 // true when remaining_ore <= 0
+
+    float depletionPercent() const {
+        if (total_ore_volume <= 0.0f) return 1.0f;
+        return 1.0f - (remaining_ore / total_ore_volume);
+    }
+
+    COMPONENT_TYPE(AsteroidDepletionState)
+};
+
+class StationServiceState : public ecs::Component {
+public:
+    struct Service {
+        std::string service_id;       // "repair", "refit", "refuel", "clone", "market", "insurance"
+        float base_cost = 100.0f;     // ISC base cost
+        float demand_modifier = 1.0f; // dynamic pricing from demand
+        bool available = true;        // false if service temporarily offline
+    };
+
+    std::vector<Service> services;
+    int max_services = 12;
+    float tax_rate = 0.05f;           // 5% station tax
+    float standing_discount = 0.0f;   // 0.0-0.5, discount based on standings
+    float total_revenue = 0.0f;
+    int total_transactions = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(StationServiceState)
+};
+
 } // namespace components
 } // namespace atlas
 

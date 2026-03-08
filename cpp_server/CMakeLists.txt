@@ -318,6 +318,7 @@ set(CORE_SOURCES
     src/systems/beacon_navigation_system.cpp
     src/systems/formation_flight_system.cpp
     src/systems/asteroid_respawn_system.cpp
+    src/systems/asteroid_depletion_tracker_system.cpp
     src/systems/bounty_payout_system.cpp
     src/systems/npc_trader_scheduler_system.cpp
     src/systems/npc_fleet_composition_system.cpp
@@ -341,6 +342,9 @@ set(CORE_SOURCES
     src/systems/sector_map_discovery_system.cpp
     src/systems/ship_loadout_preset_system.cpp
     src/systems/mining_yield_optimizer_system.cpp
+    src/systems/fleet_coordination_broadcast_system.cpp
+    src/systems/station_service_broker_system.cpp
+    src/systems/jump_gate_activation_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -715,6 +719,7 @@ set(SERVER_HEADERS
     include/systems/beacon_navigation_system.h
     include/systems/formation_flight_system.h
     include/systems/asteroid_respawn_system.h
+    include/systems/asteroid_depletion_tracker_system.h
     include/systems/bounty_payout_system.h
     include/systems/npc_trader_scheduler_system.h
     include/systems/npc_fleet_composition_system.h
@@ -738,6 +743,9 @@ set(SERVER_HEADERS
     include/systems/sector_map_discovery_system.h
     include/systems/ship_loadout_preset_system.h
     include/systems/mining_yield_optimizer_system.h
+    include/systems/fleet_coordination_broadcast_system.h
+    include/systems/station_service_broker_system.h
+    include/systems/jump_gate_activation_system.h
 )
 
 # Steam SDK configuration
