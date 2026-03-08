@@ -354,6 +354,9 @@ set(CORE_SOURCES
     src/systems/network_quality_monitor_system.cpp
     src/systems/loot_table_system.cpp
     src/systems/resource_respawn_system.cpp
+    src/systems/hyperspace_routing_system.cpp
+    src/systems/player_hangar_inventory_system.cpp
+    src/systems/server_tick_metrics_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -764,6 +767,9 @@ set(SERVER_HEADERS
     include/systems/network_quality_monitor_system.h
     include/systems/loot_table_system.h
     include/systems/resource_respawn_system.h
+    include/systems/hyperspace_routing_system.h
+    include/systems/player_hangar_inventory_system.h
+    include/systems/server_tick_metrics_system.h
 )
 
 # Steam SDK configuration
