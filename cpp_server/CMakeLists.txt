@@ -369,6 +369,10 @@ set(CORE_SOURCES
     src/systems/overheat_management_system.cpp
     src/systems/salvage_processing_system.cpp
     src/systems/jump_fatigue_tracker_system.cpp
+    src/systems/session_persistence_system.cpp
+    src/systems/star_system_population_system.cpp
+    src/systems/dynamic_difficulty_system.cpp
+    src/systems/gameplay_loop_tracker_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -794,6 +798,10 @@ set(SERVER_HEADERS
     include/systems/overheat_management_system.h
     include/systems/salvage_processing_system.h
     include/systems/jump_fatigue_tracker_system.h
+    include/systems/session_persistence_system.h
+    include/systems/star_system_population_system.h
+    include/systems/dynamic_difficulty_system.h
+    include/systems/gameplay_loop_tracker_system.h
 )
 
 # Steam SDK configuration

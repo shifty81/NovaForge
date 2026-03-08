@@ -1768,6 +1768,108 @@ public:
     COMPONENT_TYPE(JumpFatigueTrackerState)
 };
 
+class SessionPersistenceState : public ecs::Component {
+public:
+    enum class SaveStatus { Clean, Dirty, Saving, Failed };
+
+    SaveStatus status = SaveStatus::Clean;
+    float auto_save_interval = 300.0f;    // seconds between auto-saves
+    float time_since_last_save = 0.0f;
+    int total_saves = 0;
+    int total_loads = 0;
+    int save_failures = 0;
+
+    // Snapshot fields persisted per player
+    float position_x = 0.0f;
+    float position_y = 0.0f;
+    float position_z = 0.0f;
+    double credits = 0.0;
+    int cargo_units = 0;
+    int ship_hull_hp = 100;
+    int ship_armor_hp = 100;
+    int ship_shield_hp = 100;
+    std::string current_system = "sol";
+    std::string docked_station;           // empty = in space
+
+    bool active = true;
+
+    COMPONENT_TYPE(SessionPersistenceState)
+};
+
+class StarSystemPopulationState : public ecs::Component {
+public:
+    int max_npcs = 50;
+    int current_npcs = 0;
+    int miners_active = 0;
+    int haulers_active = 0;
+    int traders_active = 0;
+    int pirates_active = 0;
+    int security_active = 0;
+
+    float spawn_interval = 10.0f;         // seconds between spawn checks
+    float time_since_spawn = 0.0f;
+    float despawn_distance = 500.0f;       // AU-like distance for despawn
+    float activity_level = 1.0f;          // 0-2 multiplier on spawn rate
+
+    int total_spawned = 0;
+    int total_despawned = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(StarSystemPopulationState)
+};
+
+class DynamicDifficultyState : public ecs::Component {
+public:
+    float player_combat_rating = 1.0f;   // 0.1 (rookie) to 10.0 (veteran)
+    float ship_power_level = 1.0f;       // derived from fitting
+    float encounter_multiplier = 1.0f;   // final difficulty multiplier
+
+    float base_difficulty = 1.0f;
+    float min_difficulty = 0.5f;
+    float max_difficulty = 3.0f;
+    float adjustment_rate = 0.1f;         // how fast difficulty adjusts
+
+    int encounters_won = 0;
+    int encounters_lost = 0;
+    int consecutive_wins = 0;
+    int consecutive_losses = 0;
+
+    float time_since_last_encounter = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DynamicDifficultyState)
+};
+
+class GameplayLoopTrackerState : public ecs::Component {
+public:
+    enum class LoopPhase { Docked, Undocking, Flying, Mining, Hauling, Trading, Combat, Docking };
+
+    LoopPhase current_phase = LoopPhase::Docked;
+    LoopPhase previous_phase = LoopPhase::Docked;
+
+    int loops_completed = 0;             // full undock→dock cycles
+    int total_undocks = 0;
+    int total_docks = 0;
+    int total_mining_sessions = 0;
+    int total_trades = 0;
+    int total_combat_encounters = 0;
+
+    float time_in_current_phase = 0.0f;
+    float total_flight_time = 0.0f;
+    float total_mining_time = 0.0f;
+    float total_combat_time = 0.0f;
+    float total_docked_time = 0.0f;
+
+    bool has_undocked = false;
+    bool has_mined = false;
+    bool has_traded = false;
+    bool has_fought = false;
+
+    bool active = true;
+
+    COMPONENT_TYPE(GameplayLoopTrackerState)
+};
+
 } // namespace components
 } // namespace atlas
 
