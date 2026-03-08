@@ -333,6 +333,7 @@ void run_player_progression_tracking_system_tests();
 void run_sector_map_discovery_system_tests();
 void run_ship_loadout_preset_system_tests();
 void run_mining_yield_optimizer_system_tests();
+void run_fleet_coordination_broadcast_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -663,6 +664,7 @@ int main() {
     run_sector_map_discovery_system_tests();
     run_ship_loadout_preset_system_tests();
     run_mining_yield_optimizer_system_tests();
+    run_fleet_coordination_broadcast_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

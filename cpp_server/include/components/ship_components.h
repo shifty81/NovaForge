@@ -1430,6 +1430,27 @@ public:
     COMPONENT_TYPE(PlayerHangarInventory)
 };
 
+class FleetCoordinationState : public ecs::Component {
+public:
+    struct Signal {
+        std::string signal_type;    // "rally", "retreat", "regroup", "hold", "advance"
+        std::string issuer_id;
+        float timestamp = 0.0f;
+        float duration = 30.0f;     // seconds signal remains active
+    };
+
+    std::vector<Signal> active_signals;
+    int max_signals = 10;
+    float broadcast_range = 100.0f;   // range in km
+    float signal_strength = 1.0f;     // 0.0-1.0, decays with distance
+    int total_broadcasts = 0;
+    int total_acknowledged = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(FleetCoordinationState)
+};
+
 } // namespace components
 } // namespace atlas
 
