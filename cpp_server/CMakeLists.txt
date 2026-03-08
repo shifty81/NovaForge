@@ -343,6 +343,8 @@ set(CORE_SOURCES
     src/systems/ship_loadout_preset_system.cpp
     src/systems/mining_yield_optimizer_system.cpp
     src/systems/fleet_coordination_broadcast_system.cpp
+    src/systems/station_service_broker_system.cpp
+    src/systems/jump_gate_activation_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -742,6 +744,8 @@ set(SERVER_HEADERS
     include/systems/ship_loadout_preset_system.h
     include/systems/mining_yield_optimizer_system.h
     include/systems/fleet_coordination_broadcast_system.h
+    include/systems/station_service_broker_system.h
+    include/systems/jump_gate_activation_system.h
 )
 
 # Steam SDK configuration

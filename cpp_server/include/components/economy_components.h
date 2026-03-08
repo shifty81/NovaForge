@@ -1076,6 +1076,27 @@ public:
     COMPONENT_TYPE(AsteroidDepletionState)
 };
 
+class StationServiceState : public ecs::Component {
+public:
+    struct Service {
+        std::string service_id;       // "repair", "refit", "refuel", "clone", "market", "insurance"
+        float base_cost = 100.0f;     // ISC base cost
+        float demand_modifier = 1.0f; // dynamic pricing from demand
+        bool available = true;        // false if service temporarily offline
+    };
+
+    std::vector<Service> services;
+    int max_services = 12;
+    float tax_rate = 0.05f;           // 5% station tax
+    float standing_discount = 0.0f;   // 0.0-0.5, discount based on standings
+    float total_revenue = 0.0f;
+    int total_transactions = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(StationServiceState)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -917,6 +917,29 @@ public:
     COMPONENT_TYPE(HyperspaceRoute)
 };
 
+class JumpGateState : public ecs::Component {
+public:
+    std::string gate_id;
+    std::string destination_system;
+    std::string destination_gate_id;
+    float charge_time = 10.0f;         // seconds to fully charge
+    float current_charge = 0.0f;       // 0.0-1.0 charge progress
+    float cooldown_time = 30.0f;       // seconds before gate can be reused
+    float current_cooldown = 0.0f;     // remaining cooldown
+    float fuel_cost = 50.0f;           // ISC fuel cost per jump
+    int total_jumps = 0;
+    int max_queue = 5;                 // max ships queued for jump
+    int current_queue = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+    bool charging = false;
+    bool on_cooldown = false;
+
+    bool isReady() const { return !charging && !on_cooldown && active; }
+
+    COMPONENT_TYPE(JumpGateState)
+};
+
 } // namespace components
 } // namespace atlas
 
