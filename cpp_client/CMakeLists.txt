@@ -456,6 +456,7 @@ if(NOVAFORGE_EDITOR_TOOLS)
         ${CMAKE_SOURCE_DIR}/editor/ui/EditorLayout.cpp
         ${CMAKE_SOURCE_DIR}/editor/ui/EditorMenuBar.cpp
         ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp
+        ${CMAKE_SOURCE_DIR}/editor/ui/UndoableCommandBus.cpp
         ${CMAKE_SOURCE_DIR}/editor/ui/KeybindManager.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
@@ -473,6 +474,9 @@ if(NOVAFORGE_EDITOR_TOOLS)
         ${CMAKE_SOURCE_DIR}/editor/tools/FleetFormationPanel.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/PCGOverrideStore.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/LiveSceneManager.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/AssetPalettePanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/PhysicsTunerPanel.cpp
+        ${CMAKE_SOURCE_DIR}/editor/tools/SceneBookmarkManager.cpp
         ${CMAKE_SOURCE_DIR}/editor/ai/AIAggregator.cpp
         ${CMAKE_SOURCE_DIR}/editor/ai/TemplateAIBackend.cpp
         # PCG sources used by editor panels

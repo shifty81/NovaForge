@@ -1,8 +1,8 @@
 #ifndef NOVAFORGE_ECS_SINGLE_COMPONENT_SYSTEM_H
 #define NOVAFORGE_ECS_SINGLE_COMPONENT_SYSTEM_H
 
-#include "system.h"
 #include "world.h"
+#include "system.h"
 #include "entity.h"
 #include <string>
 #include <vector>
@@ -10,11 +10,9 @@
 namespace atlas {
 namespace ecs {
 
-// Forward declaration — entity.h may be excluded in editor / atlas-test builds
-// via include-guard pre-definition (see editor/CMakeLists.txt).  The forward
-// declaration is enough for the reference and pointer parameters below; the
-// full definition is only required when template members are instantiated
-// (i.e. inside the server build where entity.h is included normally).
+// The full definition of World is required here because the template body
+// calls world_->getEntities<C>() and world_->getEntity(), which are member
+// functions that must be fully visible at the point of template instantiation.
 class Entity;
 
 /**

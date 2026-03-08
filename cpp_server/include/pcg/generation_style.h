@@ -6,6 +6,7 @@
 #include "ship_generator.h"
 #include "station_generator.h"
 #include "interior_generator.h"
+#include "star_system_generator.h"
 #include "deterministic_rng.h"
 #include "hash_utils.h"
 #include <cstdint>
@@ -71,36 +72,6 @@ struct GenerationStyle {
     std::vector<ParameterOverride> parameters;
 
     bool valid;  ///< Set by validate().
-};
-
-// ── Star system generation result ────────────────────────────────────
-
-struct GeneratedCelestialBody {
-    uint32_t    bodyId;
-    std::string name;
-    float       orbitRadius;   ///< AU from star.
-    float       orbitAngle;    ///< Radians.
-    float       radius;        ///< km.
-    uint32_t    bodyType;      ///< 0=rocky, 1=gas, 2=ice, 3=lava.
-};
-
-struct GeneratedStargate {
-    uint32_t    gateId;
-    std::string name;
-    float       posX, posY, posZ;
-};
-
-struct GeneratedStarSystem {
-    uint64_t    systemId;
-    std::string systemName;
-    float       securityLevel;
-    float       starLuminosity;
-    uint32_t    starType;      ///< 0=main_sequence, 1=red_giant, 2=white_dwarf, 3=neutron.
-    std::vector<GeneratedCelestialBody> planets;
-    int         beltCount;
-    int         stationCount;
-    std::vector<GeneratedStargate> gates;
-    bool        valid;
 };
 
 // ── Asteroid field generation result ────────────────────────────────
