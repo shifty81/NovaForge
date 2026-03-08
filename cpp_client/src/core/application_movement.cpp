@@ -3,6 +3,8 @@
 #include "core/entity.h"
 #include "core/solar_system_scene.h"
 #include "core/ship_physics.h"
+#include "rendering/renderer.h"
+#include "ui/atlas/atlas_hud.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -99,6 +101,18 @@ void Application::commandJump(const std::string& entityId) {
         destSeed = destSeed * 31 + static_cast<uint32_t>(c);
     }
     m_solarSystem->generateSystem(destSeed, destination);
+
+    // Update sun rendering for the new system
+    const auto* newSun = m_solarSystem->getSun();
+    if (newSun) {
+        m_renderer->setSunState(newSun->position, newSun->lightColor, newSun->radius);
+    }
+
+    // Update HUD system info
+    if (m_atlasHUD) {
+        m_atlasHUD->setSystemInfo(m_solarSystem->getSystemName(),
+                                  m_solarSystem->getSecurityLevel());
+    }
 
     // Reset player position to the arrival gate location
     const auto& celestials = m_solarSystem->getCelestials();

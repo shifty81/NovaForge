@@ -356,6 +356,21 @@ void Application::initialize() {
         m_renderer->setSunState(sun->position, sun->lightColor, sun->radius);
         std::cout << "[PVE] Sun configured at origin with radius " << sun->radius << "m" << std::endl;
     }
+
+    // Set system info in HUD
+    m_atlasHUD->setSystemInfo(m_solarSystem->getSystemName(),
+                              m_solarSystem->getSecurityLevel());
+
+    // Wire warp callback so UI and renderer are updated when a warp begins
+    m_solarSystem->setWarpCallback([this](const std::string& celestialId) {
+        std::cout << "[Warp] Warp initiated to celestial: " << celestialId << std::endl;
+
+        // Send warp request to server if connected
+        auto* networkMgr = m_gameClient->getNetworkManager();
+        if (networkMgr && networkMgr->isConnected()) {
+            networkMgr->sendDockRequest(celestialId);  // reuse dock channel until dedicated warp msg
+        }
+    });
     
     // Set initial camera to orbit around player
     m_camera->setDistance(DEFAULT_CAMERA_DISTANCE);
@@ -464,7 +479,14 @@ void Application::setupUICallbacks() {
         auto entity = m_gameClient->getEntityManager().getEntity(entityId);
         if (entity) {
             m_camera->setTarget(entity->getPosition());
-            std::cout << "[Camera] Looking at: " << entityId << std::endl;
+            std::cout << "[Camera] Looking at entity: " << entityId << std::endl;
+        } else if (m_solarSystem) {
+            // Check if it's a celestial
+            const auto* cel = m_solarSystem->findCelestial(entityId);
+            if (cel) {
+                m_camera->setTarget(cel->position);
+                std::cout << "[Camera] Looking at celestial: " << cel->name << std::endl;
+            }
         }
     });
     
@@ -520,7 +542,13 @@ void Application::setupUICallbacks() {
                     auto entity = m_gameClient->getEntityManager().getEntity(entityId);
                     if (entity) {
                         m_camera->setTarget(entity->getPosition());
-                        std::cout << "[Camera] Looking at: " << entityId << std::endl;
+                        std::cout << "[Camera] Looking at entity: " << entityId << std::endl;
+                    } else if (m_solarSystem) {
+                        const auto* cel = m_solarSystem->findCelestial(entityId);
+                        if (cel) {
+                            m_camera->setTarget(cel->position);
+                            std::cout << "[Camera] Looking at celestial: " << cel->name << std::endl;
+                        }
                     }
                 }
                 break;
@@ -713,6 +741,11 @@ void Application::update(float deltaTime) {
     // Update solar system scene (engine trail, warp visual state)
     if (m_solarSystem && m_shipPhysics) {
         m_solarSystem->update(deltaTime, m_shipPhysics.get());
+
+        // Feed engine trail state into renderer
+        const auto& trail = m_solarSystem->getEngineTrailState();
+        m_renderer->setEngineTrailState(trail.emitting, trail.intensity,
+                                        trail.position, trail.velocity);
     }
     
     // Update ship status in the HUD

@@ -18,6 +18,16 @@ class WarpEffectRenderer;
 class Entity;
 
 /**
+ * Render data for a solar system celestial object (planet, station, etc.)
+ */
+struct CelestialRenderData {
+    glm::vec3 position{0.0f};
+    float radius = 1000.0f;
+    glm::vec3 color{0.5f, 0.5f, 0.5f};
+    int type = 0;  // matches Celestial::Type enum values
+};
+
+/**
  * Visual representation of a game entity
  */
 struct EntityVisual {
@@ -107,6 +117,23 @@ public:
 
     // === Entity Visual Management ===
     
+    /**
+     * Set celestial objects for rendering (planets, stations, gates, etc.).
+     * Called each frame or when the solar system changes.
+     * @param celestials Render data for all celestials (excluding the sun)
+     */
+    void setCelestials(const std::vector<CelestialRenderData>& celestials);
+
+    /**
+     * Set engine trail state for rendering.
+     * @param emitting Whether the trail is active
+     * @param intensity Trail intensity 0–1 (based on throttle)
+     * @param position Ship rear position
+     * @param velocity Ship velocity (trail extends opposite)
+     */
+    void setEngineTrailState(bool emitting, float intensity,
+                             const glm::vec3& position, const glm::vec3& velocity);
+
     /**
      * Configure the solar system sun for rendering.
      * Call each frame with the current system's sun data.
@@ -243,6 +270,14 @@ private:
     void renderSun(Camera& camera, const glm::vec3& sunPosition,
                    const glm::vec3& sunColor, float sunRadius);
 
+    /**
+     * Render celestial bodies (planets, stations, stargates, asteroid belts, etc.)
+     * as lit colored spheres reusing the sun sphere geometry.
+     *
+     * @param camera Current camera for view/projection matrices
+     */
+    void renderCelestials(Camera& camera);
+
     std::unique_ptr<Shader> m_basicShader;
     std::unique_ptr<Shader> m_starfieldShader;
     std::unique_ptr<Shader> m_nebulaShader;
@@ -291,6 +326,15 @@ private:
 
     // Entity visuals
     std::unordered_map<std::string, EntityVisual> m_entityVisuals;
+
+    // Celestial render data (set by setCelestials())
+    std::vector<CelestialRenderData> m_celestialRenderData;
+
+    // Engine trail state
+    bool m_engineTrailEmitting = false;
+    float m_engineTrailIntensity = 0.0f;
+    glm::vec3 m_engineTrailPos{0.0f};
+    glm::vec3 m_engineTrailVelocity{0.0f};
 
     bool m_initialized;
 };

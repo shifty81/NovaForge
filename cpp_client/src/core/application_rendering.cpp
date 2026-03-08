@@ -32,6 +32,51 @@ void Application::render() {
     
     // Update entity visuals from game client
     m_renderer->updateEntityVisuals(m_gameClient->getEntityManager().getAllEntities());
+
+    // Push celestial render data to the renderer
+    if (m_solarSystem) {
+        std::vector<atlas::CelestialRenderData> celData;
+        for (const auto& c : m_solarSystem->getCelestials()) {
+            if (c.type == atlas::Celestial::Type::SUN) continue;  // Sun rendered separately
+            atlas::CelestialRenderData rd;
+            rd.position = c.position;
+            rd.radius = c.radius;
+            rd.type = static_cast<int>(c.type);
+            // Assign colour by celestial type
+            switch (c.type) {
+                case atlas::Celestial::Type::PLANET:
+                    rd.color = glm::vec3(0.45f, 0.55f, 0.65f);  // blue-gray rocky
+                    break;
+                case atlas::Celestial::Type::MOON:
+                    rd.color = glm::vec3(0.6f, 0.6f, 0.6f);     // gray
+                    break;
+                case atlas::Celestial::Type::STATION:
+                    rd.color = glm::vec3(0.8f, 0.8f, 0.9f);     // metallic white
+                    break;
+                case atlas::Celestial::Type::STARGATE:
+                    rd.color = glm::vec3(0.3f, 0.6f, 0.9f);     // blue
+                    break;
+                case atlas::Celestial::Type::ASTEROID_BELT:
+                    rd.color = glm::vec3(0.6f, 0.45f, 0.3f);    // brown
+                    break;
+                case atlas::Celestial::Type::WORMHOLE:
+                    rd.color = glm::vec3(0.6f, 0.3f, 0.8f);     // purple
+                    break;
+                case atlas::Celestial::Type::ANOMALY:
+                    rd.color = glm::vec3(0.3f, 0.9f, 0.5f);     // green shimmer
+                    break;
+                default:
+                    rd.color = glm::vec3(0.5f, 0.5f, 0.5f);
+                    break;
+            }
+            celData.push_back(rd);
+        }
+        m_renderer->setCelestials(celData);
+
+        // Update system info in HUD (in case of stargate jump)
+        m_atlasHUD->setSystemInfo(m_solarSystem->getSystemName(),
+                                  m_solarSystem->getSecurityLevel());
+    }
     
     // Render scene (pass game state so renderer knows space vs hangar)
     m_renderer->renderScene(*m_camera, static_cast<int>(m_gameState));
@@ -149,6 +194,7 @@ void Application::render() {
                         case atlas::Celestial::Type::STARGATE:      entry.type = "Stargate";      break;
                         case atlas::Celestial::Type::ASTEROID_BELT: entry.type = "Asteroid Belt"; break;
                         case atlas::Celestial::Type::WORMHOLE:      entry.type = "Wormhole";      break;
+                        case atlas::Celestial::Type::ANOMALY:       entry.type = c.anomalyType.empty() ? "Anomaly" : c.anomalyType; break;
                         default:                                  entry.type = "Celestial";     break;
                     }
                     atlasOverview.push_back(entry);
@@ -169,6 +215,26 @@ void Application::render() {
                 } else {
                     atlasSelected.distance = dist;
                     atlasSelected.distanceUnit = "m";
+                }
+            } else if (m_solarSystem) {
+                // Check if the selected target is a celestial
+                const auto* cel = m_solarSystem->findCelestial(m_currentTargetId);
+                if (cel) {
+                    atlasSelected.name = cel->name;
+                    float dist = glm::distance(playerEntity->getPosition(), cel->position);
+                    // 1 AU = 149,597,870,700 m; display in AU when above 0.01 AU
+                    static constexpr float AU_IN_METERS = 149597870700.0f;
+                    static constexpr float AU_DISPLAY_THRESHOLD = 0.01f * AU_IN_METERS;
+                    if (dist >= AU_DISPLAY_THRESHOLD) {
+                        atlasSelected.distance = dist / AU_IN_METERS;
+                        atlasSelected.distanceUnit = "AU";
+                    } else if (dist >= 1000.0f) {
+                        atlasSelected.distance = dist / 1000.0f;
+                        atlasSelected.distanceUnit = "km";
+                    } else {
+                        atlasSelected.distance = dist;
+                        atlasSelected.distanceUnit = "m";
+                    }
                 }
             }
         }

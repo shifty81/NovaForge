@@ -1,6 +1,7 @@
 #include "core/application.h"
 #include "core/game_client.h"
 #include "core/entity.h"
+#include "core/solar_system_scene.h"
 #include "ui/entity_picker.h"
 #include "ui/atlas/atlas_hud.h"
 #include "rendering/window.h"
@@ -126,22 +127,48 @@ void Application::showEntityContextMenu(const std::string& entityId, double x, d
 
 void Application::openInfoPanelForEntity(const std::string& entityId) {
     auto entity = m_gameClient->getEntityManager().getEntity(entityId);
-    if (!entity || !m_atlasHUD) return;
-
-    auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
-    atlas::InfoPanelData info;
-    info.name = entity->getShipName().empty() ? entityId : entity->getShipName();
-    info.type = entity->getShipType();
-    info.faction = entity->getFaction();
-    const auto& health = entity->getHealth();
-    info.shieldPct = health.maxShield > 0 ? health.currentShield / static_cast<float>(health.maxShield) : 0.0f;
-    info.armorPct = health.maxArmor > 0 ? health.currentArmor / static_cast<float>(health.maxArmor) : 0.0f;
-    info.hullPct = health.maxHull > 0 ? health.currentHull / static_cast<float>(health.maxHull) : 0.0f;
-    info.hasHealth = true;
-    if (playerEntity) {
-        info.distance = glm::distance(playerEntity->getPosition(), entity->getPosition());
+    if (entity && m_atlasHUD) {
+        auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
+        atlas::InfoPanelData info;
+        info.name = entity->getShipName().empty() ? entityId : entity->getShipName();
+        info.type = entity->getShipType();
+        info.faction = entity->getFaction();
+        const auto& health = entity->getHealth();
+        info.shieldPct = health.maxShield > 0 ? health.currentShield / static_cast<float>(health.maxShield) : 0.0f;
+        info.armorPct = health.maxArmor > 0 ? health.currentArmor / static_cast<float>(health.maxArmor) : 0.0f;
+        info.hullPct = health.maxHull > 0 ? health.currentHull / static_cast<float>(health.maxHull) : 0.0f;
+        info.hasHealth = true;
+        if (playerEntity) {
+            info.distance = glm::distance(playerEntity->getPosition(), entity->getPosition());
+        }
+        m_atlasHUD->showInfoPanel(info);
+        return;
     }
-    m_atlasHUD->showInfoPanel(info);
+
+    // Check if it's a celestial object instead
+    if (m_solarSystem && m_atlasHUD) {
+        const auto* cel = m_solarSystem->findCelestial(entityId);
+        if (cel) {
+            atlas::InfoPanelData info;
+            info.name = cel->name;
+            switch (cel->type) {
+                case atlas::Celestial::Type::PLANET:        info.type = "Planet";        break;
+                case atlas::Celestial::Type::MOON:          info.type = "Moon";          break;
+                case atlas::Celestial::Type::STATION:       info.type = "Station";       break;
+                case atlas::Celestial::Type::STARGATE:      info.type = "Stargate";      break;
+                case atlas::Celestial::Type::ASTEROID_BELT: info.type = "Asteroid Belt"; break;
+                case atlas::Celestial::Type::WORMHOLE:      info.type = "Wormhole";      break;
+                case atlas::Celestial::Type::ANOMALY:       info.type = cel->anomalyType.empty() ? "Anomaly" : cel->anomalyType; break;
+                default:                                  info.type = "Celestial";     break;
+            }
+            info.hasHealth = false;
+            auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
+            if (playerEntity) {
+                info.distance = glm::distance(playerEntity->getPosition(), cel->position);
+            }
+            m_atlasHUD->showInfoPanel(info);
+        }
+    }
 }
 
 void Application::spawnLocalPlayerEntity() {
