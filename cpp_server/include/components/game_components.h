@@ -1768,6 +1768,211 @@ public:
     COMPONENT_TYPE(JumpFatigueTrackerState)
 };
 
+class SessionPersistenceState : public ecs::Component {
+public:
+    enum class SaveStatus { Clean, Dirty, Saving, Failed };
+
+    SaveStatus status = SaveStatus::Clean;
+    float auto_save_interval = 300.0f;    // seconds between auto-saves
+    float time_since_last_save = 0.0f;
+    int total_saves = 0;
+    int total_loads = 0;
+    int save_failures = 0;
+
+    // Snapshot fields persisted per player
+    float position_x = 0.0f;
+    float position_y = 0.0f;
+    float position_z = 0.0f;
+    double credits = 0.0;
+    int cargo_units = 0;
+    int ship_hull_hp = 100;
+    int ship_armor_hp = 100;
+    int ship_shield_hp = 100;
+    std::string current_system = "sol";
+    std::string docked_station;           // empty = in space
+
+    bool active = true;
+
+    COMPONENT_TYPE(SessionPersistenceState)
+};
+
+class StarSystemPopulationState : public ecs::Component {
+public:
+    int max_npcs = 50;
+    int current_npcs = 0;
+    int miners_active = 0;
+    int haulers_active = 0;
+    int traders_active = 0;
+    int pirates_active = 0;
+    int security_active = 0;
+
+    float spawn_interval = 10.0f;         // seconds between spawn checks
+    float time_since_spawn = 0.0f;
+    float despawn_distance = 500.0f;       // AU-like distance for despawn
+    float activity_level = 1.0f;          // 0-2 multiplier on spawn rate
+
+    int total_spawned = 0;
+    int total_despawned = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(StarSystemPopulationState)
+};
+
+class DynamicDifficultyState : public ecs::Component {
+public:
+    float player_combat_rating = 1.0f;   // 0.1 (rookie) to 10.0 (veteran)
+    float ship_power_level = 1.0f;       // derived from fitting
+    float encounter_multiplier = 1.0f;   // final difficulty multiplier
+
+    float base_difficulty = 1.0f;
+    float min_difficulty = 0.5f;
+    float max_difficulty = 3.0f;
+    float adjustment_rate = 0.1f;         // how fast difficulty adjusts
+
+    int encounters_won = 0;
+    int encounters_lost = 0;
+    int consecutive_wins = 0;
+    int consecutive_losses = 0;
+
+    float time_since_last_encounter = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DynamicDifficultyState)
+};
+
+class GameplayLoopTrackerState : public ecs::Component {
+public:
+    enum class LoopPhase { Docked, Undocking, Flying, Mining, Hauling, Trading, Combat, Docking };
+
+    LoopPhase current_phase = LoopPhase::Docked;
+    LoopPhase previous_phase = LoopPhase::Docked;
+
+    int loops_completed = 0;             // full undock→dock cycles
+    int total_undocks = 0;
+    int total_docks = 0;
+    int total_mining_sessions = 0;
+    int total_trades = 0;
+    int total_combat_encounters = 0;
+
+    float time_in_current_phase = 0.0f;
+    float total_flight_time = 0.0f;
+    float total_mining_time = 0.0f;
+    float total_combat_time = 0.0f;
+    float total_docked_time = 0.0f;
+
+    bool has_undocked = false;
+    bool has_mined = false;
+    bool has_traded = false;
+    bool has_fought = false;
+
+    bool active = true;
+
+    COMPONENT_TYPE(GameplayLoopTrackerState)
+};
+
+class ChatRouterState : public ecs::Component {
+public:
+    uint64_t next_global_seq = 0;
+    uint64_t next_local_seq = 0;
+    uint64_t next_party_seq = 0;
+    uint64_t next_guild_seq = 0;
+    uint64_t next_system_seq = 0;
+    int total_messages_routed = 0;
+    int total_messages_rejected = 0;
+    int rate_limit_violations = 0;
+    float rate_window_timer = 0.0f;
+    int messages_in_window = 0;
+    int max_messages_per_window = 3;
+    float rate_window_seconds = 5.0f;
+    int max_message_length = 512;
+    bool active = true;
+
+    COMPONENT_TYPE(ChatRouterState)
+};
+
+class EditorOverlayState : public ecs::Component {
+public:
+    enum class LayoutMode { Hidden, Minimal, Full };
+
+    LayoutMode layout_mode = LayoutMode::Hidden;
+    float overlay_opacity = 0.85f;
+    bool captures_input = false;
+    bool show_hierarchy = false;
+    bool show_inspector = false;
+    bool show_tools = true;
+    bool show_console = false;
+    bool show_profiler = false;
+    float hierarchy_width_pct = 0.20f;
+    float inspector_width_pct = 0.25f;
+    int toggle_count = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(EditorOverlayState)
+};
+
+class HangarTransitionState : public ecs::Component {
+public:
+    enum class TransitionPhase {
+        Idle, DockApproach, DockSequence, DockComplete,
+        UndockSequence, UndockLaunch, UndockComplete
+    };
+
+    TransitionPhase phase = TransitionPhase::Idle;
+    float phase_timer = 0.0f;
+    float dock_approach_duration = 3.0f;
+    float dock_sequence_duration = 5.0f;
+    float undock_sequence_duration = 4.0f;
+    float undock_launch_duration = 2.0f;
+    std::string target_station_id;
+    std::string target_hangar_id;
+    int total_docks = 0;
+    int total_undocks = 0;
+    bool animation_playing = false;
+    float animation_progress = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(HangarTransitionState)
+};
+
+class ControlModeContextState : public ecs::Component {
+public:
+    enum class ControlMode { SpaceUI, FPS, Cockpit, FleetCommand, StationMenu, BuildMode };
+
+    ControlMode current_mode = ControlMode::SpaceUI;
+    ControlMode previous_mode = ControlMode::SpaceUI;
+    bool mouse_captured = false;
+    bool sidebar_visible = true;
+    bool crosshair_visible = false;
+    bool orbit_camera_active = false;
+    int mode_switches = 0;
+    float time_in_current_mode = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ControlModeContextState)
+};
+
+class ConstructionPlacementState : public ecs::Component {
+public:
+    enum class BuildContext { ShipInterior, ShipExterior, StationModule, RoverBay, RigLocker };
+
+    BuildContext context = BuildContext::ShipInterior;
+    float grid_size = 1.0f;
+    bool snap_to_grid = true;
+    int max_sockets = 20;
+    int occupied_sockets = 0;
+    int total_placements = 0;
+    int total_removals = 0;
+    float placement_x = 0.0f;
+    float placement_y = 0.0f;
+    float placement_z = 0.0f;
+    float placement_rotation = 0.0f;
+    std::string selected_module_id;
+    bool placement_valid = false;
+    bool active = true;
+
+    COMPONENT_TYPE(ConstructionPlacementState)
+};
+
 } // namespace components
 } // namespace atlas
 
