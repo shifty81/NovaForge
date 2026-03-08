@@ -357,6 +357,10 @@ set(CORE_SOURCES
     src/systems/hyperspace_routing_system.cpp
     src/systems/player_hangar_inventory_system.cpp
     src/systems/server_tick_metrics_system.cpp
+    src/systems/shield_harmonics_system.cpp
+    src/systems/trade_route_optimizer_system.cpp
+    src/systems/scan_probe_deployment_system.cpp
+    src/systems/docking_bay_allocation_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -770,6 +774,10 @@ set(SERVER_HEADERS
     include/systems/hyperspace_routing_system.h
     include/systems/player_hangar_inventory_system.h
     include/systems/server_tick_metrics_system.h
+    include/systems/shield_harmonics_system.h
+    include/systems/trade_route_optimizer_system.h
+    include/systems/scan_probe_deployment_system.h
+    include/systems/docking_bay_allocation_system.h
 )
 
 # Steam SDK configuration

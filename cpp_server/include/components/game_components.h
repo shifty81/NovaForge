@@ -1351,6 +1351,168 @@ public:
     COMPONENT_TYPE(ServerTickMetrics)
 };
 
+/**
+ * @brief Shield harmonics state for frequency tuning and resonance
+ *
+ * Tracks shield frequency, harmonic profiles, and damage resistance
+ * modifiers.  Tuning the frequency toward an incoming damage type
+ * increases resistance but leaves other types more vulnerable.
+ */
+class ShieldHarmonicsState : public ecs::Component {
+public:
+    struct HarmonicProfile {
+        std::string damage_type;      // em, thermal, kinetic, explosive
+        float base_resistance = 0.0f; // 0.0-1.0
+        float tuned_bonus = 0.0f;     // bonus from frequency alignment
+        float effective_resistance = 0.0f;
+    };
+
+    float frequency = 50.0f;          // Current shield frequency (0-100)
+    float optimal_frequency = 50.0f;  // Optimal frequency for current threat
+    float tuning_speed = 5.0f;        // Frequency change per second
+    float resonance_strength = 0.0f;  // 0.0-1.0, how well-tuned the shield is
+    float max_bonus = 0.3f;           // Maximum resistance bonus from tuning
+
+    std::vector<HarmonicProfile> profiles;
+    int max_profiles = 4;
+
+    int total_retunings = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ShieldHarmonicsState)
+};
+
+/**
+ * @brief Trade route optimization state for multi-hop profit calculation
+ *
+ * Stores station market snapshots and computes optimal buy/sell routes
+ * across multiple hops to maximize profit per unit of cargo volume.
+ */
+class TradeRouteOptimizerState : public ecs::Component {
+public:
+    struct MarketEntry {
+        std::string station_id;
+        std::string commodity;
+        float buy_price = 0.0f;   // price to buy at this station
+        float sell_price = 0.0f;  // price to sell at this station
+        int supply = 0;
+        int demand = 0;
+    };
+
+    struct TradeHop {
+        std::string from_station;
+        std::string to_station;
+        std::string commodity;
+        float buy_price = 0.0f;
+        float sell_price = 0.0f;
+        float profit_per_unit = 0.0f;
+        float travel_time = 0.0f;
+    };
+
+    std::vector<MarketEntry> market_data;
+    int max_market_entries = 200;
+
+    std::vector<TradeHop> optimized_route;
+    int max_hops = 10;
+
+    float total_estimated_profit = 0.0f;
+    float total_travel_time = 0.0f;
+    int cargo_capacity = 100;
+    int routes_calculated = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(TradeRouteOptimizerState)
+};
+
+/**
+ * @brief Scan probe deployment state for anomaly discovery
+ *
+ * Manages deployed scan probes that gradually resolve signatures
+ * in a star system.  Each probe has a scan radius and strength;
+ * overlapping probes increase resolution speed.
+ */
+class ScanProbeDeploymentState : public ecs::Component {
+public:
+    struct ScanProbe {
+        std::string probe_id;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float scan_radius = 4.0f;  // AU
+        float scan_strength = 1.0f;
+        float lifetime = 300.0f;   // seconds before auto-recall
+        float age = 0.0f;
+        bool recalled = false;
+    };
+
+    struct Signature {
+        std::string sig_id;
+        std::string sig_type;       // "anomaly", "wormhole", "data", "relic", "gas"
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float scan_progress = 0.0f; // 0.0-1.0
+        bool resolved = false;
+    };
+
+    std::vector<ScanProbe> probes;
+    int max_probes = 8;
+
+    std::vector<Signature> signatures;
+    int max_signatures = 30;
+
+    int total_probes_launched = 0;
+    int total_signatures_resolved = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ScanProbeDeploymentState)
+};
+
+/**
+ * @brief Docking bay allocation state for station capacity management
+ *
+ * Tracks per-station docking bays, assignments, wait queues, and
+ * service timers.  Ships request bays, get assigned when available,
+ * and release bays on undock.
+ */
+class DockingBayAllocationState : public ecs::Component {
+public:
+    struct DockingBay {
+        std::string bay_id;
+        std::string assigned_ship;
+        std::string bay_size;      // "small", "medium", "large"
+        float service_timer = 0.0f;
+        bool occupied = false;
+    };
+
+    struct QueueEntry {
+        std::string ship_id;
+        std::string required_size;
+        float wait_time = 0.0f;
+        int priority = 0;          // higher = more urgent
+    };
+
+    std::string station_id;
+
+    std::vector<DockingBay> bays;
+    int max_bays = 20;
+
+    std::vector<QueueEntry> wait_queue;
+    int max_queue = 50;
+
+    int total_dockings = 0;
+    int total_undockings = 0;
+    int total_queue_timeouts = 0;
+    float avg_wait_time = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DockingBayAllocationState)
+};
+
 } // namespace components
 } // namespace atlas
 
