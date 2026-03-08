@@ -456,7 +456,7 @@ if(NOVAFORGE_EDITOR_TOOLS)
         ${CMAKE_SOURCE_DIR}/editor/ui/EditorLayout.cpp
         ${CMAKE_SOURCE_DIR}/editor/ui/EditorMenuBar.cpp
         ${CMAKE_SOURCE_DIR}/editor/ui/UndoStack.cpp
-        ${CMAKE_SOURCE_DIR}/editor/ui/UndoableCommandBus.cpp
+        src/editor/undoable_command_bus.cpp
         ${CMAKE_SOURCE_DIR}/editor/ui/KeybindManager.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/ViewportPanel.cpp
         ${CMAKE_SOURCE_DIR}/editor/tools/PCGPreviewPanel.cpp
