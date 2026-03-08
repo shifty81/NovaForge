@@ -342,6 +342,10 @@ void run_ship_insurance_payout_system_tests();
 void run_turret_tracking_system_tests();
 void run_colony_management_system_tests();
 void run_fps_input_context_system_tests();
+void run_encounter_balance_system_tests();
+void run_network_quality_monitor_system_tests();
+void run_loot_table_system_tests();
+void run_resource_respawn_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -681,6 +685,10 @@ int main() {
     run_turret_tracking_system_tests();
     run_colony_management_system_tests();
     run_fps_input_context_system_tests();
+    run_encounter_balance_system_tests();
+    run_network_quality_monitor_system_tests();
+    run_loot_table_system_tests();
+    run_resource_respawn_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
