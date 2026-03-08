@@ -373,6 +373,11 @@ set(CORE_SOURCES
     src/systems/star_system_population_system.cpp
     src/systems/dynamic_difficulty_system.cpp
     src/systems/gameplay_loop_tracker_system.cpp
+    src/systems/chat_router_system.cpp
+    src/systems/editor_overlay_system.cpp
+    src/systems/hangar_transition_system.cpp
+    src/systems/control_mode_context_system.cpp
+    src/systems/construction_placement_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
@@ -802,6 +807,11 @@ set(SERVER_HEADERS
     include/systems/star_system_population_system.h
     include/systems/dynamic_difficulty_system.h
     include/systems/gameplay_loop_tracker_system.h
+    include/systems/chat_router_system.h
+    include/systems/editor_overlay_system.h
+    include/systems/hangar_transition_system.h
+    include/systems/control_mode_context_system.h
+    include/systems/construction_placement_system.h
 )
 
 # Steam SDK configuration

@@ -1870,6 +1870,109 @@ public:
     COMPONENT_TYPE(GameplayLoopTrackerState)
 };
 
+class ChatRouterState : public ecs::Component {
+public:
+    uint64_t next_global_seq = 0;
+    uint64_t next_local_seq = 0;
+    uint64_t next_party_seq = 0;
+    uint64_t next_guild_seq = 0;
+    uint64_t next_system_seq = 0;
+    int total_messages_routed = 0;
+    int total_messages_rejected = 0;
+    int rate_limit_violations = 0;
+    float rate_window_timer = 0.0f;
+    int messages_in_window = 0;
+    int max_messages_per_window = 3;
+    float rate_window_seconds = 5.0f;
+    int max_message_length = 512;
+    bool active = true;
+
+    COMPONENT_TYPE(ChatRouterState)
+};
+
+class EditorOverlayState : public ecs::Component {
+public:
+    enum class LayoutMode { Hidden, Minimal, Full };
+
+    LayoutMode layout_mode = LayoutMode::Hidden;
+    float overlay_opacity = 0.85f;
+    bool captures_input = false;
+    bool show_hierarchy = false;
+    bool show_inspector = false;
+    bool show_tools = true;
+    bool show_console = false;
+    bool show_profiler = false;
+    float hierarchy_width_pct = 0.20f;
+    float inspector_width_pct = 0.25f;
+    int toggle_count = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(EditorOverlayState)
+};
+
+class HangarTransitionState : public ecs::Component {
+public:
+    enum class TransitionPhase {
+        Idle, DockApproach, DockSequence, DockComplete,
+        UndockSequence, UndockLaunch, UndockComplete
+    };
+
+    TransitionPhase phase = TransitionPhase::Idle;
+    float phase_timer = 0.0f;
+    float dock_approach_duration = 3.0f;
+    float dock_sequence_duration = 5.0f;
+    float undock_sequence_duration = 4.0f;
+    float undock_launch_duration = 2.0f;
+    std::string target_station_id;
+    std::string target_hangar_id;
+    int total_docks = 0;
+    int total_undocks = 0;
+    bool animation_playing = false;
+    float animation_progress = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(HangarTransitionState)
+};
+
+class ControlModeContextState : public ecs::Component {
+public:
+    enum class ControlMode { SpaceUI, FPS, Cockpit, FleetCommand, StationMenu, BuildMode };
+
+    ControlMode current_mode = ControlMode::SpaceUI;
+    ControlMode previous_mode = ControlMode::SpaceUI;
+    bool mouse_captured = false;
+    bool sidebar_visible = true;
+    bool crosshair_visible = false;
+    bool orbit_camera_active = false;
+    int mode_switches = 0;
+    float time_in_current_mode = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ControlModeContextState)
+};
+
+class ConstructionPlacementState : public ecs::Component {
+public:
+    enum class BuildContext { ShipInterior, ShipExterior, StationModule, RoverBay, RigLocker };
+
+    BuildContext context = BuildContext::ShipInterior;
+    float grid_size = 1.0f;
+    bool snap_to_grid = true;
+    int max_sockets = 20;
+    int occupied_sockets = 0;
+    int total_placements = 0;
+    int total_removals = 0;
+    float placement_x = 0.0f;
+    float placement_y = 0.0f;
+    float placement_z = 0.0f;
+    float placement_rotation = 0.0f;
+    std::string selected_module_id;
+    bool placement_valid = false;
+    bool active = true;
+
+    COMPONENT_TYPE(ConstructionPlacementState)
+};
+
 } // namespace components
 } // namespace atlas
 

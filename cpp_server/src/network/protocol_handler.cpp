@@ -53,6 +53,14 @@ void ProtocolHandler::initializeMessageTypes() {
     message_type_map_["abandon_mission"] = MessageType::ABANDON_MISSION;
     message_type_map_["mission_progress"] = MessageType::MISSION_PROGRESS;
     message_type_map_["mission_result"] = MessageType::MISSION_RESULT;
+    message_type_map_["chat_send"] = MessageType::CHAT_SEND;
+    message_type_map_["chat_message"] = MessageType::CHAT_MESSAGE;
+    message_type_map_["chat_send_result"] = MessageType::CHAT_SEND_RESULT;
+    message_type_map_["chat_history"] = MessageType::CHAT_HISTORY;
+    message_type_map_["chat_join"] = MessageType::CHAT_JOIN;
+    message_type_map_["chat_leave"] = MessageType::CHAT_LEAVE;
+    message_type_map_["admin_command_send"] = MessageType::ADMIN_COMMAND_SEND;
+    message_type_map_["admin_command_result"] = MessageType::ADMIN_COMMAND_RESULT;
     message_type_map_["error"] = MessageType::ERROR;
 }
 
@@ -102,6 +110,14 @@ std::string ProtocolHandler::messageTypeToString(MessageType type) {
         case MessageType::ABANDON_MISSION: return "abandon_mission";
         case MessageType::MISSION_PROGRESS: return "mission_progress";
         case MessageType::MISSION_RESULT: return "mission_result";
+        case MessageType::CHAT_SEND: return "chat_send";
+        case MessageType::CHAT_MESSAGE: return "chat_message";
+        case MessageType::CHAT_SEND_RESULT: return "chat_send_result";
+        case MessageType::CHAT_HISTORY: return "chat_history";
+        case MessageType::CHAT_JOIN: return "chat_join";
+        case MessageType::CHAT_LEAVE: return "chat_leave";
+        case MessageType::ADMIN_COMMAND_SEND: return "admin_command_send";
+        case MessageType::ADMIN_COMMAND_RESULT: return "admin_command_result";
         case MessageType::ERROR: return "error";
         default: return "unknown";
     }

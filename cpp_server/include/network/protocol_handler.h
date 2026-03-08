@@ -64,6 +64,15 @@ enum class MessageType {
     ABANDON_MISSION,
     MISSION_PROGRESS,
     MISSION_RESULT,
+    // Chat system messages (see docs/design/chat-system-spec.md)
+    CHAT_SEND,              // Client → Server: send a chat message
+    CHAT_MESSAGE,           // Server → Client: broadcast a chat message
+    CHAT_SEND_RESULT,       // Server → Client: ack/error for sent message
+    CHAT_HISTORY,           // Server → Client: history chunk on join
+    CHAT_JOIN,              // Client → Server: join a channel
+    CHAT_LEAVE,             // Client → Server: leave a channel
+    ADMIN_COMMAND_SEND,     // Client → Server: admin console command
+    ADMIN_COMMAND_RESULT,   // Server → Client: admin command response
     ERROR
 };
 

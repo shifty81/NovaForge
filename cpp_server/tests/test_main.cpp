@@ -370,6 +370,15 @@ void run_ancient_module_discovery_system_tests();
 void run_eva_airlock_exit_system_tests();
 void run_salvage_exploration_system_tests();
 void run_warp_performance_budget_system_tests();
+void run_session_persistence_system_tests();
+void run_star_system_population_system_tests();
+void run_dynamic_difficulty_system_tests();
+void run_gameplay_loop_tracker_system_tests();
+void run_chat_router_system_tests();
+void run_editor_overlay_system_tests();
+void run_hangar_transition_system_tests();
+void run_control_mode_context_system_tests();
+void run_construction_placement_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -737,6 +746,15 @@ int main() {
     run_eva_airlock_exit_system_tests();
     run_salvage_exploration_system_tests();
     run_warp_performance_budget_system_tests();
+    run_session_persistence_system_tests();
+    run_star_system_population_system_tests();
+    run_dynamic_difficulty_system_tests();
+    run_gameplay_loop_tracker_system_tests();
+    run_chat_router_system_tests();
+    run_editor_overlay_system_tests();
+    run_hangar_transition_system_tests();
+    run_control_mode_context_system_tests();
+    run_construction_placement_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
