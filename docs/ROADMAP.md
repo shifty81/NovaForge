@@ -114,7 +114,7 @@ If it fails any one → it doesn't ship.
 | Milestone | Target | Criteria |
 |-----------|--------|----------|
 | **Engine Baseline** | ✅ Done | ECS, rendering, audio, physics, networking, UI framework |
-| **All Server Systems** | ✅ Done | 12605+ test assertions passing across 316 ECS systems |
+| **All Server Systems** | ✅ Done | 12780+ test assertions passing across 320 ECS systems |
 | **Atlas Engine Modules** | ✅ Done | 915 engine test assertions (input, camera, audio, animation, plugin) |
 | **Editor Tool Layer** | ✅ Done | 32 tools, 17 panels, EditorCommandBus, UndoableCommandBus, DeltaEditStore, 374+ test assertions |
 | **Vertical Slice** | In Progress | One star system fully playable end-to-end |
