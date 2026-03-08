@@ -346,6 +346,10 @@ void run_encounter_balance_system_tests();
 void run_network_quality_monitor_system_tests();
 void run_loot_table_system_tests();
 void run_resource_respawn_system_tests();
+void run_hyperspace_routing_system_tests();
+void run_player_hangar_inventory_system_tests();
+void run_snapshot_replication_system2_tests();
+void run_server_tick_metrics_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -689,6 +693,10 @@ int main() {
     run_network_quality_monitor_system_tests();
     run_loot_table_system_tests();
     run_resource_respawn_system_tests();
+    run_hyperspace_routing_system_tests();
+    run_player_hangar_inventory_system_tests();
+    run_snapshot_replication_system2_tests();
+    run_server_tick_metrics_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

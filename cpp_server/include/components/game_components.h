@@ -1318,6 +1318,39 @@ public:
     COMPONENT_TYPE(PlayerProgressionTracking)
 };
 
+/**
+ * @brief Server tick performance metrics
+ *
+ * Tracks per-tick timing, entity counts, and performance budgets to
+ * help maintain the 20 Hz target tick rate.  Records min/max/avg tick
+ * durations, overtime warnings, and per-system phase timings.
+ */
+class ServerTickMetrics : public ecs::Component {
+public:
+    struct PhaseTimer {
+        std::string phase_name;
+        float duration_ms = 0.0f;
+    };
+
+    float target_tick_rate = 20.0f;     // Hz
+    float tick_budget_ms = 50.0f;       // 1000/20
+    float last_tick_ms = 0.0f;
+    float avg_tick_ms = 0.0f;
+    float min_tick_ms = 999.0f;
+    float max_tick_ms = 0.0f;
+    int total_ticks = 0;
+    int overtime_ticks = 0;             // ticks exceeding budget
+    int entity_count = 0;
+    int peak_entity_count = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    std::vector<PhaseTimer> phase_timers;
+    int max_phases = 20;
+
+    COMPONENT_TYPE(ServerTickMetrics)
+};
+
 } // namespace components
 } // namespace atlas
 
