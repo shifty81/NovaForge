@@ -318,6 +318,7 @@ set(CORE_SOURCES
     src/systems/beacon_navigation_system.cpp
     src/systems/formation_flight_system.cpp
     src/systems/asteroid_respawn_system.cpp
+    src/systems/asteroid_depletion_tracker_system.cpp
     src/systems/bounty_payout_system.cpp
     src/systems/npc_trader_scheduler_system.cpp
     src/systems/npc_fleet_composition_system.cpp
@@ -716,6 +717,7 @@ set(SERVER_HEADERS
     include/systems/beacon_navigation_system.h
     include/systems/formation_flight_system.h
     include/systems/asteroid_respawn_system.h
+    include/systems/asteroid_depletion_tracker_system.h
     include/systems/bounty_payout_system.h
     include/systems/npc_trader_scheduler_system.h
     include/systems/npc_fleet_composition_system.h

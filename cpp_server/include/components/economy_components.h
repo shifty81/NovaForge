@@ -1053,6 +1053,29 @@ public:
     COMPONENT_TYPE(MiningYieldState)
 };
 
+class AsteroidDepletionState : public ecs::Component {
+public:
+    float total_ore_volume = 10000.0f;     // initial ore volume in m3
+    float remaining_ore = 10000.0f;        // current remaining ore
+    float depletion_rate = 0.0f;           // ore removed per second (when being mined)
+    float respawn_rate = 10.0f;            // ore respawned per second
+    float respawn_delay = 300.0f;          // seconds before respawn starts after depletion
+    float time_since_depletion = 0.0f;     // timer for respawn delay
+    int times_depleted = 0;                // how many times fully depleted
+    int active_miners = 0;                 // number of miners currently extracting
+    float security_bonus = 1.0f;           // 0.5 (highsec) to 2.0 (nullsec) volume modifier
+    float elapsed = 0.0f;
+    bool active = true;
+    bool depleted = false;                 // true when remaining_ore <= 0
+
+    float depletionPercent() const {
+        if (total_ore_volume <= 0.0f) return 1.0f;
+        return 1.0f - (remaining_ore / total_ore_volume);
+    }
+
+    COMPONENT_TYPE(AsteroidDepletionState)
+};
+
 } // namespace components
 } // namespace atlas
 
