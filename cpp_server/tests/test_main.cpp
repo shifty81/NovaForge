@@ -379,6 +379,10 @@ void run_editor_overlay_system_tests();
 void run_hangar_transition_system_tests();
 void run_control_mode_context_system_tests();
 void run_construction_placement_system_tests();
+void run_fleet_progression_system_tests();
+void run_hangar_environment_system_tests();
+void run_titan_assembly_system_tests();
+void run_station_deployment_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -755,6 +759,10 @@ int main() {
     run_hangar_transition_system_tests();
     run_control_mode_context_system_tests();
     run_construction_placement_system_tests();
+    run_fleet_progression_system_tests();
+    run_hangar_environment_system_tests();
+    run_titan_assembly_system_tests();
+    run_station_deployment_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
