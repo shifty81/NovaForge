@@ -493,7 +493,7 @@ StyleGenerationResult GenerationStyleEngine::generateStarSystem(
         gate.posX   = dist * std::cos(angle);
         gate.posY   = rng.rangeFloat(-kGateVerticalSpread, kGateVerticalSpread);
         gate.posZ   = dist * std::sin(angle);
-        sys.gates.push_back(gate);
+        sys.stargates.push_back(gate);
     }
 
     // Apply designer placements (pin specific celestials).
@@ -513,7 +513,7 @@ StyleGenerationResult GenerationStyleEngine::generateStarSystem(
         }
     }
 
-    sys.valid = (!sys.planets.empty() && !sys.gates.empty());
+    sys.valid = (!sys.planets.empty() && !sys.stargates.empty());
 
     result.starSystemResult  = sys;
     result.placementsApplied = placementsApplied;

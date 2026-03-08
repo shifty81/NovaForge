@@ -1395,6 +1395,41 @@ public:
     COMPONENT_TYPE(ShipLoadoutPresets)
 };
 
+// ==================== Player Hangar Inventory ====================
+/**
+ * @brief Per-player per-station item storage.
+ *
+ * Tracks items deposited in a station hangar on behalf of a specific
+ * player.  Used by the dock → store → equip → undock gameplay loop.
+ */
+class PlayerHangarInventory : public ecs::Component {
+public:
+    struct HangarItem {
+        std::string item_id;
+        std::string item_name;
+        std::string item_type;
+        int         quantity        = 0;
+        double      volume_per_unit = 0.0;
+        double      estimated_value = 0.0;
+    };
+
+    std::string player_id;
+    std::string station_id;
+    double      max_volume          = 1000.0;
+    double      used_volume         = 0.0;
+    double      total_value_stored  = 0.0;
+    int         total_deposits      = 0;
+    int         total_withdrawals   = 0;
+    float       elapsed             = 0.0f;
+    bool        active              = true;
+
+    std::vector<HangarItem> items;
+
+    double remainingVolume() const { return max_volume - used_volume; }
+
+    COMPONENT_TYPE(PlayerHangarInventory)
+};
+
 } // namespace components
 } // namespace atlas
 
