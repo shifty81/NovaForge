@@ -911,7 +911,7 @@ public:
 
     int remainingJumps() const {
         if (current_waypoint_index < 0) return static_cast<int>(waypoints.size());
-        return std::max(0, static_cast<int>(waypoints.size()) - current_waypoint_index - 1);
+        return (std::max)(0, static_cast<int>(waypoints.size()) - current_waypoint_index - 1);
     }
 
     COMPONENT_TYPE(HyperspaceRoute)

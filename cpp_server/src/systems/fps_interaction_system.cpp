@@ -71,7 +71,7 @@ std::string FPSInteractionSystem::findNearestInteractable(
     auto* cs = char_entity->getComponent<components::FPSCharacterState>();
     if (!cs) return "";
 
-    float best_dist = std::numeric_limits<float>::max();
+    float best_dist = (std::numeric_limits<float>::max)();
     std::string best_id;
 
     for (auto* ent : world_->getEntities<components::FPSInteractable>()) {
