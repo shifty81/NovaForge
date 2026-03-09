@@ -83,7 +83,7 @@ public:
         decay   = kBaseDecay  + 1.0f * speed_factor;
 
         wet_mix = std::clamp(wet_mix, 0.0f, 1.0f);
-        decay   = std::max(decay, 0.0f);
+        decay   = (std::max)(decay, 0.0f);
     }
 
 protected:

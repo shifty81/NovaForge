@@ -19,7 +19,7 @@ option(NOVAFORGE_EDITOR_TOOLS "Embed editor tool layer in the game client (F12 t
 
 # Platform-specific settings
 if(WIN32)
-    add_definitions(-DWIN32 -D_WIN32)
+    add_definitions(-DWIN32 -D_WIN32 -DNOMINMAX)
 elseif(UNIX AND NOT APPLE)
     set(LINUX TRUE)
     add_definitions(-DLINUX)

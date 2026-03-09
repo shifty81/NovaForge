@@ -41,7 +41,7 @@ public:
     static inline float computeTotalCost(const float costs[5]) {
         float total = 0.0f;
         for (int i = 0; i < 5; ++i) {
-            total += std::max(costs[i], 0.0f);
+            total += (std::max)(costs[i], 0.0f);
         }
         return total;
     }
@@ -71,7 +71,7 @@ public:
         float total = computeTotalCost(costs);
 
         if (total <= budget_ms) {
-            return (total > 0.0f) ? std::min(total / budget_ms, 1.0f) : 0.0f;
+            return (total > 0.0f) ? (std::min)(total / budget_ms, 1.0f) : 0.0f;
         }
 
         // Over budget — disable layers from most expensive first.
@@ -87,12 +87,12 @@ public:
         float running = total;
         for (int k = 0; k < 5 && running > budget_ms; ++k) {
             int idx = order[k];
-            running -= std::max(costs[idx], 0.0f);
+            running -= (std::max)(costs[idx], 0.0f);
             enabled[idx] = false;
         }
 
         if (running <= 0.0f) return 0.0f;
-        return std::min(running / budget_ms, 1.0f);
+        return (std::min)(running / budget_ms, 1.0f);
     }
 
 protected:

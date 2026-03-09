@@ -278,7 +278,7 @@ ecs::Entity* AISystem::selectTarget(ecs::Entity* entity) {
     auto all_entities = world_->getEntities<components::Position>();
     
     ecs::Entity* best_target = nullptr;
-    float best_score = std::numeric_limits<float>::max();
+    float best_score = (std::numeric_limits<float>::max)();
     
     // Get our faction for standing checks
     auto* our_faction = entity->getComponent<components::Faction>();
@@ -439,7 +439,7 @@ ecs::Entity* AISystem::findNearestDeposit(ecs::Entity* entity) {
     auto all_entities = world_->getEntities<components::Position, components::MineralDeposit>();
     
     ecs::Entity* nearest = nullptr;
-    float best_dist = std::numeric_limits<float>::max();
+    float best_dist = (std::numeric_limits<float>::max)();
     
     for (auto* candidate : all_entities) {
         auto* dep = candidate->getComponent<components::MineralDeposit>();

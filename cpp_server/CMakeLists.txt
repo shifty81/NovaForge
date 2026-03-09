@@ -16,7 +16,7 @@ option(BUILD_TESTS "Build test suite" ON)
 
 # Platform-specific settings
 if(WIN32)
-    add_definitions(-DWIN32 -D_WIN32)
+    add_definitions(-DWIN32 -D_WIN32 -DNOMINMAX)
 elseif(UNIX AND NOT APPLE)
     set(LINUX TRUE)
     add_definitions(-DLINUX)

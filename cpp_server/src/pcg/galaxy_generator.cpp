@@ -203,7 +203,7 @@ void GalaxyGenerator::buildConnections(DeterministicRNG& rng,
     for (int i = 0; i < n; ++i) {
         if (!adjList[static_cast<size_t>(i)].empty()) continue;
 
-        float bestDist = std::numeric_limits<float>::max();
+        float bestDist = (std::numeric_limits<float>::max)();
         int bestIdx    = -1;
         const auto& ni = galaxy.nodes[static_cast<size_t>(i)];
         for (int j = 0; j < n; ++j) {
@@ -244,7 +244,7 @@ void GalaxyGenerator::buildConnections(DeterministicRNG& rng,
 
     // Bridge disconnected components.
     while (numComponents > 1) {
-        float bestDist = std::numeric_limits<float>::max();
+        float bestDist = (std::numeric_limits<float>::max)();
         int bestA = -1, bestB = -1;
         for (int i = 0; i < n; ++i) {
             if (component[static_cast<size_t>(i)] != 0) continue;

@@ -43,3 +43,8 @@ add_library(AtlasEngine STATIC
 )
 
 target_include_directories(AtlasEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Prevent Windows.h min/max macros from interfering with std::min/std::max
+if(WIN32)
+    target_compile_definitions(AtlasEngine PUBLIC NOMINMAX)
+endif()

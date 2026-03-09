@@ -48,7 +48,7 @@ protected:
         float& cur = current(component);
         float cap = max(component);
         if (cur < cap) {
-            cur = std::min(cur + rate(component) * delta_time, cap);
+            cur = (std::min)(cur + rate(component) * delta_time, cap);
         }
         onAfterRecharge(entity, component, delta_time);
     }
