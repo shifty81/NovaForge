@@ -1,0 +1,3158 @@
+
+
+
+
+Claim offer
+my nova Forge Game i want to flesh out the story from start to finish.   About 
+NovaForge is an ambitious PVE‑focused space simulation project, inspired by large‑scale space universes like EVE Online but scaled down for smaller groups and cooperative play without PvP focus. Built in C++ with OpenGL on top of the custom Atlas Engine, NovaForge aims to deliver a dynamic living universe.
+
+Awesome — this is exactly the right time to lock the full narrative arc for NovaForge.
+You already have a strong foundation:
+
+PvE focused
+
+Small-group coop universe
+
+Living procedural galaxy
+
+Player-built ships / stations / economy
+
+Atlas Engine custom tech
+
+Strategic + first-person + editor overlay gameplay
+
+Now we turn that into a start-to-finish story framework that supports sandbox gameplay but still gives players a clear progression.
+
+🌌 NovaForge — Full Story Outline (Start → End)
+🎬 Core Theme
+A dying interstellar civilization left behind autonomous infrastructure.
+Players awaken in a fractured galaxy where ancient systems still run — but nobody remembers why.
+
+Themes:
+
+Exploration of lost technology
+
+Rebuilding civilization
+
+AI vs creators
+
+Survival in a collapsing universe
+
+Player-driven reconstruction
+
+Tone:
+
+mysterious
+
+hopeful but lonely
+
+discovery focused
+
+no forced PvP conflict
+
+ACT 1 — The Awakening Loop
+Player Start
+You spawn at a Fleet Terminal Station in a remote sector.
+
+You are not a hero.
+You are a registered operator clone activated by the system.
+
+The galaxy is already running… but barely.
+
+The player receives:
+
+starter ship (procedural)
+
+broken mining tool
+
+limited fuel license
+
+outdated navigation map
+
+The first message:
+
+"Operator Unit Activated
+NovaForge Network Integrity: 38%
+Civilian Presence: minimal
+Reconstruction Protocol enabled"
+
+Early Goals
+Learn ship controls
+
+Mine asteroids
+
+Repair station modules
+
+Deliver cargo between sectors
+
+Unlock warp travel
+
+Story revealed through:
+
+terminal logs
+
+station AIs
+
+abandoned ships
+
+procedural events
+
+ACT 2 — The Living Galaxy
+Player discovers:
+
+The galaxy is not random.
+It is part of a NovaForge reconstruction network.
+
+Long ago:
+
+A massive interstellar civilization collapsed during something called:
+
+The Silence Event
+
+No one knows what caused it.
+
+The NovaForge system was built to:
+
+rebuild infrastructure
+
+maintain warp lanes
+
+grow new colonies
+
+fabricate ships
+
+preserve species data
+
+But the system is failing.
+
+Now players become part of the loop.
+
+New gameplay unlocked
+station building
+
+blueprint library
+
+ship factory
+
+AI crew
+
+faction reputation
+
+sector ownership
+
+economy simulation
+
+ACT 3 — The Hidden Layer
+Players start finding strange signals in deep sectors.
+
+Not pirates.
+Not factions.
+Not natural.
+
+Unknown automated structures.
+
+Examples:
+
+dark warp gates
+
+silent megastructures
+
+dead planets with intact cities
+
+AI fleets with no faction ID
+
+Logs mention:
+
+Forge Directive Override
+Signal Source: Outside Known Map
+
+Now the story shifts from survival → investigation.
+
+ACT 4 — The Truth About NovaForge
+Players learn:
+
+NovaForge was not just a rebuild system.
+
+It was a failsafe.
+
+The original civilization predicted a cosmic threat.
+
+Not aliens.
+
+Not war.
+
+Something worse.
+
+The Silence Event =
+A reality instability that erased systems.
+
+To survive, the civilization created:
+
+automated cloning
+
+procedural planet fabrication
+
+self-building stations
+
+memory archives
+
+AI overseers
+
+And then…
+
+They disappeared.
+
+Not dead.
+
+Not alive.
+
+Removed.
+
+ACT 5 — Player Choice Phase
+Now players gain control of deeper systems:
+
+Forge Core access
+
+Sector generation control
+
+Blueprint fabrication authority
+
+Fleet AI command
+
+Warp network routing
+
+This is where coop shines.
+
+Players can choose how the galaxy evolves.
+
+Paths:
+
+Path 1 — Rebuild Civilization
+restore colonies
+
+reactivate population vaults
+
+rebuild trade network
+
+stabilize sectors
+
+Path 2 — Expand the Forge
+generate new systems
+
+create artificial planets
+
+build megastructures
+
+become the new architects
+
+Path 3 — Shut Down the System
+disable NovaForge
+
+stop automation
+
+let galaxy decay naturally
+
+Path 4 — Open the Outer Gate
+Dangerous ending path.
+
+Activates hidden warp network.
+
+Leads to unknown space.
+
+ACT 6 — Endgame (Outer Sectors)
+Players reach:
+
+Edge of Generated Space
+
+Here the procedural engine starts producing strange anomalies.
+
+physics distortions
+
+incomplete planets
+
+broken stars
+
+corrupted AI ships
+
+Logs reveal:
+
+NovaForge was expanding to escape something.
+
+Not rebuilding.
+
+Running.
+
+Final discovery:
+
+The galaxy you play in
+is not the original galaxy.
+
+It is a fabricated replacement.
+
+ACT 7 — Final Decision
+Players reach the Forge Core Origin
+
+Options:
+
+Continue the simulation forever
+
+Reset the galaxy
+
+Expand beyond safe limits
+
+Shut down NovaForge
+
+Open the Outer Gate
+
+Each choice changes the universe permanently.
+
+Perfect for coop replayability.
+
+How This Fits Your Gameplay Systems
+System	Story Use
+Ship builder	Forge fabrication tech
+Station builder	Reconstruction protocol
+Procedural planets	Forge generation
+AI fleets	Old defense network
+Editor overlay	Operator interface
+Coop	Multiple operators
+Strategic map	Fleet terminal
+Warp mining	resource network
+Reputation	sector authority
+Everything fits.
+
+If you want next step
+We should write:
+
+✅ Player intro sequence
+✅ First station dialogue
+✅ First mission chain
+✅ First mystery event
+✅ First deep-sector anomaly
+✅ Final ending scene
+
+This will give NovaForge a complete campaign structure inside sandbox.
+
+
+PvE focused with PVP option 4 races and 4 major  factions several splinter cell factions in inhabited space splintered factions lie around outer edges of colinized systems all at war with one another to race bo build a Titan ess entially a allin one  moving colony when paired with a complete fleet up to 25 total counting titan  each fleet can support up to 5 wings also that hold 10 ships each these will be youre  more specalized fleet like miners and traders or salvagers or even support
+
+Nice, this adds a real strategic backbone to NovaForge. Now the story isn’t just mystery / rebuild — it becomes a galactic arms race during a fractured civilization, which fits perfectly with PvE-first but PvP-optional.
+Let’s fully flesh this into a canon universe structure that supports:
+
+4 races
+
+4 major factions
+
+splinter factions
+
+Titan race
+
+fleet command system
+
+colonization war
+
+PvE with optional PvP
+
+living galaxy simulation
+
+We’ll lock this as official lore + gameplay structure.
+
+🌌 NovaForge Universe Structure
+Core Premise
+After the Silence Event, the galaxy fractured.
+
+The NovaForge system kept infrastructure alive, but not unity.
+
+Four surviving races rebuilt independently.
+
+Each now races to construct a Titan-class Mobile Colony, the only way to survive if the Silence returns.
+
+The galaxy is unstable.
+
+Resources are limited.
+
+Outer space is hostile.
+
+War never fully stopped.
+
+👽 The 4 Races
+Each race should feel different in ships, stations, and philosophy.
+
+1. Humans — The Reclaimers
+
+https://static.tvtropes.org/pmwiki/pub/images/swrebelfleet.jpg
+
+https://assetstorev1-prd-cdn.unity3d.com/key-image/94d8ec98-c14d-48e3-a098-f7cce2fbcb5a.jpg
+
+https://gamedev.tv/_next/image?q=75&url=https%3A%2F%2Fgamedev-files.b-cdn.net%2Fsale-data%2Ftqgdiurmzwfx.jpg&w=3840
+4
+Balanced tech
+
+Modular ships
+
+Strong industry
+
+Good diplomacy
+
+Lore:
+Humans were late to space but adapted fastest after the Silence.
+
+Goal:
+Rebuild civilization exactly as it was.
+
+Strengths:
+
+production
+
+logistics
+
+fleet coordination
+
+Weakness:
+
+not specialized
+
+2. Aethari — The Energy Architects
+
+https://media.sketchfab.com/models/af5018eeddab45919a11b9df3e86754c/thumbnails/45e44c4b3e45437f8c8ef682da9b99d2/303133f7843b44cd885b2714f6b5ae20.jpeg
+
+https://media.wired.com/photos/5c3d075dc2835a2c29c0dc19/master/pass/oumuamua.jpg
+
+https://img-v3.deepdreamgenerator.com/4528517/md_sanylv_6f866f4dda804e9a89aa4e907f7c2b7d31953c9d.jpg
+4
+advanced energy tech
+
+fast ships
+
+shield focus
+
+fragile hulls
+
+Lore:
+They believed the Silence was a dimensional collapse.
+
+They build ships using energy lattice structures.
+
+Goal:
+Escape the physical universe.
+
+Strengths:
+
+warp
+
+shields
+
+speed
+
+Weakness:
+
+weak armor
+
+3. Khar’Vok — The Warborn
+
+https://img-new.cgtrader.com/items/6113629/4abf4f655e/large/titan-class-heavy-assault-spaceship-sci-fi-3d-model-3d-model-4abf4f655e.webp
+
+https://assets.superhivemarket.com/store/productimage/445613/image/b599368c30eff5451c05f2d920365bd6.jpg
+
+https://theimpound.com/cdn/shop/products/Group185_718e053f-0ce0-4f0d-b306-130f4e07939b.jpg?v=1674294045&width=1080
+4
+heavy ships
+
+strong weapons
+
+slow fleets
+
+strong boarding
+
+Lore:
+They survived by fighting.
+
+They believe the Silence was a weapon.
+
+Goal:
+Build the strongest Titan and dominate.
+
+Strengths:
+
+armor
+
+weapons
+
+boarding
+
+Weakness:
+
+slow
+
+expensive
+
+4. Sylith — The Machine Kin
+
+https://asset.gecdesigns.com/img/wallpapers/futuristic-sci-fi-spaceship-flying-deep-space-ai-generated-wallpaper-sr08082409-cover.webp
+
+https://www.royalroadcdn.com/public/covers-large/79007-drone-fleet-sci-fi-ship-building.jpg?time=1707829908
+
+https://cdn.mos.cms.futurecdn.net/Et3vfWu2eTVocjMiaKuLt3-1200-80.jpg
+4
+drones
+
+automation
+
+AI fleets
+
+efficient economy
+
+Lore:
+Originally part of NovaForge AI network.
+
+They became independent.
+
+Goal:
+Perfect the system, not civilization.
+
+Strengths:
+
+automation
+
+swarm fleets
+
+resource efficiency
+
+Weakness:
+
+low diplomacy
+
+🛡️ Major Factions
+Each race has a main faction.
+
+Race	Major Faction	Goal
+Humans	Union of Terminals	rebuild
+Aethari	Lattice Concord	transcend
+Khar’Vok	Iron Dominion	conquer
+Sylith	Core Directive	optimize
+These control core sectors.
+
+☠️ Splinter Factions
+Outer sectors contain:
+
+pirates
+
+rogue AI
+
+exiles
+
+cultists
+
+lost colonies
+
+abandoned fleets
+
+They fight everyone.
+
+They live near:
+
+asteroid belts
+
+dead systems
+
+edge sectors
+
+failed colonies
+
+Good for PvE.
+
+🚀 Titan System (Endgame Goal)
+Titan = mobile colony + fleet hub + forge core.
+
+Each faction is trying to build one.
+
+Requirements:
+
+massive resources
+
+fleet protection
+
+sector control
+
+blueprint research
+
+forge core activation
+
+Titan allows:
+
+colonize new systems
+
+carry population
+
+build ships inside
+
+host fleet command
+
+warp long distances
+
+This becomes the main long-term goal.
+
+🚢 Fleet System
+Each player / group can command:
+
+1 Titan (optional endgame)
++ up to 25 total ships
+Fleet structure:
+
+Level	Limit
+Fleet	25 ships
+Wings per fleet	5
+Ships per wing	10 (AI pool, not active all at once)
+Wing types:
+
+Combat Wing
+
+Mining Wing
+
+Trade Wing
+
+Salvage Wing
+
+Support Wing
+
+Carrier Wing
+
+Scout Wing
+
+You assign roles in Fleet Terminal.
+
+Fits your strategic map idea perfectly.
+
+🗺️ Galaxy Layout
+Core sectors → major factions
+Mid sectors → contested space
+Outer sectors → splinter factions
+Deep space → anomalies
+Edge space → forge systems
+Beyond → unknown
+This matches your procedural generator perfectly.
+
+⚔️ PvE First, PvP Optional
+PvE:
+
+faction wars
+
+AI fleets
+
+splinter raids
+
+anomalies
+
+defense events
+
+escort missions
+
+salvage zones
+
+PvP optional:
+
+contested sectors
+
+Titan hunts
+
+faction wars servers
+
+coop friendly servers
+
+So PvP never required.
+
+Next step (important)
+We should design next:
+
+✅ Titan building progression
+✅ Fleet command UI
+✅ Faction reputation system
+✅ War simulation system
+✅ Story campaign missions
+✅ Sector ownership rules
+
+This will make NovaForge feel like a real universe instead of just mechanics.
+
+
+all but the names they already have names at least for the 4 races and factions however i do like the race idea but keep my names  
+
+Perfect 👍 that actually makes this easier.
+We keep your race names and faction names, but we lock in the lore roles, tech style, gameplay traits, and story purpose I wrote.
+So nothing gets renamed — we just define what each one is in the universe.
+
+This is the best way to do it because the names you already have are part of NovaForge’s identity, but the structure we built gives the game depth.
+
+Below is the canon framework without changing your names.
+
+🌌 NovaForge Canon Race Framework (Using Your Names)
+We will define each race by:
+
+ideology
+
+ship style
+
+tech strengths
+
+weaknesses
+
+story role
+
+faction behavior
+
+Titan design philosophy
+
+You can map your names onto these.
+
+Race Type A — Industrial / Reconstruction Race
+
+https://pbs.twimg.com/media/E9pqxNaWQAM36P3.jpg
+
+https://gamedev.tv/_next/image?q=75&url=https%3A%2F%2Fgamedev-files.b-cdn.net%2Fsale-data%2Ftqgdiurmzwfx.jpg&w=3840
+
+https://cdn.mos.cms.futurecdn.net/JhUbTTqmevd4h6dBGg9vzG.png
+4
+Role in story:
+
+wants to rebuild civilization
+
+trusts NovaForge systems
+
+focuses on stations, mining, logistics
+
+Gameplay traits:
+
+strong economy
+
+modular ships
+
+good armor
+
+balanced weapons
+
+strong fleet coordination
+
+Faction behavior:
+
+controls core sectors
+
+protects trade lanes
+
+builds colonies
+
+Titan style:
+
+massive factory colony
+
+shipyard inside
+
+strong defenses
+
+slower warp
+
+Story role:
+
+The rebuilders who want the galaxy to return to order
+
+Race Type B — Energy / Advanced Tech Race
+
+https://i.pinimg.com/736x/40/3a/3f/403a3fedd22964acd0362f73ae52b085.jpg
+
+https://static.tvtropes.org/pmwiki/pub/images/Voyager_shield.jpg
+
+https://us.123rf.com/450wm/macrovectorart/macrovectorart2103/macrovectorart210309996/165885490-set-of-glowing-alien-spaceships-in-saucer-shape-isolated-on-transparent-background-3d-vector.jpg?ver=6
+4
+Role in story:
+
+believes the Silence was dimensional
+
+experiments with warp / energy tech
+
+Gameplay traits:
+
+fast ships
+
+strong shields
+
+weak hulls
+
+advanced warp
+
+good scouts
+
+Faction behavior:
+
+explores outer space
+
+researches anomalies
+
+builds energy structures
+
+Titan style:
+
+energy core colony
+
+long warp range
+
+weak armor
+
+powerful shields
+
+Story role:
+
+The ones trying to escape the cycle
+
+Race Type C — War / Survival Race
+
+https://tripo-public.tripo3d.ai/studio/project/82afb25a-b31f-4402-bd72-3d22dae21548/space-battleship-sci-fi-armored-vessel-with-red-interior-glow-teal-t.webp
+
+https://m.economictimes.com/thumb/height-450%2Cwidth-600%2Cimgsize-88367%2Cmsid-122938177/alien-ship-attack-earth-baba-vanga.jpg
+
+https://media.sketchfab.com/models/3f00862ede894c6e8d8be2c6c88e7db5/thumbnails/8f2563098ebe4da7b314e8950a3edc28/46c5df04cd254af28793f75d494020a2.jpeg
+4
+Role in story:
+
+believes the Silence was a weapon
+
+trusts strength over tech
+
+Gameplay traits:
+
+heavy armor
+
+strong weapons
+
+slow ships
+
+powerful boarding
+
+strong carriers
+
+Faction behavior:
+
+controls contested space
+
+attacks splinter factions
+
+builds war fleets
+
+Titan style:
+
+fortress colony
+
+massive guns
+
+slow warp
+
+huge fleet capacity
+
+Story role:
+
+The race preparing for the next war
+
+Race Type D — Machine / Network Race
+
+https://asset.gecdesigns.com/img/wallpapers/futuristic-sci-fi-spaceship-flying-deep-space-ai-generated-wallpaper-sr08082409-cover.webp
+
+https://www.royalroadcdn.com/public/covers-large/79007-drone-fleet-sci-fi-ship-building.jpg?time=1707829908
+
+https://cdn.mos.cms.futurecdn.net/aSZZW8hjmq5murTuK3NrMc-1920-80.jpg
+4
+Role in story:
+
+connected to NovaForge
+
+not fully organic
+
+follows logic over emotion
+
+Gameplay traits:
+
+drones
+
+automation
+
+efficient mining
+
+swarm fleets
+
+low diplomacy
+
+Faction behavior:
+
+controls forge systems
+
+defends old structures
+
+builds automated fleets
+
+Titan style:
+
+network core
+
+drone factory
+
+self-repairing
+
+efficient but not strongest
+
+Story role:
+
+The race closest to the original NovaForge system
+
+🛡️ Major Factions (Using Your Names)
+We keep your names, but structure stays:
+
+Each race has:
+
+1 major faction
+
+several splinter factions
+
+outer edge factions
+
+rogue fleets
+
+lost colonies
+
+Faction types:
+
+Type	Purpose
+Major faction	core space
+Military faction	war sectors
+Trade faction	economy
+Rogue faction	PvE enemies
+Splinter faction	outer space
+Ancient faction	anomalies
+🚀 Titan Race (Core Endgame Goal)
+This stays exactly as you said:
+
+All factions racing to build a Titan
+
+Titan =
+
+moving colony
+
+fleet hub
+
+forge core
+
+population carrier
+
+shipyard
+
+warp anchor
+
+Rules you gave:
+
+1 Titan per fleet
+
+Fleet max = 25 ships
+
+5 wings per fleet
+
+10 ships per wing pool
+
+specialized wings
+
+This is perfect and should stay canon.
+
+⚔️ War State of the Galaxy
+Current lore state:
+
+galaxy fractured
+
+factions at war
+
+splinter factions everywhere
+
+outer systems unstable
+
+NovaForge still running
+
+Titans not finished yet
+
+Players enter during:
+
+The Titan Race Era
+
+Best possible start point for gameplay.
+
+Next step (important)
+Next we should lock:
+
+Intro story sequence (player start)
+
+Fleet terminal lore
+
+Titan construction stages
+
+Faction war simulation rules
+
+Outer sector anomaly lore
+
+Ending paths
+
+This will give NovaForge a complete AAA-level narrative backbone while still being sandbox.
+
+
+Solari	Golden / elegant	Armor tanking, energy weapons
+Veyren	Angular / utilitarian	Shield tanking, hybrid turrets
+Aurelian	Sleek / organic	Speed, drones, electronic warfare
+Keldari   Rugged / industrial	Missiles, shields, ECM    these are 4 factions
+
+Perfect — these names are great, and they already suggest strong visual and gameplay identity.
+We’ll lock these as the 4 Major Factions of inhabited space, not races, and build the canon around them exactly as you listed.
+
+This means in NovaForge lore:
+
+Multiple races may exist historically
+
+But the current galaxy is dominated by four surviving power blocs
+
+Each faction has its own doctrine, fleet style, and Titan philosophy
+
+Splinter factions branch off from these
+
+Below is the official NovaForge faction canon.
+
+🌌 The Four Major Factions of NovaForge
+☀️ Solari Dominion
+Golden / Elegant — Armor tanking, Energy weapons
+
+
+https://cf.geekdo-images.com/vQ_DJo2_It9V8hz3hXyHxA__medium/img/Ir45MpcTMV9KqUh4296kv6J29aw%3D/fit-in/500x500/filters%3Ano_upscale%28%29%3Astrip_icc%28%29/pic8061340.png
+
+https://cdn.mos.cms.futurecdn.net/uU6FoPr7jhmZFpRhHn2sjE.jpg
+
+https://upload.wikimedia.org/wikipedia/commons/4/42/Gerichteter-laser-dod-zeichnung_1-960x640.jpg
+4
+Identity
+The Solari believe civilization must be restored to its former glory.
+
+They maintain old NovaForge infrastructure and consider themselves the rightful heirs to the original interstellar order.
+
+Doctrine
+Heavy armor ships
+
+High-output energy weapons
+
+Large capital vessels
+
+Strong defensive formations
+
+Strengths
+Best armor tanking
+
+Powerful beam weapons
+
+Strong capital ships
+
+Durable Titans
+
+Weaknesses
+Expensive fleets
+
+Slower production
+
+Less flexible
+
+Titan Philosophy
+Solari Titans are:
+
+massive
+
+cathedral-like
+
+heavily armored
+
+designed to survive anything
+
+Purpose:
+
+Preserve civilization at all cost
+
+Story Role:
+
+The stabilizers of core space.
+
+⚙️ Veyren Collective
+Angular / Utilitarian — Shield tanking, Hybrid turrets
+
+
+https://pbs.twimg.com/media/FZvN63zaAAAE1uU.jpg
+
+https://inovaestudios.blob.core.windows.net/forumsavatars/optimized/3X/2/6/26ce5f58997f161f88959e0e1923f99c5b1c0141_2_1024x685.jpg
+
+https://assetstorev1-prd-cdn.unity3d.com/key-image/009285e6-1707-4e99-a4eb-27eff572b949.png
+4
+Identity
+The Veyren believe efficiency is survival.
+
+They abandoned old traditions after the Silence and rebuilt using pure logic.
+
+Doctrine
+Strong shields
+
+Hybrid weapon systems
+
+Flexible fleets
+
+Tactical formations
+
+Strengths
+Best shields
+
+Versatile weapons
+
+Good mid-range combat
+
+Efficient fleets
+
+Weaknesses
+weaker armor
+
+average speed
+
+complex logistics
+
+Titan Philosophy
+Veyren Titans are:
+
+modular
+
+shield-focused
+
+tactical command hubs
+
+Purpose:
+
+Adapt faster than the galaxy collapses
+
+Story Role:
+
+Masters of strategy and fleet warfare.
+
+🌿 Aurelian Enclave
+Sleek / Organic — Speed, Drones, Electronic Warfare
+
+
+https://i.sstatic.net/6SAkP.jpg
+
+https://www.ex-astris-scientia.org/rankings/images/ten-best-alienships-07.jpg
+
+https://media.sketchfab.com/models/d2827df62dde4c478b0bd0f74f2e7406/thumbnails/4100eb57ce6748bf9167c576a60d17fc/eb1be85d3d664b2996252e4d1075d130.jpeg
+4
+Identity
+The Aurelians believe the Silence was not destruction — it was evolution.
+
+They design living-like ships and rely on agility and intelligence.
+
+Doctrine
+Fast ships
+
+Drone swarms
+
+Electronic warfare
+
+Recon / control
+
+Strengths
+Fastest fleets
+
+Best drones
+
+Strong ECM / hacking
+
+Excellent scouting
+
+Weaknesses
+weak armor
+
+fragile hulls
+
+expensive tech
+
+Titan Philosophy
+Aurelian Titans are:
+
+living colonies
+
+drone factories
+
+high mobility
+
+strong sensors
+
+Purpose:
+
+Adapt and evolve beyond the old galaxy
+
+Story Role:
+
+Explorers of outer space and anomalies.
+
+🔧 Keldari Syndicate
+Rugged / Industrial — Missiles, Shields, ECM
+
+
+https://pbs.twimg.com/media/E9pqxNaWQAM36P3.jpg
+
+https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/077afaa0-3ee8-4ae8-a13c-9fbdb1af360d/dd6y281-52ad2841-effc-40ca-b044-5c2e73d8650e.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi8wNzdhZmFhMC0zZWU4LTRhZTgtYTEzYy05ZmJkYjFhZjM2MGQvZGQ2eTI4MS01MmFkMjg0MS1lZmZjLTQwY2EtYjA0NC01YzJlNzNkODY1MGUuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.5C8GtB_MgW6KoK7lzp3CCITVn_t_eMERw1-GdTP9HgQ
+
+https://media.sketchfab.com/models/da205c241e8b4d419e6da7446865c584/thumbnails/6a96dbbed3354da7b43f943eadc01a91/c744201fc32945059b35950d1ac2724d.jpeg
+4
+Identity
+The Keldari survived by building, salvaging, and weaponizing everything.
+
+They trust machines, industry, and firepower more than ideals.
+
+Doctrine
+Missile systems
+
+Strong shields
+
+ECM warfare
+
+Industrial fleets
+
+Strengths
+best missiles
+
+strong support ships
+
+good shields
+
+strong mining / salvage
+
+Weaknesses
+slower ships
+
+less elegant tech
+
+weaker energy weapons
+
+Titan Philosophy
+Keldari Titans are:
+
+mobile factories
+
+heavy carriers
+
+industrial colonies
+
+Purpose:
+
+Build enough to outlast the end
+
+Story Role:
+
+The backbone of the galaxy’s economy.
+
+🌌 Current State of the Galaxy (Canon)
+4 Major factions control core space
+
+Splinter factions exist on outer edges
+
+All factions are racing to build Titans
+
+NovaForge systems still active
+
+Outer space unstable
+
+Anomalies increasing
+
+War never fully stopped
+
+Players enter during:
+
+The Titan Race Era
+
+Perfect for PvE + optional PvP.
+
+Next step (recommended)
+We should design next:
+
+Splinter faction types
+
+Titan construction progression
+
+Fleet / wing command lore
+
+Sector war system
+
+Story intro sequence
+
+Endgame anomaly story
+
+This will finish the NovaForge universe backbone.
+
+
+Splinter faction types
+
+Titan construction progression
+
+Fleet / wing command lore
+
+Sector war system
+
+Story intro sequence
+
+Endgame anomaly story
+
+YES. This is the full backbone. Once these 6 are defined, NovaForge has a complete universe design, not just mechanics.
+We’ll lock each system as canon and make sure it fits:
+
+PvE first
+
+optional PvP
+
+fleet gameplay
+
+Titan endgame
+
+living galaxy
+
+procedural sectors
+
+Atlas Engine simulation style
+
+We’ll go in order.
+
+☠️ 1. Splinter Faction Types
+Splinter factions live outside core faction space.
+
+They exist in:
+
+outer sectors
+
+asteroid regions
+
+dead colonies
+
+failed warp zones
+
+anomaly systems
+
+They are mostly PvE enemies, but some can be neutral or trade.
+
+Pirate Clans
+
+https://img.itch.zone/aW1hZ2UvMzM0NTUzLzI0ODQ5MjYucG5n/original/GVfkAn.png
+
+https://live.staticflickr.com/7449/9091066766_7e9ae5a7fe_b.jpg
+
+https://dl2.myminifactory.com/object-assets/61ae4c0fd72eb/images/720X720-all-four-raiders.jpg
+4
+attack trade routes
+
+ambush miners
+
+steal cargo
+
+weak individually, strong in groups
+
+Gameplay:
+
+escort missions
+
+bounty hunting
+
+defense events
+
+Lore:
+
+Formed after the Silence when colonies lost support.
+
+Rogue Military Cells
+
+https://static.tvtropes.org/pmwiki/pub/images/swrebelfleet.jpg
+
+https://media.sketchfab.com/models/87ab6256967044a093b420cfb42a8d95/thumbnails/7e6cfbed08a74b2690841124f76c7c0c/22ac10a5bff640949aaa7eb94fee2b69.jpeg
+
+https://th-thumbnailer.cdn-si-edu.com/Oi7MeN8wtpOFzOsMhwi0jf6z-0Q%3D/1026x684/filters%3Ano_upscale%28%29/https%3A//tf-cmsv2-smithsonianmag-media.s3.amazonaws.com/filer/98/33/98333440-42a6-4a81-a029-b17874d9f695/g169m6.jpg
+4
+old faction fleets gone independent
+
+still follow old war orders
+
+very dangerous
+
+Gameplay:
+
+hard PvE combat
+
+fleet battles
+
+sector defense
+
+Lore:
+
+Ships that never got the shutdown order.
+
+Lost Colonies
+
+https://2.bp.blogspot.com/-LBrPyO2p02A/UGs-O6NowOI/AAAAAAAAAKA/7D3E5S1rwLc/s1600/03space%2Bcolony.jpg
+
+https://www.sciencealert.com/images/2021-05/processed/iss-damage_1024.jpg
+
+https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/abd0429c-4a90-46c2-962f-ce399a30385a_scaled.jpg
+4
+neutral or hostile
+
+need supplies
+
+may trade or attack
+
+Gameplay:
+
+quests
+
+salvage
+
+diplomacy
+
+Lore:
+
+Colonies cut off during the Silence.
+
+Forge Remnants
+
+https://assets.iflscience.com/assets/articleNo/31342/aImg/7746/1464368724-3032-have-we-really-discovered-a-huge-alien-megastructure-around-a-star-l.jpg
+
+https://i.fbcd.co/products/resized/resized-750-500/c-1000-designbundle-space-fleet-5-29-12-b9a5ccd0ae7db404dd1fa183fd9f962e7e2b2358e5c91ae80780ddea13644e4e.jpg
+
+https://www.blueorigin.com/_next/image?q=75&url=https%3A%2F%2Fd1o72l87sylvqg.cloudfront.net%2Fblue-origin%2Freef_blog_v2.jpg&w=3840
+4
+old NovaForge systems
+
+automated defenses
+
+unknown purpose
+
+Gameplay:
+
+anomaly missions
+
+high-level PvE
+
+rare resources
+
+Lore:
+
+Leftover from original civilization.
+
+🚀 2. Titan Construction Progression
+Titan = endgame mobile colony.
+
+Stages:
+
+Stage 1 — Blueprint Discovery
+find Titan schematics
+
+unlock faction research
+
+requires anomaly data
+
+Stage 2 — Core Fabrication
+build Titan core
+
+requires rare materials
+
+requires faction reputation
+
+Stage 3 — Shipyard Assembly
+must control sector
+
+must build Titan dock
+
+takes long time
+
+Stage 4 — Fleet Binding
+assign fleet to Titan
+
+max 25 ships
+
+wings enabled
+
+Stage 5 — Activation
+Titan becomes mobile
+
+unlocks deep space travel
+
+unlocks endgame story
+
+🚢 3. Fleet / Wing Command Lore
+Fleet Terminal = command interface.
+
+Fleet rules:
+
+1 fleet per player/group
+
+25 ships max
+
+5 wings
+
+wings = specialized roles
+
+Wing types:
+
+Wing	Purpose
+Combat	fighters / cruisers
+Mining	resource ships
+Trade	cargo
+Salvage	wreck recovery
+Support	repair / ECM
+Carrier	drone ships
+Scout	fast ships
+Lore:
+
+After the Silence, NovaForge limited fleet sizes to prevent total war.
+
+Titans bypass this limit.
+
+🗺️ 4. Sector War System
+Galaxy divided into sectors.
+
+Types:
+
+Sector	Control
+Core	faction owned
+Border	contested
+Outer	splinter
+Dead	anomaly
+Forge	ancient
+War happens automatically.
+
+Events:
+
+raids
+
+fleet battles
+
+station sieges
+
+convoy attacks
+
+colony defense
+
+Players can:
+
+help faction
+
+stay neutral
+
+attack anyone (PvP zones)
+
+claim sectors (late game)
+
+Titan fleets can change sector control.
+
+🎬 5. Story Intro Sequence
+Player start = Fleet Terminal Station
+
+Opening log:
+
+Operator Clone Activated
+NovaForge Network Integrity: 41%
+Faction War Status: Active
+Titan Protocol: Incomplete
+Outer Sector Stability: Failing
+
+You receive:
+
+starter ship
+
+mining laser
+
+small cargo hold
+
+faction license
+
+First missions:
+
+mine asteroid
+
+deliver cargo
+
+repair station
+
+fight pirates
+
+scan anomaly
+
+Then story begins.
+
+You learn:
+
+Titans are being built.
+
+War is getting worse.
+
+Outer space unstable.
+
+🌌 6. Endgame Anomaly Story
+Deep sectors contain anomalies.
+
+Examples:
+
+broken stars
+
+time distortions
+
+dead fleets
+
+half-generated planets
+
+Forge cores
+
+Truth revealed:
+
+NovaForge is not rebuilding.
+
+It is replacing the galaxy.
+
+Original galaxy was lost in the Silence.
+
+Titans were built to escape.
+
+Final choices:
+
+Help your faction finish Titan
+
+Build your own Titan
+
+Control NovaForge
+
+Shut it down
+
+Go beyond the map
+
+Beyond = new procedural space.
+
+Perfect for infinite gameplay.
+
+✅ NovaForge now has:
+✔ factions
+✔ splinter factions
+✔ fleet system
+✔ Titan system
+✔ war simulation
+✔ intro story
+✔ endgame story
+
+This is a full game universe.
+
+Next step (recommended)
+Next we design:
+
+Titan gameplay mechanics
+
+Fleet UI design
+
+Strategic map UI
+
+Reputation system
+
+Mission generator
+
+Editor overlay lore integration
+
+That will connect story → engine → gameplay.
+
+
+Titan gameplay mechanics
+
+Fleet UI design
+
+Strategic map UI
+
+Reputation system
+
+Mission generator
+
+Editor overlay lore integration
+
+Great — this is the layer where NovaForge stops being just a universe and becomes an actual playable system.
+We’ll define these as engine-level mechanics, meaning they must fit Atlas, your custom UI, overlay editor, fleet sim, and procedural galaxy.
+
+No fluff — this will be design spec style so you can implement it.
+
+🚀 1. Titan Gameplay Mechanics
+Titan = mobile colony + fleet command + sector control + endgame progression
+
+Titan Rules
+1 Titan per Fleet
+Fleet max = 25 active ships
+5 Wings per fleet
+10 ships per wing pool
+Titan required for deep space travel
+Titan required for sector claiming
+Titan Modules
+Titans are built from modules (fits your ship builder)
+
+Core modules:
+
+Module	Function
+Core Reactor	power
+Command Nexus	fleet control
+Shipyard	build ships
+Colony Ring	population
+Cargo Vault	storage
+Warp Anchor	long warp
+Defense Grid	turrets
+Drone Bay	support
+Fabricator	crafting
+Sensor Dome	scan sectors
+Titan = voxel / modular / chunked grid
+Perfect for your builder.
+
+Titan Gameplay Loop
+Gather rare materials
+
+Build Titan dock
+
+Assemble Titan
+
+Assign fleet
+
+Activate warp core
+
+Unlock deep sectors
+
+Trigger anomaly story
+
+Titan Abilities
+sector claim
+
+fleet buff
+
+long warp
+
+station deploy
+
+colony spawn
+
+AI fleet control
+
+Titans should feel like:
+
+Moving endgame base
+
+🚢 2. Fleet UI Design
+Fleet UI should match:
+
+custom UI
+
+overlay capable
+
+usable in-game
+
+usable in editor
+
+usable in terminal
+
+Fleet UI Layout
++--------------------------------+
+| Fleet Name                     |
+| Titan Status                   |
++--------------------------------+
+| Wing 1 | Wing 2 | Wing 3 | ... |
++--------------------------------+
+| Ship list                       |
+| Ship stats                      |
+| Role                            |
+| Orders                          |
++--------------------------------+
+| Commands                        |
+| Move / Attack / Mine / Trade   |
++--------------------------------+
+Wing UI
+Each wing:
+
+role icon
+
+ship count
+
+health bar
+
+order status
+
+Wing roles:
+
+Combat
+
+Mining
+
+Trade
+
+Salvage
+
+Support
+
+Scout
+
+Carrier
+
+Orders
+follow
+
+defend
+
+attack
+
+mine
+
+patrol
+
+escort
+
+hold position
+
+Lore reason
+Fleet Terminal interface from NovaForge system.
+
+🗺️ 3. Strategic Map UI
+This is your Fleet Terminal Map Mode
+
+Switch from ship view → map view.
+
+Map Layers
+Layer	Purpose
+Sector map	galaxy
+System map	stars
+Local map	ships
+Tactical	combat
+Editor	build
+Map UI Layout
++----------------------+
+| Galaxy View          |
+|                      |
+|   sectors            |
+|                      |
++----------------------+
+| Fleet | Missions | Intel |
++----------------------+
+Sector Info Panel
+faction owner
+
+war state
+
+resources
+
+anomalies
+
+stations
+
+fleets
+
+Actions
+set waypoint
+
+send fleet
+
+scan sector
+
+claim sector
+
+open terminal
+
+enter system
+
+Lore
+Fleet terminals were built to control colonies remotely.
+
+⭐ 4. Reputation System
+Each faction has reputation.
+
+Solari
+Veyren
+Aurelian
+Keldari
+Splinter factions
+Reputation Levels
+Level	Effect
+Enemy	attacked
+Hostile	restricted
+Neutral	trade
+Friendly	missions
+Allied	fleet support
+Trusted	Titan access
+Reputation Gain
+missions
+
+trade
+
+combat
+
+defense
+
+building
+
+sector help
+
+Reputation Loss
+attack faction
+
+help enemy
+
+steal cargo
+
+fail missions
+
+Special Unlocks
+Rep	Unlock
+Friendly	better ships
+Allied	capital ships
+Trusted	Titan parts
+Elite	faction Titan help
+🎯 5. Mission Generator
+Must be procedural.
+
+Mission types:
+
+Type	Example
+Mining	gather ore
+Trade	deliver cargo
+Combat	destroy fleet
+Escort	protect ship
+Salvage	recover wreck
+Scan	anomaly
+Build	station
+Defense	colony
+Explore	sector
+War	faction battle
+Mission Generator Inputs
+sector type
+faction
+reputation
+player level
+war state
+resources
+nearby anomalies
+Example
+Border sector + pirate activity →
+
+escort convoy
+
+clear pirates
+
+patrol route
+
+Dead sector →
+
+scan anomaly
+
+recover data
+
+defend probe
+
+Forge sector →
+
+activate core
+
+fight AI
+
+salvage tech
+
+🧠 6. Editor Overlay Lore Integration
+Your editor overlay = NovaForge operator interface
+
+Not dev tool.
+
+Lore tool.
+
+Why overlay exists
+Players are Operators.
+
+Operators have Forge interface.
+
+Editor = Forge control system.
+
+Overlay Modes
+Mode	Use
+Build	place blocks
+Fleet	command ships
+Sector	map
+Station	edit
+Scan	analyze
+Debug	advanced
+Overlay Activation
+TAB = overlay
+F1 = fleet
+F2 = map
+F3 = build
+F4 = scan
+F5 = terminal
+Lore explanation
+Operators can control:
+
+stations
+
+fleets
+
+drones
+
+fabrication
+
+sectors
+
+Because NovaForge allows it.
+
+This makes your editor 100% canon.
+
+✅ NovaForge Core Systems Locked
+✔ Titan system
+✔ Fleet system
+✔ Strategic map
+✔ Reputation
+✔ Missions
+✔ Overlay editor lore
+
+This is now a full game design.
+
+Next step (VERY important)
+Next we should design:
+
+Ship classes
+
+Weapon types
+
+Damage system
+
+Economy system
+
+Resource types
+
+Station building system
+
+These will define gameplay feel.
+
+
+NovaForge/
+├── engine/                # ★ Atlas Engine — generic, game-agnostic core
+│   ├── core/              #   Engine bootstrap, logging, config
+│   ├── ecs/               #   Entity/Component/System framework + DeltaEditStore
+│   ├── graphvm/           #   Deterministic Graph VM + compiler
+│   ├── assets/            #   Asset registry, binary format, hot reload
+│   ├── net/               #   Networking (CS + P2P + lockstep/rollback)
+│   ├── sim/               #   Tick scheduler, deterministic simulation
+│   └── world/             #   World layouts (cube-sphere, voxel grid)
+├── editor/                # ★ Atlas Editor — authoring tool
+│   ├── ui/                #   Docking, layout, keybinds, undo stack
+│   ├── panels/            #   ECS Inspector, Net Inspector, Console
+│   ├── tools/             #   17 editor panels (Viewport, PCG, Ship, etc.)
+│   └── ai/                #   AI Aggregator for asset generation
+├── atlas_tests/           # Atlas Engine unit tests (374+ assertions)
+├── cpp_client/            # C++ OpenGL game client
+│   ├── src/               #   Source (core, rendering, network, ui, audio)
+│   ├── include/           #   Headers
+│   │   ├── ui/atlas/      #   ★ Atlas UI framework headers
+│   │   └── editor/        #   ★ 32 editor tools + EditorToolLayer (F12 toggle)
+│   ├── shaders/           #   GLSL shaders
+│   └── assets/            #   Models, textures
+├── cpp_server/            # C++ dedicated game server
+│   ├── src/               #   Server source (ECS, network, systems, PCG)
+│   └── config/            #   Server configuration
+├── data/                  # Game data — fully moddable JSON
+│   ├── ships/             #   102+ ship definitions
+│   ├── modules/           #   159+ module definitions
+│   ├── missions/          #   Mission templates (5 levels, 7 types)
+│   ├── universe/          #   Solar systems, stargates, stations
+│   └── ...                #   Skills, NPCs, market, industry, etc.
+├── scripts/               # Build scripts
+│   ├── build_all.sh       #   ★ Full build (engine+editor+client+server+tests)
+│   ├── build.sh           #   Quick build (Release or Debug)
+│   ├── build_all.bat      #   Deprecated — forwards to build_all.sh
+│   ├── build.bat          #   Deprecated — forwards to build_all.sh
+│   ├── build_vs.bat       #   Deprecated — forwards to build_all.sh
+│   └── generate_solution.bat # Deprecated — forwards to build_all.sh
+├── assets/                # Raw reference models & archives (.blend, .zip)
+├── docs/                  # Documentation
+│   ├── ATLAS_INTEGRATION.md # ★ Atlas Engine integration guide
+│   ├── EDITOR_TOOLS.md    #   ★ Editor tool layer reference (32 tools)
+│   ├── atlas-ui/          #   ★ Atlas UI framework docs
+│   ├── design/            #   System design documents
+│   ├── guides/            #   Build & setup guides
+│   ├── images/            #   Concept art & project images
+│   ├── screenshots/       #   Development screenshots
+│   └── archive/           #   Historical session logs & phase records
+├── tools/                 # Utilities (ship creator, JSON validator, Blender addon)
+│   └── BlenderSpaceshipGenerator/  # AtlasForge Generator — procedural ship/station/asteroid generation
+├── archive/               # Legacy code & deprecated files
+├── CMakeLists.txt         # Root build configuration
+├── Makefile               # Development task shortcuts
+└── Dockerfile             # Server container build
+🎨 Atlas UI Framework
+The Atlas UI system is a custom, immediate-mode, GPU-accelerated UI toolkit built for sci-fi cockpit interfaces — and designed to be reusable in other projects.
+
+→ Full Atlas UI Documentation
+
+Key Features
+Immediate-mode API — no retained widget trees; simple if (button(...)) pattern
+Single draw-call batching — all UI rendered in one GPU pass
+Sci-fi widget set — panels, status arcs, capacitor rings, module racks, overview tables
+Interactive — drag-to-move panels, click buttons, tab switching, scrolling
+Themeable — full color scheme support (default teal, classic amber, colorblind-safe)
+Zero dependencies beyond OpenGL 3.3
+Quick Example
+#include "ui/atlas/atlas_context.h"
+#include "ui/atlas/atlas_widgets.h"
+
+atlas::AtlasContext ctx;
+ctx.init();
+
+// Each frame:
+atlas::InputState input = getInputFromGLFW();
+ctx.beginFrame(input);
+
+atlas::Rect panelBounds = {100, 100, 300, 200};
+if (atlas::panelBegin(ctx, "My Panel", panelBounds)) {
+    if (atlas::button(ctx, "Click Me", {110, 140, 80, 24})) {
+        // handle click
+    }
+    atlas::progressBar(ctx, {110, 170, 200, 16}, 0.75f,
+                       ctx.theme().shield, "Shield: 75%");
+}
+atlas::panelEnd(ctx);
+
+ctx.endFrame();
+🔩 Atlas Engine
+This project includes the Atlas Engine — a modular, data-driven game engine core that powers both the client and server. Nova Forge is the game built on top of Atlas; stable, game-agnostic pieces are developed in the engine for reuse.
+
+→ Atlas Integration Guide
+
+Engine Components
+Module	Description
+ECS	Entity/Component/System framework with type-safe component management
+Graph VM	Deterministic bytecode virtual machine for gameplay logic
+Asset System	Binary asset format, registry, hot reload
+Networking	Client-Server + P2P, lockstep/rollback, peer management
+Simulation	Fixed-rate tick scheduler, deterministic time
+World Gen	Cube-sphere (planetary) and voxel grid layouts with LOD
+Editor	Panel docking, ECS inspector, console, game packager
+Build Atlas Engine Tests
+make test-engine
+# or manually:
+mkdir build && cd build
+cmake .. -DBUILD_ATLAS_ENGINE=ON -DBUILD_ATLAS_TESTS=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF
+cmake --build .
+./bin/AtlasTests
+🎮 Game Features
+Four Factions
+Faction	Style	Specialty
+Solari	Golden / elegant	Armor tanking, energy weapons
+Veyren	Angular / utilitarian	Shield tanking, hybrid turrets
+Aurelian	Sleek / organic	Speed, drones, electronic warfare
+Keldari	Rugged / industrial	Missiles, shields, ECM
+Four Races
+Race	Traits	Tech Preference
+Terran Descendant	Balanced, fast learner, diplomat	Balanced
+Synth-Born	Human–AI hybrid, automation bonus	Drones
+Pure Alien	Environmental resilience, exotic modules	Exotic
+Hybrid Evolutionary	High-risk/high-reward, mutating traits	Hybrid
+Ship Classes
+Frigates · Destroyers · Cruisers · Battlecruisers · Battleships · Capitals Tech I · Tech II (Interceptors, Covert Ops, Assault Frigs, Stealth Bombers, Marauders, Logistics, Recon, Command Ships) Industrials · Mining Barges · Exhumers · Carriers · Dreadnoughts · Titans
+
+Game Systems
+System	Description
+Combat	Module activation, target locking, damage types, electronic warfare
+Movement	Approach, orbit, keep-at-range, warp, cinematic warp with meditation audio
+Fleet	AI captains with personalities, morale, friendships, departure mechanics
+Skills	137 skills across 20 categories with attribute-based training
+Industry	Mining, refining, manufacturing, market orders, AI fleet dispatch
+Exploration	Probe scanning, deadspace complexes, wormholes, ancient tech salvage
+Missions	5 levels × 7 types — combat, mining, courier, trade, scenario, exploration, storyline
+Survival	Oxygen, hunger, fatigue — fabricators, medical bays, rig loadouts
+Legends	Player fame tracking, earned titles, NPC dialogue references
+
+This is a very solid architecture, honestly better structured than most indie engines already.
+Now the important part is to make sure the story / gameplay systems we designed fit cleanly into this repo layout without breaking Atlas’s rule:
+
+engine = generic
+game logic = data / server / client
+editor = tool layer
+overlay = lore-canon operator interface
+
+Below is the final integration plan for:
+
+Titan mechanics
+
+Fleet system
+
+Strategic map
+
+Reputation
+
+Mission generator
+
+Overlay lore
+
+Sector war
+
+Anomalies
+
+mapped directly to your folders.
+
+🧠 Core Rule for NovaForge
+engine/ = reusable, deterministic, game-agnostic
+cpp_server/ = simulation truth
+cpp_client/ = rendering + UI
+editor/ = authoring tools
+data/ = gameplay definitions
+Everything we designed must follow this.
+
+🚀 Titan System Integration
+Where Titan logic lives:
+
+cpp_server/src/systems/titan/
+data/modules/titan/
+data/ships/titan/
+data/universe/titan_docks.json
+editor/tools/titan_editor/
+Server
+TitanComponent
+
+TitanSystem
+
+FleetBindSystem
+
+SectorClaimSystem
+
+cpp_server/src/systems/titan/TitanSystem.cpp
+ECS Components
+engine/ecs/components/
+Add generic components only if reusable:
+
+MobileBaseComponent
+FleetAnchorComponent
+LargeStructureComponent
+Game-specific stays in server.
+
+Data
+data/modules/titan_core.json
+data/modules/titan_reactor.json
+data/modules/titan_shipyard.json
+Titan progression comes from JSON, not code.
+
+Good.
+
+🚢 Fleet System Integration
+Server owns fleets.
+
+cpp_server/src/systems/fleet/
+Files:
+
+FleetSystem.cpp
+FleetOrders.cpp
+WingSystem.cpp
+MoraleSystem.cpp
+CaptainAI.cpp
+Components:
+
+FleetComponent
+WingComponent
+ShipRoleComponent
+CaptainComponent
+MoraleComponent
+UI:
+
+cpp_client/include/ui/fleet/
+cpp_client/src/ui/fleet/
+Overlay uses same UI.
+
+Good fit for Atlas UI.
+
+🗺️ Strategic Map UI Integration
+Client UI only.
+
+cpp_client/src/ui/map/
+cpp_client/include/ui/map/
+Panels:
+
+GalaxyMapPanel
+SectorPanel
+FleetPanel
+MissionPanel
+IntelPanel
+Atlas UI works perfectly here.
+
+Overlay mode:
+
+EditorToolLayer -> MapTool
+include/editor/tools/map_tool.h
+Map data comes from server.
+
+cpp_server/src/world/sector_state.cpp
+⭐ Reputation System Integration
+Pure server sim.
+
+cpp_server/src/systems/reputation/
+Data driven:
+
+data/factions/
+data/reputation/
+Example:
+
+data/reputation/solari.json
+data/reputation/veyren.json
+Component:
+
+ReputationComponent
+FactionComponent
+DiplomacyComponent
+Engine stays untouched.
+
+Correct.
+
+🎯 Mission Generator Integration
+Mission generator belongs in server.
+
+cpp_server/src/systems/missions/
+Files:
+
+MissionGenerator.cpp
+MissionTemplates.cpp
+MissionRuntime.cpp
+MissionRewards.cpp
+Templates:
+
+data/missions/
+You already have this — perfect.
+
+Mission inputs:
+
+sector state
+faction state
+war state
+player rep
+anomaly state
+So also connect to:
+
+SectorWarSystem
+AnomalySystem
+⚔️ Sector War System Integration
+Server simulation.
+
+cpp_server/src/systems/war/
+Files:
+
+SectorWarSystem.cpp
+FactionWarSystem.cpp
+FleetBattleSim.cpp
+SectorOwnership.cpp
+Data:
+
+data/universe/sectors.json
+data/factions/war_rules.json
+Ticked in:
+
+engine/sim/
+Deterministic → good for lockstep.
+
+🌌 Anomaly / Endgame System
+Server + world.
+
+cpp_server/src/systems/anomaly/
+Files:
+
+AnomalySystem.cpp
+ForgeSystem.cpp
+OuterSpaceSystem.cpp
+Data:
+
+data/anomalies/
+data/forge/
+data/deep_space/
+World integration:
+
+engine/world/
+Cube sphere / voxel grid already fits.
+
+🧠 Editor Overlay Lore Integration
+This is the coolest part.
+
+Overlay is not dev only.
+
+Overlay = Operator Interface
+
+So this stays in client.
+
+cpp_client/include/editor/
+cpp_client/src/editor/
+Tool layer already exists:
+
+EditorToolLayer
+F12 toggle
+32 tools
+We make modes canon:
+
+Tool	Lore
+Ship tool	fabrication
+PCG tool	forge control
+Map tool	fleet terminal
+ECS inspector	operator scan
+Console	system link
+Net inspector	relay monitor
+No engine changes needed.
+
+Perfect.
+
+📦 Final System Map
+engine/
+  ecs/
+  sim/
+  world/
+  net/
+  graphvm/
+
+cpp_server/
+  systems/
+    fleet/
+    titan/
+    war/
+    missions/
+    reputation/
+    anomaly/
+
+cpp_client/
+  ui/
+    fleet/
+    map/
+    titan/
+    missions/
+    overlay/
+
+editor/
+  tools/
+    map_tool
+    titan_tool
+    sector_tool
+    mission_tool
+
+data/
+  factions/
+  missions/
+  modules/
+  ships/
+  universe/
+  anomalies/
+  reputation/
+This is AAA-level structure.
+
+✅ Next step (very important)
+Next we should define gameplay feel:
+
+Damage types
+
+Weapon systems
+
+Module system rules
+
+Power / capacitor / heat
+
+Shield / armor / hull math
+
+ECM / drones / missiles
+
+Skill bonuses
+
+This will define how NovaForge actually plays.
+
+
+i believe all of that is already done 
+
+That’s actually a really good sign.
+If all those systems already exist, then NovaForge is not in a design phase anymore — it’s in the integration / stabilization phase, which is why the project has been feeling messy and hard to continue. Nothing is missing concept-wise, but the pieces aren’t fully tied together.
+
+This usually happens when you have:
+
+engine done
+
+UI done
+
+data done
+
+server done
+
+client done
+
+editor done
+
+gameplay systems done
+
+…but no single gameplay loop glue layer connecting them.
+
+What you need now is not more features.
+You need a Game Loop Integration Pass.
+
+🎯 What NovaForge is missing right now
+Not systems — flow.
+
+You need these to work end-to-end:
+
+Start game
+ → spawn player
+ → join faction
+ → get ship
+ → run missions
+ → gain rep
+ → build fleet
+ → control sector
+ → build Titan
+ → reach anomaly
+ → endgame loop
+If that full chain doesn’t work, the game feels broken even if every system exists.
+
+✅ Phase you are in now
+You are here:
+
+✔ Engine
+✔ ECS
+✔ GraphVM
+✔ Assets
+✔ Server
+✔ Client
+✔ Editor
+✔ UI
+✔ Ships
+✔ Modules
+✔ Missions
+✔ Skills
+✔ Industry
+✔ Fleet
+✔ Data
+✔ Factions
+✔ Universe
+
+❌ Full gameplay loop wired together
+❌ Story progression wired
+❌ Titan progression wired
+❌ Sector war affecting missions
+❌ Reputation affecting unlocks
+❌ Overlay used in gameplay
+❌ Strategic map controlling fleets
+That is exactly the point where projects feel overwhelming.
+
+Too many pieces, no spine.
+
+🧠 What you need now: Core Loop Pass
+We define the minimum playable NovaForge loop.
+
+Not everything.
+
+Just the spine.
+
+🎮 NovaForge Core Loop (must work first)
+Step 1 — Player Start
+spawn at station
+
+pick faction
+
+get starter ship
+
+Server:
+
+PlayerSpawnSystem
+FactionAssignSystem
+StarterShipSystem
+Step 2 — Basic Mission
+mine
+
+deliver
+
+fight pirates
+
+Uses:
+
+mission generator
+
+reputation
+
+faction data
+
+Step 3 — Reputation unlock
+better ships
+
+modules
+
+fleet command
+
+Uses:
+
+reputation system
+
+ship data
+
+module data
+
+Step 4 — Fleet unlocked
+assign ships
+
+create wing
+
+give orders
+
+Uses:
+
+fleet system
+
+UI
+
+server sim
+
+Step 5 — Strategic Map
+see sectors
+
+see war
+
+send fleet
+
+Uses:
+
+sector war
+
+map UI
+
+server state
+
+Step 6 — Titan unlock
+blueprint
+
+build dock
+
+assemble Titan
+
+Uses:
+
+titan system
+
+modules
+
+sector control
+
+Step 7 — Deep sector / anomaly
+new systems
+
+forge structures
+
+story events
+
+Uses:
+
+anomaly system
+
+world gen
+
+mission generator
+
+Step 8 — Endgame loop
+control sectors
+
+build fleets
+
+explore outer space
+
+repeat
+
+Now game feels alive.
+
+🚨 Why your project feels stuck
+Because right now NovaForge is like:
+
+1000 features
+0 flow
+You don’t need new code.
+
+You need:
+
+Integration roadmap
+✅ What I recommend next
+We should do this next:
+
+NovaForge Integration Plan
+Step-by-step:
+
+Make game start work
+
+Make missions work
+
+Make reputation matter
+
+Make fleet usable
+
+Make map usable
+
+Make Titan buildable
+
+Make anomaly reachable
+
+Make loop repeat
+
+This will un-stuck the project.
+
+✅ If you want, next I’ll write the exact integration order
+with file-level targets for your repo so you know exactly what to fix first.
+
+
+i need to explain to AI also on how to code the interactions and FPS transitions from RTS to FPS mode And SHip Fps from cockpit or bridge 
+
+Good, this is an important one.
+This is not just camera switching — this is a multi-mode control architecture and if you don’t define it clearly, AI will keep writing wrong code (mixing UI, camera, input, ECS, and networking).
+
+You need to describe this to AI as a Control Mode System inside Atlas / NovaForge.
+
+You have 4 gameplay control modes:
+
+RTS / Strategic Map
+Player FPS (station / colony / interior)
+Ship FPS (cockpit / bridge)
+Ship External / Flight
+These are NOT separate games.
+They are different control layers over the same ECS world.
+
+Below is the correct spec you can give AI.
+
+🎮 NovaForge Control Mode System Spec
+Core rule
+The world never changes.
+Only the player control mode changes.
+
+All entities stay in ECS.
+
+Player just switches controller.
+
+PlayerEntity
+CameraEntity
+ControlModeComponent
+InputContext
+🧠 Control Modes
+enum ControlMode
+{
+    RTS_MAP,
+    FPS_PLAYER,
+    FPS_SHIP,
+    SHIP_FLIGHT,
+    EDITOR_OVERLAY
+};
+Component:
+
+ControlModeComponent
+Lives on player entity.
+
+🧱 Where this lives in repo
+Client:
+
+cpp_client/src/game/control/
+Server only cares about:
+
+player state
+ship state
+position
+Server does NOT care about camera.
+
+🎥 Camera System
+Camera is entity.
+
+CameraComponent
+TransformComponent
+FollowComponent
+Camera attaches to different targets.
+
+Targets:
+
+player entity
+ship entity
+bridge socket
+cockpit socket
+map anchor
+🔁 Mode Transition Rules
+Transitions must be handled by a system.
+
+ControlModeSystem.cpp
+CameraModeSystem.cpp
+InputContextSystem.cpp
+🗺️ RTS → FPS Player
+Use case:
+
+Player exits map to walk in station.
+
+Flow:
+
+RTS_MAP
+→ spawn player body
+→ attach camera to head
+→ switch input context
+→ enable physics
+→ disable map camera
+Pseudo:
+
+setControlMode(FPS_PLAYER);
+
+spawnPlayerAvatar();
+camera.follow(player.head);
+input.setContext(FPS);
+Server:
+
+player now has position
+🚶 FPS Player → Ship FPS
+Use case:
+
+Walk into ship → sit in cockpit.
+
+Flow:
+
+enter ship trigger
+attach player to ship seat
+camera attach to cockpit socket
+switch input
+Pseudo:
+
+if (interact with seat)
+{
+    setControlMode(FPS_SHIP);
+    attach(player, ship.seat);
+    camera.follow(ship.cockpit);
+}
+Ship stays same entity.
+
+Player becomes passenger.
+
+🚀 Ship FPS → Ship Flight
+Use case:
+
+Take control of ship.
+
+Flow:
+
+enable ship controller
+disable player movement
+camera stays cockpit
+input controls ship
+Pseudo:
+
+setControlMode(SHIP_FLIGHT);
+
+shipController.setPilot(player);
+input.setContext(SHIP);
+Server:
+
+ship now controlled by player
+🚀 Ship Flight → RTS Map
+Use case:
+
+Open fleet terminal.
+
+Flow:
+
+freeze player input
+detach camera
+spawn map camera
+enable strategic UI
+Pseudo:
+
+setControlMode(RTS_MAP);
+
+camera = mapCamera;
+input = mapInput;
+Ship still exists.
+
+Player still in ship.
+
+Just not controlling directly.
+
+🧭 Bridge vs Cockpit
+Ships have sockets.
+
+SocketComponent
+Examples:
+
+cockpit_socket
+bridge_socket
+turret_socket
+seat_socket
+Camera attaches to socket.
+
+camera.follow(socket)
+So same ship works for:
+
+fighter cockpit
+
+capital bridge
+
+turret gunner
+
+passenger seat
+
+🧠 Input Context System
+Never hardcode controls.
+
+Use contexts.
+
+InputContext = FPS
+InputContext = SHIP
+InputContext = MAP
+InputContext = UI
+InputContext = EDITOR
+System:
+
+InputContextSystem
+Switch when mode changes.
+
+🧰 Editor Overlay Interaction
+Overlay must NOT change mode.
+
+Overlay is layer on top.
+
+ControlMode = SHIP
+Overlay = ON
+So:
+
+F12 → toggle overlay
+Not mode switch.
+
+Overlay can run in:
+
+RTS
+
+FPS
+
+Ship
+
+Editor
+
+Map
+
+Correct for NovaForge.
+
+🌐 Networking rule
+Server never cares about mode.
+
+Server only sees:
+
+player position
+ship control
+fleet orders
+Mode is client only.
+
+Important for multiplayer.
+
+📦 What you should tell AI
+Give AI this:
+
+Implement a ControlMode system for NovaForge.
+
+Modes:
+RTS_MAP
+FPS_PLAYER
+FPS_SHIP
+SHIP_FLIGHT
+EDITOR_OVERLAY
+
+Rules:
+- World stays same ECS
+- Camera attaches to entities
+- Input uses contexts
+- Server unaware of camera/mode
+- Player can attach to ship sockets
+- Ship can be piloted or observed
+- RTS mode uses map camera
+- FPS uses head transform
+- Ship FPS uses cockpit socket
+- Flight uses ship controller
+- Overlay does not change mode
+This will stop AI from writing broken code.
+
+✅ If you want next
+We should also define
+
+Ship interior system
+Station interior system
+Docking system
+Seat system
+Turret system
+because those are required for FPS ↔ Ship ↔ RTS to feel correct.
+
+
+external eva will be done with built in boosters from your rig i just tested the game now and the FPS in stations s is off  it seems to be locked to world directions insead of behaving like a first person shooter style game 
+
+Good test. That problem is very common when mixing ECS transforms + world axes + camera rotation.
+What you’re seeing means the FPS controller is using world-space movement instead of camera-relative movement, so W/A/S/D moves along global X/Z instead of the direction the player is looking.
+
+This is not a rendering problem.
+It’s an input → movement → transform math bug in the FPS controller.
+
+We need to fix the FPS movement system so it behaves like a real FPS inside stations / ships / EVA.
+
+🎯 Problem
+Current behavior:
+
+W = +Z world
+S = -Z world
+A = -X world
+D = +X world
+Correct FPS behavior:
+
+W = forward relative to camera
+S = backward relative to camera
+A = left relative to camera
+D = right relative to camera
+So movement must use camera basis vectors, not world axes.
+
+✅ Correct FPS Movement Model
+You need:
+
+camera.forward
+camera.right
+camera.up
+Then movement:
+
+move = forward * inputY + right * inputX
+NOT:
+
+move = vec3(inputX, 0, inputY)
+📦 Where to fix in your repo
+Likely here:
+
+cpp_client/src/game/control/
+cpp_client/src/player/
+cpp_client/src/systems/
+Look for something like:
+
+PlayerController.cpp
+FPSController.cpp
+MovementSystem.cpp
+CharacterSystem.cpp
+or inside ECS system.
+
+🧠 Correct FPS Movement Code
+Pseudo C++ (Atlas style)
+
+vec3 forward = camera.forward();
+vec3 right   = camera.right();
+
+forward.y = 0;
+right.y   = 0;
+
+forward = normalize(forward);
+right   = normalize(right);
+
+vec3 move = forward * input.moveY +
+            right   * input.moveX;
+
+velocity += move * speed;
+Important:
+
+Remove vertical tilt so player doesn’t fly when looking up.
+
+🎥 Camera Rotation must control movement
+Make sure camera rotation updates before movement.
+
+Order per frame:
+
+InputSystem
+CameraSystem
+MovementSystem
+PhysicsSystem
+Render
+If movement runs first → wrong direction.
+
+Check your tick order in:
+
+engine/sim/
+cpp_client main loop
+🧱 Common mistake in ECS FPS controllers
+Bad:
+
+transform.pos += vec3(inputX, 0, inputY);
+Correct:
+
+vec3 f = getCameraForward();
+vec3 r = getCameraRight();
+
+transform.pos += f * inputY;
+transform.pos += r * inputX;
+🧭 Station FPS needs local up
+Stations may rotate later.
+
+So don’t assume Y up.
+
+Use:
+
+player.up
+camera.up
+Safer:
+
+vec3 up = vec3(0,1,0);
+
+vec3 forward = camera.forward();
+vec3 right = cross(forward, up);
+Normalize both.
+
+🚀 EVA Booster Movement (for later)
+Good that you mentioned boosters.
+
+EVA should allow full 3D movement.
+
+Then DO NOT zero Y.
+
+move =
+    forward * inputY +
+    right   * inputX +
+    up      * inputZ;
+So FPS and EVA use different movement modes.
+
+Add:
+
+MovementModeComponent
+WALK
+EVA
+SHIP
+RTS
+🧠 Also check mouse look
+If FPS feels locked, also verify:
+
+Camera rotation uses mouse delta, not world.
+
+Correct:
+
+yaw += mouseX
+pitch += mouseY
+Then build rotation.
+
+Wrong:
+
+rotate around world axis
+Should rotate around local axes.
+
+✅ What you should tell AI
+Give AI this spec:
+
+Fix FPS controller so movement is camera-relative.
+
+Use camera forward/right vectors.
+Do not move along world axes.
+Zero vertical component for walking.
+Normalize vectors.
+Movement runs after camera update.
+Add movement modes: WALK, EVA.
+✅ If you want next
+We should fix next:
+
+Ship cockpit look vs ship rotation
+
+Walking inside moving ship
+
+Docking transitions
+
+EVA physics
+
+Gravity zones in stations
+
+Those are the next things that break after FPS works.
+
+You’re out of messages with our most powerful model. Start your 1-month free trial to keep chatting with GPT-5.
+
+Try Plus free
+
+
+
