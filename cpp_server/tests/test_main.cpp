@@ -401,6 +401,7 @@ void run_capacitor_hud_bar_system_tests();
 void run_velocity_arc_hud_system_tests();
 void run_alert_stack_hud_system_tests();
 void run_damage_feedback_hud_system_tests();
+void run_gate_gun_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -799,6 +800,7 @@ int main() {
     run_velocity_arc_hud_system_tests();
     run_alert_stack_hud_system_tests();
     run_damage_feedback_hud_system_tests();
+    run_gate_gun_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

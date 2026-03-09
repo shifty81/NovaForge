@@ -606,6 +606,44 @@ public:
     COMPONENT_TYPE(LootTableState)
 };
 
+// ==================== Gate Gun State ====================
+
+/**
+ * @brief Automated sentry gun placed at stargates in high/low-sec systems
+ *
+ * Gate guns automatically engage entities flagged as criminal or hostile
+ * within their engagement range.  They cycle fire at a fixed interval
+ * and deal configurable damage.  Damage falloff applies beyond optimal
+ * range.
+ */
+class GateGunState : public ecs::Component {
+public:
+    struct Target {
+        std::string entity_id;
+        float threat_level = 0.0f;   // 0.0–10.0
+        float time_engaged = 0.0f;
+        bool is_criminal = false;
+    };
+
+    std::string gate_id;
+    float engagement_range = 150.0f;   // km
+    float optimal_range = 100.0f;      // km – full damage
+    float falloff_range = 50.0f;       // km beyond optimal before 0 dmg
+    float damage_per_cycle = 500.0f;
+    float cycle_time = 3.0f;           // seconds per shot
+    float cycle_progress = 0.0f;
+    int max_targets = 3;
+    std::vector<Target> targets;
+    int total_shots_fired = 0;
+    float total_damage_dealt = 0.0f;
+    int total_kills = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+    bool online = true;               // can be disabled (e.g. during incursion)
+
+    COMPONENT_TYPE(GateGunState)
+};
+
 } // namespace components
 } // namespace atlas
 
