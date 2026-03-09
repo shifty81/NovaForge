@@ -385,6 +385,10 @@ set(CORE_SOURCES
     src/systems/alert_stack_hud_system.cpp
     src/systems/damage_feedback_hud_system.cpp
     src/systems/gate_gun_system.cpp
+    src/systems/aggression_switching_system.cpp
+    src/systems/officer_spawn_system.cpp
+    src/systems/anomaly_spawning_system.cpp
+    src/systems/relay_clone_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp

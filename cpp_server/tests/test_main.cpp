@@ -402,6 +402,10 @@ void run_velocity_arc_hud_system_tests();
 void run_alert_stack_hud_system_tests();
 void run_damage_feedback_hud_system_tests();
 void run_gate_gun_system_tests();
+void run_aggression_switching_system_tests();
+void run_officer_spawn_system_tests();
+void run_anomaly_spawning_system_tests();
+void run_relay_clone_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -801,6 +805,10 @@ int main() {
     run_alert_stack_hud_system_tests();
     run_damage_feedback_hud_system_tests();
     run_gate_gun_system_tests();
+    run_aggression_switching_system_tests();
+    run_officer_spawn_system_tests();
+    run_anomaly_spawning_system_tests();
+    run_relay_clone_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

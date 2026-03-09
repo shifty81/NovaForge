@@ -1086,6 +1086,44 @@ public:
     COMPONENT_TYPE(SectorMapDiscovery)
 };
 
+/**
+ * @brief Dynamic anomaly spawning state for a star system
+ *
+ * Controls the periodic spawning and despawning of combat and
+ * exploration anomalies.  Anomaly count scales with system security
+ * level (more in null-sec) and player activity.
+ */
+class AnomalySpawningState : public ecs::Component {
+public:
+    enum class AnomalyType { Combat, Gas, Relic, Data, Wormhole };
+
+    struct SpawnedAnomaly {
+        std::string anomaly_id;
+        AnomalyType type = AnomalyType::Combat;
+        int difficulty = 1;          // 1–5
+        float lifetime = 0.0f;       // seconds alive
+        float max_lifetime = 3600.0f; // 1 hour default
+        bool completed = false;
+    };
+
+    std::string system_id;
+    float security_level = 0.5f;        // determines max anomalies
+    int base_max_anomalies = 3;
+    int max_anomalies = 3;              // adjusted by security
+    float spawn_interval = 300.0f;      // seconds between spawn checks
+    float spawn_timer = 0.0f;
+    float despawn_check_interval = 60.0f;
+    float despawn_timer = 0.0f;
+    std::vector<SpawnedAnomaly> anomalies;
+    int total_spawned = 0;
+    int total_completed = 0;
+    int total_despawned = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(AnomalySpawningState)
+};
+
 } // namespace components
 } // namespace atlas
 

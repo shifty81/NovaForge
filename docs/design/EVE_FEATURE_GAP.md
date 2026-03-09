@@ -32,9 +32,9 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Basic AI exists (approach, orbit, attack)
 **Implementation Needed:**
-- [ ] Aggression switching based on threat/DPS
+- [x] Aggression switching based on threat/DPS
 - [ ] NPC fleet compositions
-- [ ] Officer/Commander spawns with better loot
+- [x] Officer/Commander spawns with better loot
 - [ ] Sleeper AI (wormhole space)
 - [ ] Drifter/Triglavian equivalents
 
@@ -70,7 +70,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [ ] Wormhole mass/time limits
 - [ ] Sleeper cache sites
 - [ ] Null-sec specific mechanics (bubbles, cynos)
-- [ ] Dynamic anomaly spawning
+- [x] Dynamic anomaly spawning
 
 ---
 
@@ -107,7 +107,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] Relay clone mechanics (24-hour cooldown, Infomorph Psychology skill)
 - [x] Implant system (5 attribute slots, 4 grades)
 - [x] Death mechanics (pod kill, skill point loss, implant loss)
-- [ ] Clone bay station service in server code
+- [x] Clone bay station service in server code
 - [ ] Relay clone installation UI
 
 ---
