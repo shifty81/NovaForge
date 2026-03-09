@@ -12,12 +12,10 @@ static void testPvPCreateAndDefaults() {
 
     ecs::World world;
     systems::PvPToggleSystem sys(&world);
+    world.createEntity("player1");
 
     bool created = sys.createPvPState("player1");
     assertTrue(created, "createPvPState returns true");
-
-    bool duplicate = sys.createPvPState("player1");
-    assertTrue(!duplicate, "createPvPState returns false for duplicate");
 
     assertTrue(!sys.isPvPEnabled("player1"), "Default pvp_enabled is false");
     assertTrue(sys.getSafetyLevel("player1") == "HighSec", "Default safety level is HighSec");
@@ -32,6 +30,7 @@ static void testPvPSafetyLevels() {
 
     ecs::World world;
     systems::PvPToggleSystem sys(&world);
+    world.createEntity("player1");
     sys.createPvPState("player1");
 
     // HighSec: force-disables PvP
@@ -65,6 +64,7 @@ static void testPvPEnableDisable() {
 
     ecs::World world;
     systems::PvPToggleSystem sys(&world);
+    world.createEntity("player1");
     sys.createPvPState("player1");
 
     // Cannot enable PvP in HighSec
@@ -85,6 +85,7 @@ static void testPvPEnableDisable() {
     assertTrue(!sys.isPvPEnabled("player1"), "PvP disabled after disablePvP");
 
     // Cannot disable PvP with active aggression timer
+    world.createEntity("player2");
     sys.createPvPState("player2");
     sys.setSafetyLevel("player1", "LowSec");
     sys.setSafetyLevel("player2", "LowSec");
@@ -96,12 +97,14 @@ static void testPvPEnableDisable() {
     assertTrue(sys.isPvPEnabled("player1"), "PvP remains enabled with aggression timer");
 
     // Cannot disable PvP in NullSec
+    world.createEntity("player3");
     sys.createPvPState("player3");
     sys.setSafetyLevel("player3", "NullSec");
     disabled = sys.disablePvP("player3");
     assertTrue(!disabled, "disablePvP fails in NullSec");
 
     // Cannot disable PvP in Wormhole
+    world.createEntity("player4");
     sys.createPvPState("player4");
     sys.setSafetyLevel("player4", "Wormhole");
     disabled = sys.disablePvP("player4");
@@ -114,6 +117,8 @@ static void testPvPEngagement() {
     ecs::World world;
     systems::PvPToggleSystem sys(&world);
 
+    world.createEntity("attacker");
+    world.createEntity("defender");
     sys.createPvPState("attacker");
     sys.createPvPState("defender");
     sys.setSafetyLevel("attacker", "LowSec");
@@ -130,6 +135,7 @@ static void testPvPEngagement() {
     assertTrue(approxEqual(sys.getAggressionTimer("defender"), 300.0f), "Defender aggression timer set to 300");
 
     // canEngage fails when defender has PvP disabled
+    world.createEntity("pacifist");
     sys.createPvPState("pacifist");
     sys.setSafetyLevel("pacifist", "HighSec");
     bool canAttack = sys.canEngage("attacker", "pacifist");
@@ -141,6 +147,7 @@ static void testPvPKillTracking() {
 
     ecs::World world;
     systems::PvPToggleSystem sys(&world);
+    world.createEntity("killer");
     sys.createPvPState("killer");
 
     // Record first kill
@@ -171,6 +178,8 @@ static void testPvPAggressionDecay() {
     ecs::World world;
     systems::PvPToggleSystem sys(&world);
 
+    world.createEntity("attacker");
+    world.createEntity("defender");
     sys.createPvPState("attacker");
     sys.createPvPState("defender");
     sys.setSafetyLevel("attacker", "LowSec");

@@ -384,6 +384,14 @@ void run_hangar_environment_system_tests();
 void run_titan_assembly_system_tests();
 void run_station_deployment_system_tests();
 void run_hull_class_capability_system_tests();
+void run_interest_management_priority_system_tests();
+void run_pvp_toggle_system_tests();
+void run_fps_objective_system_tests();
+void run_fleet_positional_audio_system_tests();
+void run_atlas_ui_panel_system_tests();
+void run_warp_hud_travel_mode_system_tests();
+void run_space_planet_transition_system_tests();
+void run_fps_salvage_path_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -765,6 +773,14 @@ int main() {
     run_titan_assembly_system_tests();
     run_station_deployment_system_tests();
     run_hull_class_capability_system_tests();
+    run_interest_management_priority_system_tests();
+    run_pvp_toggle_system_tests();
+    run_fps_objective_system_tests();
+    run_fleet_positional_audio_system_tests();
+    run_atlas_ui_panel_system_tests();
+    run_warp_hud_travel_mode_system_tests();
+    run_space_planet_transition_system_tests();
+    run_fps_salvage_path_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
