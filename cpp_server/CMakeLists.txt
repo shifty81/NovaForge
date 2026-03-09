@@ -384,6 +384,7 @@ set(CORE_SOURCES
     src/systems/velocity_arc_hud_system.cpp
     src/systems/alert_stack_hud_system.cpp
     src/systems/damage_feedback_hud_system.cpp
+    src/systems/gate_gun_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
