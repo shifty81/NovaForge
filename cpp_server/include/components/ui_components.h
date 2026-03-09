@@ -426,6 +426,180 @@ public:
     COMPONENT_TYPE(OverviewFilter)
 };
 
+// ==================== Shield Arc HUD ====================
+
+/**
+ * @brief Circular shield/armor/hull arc display state for HUD
+ *
+ * Renders concentric arcs (shield outermost, hull innermost) that
+ * deplete clockwise from 12 o'clock.  Used by the Ship HUD Control Ring.
+ */
+class ShieldArcHud : public ecs::Component {
+public:
+    std::string owner_id;
+
+    float shield_percent = 100.0f;   // 0-100
+    float armor_percent  = 100.0f;
+    float hull_percent   = 100.0f;
+
+    // Visual state
+    bool  shield_critical = false;   // shield < 25 %
+    bool  armor_critical  = false;
+    bool  hull_critical   = false;
+    float flash_timer     = 0.0f;    // pulse animation timer
+    float flash_interval  = 0.5f;    // seconds between flashes when critical
+    bool  visible         = true;
+    bool  active          = true;
+
+    COMPONENT_TYPE(ShieldArcHud)
+};
+
+// ==================== Capacitor HUD Bar ====================
+
+/**
+ * @brief Vertical capacitor bar state for HUD
+ *
+ * Displays a vertical bar showing current vs max capacitor with
+ * color transitions: green → yellow → red as charge depletes.
+ */
+class CapacitorHudBar : public ecs::Component {
+public:
+    std::string owner_id;
+
+    float current    = 100.0f;
+    float maximum    = 100.0f;
+    float percent    = 100.0f;       // derived: current / maximum * 100
+
+    // Color thresholds (percent values)
+    float green_threshold  = 50.0f;  // above this → green
+    float yellow_threshold = 25.0f;  // above this → yellow, else red
+
+    enum class BarColor { Green, Yellow, Red };
+    int color_state = 0;             // 0=Green, 1=Yellow, 2=Red
+
+    bool  warning_active = false;    // true when below yellow threshold
+    float drain_rate     = 0.0f;     // GJ/s currently being consumed
+    bool  visible        = true;
+    bool  active         = true;
+
+    COMPONENT_TYPE(CapacitorHudBar)
+};
+
+// ==================== Velocity Arc HUD ====================
+
+/**
+ * @brief Velocity arc indicator for HUD
+ *
+ * Shows current speed as a sweeping arc with color-coded states:
+ * green (normal), yellow (approaching max), red (max / overloaded).
+ */
+class VelocityArcHud : public ecs::Component {
+public:
+    std::string owner_id;
+
+    float current_speed = 0.0f;
+    float max_speed     = 100.0f;
+    float speed_percent = 0.0f;      // derived: current / max * 100
+
+    enum class SpeedState { Idle, Normal, Approaching, AtMax };
+    int   speed_state = 0;           // 0=Idle, 1=Normal, 2=Approaching, 3=AtMax
+
+    float approach_threshold = 80.0f; // percent → Approaching state
+    float idle_threshold     = 1.0f;  // speed below this → Idle
+
+    float warp_prep_progress = 0.0f;  // 0-1, warp charge-up visualisation
+    bool  afterburner_active = false;
+    bool  visible            = true;
+    bool  active             = true;
+
+    COMPONENT_TYPE(VelocityArcHud)
+};
+
+// ==================== Alert Stack HUD ====================
+
+/**
+ * @brief Warning / notification alert stack for HUD
+ *
+ * Manages a stack of timed alerts (shield low, cargo full, etc.)
+ * ordered by priority.  Oldest alerts expire automatically.
+ */
+class AlertStackHud : public ecs::Component {
+public:
+    enum class AlertLevel { Info = 0, Warning = 1, Critical = 2 };
+
+    struct Alert {
+        int    id       = 0;
+        int    level    = 0;      // AlertLevel as int
+        std::string message;
+        float  lifetime     = 5.0f;
+        float  max_lifetime = 5.0f;
+        bool   persistent   = false;   // if true, never auto-expires
+        bool   dismissed    = false;
+    };
+
+    std::vector<Alert> alerts;
+    int  next_alert_id  = 1;
+    int  max_alerts     = 10;
+    int  total_shown    = 0;
+    int  total_expired  = 0;
+    int  total_dismissed = 0;
+    bool visible        = true;
+    bool active         = true;
+
+    Alert* findAlert(int alert_id) {
+        for (auto& a : alerts) {
+            if (a.id == alert_id) return &a;
+        }
+        return nullptr;
+    }
+
+    const Alert* findAlert(int alert_id) const {
+        for (const auto& a : alerts) {
+            if (a.id == alert_id) return &a;
+        }
+        return nullptr;
+    }
+
+    COMPONENT_TYPE(AlertStackHud)
+};
+
+// ==================== Damage Feedback HUD ====================
+
+/**
+ * @brief Damage feedback overlay state for HUD
+ *
+ * Manages screen-space damage effects: shield ripple (blue),
+ * armor flash (yellow / orange), and hull shake (red + screen shake).
+ * Effects are layered and decay over time.
+ */
+class DamageFeedbackHud : public ecs::Component {
+public:
+    struct FeedbackLayer {
+        std::string layer_type;        // "shield", "armor", "hull"
+        float       intensity  = 0.0f; // 0-1 visual strength
+        float       decay_rate = 2.0f; // intensity lost per second
+        float       duration   = 0.0f; // seconds since trigger
+        bool        active     = false;
+    };
+
+    std::string owner_id;
+
+    FeedbackLayer shield_feedback{"shield", 0.0f, 2.0f, 0.0f, false};
+    FeedbackLayer armor_feedback {"armor",  0.0f, 1.5f, 0.0f, false};
+    FeedbackLayer hull_feedback  {"hull",   0.0f, 1.0f, 0.0f, false};
+
+    float screen_shake_intensity = 0.0f;
+    float screen_shake_decay     = 3.0f;
+
+    int   total_shield_hits = 0;
+    int   total_armor_hits  = 0;
+    int   total_hull_hits   = 0;
+    bool  visible           = true;
+    bool  active            = true;
+
+    COMPONENT_TYPE(DamageFeedbackHud)
+};
+
 } // namespace components
 } // namespace atlas
 

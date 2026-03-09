@@ -379,6 +379,11 @@ set(CORE_SOURCES
     src/systems/control_mode_context_system.cpp
     src/systems/construction_placement_system.cpp
     src/systems/hull_class_capability_system.cpp
+    src/systems/shield_arc_hud_system.cpp
+    src/systems/capacitor_hud_bar_system.cpp
+    src/systems/velocity_arc_hud_system.cpp
+    src/systems/alert_stack_hud_system.cpp
+    src/systems/damage_feedback_hud_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp
