@@ -12,7 +12,7 @@ namespace systems {
  * @brief Velocity arc indicator for the Ship HUD Control Ring
  *
  * Displays current speed as a sweeping arc with colour-coded states:
- *   Idle (< 1 % max), Normal, Approaching (> 80 %), AtMax (100 %).
+ *   Idle (speed < idle_threshold), Normal, Approaching (> 80 %), AtMax (100 %).
  * Also tracks afterburner state and warp charge-up progress.
  */
 class VelocityArcHudSystem : public ecs::SingleComponentSystem<components::VelocityArcHud> {

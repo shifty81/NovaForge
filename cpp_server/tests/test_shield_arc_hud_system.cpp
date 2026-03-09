@@ -70,7 +70,7 @@ static void testShieldArcHudCriticalThreshold() {
     sys.initialize("ship1");
     sys.setShieldPercent("ship1", 25.0f);
     sys.update(0.1f);
-    assertTrue(!sys.isShieldCritical("ship1"), "25% is not critical (below < 25)");
+    assertTrue(!sys.isShieldCritical("ship1"), "25% is not critical (threshold is < 25%)");
     sys.setShieldPercent("ship1", 24.9f);
     sys.update(0.1f);
     assertTrue(sys.isShieldCritical("ship1"), "24.9% is critical");

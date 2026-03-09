@@ -16,9 +16,9 @@ void ShieldArcHudSystem::updateComponent(ecs::Entity& /*entity*/,
     if (!arc.active) return;
 
     // Update critical flags
-    arc.shield_critical = arc.shield_percent < 25.0f;
-    arc.armor_critical  = arc.armor_percent  < 25.0f;
-    arc.hull_critical   = arc.hull_percent   < 25.0f;
+    arc.shield_critical = arc.shield_percent < arc.critical_threshold;
+    arc.armor_critical  = arc.armor_percent  < arc.critical_threshold;
+    arc.hull_critical   = arc.hull_percent   < arc.critical_threshold;
 
     // Flash timer for critical layers
     if (arc.shield_critical || arc.armor_critical || arc.hull_critical) {

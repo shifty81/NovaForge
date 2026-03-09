@@ -20,7 +20,7 @@ void CapacitorHudBarSystem::updateComponent(ecs::Entity& /*entity*/,
         : 0.0f;
     bar.percent = (std::max)(0.0f, (std::min)(100.0f, bar.percent));
 
-    // Derive colour state
+    // Derive color state
     if (bar.percent > bar.green_threshold) {
         bar.color_state = 0; // Green
     } else if (bar.percent > bar.yellow_threshold) {

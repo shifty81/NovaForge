@@ -443,7 +443,8 @@ public:
     float hull_percent   = 100.0f;
 
     // Visual state
-    bool  shield_critical = false;   // shield < 25 %
+    float critical_threshold = 25.0f;  // percent below which a layer is critical
+    bool  shield_critical = false;   // shield < critical_threshold
     bool  armor_critical  = false;
     bool  hull_critical   = false;
     float flash_timer     = 0.0f;    // pulse animation timer
@@ -471,8 +472,8 @@ public:
     float percent    = 100.0f;       // derived: current / maximum * 100
 
     // Color thresholds (percent values)
-    float green_threshold  = 50.0f;  // above this → green
-    float yellow_threshold = 25.0f;  // above this → yellow, else red
+    float green_threshold  = 50.0f;  // strictly above this → green
+    float yellow_threshold = 25.0f;  // strictly above this → yellow, else red
 
     enum class BarColor { Green, Yellow, Red };
     int color_state = 0;             // 0=Green, 1=Yellow, 2=Red
