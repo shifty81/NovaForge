@@ -392,6 +392,10 @@ void run_atlas_ui_panel_system_tests();
 void run_warp_hud_travel_mode_system_tests();
 void run_space_planet_transition_system_tests();
 void run_fps_salvage_path_system_tests();
+void run_ancient_tech_system_tests();
+void run_data_binding_system_tests();
+void run_fleet_warp_formation_system_tests();
+void run_keyboard_navigation_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -781,6 +785,10 @@ int main() {
     run_warp_hud_travel_mode_system_tests();
     run_space_planet_transition_system_tests();
     run_fps_salvage_path_system_tests();
+    run_ancient_tech_system_tests();
+    run_data_binding_system_tests();
+    run_fleet_warp_formation_system_tests();
+    run_keyboard_navigation_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
