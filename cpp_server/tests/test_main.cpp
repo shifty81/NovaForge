@@ -410,6 +410,10 @@ void run_aegis_spawn_system_tests();
 void run_sleeper_ai_system_tests();
 void run_order_matching_system_tests();
 void run_blueprint_research_system_tests();
+void run_drifter_ai_system_tests();
+void run_warp_bubble_system_tests();
+void run_invention_system_tests();
+void run_regional_market_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -817,6 +821,10 @@ int main() {
     run_sleeper_ai_system_tests();
     run_order_matching_system_tests();
     run_blueprint_research_system_tests();
+    run_drifter_ai_system_tests();
+    run_warp_bubble_system_tests();
+    run_invention_system_tests();
+    run_regional_market_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

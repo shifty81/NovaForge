@@ -723,6 +723,57 @@ public:
     COMPONENT_TYPE(AegisSpawnState)
 };
 
+// ==================== Drifter AI ====================
+
+/**
+ * @brief Drifter / Triglavian NPC AI state
+ *
+ * Drifters use advanced beam weapons that ramp up damage over time
+ * when attacking the same target.  They can deploy area denial fields
+ * and call reinforcements from a superweapon carrier when provoked
+ * beyond a configurable threshold.
+ */
+class DrifterAIState : public ecs::Component {
+public:
+    enum class DrifterRole { Cruiser, Battleship, Carrier, Response };
+    enum class ThreatLevel { Passive, Aggressive, Berserk };
+
+    struct DrifterUnit {
+        std::string unit_id;
+        DrifterRole role = DrifterRole::Cruiser;
+        float hp = 2000.0f;
+        float max_hp = 2000.0f;
+        float base_dps = 200.0f;
+        float ramp_multiplier = 1.0f;       // grows while firing at same target
+        float ramp_rate = 0.1f;              // multiplier increase per second
+        float max_ramp = 3.0f;              // cap on ramp_multiplier
+        std::string current_target;
+        bool alive = true;
+    };
+
+    std::string site_id;
+    ThreatLevel threat_level = ThreatLevel::Passive;
+    std::vector<DrifterUnit> units;
+    int max_units = 8;
+    float provocation_threshold = 3000.0f;   // total damage to trigger Berserk
+    float damage_taken = 0.0f;
+    float area_denial_radius = 15000.0f;     // meters
+    bool area_denial_active = false;
+    float area_denial_dps = 50.0f;           // damage per second to ships in field
+    float area_denial_timer = 0.0f;
+    float area_denial_duration = 30.0f;      // seconds
+    int reinforcement_wave = 0;
+    int max_reinforcement_waves = 2;
+    float reinforcement_cooldown = 45.0f;
+    float reinforcement_timer = 0.0f;
+    int total_kills = 0;
+    int total_losses = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(DrifterAIState)
+};
+
 } // namespace components
 } // namespace atlas
 

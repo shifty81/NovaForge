@@ -998,6 +998,42 @@ public:
     COMPONENT_TYPE(NetworkQualityState)
 };
 
+// ==================== Warp Disruption Bubble ====================
+
+/**
+ * @brief Area-of-effect warp disruption bubble state
+ *
+ * Interdictor-deployed bubbles that prevent warping for any ship
+ * inside the sphere.  Bubbles have a limited lifetime and radius.
+ * Ships within the bubble have their warp blocked regardless of
+ * warp core strength (unlike point disruption).
+ */
+class WarpBubbleState : public ecs::Component {
+public:
+    struct Bubble {
+        std::string bubble_id;
+        std::string deployer_id;       // who launched it
+        float radius = 20000.0f;       // meters
+        float lifetime = 120.0f;       // total seconds
+        float remaining = 120.0f;      // seconds left
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        int ships_caught = 0;
+        bool expired = false;
+    };
+
+    std::string system_id;
+    std::vector<Bubble> bubbles;
+    int max_bubbles = 10;
+    int total_deployed = 0;
+    int total_ships_caught = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(WarpBubbleState)
+};
+
 } // namespace components
 } // namespace atlas
 
