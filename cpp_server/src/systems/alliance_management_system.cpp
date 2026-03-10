@@ -46,7 +46,7 @@ bool AllianceManagementSystem::initialize(
     // Auto-add executor as first member
     components::AllianceState::AllianceMember exec;
     exec.corp_id     = executor_corp_id;
-    exec.corp_name   = executor_corp_id; // name defaults to ID
+    exec.corp_name   = executor_corp_id; // using corp_id as placeholder name
     exec.is_executor = true;
     comp->members.push_back(exec);
     comp->total_members_joined = 1;
