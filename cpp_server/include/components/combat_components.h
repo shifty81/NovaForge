@@ -774,6 +774,60 @@ public:
     COMPONENT_TYPE(DrifterAIState)
 };
 
+// ==================== Incursion State ====================
+
+/**
+ * @brief Dynamic incursion encounter state
+ *
+ * Incursions are constellation-wide invasions with multiple difficulty tiers.
+ * They follow a lifecycle of spawning → active → withdrawn as capsuleers
+ * reduce influence by completing sites.  Fleet coordination is rewarded
+ * with scaled loyalty point payouts.
+ */
+class IncursionState : public ecs::Component {
+public:
+    enum class Tier { Vanguard, Assault, Headquarters };
+    enum class Lifecycle { Spawning, Active, Withdrawn };
+
+    struct IncursionSite {
+        std::string site_id;
+        Tier tier = Tier::Vanguard;
+        int npc_wave = 0;
+        int max_waves = 3;
+        bool completed = false;
+        int lp_reward = 0;
+    };
+
+    struct FleetMember {
+        std::string pilot_id;
+        std::string site_id;
+    };
+
+    std::string constellation_id;
+    Lifecycle lifecycle = Lifecycle::Spawning;
+    float influence = 100.0f;                   // 0–100 %
+    float influence_decay_rate = 0.1f;          // per second
+    std::vector<IncursionSite> sites;
+    int max_sites = 10;
+    std::vector<FleetMember> fleet_members;
+    int completed_sites = 0;
+    float total_lp_paid = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    // LP payout per tier (base, scaled by fleet size)
+    static int baseLPForTier(Tier t) {
+        switch (t) {
+            case Tier::Vanguard:     return 1000;
+            case Tier::Assault:      return 2500;
+            case Tier::Headquarters: return 7000;
+        }
+        return 0;
+    }
+
+    COMPONENT_TYPE(IncursionState)
+};
+
 } // namespace components
 } // namespace atlas
 

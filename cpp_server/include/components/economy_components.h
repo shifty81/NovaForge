@@ -1358,6 +1358,44 @@ public:
     COMPONENT_TYPE(RegionalMarketState)
 };
 
+/**
+ * @brief Reaction formula state for processing moon materials
+ *
+ * Manages reaction jobs that convert moon goo into intermediate and
+ * advanced materials.  Each reaction consumes a set of input materials
+ * and produces a single output material over a configurable duration.
+ * Efficiency modifiers from rigs/facilities scale progress speed.
+ */
+struct ReactionFormulaState : public ecs::Component {
+    struct InputMaterial {
+        std::string material_id;
+        int quantity = 0;
+    };
+
+    struct ReactionJob {
+        std::string job_id;
+        std::string formula_id;
+        std::vector<InputMaterial> inputs;
+        std::string output_material;
+        int output_quantity = 0;
+        float time_required = 3600.0f;
+        float progress = 0.0f;
+        bool completed = false;
+        bool cancelled = false;
+    };
+
+    std::string facility_id;
+    std::vector<ReactionJob> jobs;
+    int max_concurrent_reactions = 3;
+    float efficiency = 1.0f;          // rig/facility bonus multiplier
+    int total_started = 0;
+    int total_completed = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(ReactionFormulaState)
+};
+
 } // namespace components
 } // namespace atlas
 

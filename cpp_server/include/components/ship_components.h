@@ -1489,6 +1489,38 @@ public:
     COMPONENT_TYPE(HullClassCapabilityProfile)
 };
 
+// ==================== Meta Level State ====================
+
+/**
+ * @brief Module meta level categories for ship fitting
+ *
+ * Tracks modules fitted to a ship with their meta level classification:
+ * 0 = Tech I, 1-4 = Named variants, 5 = Tech II, 6+ = Faction/Deadspace/Officer.
+ * Each module entry carries stat, CPU, and powergrid multipliers that scale
+ * with meta level.  Supports upgrade tracking and drop-rate configuration
+ * for loot tables.
+ */
+class MetaLevelState : public ecs::Component {
+public:
+    struct ModuleEntry {
+        std::string module_id;
+        std::string base_item_type;
+        int meta_level = 0;                  // 0=T1, 1-4=Named, 5=T2, 6+=Faction+
+        float stat_multiplier = 1.0f;
+        float cpu_multiplier = 1.0f;
+        float powergrid_multiplier = 1.0f;
+        float drop_rate = 1.0f;              // 0.0-1.0
+    };
+
+    std::string fitting_id;
+    std::vector<ModuleEntry> modules;
+    int max_modules = 16;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MetaLevelState)
+};
+
 } // namespace components
 } // namespace atlas
 

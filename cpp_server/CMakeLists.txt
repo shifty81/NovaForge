@@ -391,12 +391,17 @@ set(CORE_SOURCES
     src/systems/relay_clone_system.cpp
     src/systems/aegis_spawn_system.cpp
     src/systems/sleeper_ai_system.cpp
+    src/systems/sleeper_cache_system.cpp
     src/systems/order_matching_system.cpp
     src/systems/blueprint_research_system.cpp
     src/systems/drifter_ai_system.cpp
     src/systems/warp_bubble_system.cpp
     src/systems/invention_system.cpp
     src/systems/regional_market_system.cpp
+    src/systems/sleeper_cache_system.cpp
+    src/systems/incursion_system.cpp
+    src/systems/meta_level_system.cpp
+    src/systems/reaction_formula_system.cpp
     src/pcg/pcg_manager.cpp
     src/pcg/ship_generator.cpp
     src/pcg/fleet_doctrine.cpp

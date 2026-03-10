@@ -1,10 +1,9 @@
-// Tests for: Incursion System Tests
+// Tests for: Incursion System
 #include "test_log.h"
 #include "components/core_components.h"
-#include "components/economy_components.h"
+#include "components/combat_components.h"
 #include "ecs/system.h"
 #include "systems/incursion_system.h"
-#include <sys/stat.h>
 
 using namespace atlas;
 
@@ -15,166 +14,184 @@ static void testIncursionCreate() {
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    assertTrue(sys.initialize("inc1", "incursion_alpha", "system_jita", 2), "Init succeeds");
-    assertTrue(sys.getInfluence("inc1") > 0.9f, "Influence starts at 1.0");
-    assertTrue(sys.getParticipantCount("inc1") == 0, "No participants initially");
-    assertTrue(sys.getState("inc1") == 0, "State is Pending");
-    assertTrue(approxEqual(sys.getRewardPool("inc1"), 0.0f), "Reward pool is 0");
-    assertTrue(sys.getTotalWavesDefeated("inc1") == 0, "No waves defeated");
+    assertTrue(sys.initialize("inc1", "constellation_abc"), "Init succeeds");
+    assertTrue(sys.getSiteCount("inc1") == 0, "No sites initially");
+    assertTrue(approxEqual(sys.getInfluence("inc1"), 100.0f), "Influence starts at 100");
+    assertTrue(!sys.isWithdrawn("inc1"), "Not withdrawn initially");
+    assertTrue(sys.getCompletedSiteCount("inc1") == 0, "0 completed sites");
+    assertTrue(approxEqual(sys.getTotalLPPaid("inc1"), 0.0f), "0 LP paid");
+    assertTrue(sys.getFleetSize("inc1") == 0, "No fleet members");
 }
 
-static void testIncursionAddWave() {
-    std::cout << "\n=== Incursion: AddWave ===" << std::endl;
+static void testIncursionSpawnSite() {
+    std::cout << "\n=== Incursion: SpawnSite ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
-    assertTrue(sys.addWave("inc1", 1, "Frigate", 5), "Add wave 1 succeeds");
-    assertTrue(sys.addWave("inc1", 2, "Cruiser", 3), "Add wave 2 succeeds");
-    assertTrue(sys.addWave("inc1", 3, "Battleship", 1), "Add wave 3 succeeds");
+    sys.initialize("inc1", "const_01");
+
+    assertTrue(sys.spawnSite("inc1", "site_v1",
+               components::IncursionState::Tier::Vanguard), "Spawn vanguard");
+    assertTrue(sys.getSiteCount("inc1") == 1, "1 site");
+
+    assertTrue(sys.spawnSite("inc1", "site_a1",
+               components::IncursionState::Tier::Assault), "Spawn assault");
+    assertTrue(sys.getSiteCount("inc1") == 2, "2 sites");
+
+    assertTrue(sys.spawnSite("inc1", "site_hq1",
+               components::IncursionState::Tier::Headquarters), "Spawn HQ");
+    assertTrue(sys.getSiteCount("inc1") == 3, "3 sites");
 }
 
-static void testIncursionDuplicate() {
-    std::cout << "\n=== Incursion: Duplicate ===" << std::endl;
+static void testIncursionCompleteSite() {
+    std::cout << "\n=== Incursion: CompleteSite ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
-    sys.addWave("inc1", 1, "Frigate", 5);
-    assertTrue(!sys.addWave("inc1", 1, "Cruiser", 3), "Duplicate wave rejected");
-    sys.joinIncursion("inc1", "player1");
-    assertTrue(!sys.joinIncursion("inc1", "player1"), "Duplicate participant rejected");
+    sys.initialize("inc1", "const_01");
+    sys.spawnSite("inc1", "site_v1", components::IncursionState::Tier::Vanguard);
+
+    assertTrue(sys.completeSite("inc1", "site_v1"), "Complete vanguard");
+    assertTrue(sys.getCompletedSiteCount("inc1") == 1, "1 completed");
+    // Base LP for Vanguard = 1000, fleet_bonus = max(0,1) = 1
+    assertTrue(approxEqual(sys.getTotalLPPaid("inc1"), 1000.0f), "1000 LP paid");
+
+    // Cannot complete same site twice
+    assertTrue(!sys.completeSite("inc1", "site_v1"), "Cannot re-complete");
+    assertTrue(sys.getCompletedSiteCount("inc1") == 1, "Still 1 completed");
 }
 
-static void testIncursionSpawn() {
-    std::cout << "\n=== Incursion: Spawn ===" << std::endl;
+static void testIncursionFleetCoordination() {
+    std::cout << "\n=== Incursion: FleetCoordination ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
-    sys.addWave("inc1", 1, "Frigate", 5);
-    assertTrue(sys.spawnWave("inc1", 1), "Spawn wave succeeds");
-    assertTrue(!sys.spawnWave("inc1", 1), "Double spawn rejected");
-    assertTrue(!sys.spawnWave("inc1", 99), "Spawn nonexistent wave fails");
+    sys.initialize("inc1", "const_01");
+    sys.spawnSite("inc1", "site_a1", components::IncursionState::Tier::Assault);
+
+    // Register 3 fleet members for this site
+    assertTrue(sys.registerFleetMember("inc1", "site_a1", "pilot_1"),
+               "Register pilot 1");
+    assertTrue(sys.registerFleetMember("inc1", "site_a1", "pilot_2"),
+               "Register pilot 2");
+    assertTrue(sys.registerFleetMember("inc1", "site_a1", "pilot_3"),
+               "Register pilot 3");
+    assertTrue(sys.getFleetSize("inc1") == 3, "3 fleet members");
+
+    // Complete site: base LP = 2500 * 3 fleet = 7500
+    sys.completeSite("inc1", "site_a1");
+    assertTrue(approxEqual(sys.getTotalLPPaid("inc1"), 7500.0f),
+               "7500 LP paid (2500 * 3 fleet)");
 }
 
-static void testIncursionDefeat() {
-    std::cout << "\n=== Incursion: Defeat ===" << std::endl;
+static void testIncursionInfluence() {
+    std::cout << "\n=== Incursion: Influence ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
-    sys.addWave("inc1", 1, "Frigate", 5);
-    sys.spawnWave("inc1", 1);
-    float before = sys.getInfluence("inc1");
-    assertTrue(sys.defeatWave("inc1", 1), "Defeat wave succeeds");
-    assertTrue(sys.getInfluence("inc1") < before, "Influence decreased");
-    assertTrue(sys.getTotalWavesDefeated("inc1") == 1, "1 wave defeated");
-    assertTrue(!sys.defeatWave("inc1", 1), "Double defeat rejected");
+    sys.initialize("inc1", "const_01");
+
+    assertTrue(approxEqual(sys.getInfluence("inc1"), 100.0f), "Starts at 100");
+
+    // Apply negative delta
+    assertTrue(sys.applyInfluenceDelta("inc1", -25.0f), "Apply -25 delta");
+    assertTrue(approxEqual(sys.getInfluence("inc1"), 75.0f), "75 after -25");
+
+    // Apply positive delta
+    assertTrue(sys.applyInfluenceDelta("inc1", 10.0f), "Apply +10 delta");
+    assertTrue(approxEqual(sys.getInfluence("inc1"), 85.0f), "85 after +10");
+
+    // Clamp at 100
+    assertTrue(sys.applyInfluenceDelta("inc1", 50.0f), "Apply +50 delta");
+    assertTrue(approxEqual(sys.getInfluence("inc1"), 100.0f), "Clamped at 100");
+
+    // Decay via update (rate = 0.1/s, 10s → -1.0)
+    sys.update(10.0f);
+    assertTrue(sys.getInfluence("inc1") < 100.0f, "Influence decayed");
+    assertTrue(approxEqual(sys.getInfluence("inc1"), 99.0f), "~99 after 10s decay");
 }
 
-static void testIncursionJoin() {
-    std::cout << "\n=== Incursion: Join ===" << std::endl;
+static void testIncursionWithdrawal() {
+    std::cout << "\n=== Incursion: Withdrawal ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
-    assertTrue(sys.joinIncursion("inc1", "player1"), "Join succeeds");
-    assertTrue(sys.joinIncursion("inc1", "player2"), "Join second succeeds");
-    assertTrue(sys.getParticipantCount("inc1") == 2, "2 participants");
-    assertTrue(sys.leaveIncursion("inc1", "player1"), "Leave succeeds");
-    assertTrue(sys.getParticipantCount("inc1") == 1, "1 participant after leave");
-    assertTrue(!sys.leaveIncursion("inc1", "player1"), "Double leave fails");
+    sys.initialize("inc1", "const_01");
+
+    assertTrue(!sys.isWithdrawn("inc1"), "Not withdrawn initially");
+
+    // Drive influence to zero via delta
+    sys.applyInfluenceDelta("inc1", -100.0f);
+    assertTrue(approxEqual(sys.getInfluence("inc1"), 0.0f), "Influence at 0");
+    assertTrue(sys.isWithdrawn("inc1"), "Withdrawn at 0 influence");
 }
 
-static void testIncursionRewards() {
-    std::cout << "\n=== Incursion: Rewards ===" << std::endl;
+static void testIncursionMaxSites() {
+    std::cout << "\n=== Incursion: MaxSites ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
-    assertTrue(sys.contributeRewards("inc1", 1000.0f), "Contribute succeeds");
-    assertTrue(sys.contributeRewards("inc1", 500.0f), "Contribute again succeeds");
-    assertTrue(approxEqual(sys.getRewardPool("inc1"), 1500.0f), "Pool is 1500");
+    sys.initialize("inc1", "const_01");
+
+    for (int i = 0; i < 10; i++) {
+        assertTrue(sys.spawnSite("inc1", "site_" + std::to_string(i)),
+                   "Spawn site " + std::to_string(i));
+    }
+    assertTrue(sys.getSiteCount("inc1") == 10, "10 sites (max)");
+    assertTrue(!sys.spawnSite("inc1", "overflow"), "Overflow rejected");
 }
 
-static void testIncursionStateTransition() {
-    std::cout << "\n=== Incursion: StateTransition ===" << std::endl;
+static void testIncursionMultipleTiers() {
+    std::cout << "\n=== Incursion: MultipleTiers ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
     world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
+    sys.initialize("inc1", "const_01");
 
-    auto* entity = world.getEntity("inc1");
-    auto* inc = entity->getComponent<components::Incursion>();
-    inc->max_waves = 2;
-    inc->state = components::Incursion::IncursionState::Active;
+    // Spawn and complete one of each tier (no fleet → bonus = 1)
+    sys.spawnSite("inc1", "sv", components::IncursionState::Tier::Vanguard);
+    sys.spawnSite("inc1", "sa", components::IncursionState::Tier::Assault);
+    sys.spawnSite("inc1", "sh", components::IncursionState::Tier::Headquarters);
 
-    sys.addWave("inc1", 1, "Frigate", 5);
-    sys.addWave("inc1", 2, "Cruiser", 3);
+    sys.completeSite("inc1", "sv");
+    assertTrue(approxEqual(sys.getTotalLPPaid("inc1"), 1000.0f), "Vanguard 1000 LP");
 
-    sys.defeatWave("inc1", 1);
-    sys.update(0.1f);
-    assertTrue(sys.getState("inc1") == 1, "Still Active after 1 wave defeated");
+    sys.completeSite("inc1", "sa");
+    assertTrue(approxEqual(sys.getTotalLPPaid("inc1"), 3500.0f), "Assault adds 2500");
 
-    sys.defeatWave("inc1", 2);
-    sys.update(0.1f);
-    assertTrue(sys.getState("inc1") == 2, "Withdrawing after all waves defeated");
+    sys.completeSite("inc1", "sh");
+    assertTrue(approxEqual(sys.getTotalLPPaid("inc1"), 10500.0f), "HQ adds 7000");
 
-    inc->influence = 0.0f;
-    sys.update(0.1f);
-    assertTrue(sys.getState("inc1") == 3, "Defeated when influence is 0");
-}
-
-static void testIncursionMaxLimit() {
-    std::cout << "\n=== Incursion: MaxLimit ===" << std::endl;
-    ecs::World world;
-    systems::IncursionSystem sys(&world);
-    world.createEntity("inc1");
-    sys.initialize("inc1", "incursion_alpha", "system_jita", 1);
-
-    auto* entity = world.getEntity("inc1");
-    auto* inc = entity->getComponent<components::Incursion>();
-    inc->max_waves = 2;
-    inc->max_participants = 2;
-
-    sys.addWave("inc1", 1, "Frigate", 5);
-    sys.addWave("inc1", 2, "Cruiser", 3);
-    assertTrue(!sys.addWave("inc1", 3, "Battleship", 1), "Max waves enforced");
-
-    sys.joinIncursion("inc1", "p1");
-    sys.joinIncursion("inc1", "p2");
-    assertTrue(!sys.joinIncursion("inc1", "p3"), "Max participants enforced");
+    assertTrue(sys.getCompletedSiteCount("inc1") == 3, "3 sites completed");
 }
 
 static void testIncursionMissing() {
     std::cout << "\n=== Incursion: Missing ===" << std::endl;
     ecs::World world;
     systems::IncursionSystem sys(&world);
-    assertTrue(!sys.initialize("nonexistent", "i1", "s1", 1), "Init fails on missing");
-    assertTrue(!sys.addWave("nonexistent", 1, "Frigate", 5), "AddWave fails on missing");
-    assertTrue(!sys.spawnWave("nonexistent", 1), "SpawnWave fails on missing");
-    assertTrue(!sys.defeatWave("nonexistent", 1), "DefeatWave fails on missing");
-    assertTrue(!sys.joinIncursion("nonexistent", "p1"), "Join fails on missing");
-    assertTrue(!sys.leaveIncursion("nonexistent", "p1"), "Leave fails on missing");
-    assertTrue(!sys.contributeRewards("nonexistent", 100.0f), "Contribute fails on missing");
+    assertTrue(!sys.initialize("nonexistent"), "Init fails on missing");
+    assertTrue(!sys.spawnSite("nonexistent", "site1"), "Spawn fails on missing");
+    assertTrue(!sys.completeSite("nonexistent", "site1"), "Complete fails on missing");
+    assertTrue(!sys.registerFleetMember("nonexistent", "site1", "pilot1"),
+               "Register fails on missing");
+    assertTrue(!sys.applyInfluenceDelta("nonexistent", -10.0f),
+               "Influence delta fails on missing");
+    assertTrue(sys.getSiteCount("nonexistent") == 0, "0 sites on missing");
     assertTrue(approxEqual(sys.getInfluence("nonexistent"), 0.0f), "0 influence on missing");
-    assertTrue(sys.getParticipantCount("nonexistent") == 0, "0 participants on missing");
-    assertTrue(sys.getState("nonexistent") == 0, "0 state on missing");
-    assertTrue(approxEqual(sys.getRewardPool("nonexistent"), 0.0f), "0 pool on missing");
-    assertTrue(sys.getTotalWavesDefeated("nonexistent") == 0, "0 defeated on missing");
+    assertTrue(!sys.isWithdrawn("nonexistent"), "Not withdrawn on missing");
+    assertTrue(sys.getCompletedSiteCount("nonexistent") == 0, "0 completed on missing");
+    assertTrue(approxEqual(sys.getTotalLPPaid("nonexistent"), 0.0f), "0 LP on missing");
+    assertTrue(sys.getFleetSize("nonexistent") == 0, "0 fleet on missing");
 }
-
 
 void run_incursion_system_tests() {
     testIncursionCreate();
-    testIncursionAddWave();
-    testIncursionDuplicate();
-    testIncursionSpawn();
-    testIncursionDefeat();
-    testIncursionJoin();
-    testIncursionRewards();
-    testIncursionStateTransition();
-    testIncursionMaxLimit();
+    testIncursionSpawnSite();
+    testIncursionCompleteSite();
+    testIncursionFleetCoordination();
+    testIncursionInfluence();
+    testIncursionWithdrawal();
+    testIncursionMaxSites();
+    testIncursionMultipleTiers();
     testIncursionMissing();
 }
