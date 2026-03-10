@@ -409,6 +409,9 @@ set(CORE_SOURCES
     src/systems/market_api_system.cpp
     src/systems/session_manager_system.cpp
     src/systems/relay_clone_install_ui_system.cpp
+    src/systems/player_spawn_system.cpp
+    src/systems/d_scan_system.cpp
+    src/systems/kill_report_system.cpp
     src/systems/sleeper_cache_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
