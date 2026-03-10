@@ -2029,6 +2029,68 @@ public:
     COMPONENT_TYPE(SessionState)
 };
 
+// ---------------------------------------------------------------------------
+// PlayerSpawn — player spawn point management and respawn lifecycle
+// ---------------------------------------------------------------------------
+/**
+ * @brief Player spawn point management and respawn lifecycle
+ *
+ * Tracks where a player is spawned in the game world, handles death and
+ * the timed respawn countdown, and records total spawn/death counts.
+ */
+class PlayerSpawn : public ecs::Component {
+public:
+    enum class SpawnState { Spawned, Dead, Respawning };
+
+    std::string spawn_location;        // current designated spawn location
+    std::string death_location;        // location where the player last died
+    SpawnState state = SpawnState::Dead;
+    float respawn_timer = 0.0f;        // countdown until respawn (seconds)
+    float respawn_cooldown = 15.0f;    // default respawn wait time (seconds)
+    int spawn_count = 0;               // total times spawned
+    int death_count = 0;               // total times died
+    int max_respawn_attempts = -1;     // -1 = unlimited
+    int respawn_attempts = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(PlayerSpawn)
+};
+
+// ---------------------------------------------------------------------------
+// DScanState — directional scanner state
+// ---------------------------------------------------------------------------
+/**
+ * @brief Directional scanner state
+ *
+ * Models EVE Online's directional scanner: the player configures a range
+ * and cone angle then triggers a scan; contacts within the cone and range
+ * are collected.  The system advances the scan timer and sets is_scanning
+ * to false when the scan completes.
+ */
+class DScanState : public ecs::Component {
+public:
+    enum class ContactType { Ship, Structure, Probe, Drone, Other };
+
+    struct Contact {
+        std::string entity_id;
+        std::string name;
+        ContactType type = ContactType::Ship;
+        float distance = 0.0f;   // AU
+    };
+
+    float scan_range = 14.3f;           // AU  (max EVE range ≈ 14.3 AU)
+    float scan_angle = 360.0f;          // degrees; 360 = full sphere
+    float scan_duration = 1.0f;         // seconds to complete one scan
+    float scan_timer = 0.0f;            // countdown during active scan
+    bool is_scanning = false;
+    int scan_count = 0;                 // total scans performed
+    int max_contacts = 100;
+    std::vector<Contact> contacts;
+    bool active = true;
+
+    COMPONENT_TYPE(DScanState)
+};
+
 } // namespace components
 } // namespace atlas
 

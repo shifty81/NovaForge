@@ -828,6 +828,44 @@ public:
     COMPONENT_TYPE(IncursionState)
 };
 
+// ---------------------------------------------------------------------------
+// KillReport — kill mail generation and loss tracking
+// ---------------------------------------------------------------------------
+/**
+ * @brief Kill mail generation and loss tracking
+ *
+ * Generates kill report entries whenever a ship is destroyed or lost.
+ * Entries are stored up to max_reports (oldest evicted).  Unacknowledged
+ * reports are tracked so the UI can present a notification badge.
+ */
+class KillReport : public ecs::Component {
+public:
+    struct KillEntry {
+        std::string killer_id;
+        std::string victim_id;
+        std::string ship_type;
+        float damage_dealt = 0.0f;
+        float timestamp = 0.0f;
+        std::string system_id;
+        std::string location;
+        bool acknowledged = false;
+    };
+
+    std::vector<KillEntry> kills;      // kills by this entity
+    std::vector<KillEntry> losses;     // losses (this entity died)
+    int max_reports = 50;
+    int total_kills = 0;
+    int total_losses = 0;
+    float total_damage_dealt = 0.0f;
+    float total_damage_received = 0.0f;
+    int pending_kill_reports = 0;      // unacknowledged kills
+    int pending_loss_reports = 0;      // unacknowledged losses
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(KillReport)
+};
+
 } // namespace components
 } // namespace atlas
 
