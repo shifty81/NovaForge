@@ -1580,6 +1580,55 @@ public:
     COMPONENT_TYPE(CapitalComponentState)
 };
 
+/**
+ * @brief Market API state for client-facing market data access
+ *
+ * Exposes order books, price history, and subscription feeds to game
+ * clients. Clients subscribe to item types; the server pushes snapshots
+ * of the order book on every price_push_interval tick. Tracks request
+ * counts, active subscriptions and a bounded history of price snapshots
+ * per subscribed item type.
+ */
+class MarketApiState : public ecs::Component {
+public:
+    struct PriceSnapshot {
+        float best_buy  = 0.0f;
+        float best_sell = 0.0f;
+        float volume    = 0.0f;
+        float timestamp = 0.0f;
+    };
+
+    struct Subscription {
+        std::string client_id;
+        std::string item_type;
+        int    snapshot_count = 0;       // snapshots pushed so far
+        float  last_push      = 0.0f;
+    };
+
+    struct ClientRequest {
+        std::string client_id;
+        std::string request_type;        // "buy_orders", "sell_orders", "history"
+        std::string item_type;
+        float       received_at = 0.0f;
+        bool        fulfilled   = false;
+    };
+
+    std::string region_id;
+    std::vector<Subscription>    subscriptions;
+    std::vector<ClientRequest>   pending_requests;
+    std::vector<PriceSnapshot>   price_history;    // most-recent snapshots
+    int   max_history         = 100;
+    int   max_subscriptions   = 50;
+    float price_push_interval = 5.0f;  // seconds between snapshot pushes
+    float push_timer          = 0.0f;
+    int   total_requests      = 0;
+    int   total_pushes        = 0;
+    float elapsed             = 0.0f;
+    bool  active              = true;
+
+    COMPONENT_TYPE(MarketApiState)
+};
+
 } // namespace components
 } // namespace atlas
 

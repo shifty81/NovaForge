@@ -601,6 +601,67 @@ public:
     COMPONENT_TYPE(DamageFeedbackHud)
 };
 
+// ==================== Relay Clone Installation UI ====================
+
+/**
+ * @brief UI state for relay clone installation dialog
+ *
+ * Drives the "Install Relay Clone" panel that a player uses while docked
+ * at a station with a Clone Bay.  Manages the multi-step flow:
+ *   1. Select destination station (from a searchable list)
+ *   2. Confirm cost (skill-based fee)
+ *   3. Await server acknowledgement (pending state)
+ *   4. Display success / error message
+ * Tracks previously installed clones for display and allows cancellation
+ * at any step before the final confirm.
+ */
+class RelayCloneInstallUiState : public ecs::Component {
+public:
+    enum class UiStep {
+        Idle,           // panel not open
+        SelectStation,  // player is browsing station list
+        ConfirmCost,    // cost breakdown shown, awaiting confirm
+        Pending,        // request sent to server
+        Success,        // server confirmed installation
+        Error           // server returned an error
+    };
+
+    struct StationEntry {
+        std::string station_id;
+        std::string station_name;
+        std::string region;
+        float       install_cost = 0.0f;
+        bool        available    = true;
+    };
+
+    struct InstalledCloneEntry {
+        std::string clone_id;
+        std::string station_id;
+        std::string station_name;
+    };
+
+    std::string character_id;
+    UiStep      current_step         = UiStep::Idle;
+    std::string selected_station_id;
+    float       pending_cost         = 0.0f;
+    std::string last_error_message;
+    std::string station_search_filter;
+
+    std::vector<StationEntry>       available_stations;
+    std::vector<InstalledCloneEntry> installed_clones;
+    std::vector<StationEntry>       filtered_stations; // driven by search filter
+
+    int   max_stations         = 200;
+    int   total_installs       = 0;
+    int   total_cancels        = 0;
+    float pending_timeout      = 10.0f;  // seconds before timeout error
+    float pending_elapsed      = 0.0f;
+    bool  panel_open           = false;
+    bool  active               = true;
+
+    COMPONENT_TYPE(RelayCloneInstallUiState)
+};
+
 } // namespace components
 } // namespace atlas
 
