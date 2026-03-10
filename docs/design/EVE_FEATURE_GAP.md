@@ -88,7 +88,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] Broker fees and sales tax data (`data/contracts/contracts.json`)
 - [x] Order modification/cancellation
 - [x] Regional price differences
-- [ ] Market API for clients
+- [x] Market API for clients (`market_api_system.h`)
 
 ---
 
@@ -108,7 +108,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] Implant system (5 attribute slots, 4 grades)
 - [x] Death mechanics (pod kill, skill point loss, implant loss)
 - [x] Clone bay station service in server code
-- [ ] Relay clone installation UI
+- [x] Relay clone installation UI (`relay_clone_install_ui_system.h`)
 
 ---
 
