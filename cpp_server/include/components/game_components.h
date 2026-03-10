@@ -2091,6 +2091,105 @@ public:
     COMPONENT_TYPE(DScanState)
 };
 
+// ---------------------------------------------------------------------------
+// RespawnSelection — respawn location selection panel
+// ---------------------------------------------------------------------------
+/**
+ * @brief Respawn location selection panel state
+ *
+ * When a player dies the system opens the selection panel and presents a
+ * list of available respawn locations (home station, nearby citadels,
+ * medical clones, etc.).  The player picks a destination; if they do not
+ * choose within auto_select_duration the default location is chosen
+ * automatically.
+ */
+class RespawnSelection : public ecs::Component {
+public:
+    struct RespawnLocation {
+        std::string location_id;
+        std::string location_name;
+        float distance_ly = 0.0f;   // distance in light-years
+        bool is_default = false;
+    };
+
+    bool is_open = false;
+    std::string selected_location_id;
+    std::vector<RespawnLocation> locations;
+    float auto_select_timer = 0.0f;     // countdown; fires when it reaches 0
+    float auto_select_duration = 30.0f; // seconds before auto-pick
+    int total_selections = 0;
+    int max_locations = 10;
+    bool active = true;
+
+    COMPONENT_TYPE(RespawnSelection)
+};
+
+// ---------------------------------------------------------------------------
+// TutorialState — tutorial guidance and progression
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tutorial guidance and progression state
+ *
+ * Tracks a linear sequence of tutorial steps.  The system advances the
+ * step index as each step is completed and marks the tutorial as complete
+ * when the final step is done.  The elapsed timer accumulates while the
+ * tutorial is active.
+ */
+class TutorialState : public ecs::Component {
+public:
+    struct TutorialStep {
+        std::string step_id;
+        std::string description;
+        bool completed = false;
+    };
+
+    bool is_active = false;
+    bool is_complete = false;
+    bool is_skipped = false;
+    int current_step_index = 0;
+    std::vector<TutorialStep> steps;
+    int completed_step_count = 0;
+    float elapsed = 0.0f;  // total time spent in tutorial (seconds)
+    bool active = true;
+
+    COMPONENT_TYPE(TutorialState)
+};
+
+// ---------------------------------------------------------------------------
+// TradeWindow — player-to-player trade interface
+// ---------------------------------------------------------------------------
+/**
+ * @brief Player-to-player trade window state
+ *
+ * Models the two-step EVE Online trade interface: both sides add their
+ * offers, then independently confirm.  Once both sides confirm the trade
+ * is marked Complete.  Either side can cancel at any time before
+ * completion.
+ */
+class TradeWindow : public ecs::Component {
+public:
+    enum class TradeState { Idle, Open, Complete, Cancelled };
+
+    struct TradeOffer {
+        std::string item_id;
+        std::string item_name;
+        int quantity = 1;
+        float unit_value = 0.0f;
+    };
+
+    TradeState state = TradeState::Idle;
+    std::string owner_id;
+    std::string partner_id;
+    std::vector<TradeOffer> my_offers;
+    bool owner_confirmed = false;
+    bool partner_confirmed = false;
+    int max_offers = 20;
+    int total_trades = 0;
+    bool active = true;
+
+    COMPONENT_TYPE(TradeWindow)
+};
+
 } // namespace components
 } // namespace atlas
 
