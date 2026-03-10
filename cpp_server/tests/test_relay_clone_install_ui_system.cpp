@@ -21,6 +21,18 @@ static void testRelayCloneUiInit() {
     assertTrue(sys.getInstalledCloneCount("char1") == 0, "0 installed clones");
     assertTrue(sys.getTotalInstalls("char1") == 0, "0 installs");
     assertTrue(sys.getTotalCancels("char1") == 0, "0 cancels");
+
+    // Verify character_id stored; defaults to entity_id when empty
+    world.createEntity("char2");
+    sys.initialize("char2", "");
+    auto* e2 = world.getEntity("char2");
+    auto* comp2 = e2->getComponent<components::RelayCloneInstallUiState>();
+    assertTrue(comp2->character_id == "char2", "character_id defaults to entity_id");
+    world.createEntity("char3");
+    sys.initialize("char3", "override_id");
+    auto* e3 = world.getEntity("char3");
+    auto* comp3 = e3->getComponent<components::RelayCloneInstallUiState>();
+    assertTrue(comp3->character_id == "override_id", "character_id stored when provided");
 }
 
 static void testRelayCloneUiOpenClose() {

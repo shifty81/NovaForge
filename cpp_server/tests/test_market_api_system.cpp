@@ -20,6 +20,18 @@ static void testMarketApiInit() {
     assertTrue(sys.getHistoryCount("api1") == 0, "0 history entries");
     assertTrue(sys.getTotalPushes("api1") == 0, "0 total pushes");
     assertTrue(approxEqual(sys.getPushInterval("api1"), 5.0f), "Default push interval 5s");
+
+    // Verify region_id stored; defaults to entity_id when empty
+    world.createEntity("api2");
+    sys.initialize("api2", "");
+    auto* e2 = world.getEntity("api2");
+    auto* comp2 = e2->getComponent<components::MarketApiState>();
+    assertTrue(comp2->region_id == "api2", "region_id defaults to entity_id");
+    world.createEntity("api3");
+    sys.initialize("api3", "domain_region");
+    auto* e3 = world.getEntity("api3");
+    auto* comp3 = e3->getComponent<components::MarketApiState>();
+    assertTrue(comp3->region_id == "domain_region", "region_id stored when provided");
 }
 
 static void testMarketApiSubscribe() {

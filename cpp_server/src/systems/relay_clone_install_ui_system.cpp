@@ -47,8 +47,10 @@ void RelayCloneInstallUiSystem::rebuildFilteredList(
         // Case-insensitive substring match on name or region
         auto contains = [&](const std::string& haystack) {
             std::string h = haystack, needle = f;
-            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
-            std::transform(needle.begin(), needle.end(), needle.begin(), ::tolower);
+            std::transform(h.begin(), h.end(), h.begin(),
+                           [](unsigned char c){ return std::tolower(c); });
+            std::transform(needle.begin(), needle.end(), needle.begin(),
+                           [](unsigned char c){ return std::tolower(c); });
             return h.find(needle) != std::string::npos;
         };
         if (contains(s.station_name) || contains(s.region)) {
