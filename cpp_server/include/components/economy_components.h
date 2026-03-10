@@ -1281,6 +1281,83 @@ public:
     COMPONENT_TYPE(BlueprintResearchState)
 };
 
+// ==================== Invention ====================
+
+/**
+ * @brief T2 blueprint invention state
+ *
+ * Manages invention jobs that attempt to create Tech II blueprint
+ * copies from Tech I blueprints.  Each attempt has a probability of
+ * success based on skills and data-core inputs.  Failed attempts
+ * consume inputs but produce no output.
+ */
+class InventionState : public ecs::Component {
+public:
+    struct InventionJob {
+        std::string job_id;
+        std::string t1_blueprint_id;
+        std::string t2_blueprint_id;       // output on success
+        std::string datacore_1;
+        std::string datacore_2;
+        float base_chance = 0.25f;         // 25 % base success
+        float skill_bonus = 0.0f;          // additive from skills
+        float time_required = 900.0f;      // seconds
+        float progress = 0.0f;
+        bool completed = false;
+        bool succeeded = false;
+        bool cancelled = false;
+    };
+
+    std::string facility_id;
+    std::vector<InventionJob> jobs;
+    int max_concurrent_jobs = 3;
+    float research_speed = 1.0f;           // multiplier
+    int total_attempted = 0;
+    int total_succeeded = 0;
+    int total_failed = 0;
+    int total_cancelled = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(InventionState)
+};
+
+// ==================== Regional Market ====================
+
+/**
+ * @brief Regional market price state
+ *
+ * Tracks average prices and trade volumes across multiple regions
+ * to model regional price differences.  Each region maintains a
+ * rolling price history and a trade hub multiplier that adjusts
+ * prices based on local supply/demand.
+ */
+class RegionalMarketState : public ecs::Component {
+public:
+    struct RegionPrice {
+        std::string region_id;
+        std::string item_type;
+        float average_price = 100.0f;
+        float min_price = 90.0f;
+        float max_price = 110.0f;
+        float supply = 1000.0f;
+        float demand = 1000.0f;
+        float hub_multiplier = 1.0f;       // 1.0 for trade hubs, >1.0 for remote
+        int trade_volume = 0;
+    };
+
+    std::vector<RegionPrice> prices;
+    int max_tracked_items = 200;
+    float price_update_interval = 60.0f;    // seconds between recalcs
+    float price_update_timer = 0.0f;
+    float volatility_factor = 0.05f;        // how fast prices change
+    int total_updates = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(RegionalMarketState)
+};
+
 } // namespace components
 } // namespace atlas
 

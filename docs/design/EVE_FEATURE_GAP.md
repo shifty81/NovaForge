@@ -33,10 +33,10 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 **Current Status:** Basic AI exists (approach, orbit, attack)
 **Implementation Needed:**
 - [x] Aggression switching based on threat/DPS
-- [ ] NPC fleet compositions
+- [x] NPC fleet compositions
 - [x] Officer/Commander spawns with better loot
 - [x] Sleeper AI (wormhole space)
-- [ ] Drifter/Triglavian equivalents
+- [x] Drifter/Triglavian equivalents
 
 ---
 
@@ -49,11 +49,11 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Basic bounty values in NPC data, insurance data defined
 **Implementation Needed:**
-- [ ] Automatic bounty payout on NPC destruction
-- [ ] Loyalty Points (LP) system
-- [ ] LP stores with unique items
+- [x] Automatic bounty payout on NPC destruction
+- [x] Loyalty Points (LP) system
+- [x] LP stores with unique items
 - [x] Insurance contract data (`data/security/aegis_and_insurance.json`)
-- [ ] Salvaging mechanics with modules
+- [x] Salvaging mechanics with modules
 
 ---
 
@@ -66,10 +66,10 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Basic exploration signatures exist
 **Implementation Needed:**
-- [ ] Wormhole generation and connections
-- [ ] Wormhole mass/time limits
+- [x] Wormhole generation and connections
+- [x] Wormhole mass/time limits
 - [ ] Sleeper cache sites
-- [ ] Null-sec specific mechanics (bubbles, cynos)
+- [x] Null-sec specific mechanics (bubbles, cynos)
 - [x] Dynamic anomaly spawning
 
 ---
@@ -86,8 +86,8 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 **Implementation Needed:**
 - [x] Order matching engine
 - [x] Broker fees and sales tax data (`data/contracts/contracts.json`)
-- [ ] Order modification/cancellation
-- [ ] Regional price differences
+- [x] Order modification/cancellation
+- [x] Regional price differences
 - [ ] Market API for clients
 
 ---
@@ -174,7 +174,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 **Implementation Needed:**
 - [x] Material Efficiency research
 - [x] Time Efficiency research
-- [ ] Invention mechanics
+- [x] Invention mechanics
 - [ ] Reaction formulas
 - [ ] Capital components
 
@@ -279,4 +279,4 @@ To achieve a complete EVE-like PVE experience, focus on:
 4. **Content variety**: Missions, Exploration, Mining, Industry
 5. **Social features**: Corporations, Fleet operations, Shared goals
 
-The current implementation has ~60% of EVE's PVE features (data structures for most systems, runtime code for core gameplay). Completing the remaining runtime implementation would bring it to ~85% feature parity.
+The current implementation has ~70% of EVE's PVE features (data structures for most systems, runtime code for core gameplay). Completing the remaining runtime implementation would bring it to ~90% feature parity.
