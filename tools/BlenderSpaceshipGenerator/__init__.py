@@ -23,24 +23,66 @@ from bpy.props import (
     StringProperty,
 )
 
-from . import ship_generator
-from . import ship_parts
-from . import interior_generator
-from . import module_system
-from . import atlas_exporter
-from . import station_generator
-from . import asteroid_generator
-from . import texture_generator
-from . import brick_system
-from . import pcg_panel
-from . import novaforge_importer
-from . import render_setup
-from . import lod_generator
-from . import collision_generator
-from . import animation_system
-from . import damage_system
-from . import power_system
-from . import build_validator
+import traceback
+
+# Each submodule is imported inside a try/except so that a single broken
+# module does not prevent the entire addon from loading.  Modules that fail
+# are set to ``None`` and skipped during registration.
+_submodule_names = [
+    "ship_generator",
+    "ship_parts",
+    "interior_generator",
+    "module_system",
+    "atlas_exporter",
+    "station_generator",
+    "asteroid_generator",
+    "texture_generator",
+    "brick_system",
+    "pcg_panel",
+    "novaforge_importer",
+    "render_setup",
+    "lod_generator",
+    "collision_generator",
+    "animation_system",
+    "damage_system",
+    "power_system",
+    "build_validator",
+]
+
+_submodules = {}
+_failed_submodules = []
+
+for _name in _submodule_names:
+    try:
+        _mod = __import__(f".{_name}", globals(), locals(), [_name], 1)
+        _submodules[_name] = _mod
+    except Exception as _exc:  # noqa: BLE001
+        _submodules[_name] = None
+        _failed_submodules.append((_name, _exc))
+        print(f"[AtlasForge] WARNING: failed to import {_name}: {_exc}")
+        traceback.print_exc()
+
+# Expose successfully loaded submodules as module-level attributes so that
+# operators written as ``ship_generator.generate_spaceship(...)`` continue to
+# work unchanged.
+ship_generator = _submodules.get("ship_generator")
+ship_parts = _submodules.get("ship_parts")
+interior_generator = _submodules.get("interior_generator")
+module_system = _submodules.get("module_system")
+atlas_exporter = _submodules.get("atlas_exporter")
+station_generator = _submodules.get("station_generator")
+asteroid_generator = _submodules.get("asteroid_generator")
+texture_generator = _submodules.get("texture_generator")
+brick_system = _submodules.get("brick_system")
+pcg_panel = _submodules.get("pcg_panel")
+novaforge_importer = _submodules.get("novaforge_importer")
+render_setup = _submodules.get("render_setup")
+lod_generator = _submodules.get("lod_generator")
+collision_generator = _submodules.get("collision_generator")
+animation_system = _submodules.get("animation_system")
+damage_system = _submodules.get("damage_system")
+power_system = _submodules.get("power_system")
+build_validator = _submodules.get("build_validator")
 
 
 class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
@@ -846,52 +888,40 @@ def register():
         type=SpaceshipGeneratorProperties
     )
     
-    # Register submodules
-    ship_generator.register()
-    ship_parts.register()
-    interior_generator.register()
-    module_system.register()
-    atlas_exporter.register()
-    station_generator.register()
-    asteroid_generator.register()
-    texture_generator.register()
-    brick_system.register()
-    pcg_panel.register()
-    novaforge_importer.register()
-    render_setup.register()
-    lod_generator.register()
-    collision_generator.register()
-    animation_system.register()
-    damage_system.register()
-    power_system.register()
-    build_validator.register()
+    # Register submodules — skip any that failed to import
+    for name in _submodule_names:
+        mod = _submodules.get(name)
+        if mod is not None and hasattr(mod, "register"):
+            try:
+                mod.register()
+            except Exception as exc:  # noqa: BLE001
+                print(f"[AtlasForge] WARNING: {name}.register() failed: {exc}")
+
+    # Inform the user that the addon loaded successfully
+    print(f"[AtlasForge] Addon registered ({len(classes)} classes)")
+    if _failed_submodules:
+        for name, exc in _failed_submodules:
+            print(f"[AtlasForge]   ⚠ {name}: {exc}")
+    else:
+        print("[AtlasForge] All submodules loaded OK")
 
 
 def unregister():
-    # Unregister submodules
-    build_validator.unregister()
-    power_system.unregister()
-    damage_system.unregister()
-    animation_system.unregister()
-    collision_generator.unregister()
-    lod_generator.unregister()
-    render_setup.unregister()
-    novaforge_importer.unregister()
-    pcg_panel.unregister()
-    brick_system.unregister()
-    texture_generator.unregister()
-    asteroid_generator.unregister()
-    station_generator.unregister()
-    atlas_exporter.unregister()
-    module_system.unregister()
-    interior_generator.unregister()
-    ship_parts.unregister()
-    ship_generator.unregister()
+    # Unregister submodules in reverse order — skip any that failed to import
+    for name in reversed(_submodule_names):
+        mod = _submodules.get(name)
+        if mod is not None and hasattr(mod, "unregister"):
+            try:
+                mod.unregister()
+            except Exception:  # noqa: BLE001
+                pass
     
     del bpy.types.Scene.spaceship_props
     
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    print("[AtlasForge] Addon unregistered")
 
 
 if __name__ == "__main__":

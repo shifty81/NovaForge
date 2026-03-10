@@ -209,7 +209,7 @@ class PCG_PT_pipeline_panel(bpy.types.Panel):
     bl_idname = "PCG_PT_pipeline_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Spaceship'
+    bl_category = 'AtlasForge'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):

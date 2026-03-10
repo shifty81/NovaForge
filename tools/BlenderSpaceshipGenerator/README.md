@@ -130,25 +130,95 @@ This addon integrates directly with the Nova Forge project:
 
 ## Installation
 
-1. Download or clone this repository
-2. In Blender, go to Edit → Preferences → Add-ons
-3. Click "Install" and select the downloaded folder or ZIP file
-4. Enable the "AtlasForge Generator" addon
+### Method 1 — Install from ZIP (Recommended)
+
+1. **Package the addon**: Create a ZIP file named `BlenderSpaceshipGenerator.zip`
+   containing the `BlenderSpaceshipGenerator/` folder. On the command line:
+   ```bash
+   cd tools/
+   zip -r BlenderSpaceshipGenerator.zip BlenderSpaceshipGenerator/
+   ```
+2. Open Blender (2.80 or newer).
+3. Go to **Edit → Preferences → Add-ons**.
+4. Click **Install…** (top-right) and select the ZIP file.
+5. Search for **"AtlasForge"** in the add-ons list.
+6. Tick the checkbox next to **AtlasForge Generator** to enable it.
+
+### Method 2 — Symlink / Copy
+
+1. Copy (or symlink) the entire `BlenderSpaceshipGenerator/` folder into
+   Blender's addons directory:
+   - **Linux**: `~/.config/blender/<version>/scripts/addons/`
+   - **macOS**: `/Users/<you>/Library/Application Support/Blender/<version>/scripts/addons/`
+   - **Windows**: `%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\`
+2. Restart Blender.
+3. Go to **Edit → Preferences → Add-ons**, search for **"AtlasForge"**,
+   and enable the checkbox.
+
+### Verifying the Installation
+
+After enabling the addon you should see:
+
+1. **Sidebar tab** — In the 3D Viewport press **N** to open the sidebar.
+   An **"AtlasForge"** tab appears on the right.
+2. **Console output** — Open the system console (on Windows:
+   *Window → Toggle System Console*; on Linux/macOS run Blender from a
+   terminal) and look for:
+   ```
+   [AtlasForge] Addon registered (13 classes)
+   [AtlasForge] All submodules loaded OK
+   ```
+   If any submodule failed to load, a warning line will be printed
+   with the error message — this helps diagnose missing dependencies.
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Addon checkbox appears but no sidebar tab | A submodule import error prevented `register()` from running | Check the Blender system console for `[AtlasForge] WARNING` messages |
+| "No module named '…'" error | ZIP was packed without the top-level directory | Re-create the ZIP so the folder `BlenderSpaceshipGenerator/` is at the root |
+| Blender version error | Addon requires Blender 2.80+ | Upgrade Blender |
 
 ## Usage
 
-1. Open Blender and go to the 3D Viewport
-2. Open the sidebar (press N if not visible)
-3. Navigate to the "AtlasForge" tab
+### Quick Start
+
+1. Open Blender and go to the 3D Viewport.
+2. Press **N** to open the sidebar (if not already visible).
+3. Click the **"AtlasForge"** tab on the right-hand side.
 4. Configure your ship:
-   - Select ship class (Shuttle to Capital)
-   - Choose design style
+   - Select ship class (Shuttle to Titan)
+   - Choose design style (Mixed, EVE, Elite, NMS, or a faction)
    - Set random seed for variation
    - Enable/disable interior generation
-   - Adjust module slots
-   - Set hull complexity
+   - Adjust module slots and hull complexity
    - Toggle symmetry
-5. Click "Generate Spaceship"
+5. Click **"Generate Spaceship"**.
+
+### PCG Pipeline Panel
+
+Below the main generator panel you will find the **PCG Pipeline** sub-panel
+(click to expand). It provides batch universe generation:
+
+- **Generate Universe** — create a full galaxy of star systems, planets,
+  stations, ships and characters. Output is written as JSON metadata to the
+  configured output directory.
+- **Generate System** — create a single star system.
+- **Materialize Ships** — read ship JSON files from the output directory and
+  build the corresponding meshes in the current Blender scene.
+
+### Other Operations
+
+| Button | What It Does |
+|--------|-------------|
+| **Import from Project Data** | Load a ship from the project's `data/ships/` directory |
+| **Batch Generate All Ships** | Generate meshes for every ship in the data directory |
+| **Full Pipeline Export** | Generate → texture → LOD → export OBJ for all ships |
+| **Setup Catalog Render** | Position camera + lights for a catalog-style render |
+| **Export OBJ for Atlas** | Export selected ship(s) as OBJ for the Atlas engine |
+| **Export Ship DNA** | Save the selected ship's generation parameters as JSON |
+| **Generate Station** | Create a procedural station (Industrial, Military, etc.) |
+| **Generate Asteroid Belt** | Create an asteroid belt with configurable ore types |
 
 ## Ship Classes
 
