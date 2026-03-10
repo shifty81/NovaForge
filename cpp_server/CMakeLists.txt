@@ -407,6 +407,7 @@ set(CORE_SOURCES
     src/systems/tech2_module_system.cpp
     src/systems/capital_component_system.cpp
     src/systems/market_api_system.cpp
+    src/systems/session_manager_system.cpp
     src/systems/relay_clone_install_ui_system.cpp
     src/systems/sleeper_cache_system.cpp
     src/systems/incursion_system.cpp
