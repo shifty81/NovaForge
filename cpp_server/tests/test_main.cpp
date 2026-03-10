@@ -418,6 +418,7 @@ void run_sleeper_cache_system_tests();
 void run_incursion_system_tests();
 void run_meta_level_system_tests();
 void run_reaction_formula_system_tests();
+void run_session_manager_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -833,6 +834,7 @@ int main() {
     run_incursion_system_tests();
     run_meta_level_system_tests();
     run_reaction_formula_system_tests();
+    run_session_manager_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

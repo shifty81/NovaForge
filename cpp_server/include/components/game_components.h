@@ -2003,6 +2003,32 @@ public:
     COMPONENT_TYPE(RelayCloneState)
 };
 
+/**
+ * @brief Player session lifecycle state
+ *
+ * Tracks a player through login, authentication, loading, active
+ * gameplay, and disconnection.  The system increments session_duration
+ * and idle_timer while the session is Active and auto-disconnects
+ * players who exceed idle_timeout.
+ */
+class SessionState : public ecs::Component {
+public:
+    enum class Phase { Disconnected, Authenticating, Loading, Active, Disconnecting };
+
+    std::string player_id;
+    std::string character_name;
+    Phase phase = Phase::Disconnected;
+    float session_duration = 0.0f;
+    float idle_timer = 0.0f;
+    float idle_timeout = 300.0f;  // 5 minutes
+    std::string spawn_location;   // station/space
+    bool is_new_player = false;
+    int login_count = 0;
+    float last_heartbeat = 0.0f;
+
+    COMPONENT_TYPE(SessionState)
+};
+
 } // namespace components
 } // namespace atlas
 
