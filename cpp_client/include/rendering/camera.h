@@ -118,6 +118,11 @@ public:
      */
     glm::vec3 getFPSForward() const { return m_fpsForward; }
 
+    /** Get the current FPS yaw angle in degrees (used to sync Application movement). */
+    float getFPSYaw()   const { return m_fpsYaw; }
+    /** Get the current FPS pitch angle in degrees. */
+    float getFPSPitch() const { return m_fpsPitch; }
+
 private:
     void updateVectors();
 

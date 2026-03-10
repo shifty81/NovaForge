@@ -67,12 +67,25 @@ public:
     /** Check if the title screen wants keyboard input. */
     bool wantsKeyboardInput() const { return m_active; }
 
+    /**
+     * Forward a GLFW key event.  Used to handle backspace / delete in the
+     * character-name input field while the title screen is active.
+     */
+    void handleKey(int key, int action);
+
+    /**
+     * Forward a Unicode codepoint typed by the user.  Appended to the
+     * character name when the name field is focused.
+     */
+    void handleChar(unsigned int codepoint);
+
     // ── Character / ship query (read after flow completes) ──────────
 
     const std::string& getSelectedRace()      const { return m_selectedRace; }
     const std::string& getSelectedBloodline() const { return m_selectedBloodline; }
     const std::string& getSelectedCareer()    const { return m_selectedCareer; }
     const std::string& getSelectedShipClass() const { return m_selectedShipClass; }
+    const std::string& getCharacterName()     const { return m_charName; }
 
 private:
     // ── Page renderers ──────────────────────────────────────────────
@@ -155,6 +168,16 @@ private:
     float m_previewCamYaw   = 180.0f;   // start behind the character
     float m_previewCamPitch = 10.0f;
     float m_previewCamDist  = 3.0f;
+
+    /// Drag-orbit state — tracks whether the user is currently dragging.
+    bool  m_previewDragging  = false;
+    float m_previewDragLastX = 0.0f;
+
+    // ── Character name text input — keyboard event forwarding
+    // ─────────────────────────────────────────────────────────────────
+    std::string m_charName          = "Pilot";   ///< Character name typed by player
+    bool        m_charNameFocused   = false;
+    double      m_charNameFocusTime = 0.0;  // glfwGetTime() when focus was gained
 
     /// Simplified mesh layout derived from the character generator.
     struct PreviewBodyPart {

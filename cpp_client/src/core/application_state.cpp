@@ -165,6 +165,9 @@ void Application::requestStateTransition(GameState newState) {
             // looking toward the landing pad and ship.
             m_camera->setFPSPosition(glm::vec3(-30.0f, 1.8f, 0.0f),
                                       glm::vec3(1.0f, 0.0f, 0.0f));
+            // Sync Application-level yaw/pitch so movement matches camera.
+            m_fpsYaw   = m_camera->getFPSYaw();
+            m_fpsPitch = m_camera->getFPSPitch();
             m_activeModeText = "DOCKED";
             break;
         case GameState::StationInterior:
@@ -283,6 +286,8 @@ void Application::enterStationInterior() {
         requestStateTransition(GameState::StationInterior);
         // Place camera at an interior spawn point
         m_camera->setFPSPosition(glm::vec3(0.0f, 1.8f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+        m_fpsYaw   = m_camera->getFPSYaw();
+        m_fpsPitch = m_camera->getFPSPitch();
     }
 }
 
@@ -291,6 +296,8 @@ void Application::enterShipInterior() {
         requestStateTransition(GameState::ShipInterior);
         // Place camera inside the ship bridge area
         m_camera->setFPSPosition(glm::vec3(0.0f, 1.6f, 2.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+        m_fpsYaw   = m_camera->getFPSYaw();
+        m_fpsPitch = m_camera->getFPSPitch();
     }
 }
 
@@ -299,6 +306,8 @@ void Application::enterCockpit() {
         requestStateTransition(GameState::Cockpit);
         // Cockpit camera: slightly elevated, looking forward
         m_camera->setFPSPosition(glm::vec3(0.0f, 1.4f, -1.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+        m_fpsYaw   = m_camera->getFPSYaw();
+        m_fpsPitch = m_camera->getFPSPitch();
     }
 }
 

@@ -121,144 +121,181 @@ void Application::render() {
             return;
         }
         
-        atlas::ShipHUDData shipData;
-        // Connect to actual ship state from game client
-        auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
-        if (playerEntity) {
-            const auto& health = playerEntity->getHealth();
-            shipData.shieldPct = health.maxShield > 0 ? health.currentShield / static_cast<float>(health.maxShield) : 0.0f;
-            shipData.armorPct = health.maxArmor > 0 ? health.currentArmor / static_cast<float>(health.maxArmor) : 0.0f;
-            shipData.hullPct = health.maxHull > 0 ? health.currentHull / static_cast<float>(health.maxHull) : 0.0f;
-            const auto& capacitor = playerEntity->getCapacitor();
-            shipData.capacitorPct = capacitor.max > 0.0f ? capacitor.current / capacitor.max : 0.0f;
-        }
-        shipData.currentSpeed = m_playerSpeed;
-        shipData.maxSpeed = m_playerMaxSpeed;
-        
-        // Feed warp state into HUD
-        if (m_solarSystem) {
-            const auto& ws = m_solarSystem->getWarpVisualState();
-            shipData.warpActive   = ws.active;
-            shipData.warpPhase    = ws.phase;
-            shipData.warpProgress = ws.progress;
-            shipData.warpSpeedAU  = ws.speedAU;
-        }
-        
-        // Build Atlas target cards from target list
-        std::vector<atlas::TargetCardInfo> atlasTargets;
-        if (playerEntity) {
-            const auto playerPos = playerEntity->getPosition();
-            for (const auto& targetId : m_targetList) {
-                auto targetEntity = m_gameClient->getEntityManager().getEntity(targetId);
-                if (!targetEntity) continue;
-                atlas::TargetCardInfo card;
-                card.name = targetEntity->getShipName().empty() ? targetEntity->getId() : targetEntity->getShipName();
-                const auto& th = targetEntity->getHealth();
-                card.shieldPct = th.maxShield > 0 ? th.currentShield / static_cast<float>(th.maxShield) : 0.0f;
-                card.armorPct = th.maxArmor > 0 ? th.currentArmor / static_cast<float>(th.maxArmor) : 0.0f;
-                card.hullPct = th.maxHull > 0 ? th.currentHull / static_cast<float>(th.maxHull) : 0.0f;
-                card.distance = glm::distance(playerPos, targetEntity->getPosition());
-                card.isActive = (targetId == m_currentTargetId);
-                atlasTargets.push_back(card);
+        // ── In-space (tactical) HUD — hidden while on foot or in a ship interior ──
+        if (!isInFPSMode()) {
+            atlas::ShipHUDData shipData;
+            // Connect to actual ship state from game client
+            auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
+            if (playerEntity) {
+                const auto& health = playerEntity->getHealth();
+                shipData.shieldPct = health.maxShield > 0 ? health.currentShield / static_cast<float>(health.maxShield) : 0.0f;
+                shipData.armorPct = health.maxArmor > 0 ? health.currentArmor / static_cast<float>(health.maxArmor) : 0.0f;
+                shipData.hullPct = health.maxHull > 0 ? health.currentHull / static_cast<float>(health.maxHull) : 0.0f;
+                const auto& capacitor = playerEntity->getCapacitor();
+                shipData.capacitorPct = capacitor.max > 0.0f ? capacitor.current / capacitor.max : 0.0f;
             }
-        }
-        
-        // Build Atlas overview entries from entity manager
-        std::vector<atlas::OverviewEntry> atlasOverview;
-        if (playerEntity) {
-            const auto playerPos = playerEntity->getPosition();
-            for (const auto& pair : m_gameClient->getEntityManager().getAllEntities()) {
-                if (pair.first == m_localPlayerId) continue;
-                atlas::OverviewEntry entry;
-                entry.entityId = pair.first;
-                entry.name = pair.second->getShipName().empty() ? pair.first : pair.second->getShipName();
-                entry.type = pair.second->getShipType();
-                entry.distance = glm::distance(playerPos, pair.second->getPosition());
-                entry.selected = (pair.first == m_currentTargetId);
-                atlasOverview.push_back(entry);
+            shipData.currentSpeed = m_playerSpeed;
+            shipData.maxSpeed = m_playerMaxSpeed;
+            
+            // Feed warp state into HUD
+            if (m_solarSystem) {
+                const auto& ws = m_solarSystem->getWarpVisualState();
+                shipData.warpActive   = ws.active;
+                shipData.warpPhase    = ws.phase;
+                shipData.warpProgress = ws.progress;
+                shipData.warpSpeedAU  = ws.speedAU;
             }
             
-            // Add solar system celestials (planets, stations, gates, belts)
-            if (m_solarSystem) {
-                for (const auto& c : m_solarSystem->getCelestials()) {
-                    if (c.type == atlas::Celestial::Type::SUN) continue;
-                    atlas::OverviewEntry entry;
-                    entry.entityId = c.id;
-                    entry.name = c.name;
-                    entry.distance = glm::distance(playerPos, c.position);
-                    entry.selected = false;
-                    switch (c.type) {
-                        case atlas::Celestial::Type::PLANET:        entry.type = "Planet";        break;
-                        case atlas::Celestial::Type::MOON:          entry.type = "Moon";          break;
-                        case atlas::Celestial::Type::STATION:       entry.type = "Station";       break;
-                        case atlas::Celestial::Type::STARGATE:      entry.type = "Stargate";      break;
-                        case atlas::Celestial::Type::ASTEROID_BELT: entry.type = "Asteroid Belt"; break;
-                        case atlas::Celestial::Type::WORMHOLE:      entry.type = "Wormhole";      break;
-                        case atlas::Celestial::Type::ANOMALY:       entry.type = c.anomalyType.empty() ? "Anomaly" : c.anomalyType; break;
-                        default:                                  entry.type = "Celestial";     break;
-                    }
-                    atlasOverview.push_back(entry);
+            // Build Atlas target cards from target list
+            std::vector<atlas::TargetCardInfo> atlasTargets;
+            if (playerEntity) {
+                const auto playerPos = playerEntity->getPosition();
+                for (const auto& targetId : m_targetList) {
+                    auto targetEntity = m_gameClient->getEntityManager().getEntity(targetId);
+                    if (!targetEntity) continue;
+                    atlas::TargetCardInfo card;
+                    card.name = targetEntity->getShipName().empty() ? targetEntity->getId() : targetEntity->getShipName();
+                    const auto& th = targetEntity->getHealth();
+                    card.shieldPct = th.maxShield > 0 ? th.currentShield / static_cast<float>(th.maxShield) : 0.0f;
+                    card.armorPct = th.maxArmor > 0 ? th.currentArmor / static_cast<float>(th.maxArmor) : 0.0f;
+                    card.hullPct = th.maxHull > 0 ? th.currentHull / static_cast<float>(th.maxHull) : 0.0f;
+                    card.distance = glm::distance(playerPos, targetEntity->getPosition());
+                    card.isActive = (targetId == m_currentTargetId);
+                    atlasTargets.push_back(card);
                 }
             }
-        }
-        
-        // Build selected item info
-        atlas::SelectedItemInfo atlasSelected;
-        if (!m_currentTargetId.empty() && playerEntity) {
-            auto targetEntity = m_gameClient->getEntityManager().getEntity(m_currentTargetId);
-            if (targetEntity) {
-                atlasSelected.name = targetEntity->getShipName().empty() ? m_currentTargetId : targetEntity->getShipName();
-                float dist = glm::distance(playerEntity->getPosition(), targetEntity->getPosition());
-                if (dist >= 1000.0f) {
-                    atlasSelected.distance = dist / 1000.0f;
-                    atlasSelected.distanceUnit = "km";
-                } else {
-                    atlasSelected.distance = dist;
-                    atlasSelected.distanceUnit = "m";
+            
+            // Build Atlas overview entries from entity manager
+            std::vector<atlas::OverviewEntry> atlasOverview;
+            if (playerEntity) {
+                const auto playerPos = playerEntity->getPosition();
+                for (const auto& pair : m_gameClient->getEntityManager().getAllEntities()) {
+                    if (pair.first == m_localPlayerId) continue;
+                    atlas::OverviewEntry entry;
+                    entry.entityId = pair.first;
+                    entry.name = pair.second->getShipName().empty() ? pair.first : pair.second->getShipName();
+                    entry.type = pair.second->getShipType();
+                    entry.distance = glm::distance(playerPos, pair.second->getPosition());
+                    entry.selected = (pair.first == m_currentTargetId);
+                    atlasOverview.push_back(entry);
                 }
-            } else if (m_solarSystem) {
-                // Check if the selected target is a celestial
-                const auto* cel = m_solarSystem->findCelestial(m_currentTargetId);
-                if (cel) {
-                    atlasSelected.name = cel->name;
-                    float dist = glm::distance(playerEntity->getPosition(), cel->position);
-                    // 1 AU = 149,597,870,700 m; display in AU when above 0.01 AU
-                    static constexpr float AU_IN_METERS = 149597870700.0f;
-                    static constexpr float AU_DISPLAY_THRESHOLD = 0.01f * AU_IN_METERS;
-                    if (dist >= AU_DISPLAY_THRESHOLD) {
-                        atlasSelected.distance = dist / AU_IN_METERS;
-                        atlasSelected.distanceUnit = "AU";
-                    } else if (dist >= 1000.0f) {
+                
+                // Add solar system celestials (planets, stations, gates, belts)
+                if (m_solarSystem) {
+                    for (const auto& c : m_solarSystem->getCelestials()) {
+                        if (c.type == atlas::Celestial::Type::SUN) continue;
+                        atlas::OverviewEntry entry;
+                        entry.entityId = c.id;
+                        entry.name = c.name;
+                        entry.distance = glm::distance(playerPos, c.position);
+                        entry.selected = false;
+                        switch (c.type) {
+                            case atlas::Celestial::Type::PLANET:        entry.type = "Planet";        break;
+                            case atlas::Celestial::Type::MOON:          entry.type = "Moon";          break;
+                            case atlas::Celestial::Type::STATION:       entry.type = "Station";       break;
+                            case atlas::Celestial::Type::STARGATE:      entry.type = "Stargate";      break;
+                            case atlas::Celestial::Type::ASTEROID_BELT: entry.type = "Asteroid Belt"; break;
+                            case atlas::Celestial::Type::WORMHOLE:      entry.type = "Wormhole";      break;
+                            case atlas::Celestial::Type::ANOMALY:       entry.type = c.anomalyType.empty() ? "Anomaly" : c.anomalyType; break;
+                            default:                                  entry.type = "Celestial";     break;
+                        }
+                        atlasOverview.push_back(entry);
+                    }
+                }
+            }
+            
+            // Build selected item info
+            atlas::SelectedItemInfo atlasSelected;
+            if (!m_currentTargetId.empty() && playerEntity) {
+                auto targetEntity = m_gameClient->getEntityManager().getEntity(m_currentTargetId);
+                if (targetEntity) {
+                    atlasSelected.name = targetEntity->getShipName().empty() ? m_currentTargetId : targetEntity->getShipName();
+                    float dist = glm::distance(playerEntity->getPosition(), targetEntity->getPosition());
+                    if (dist >= 1000.0f) {
                         atlasSelected.distance = dist / 1000.0f;
                         atlasSelected.distanceUnit = "km";
                     } else {
                         atlasSelected.distance = dist;
                         atlasSelected.distanceUnit = "m";
                     }
+                } else if (m_solarSystem) {
+                    // Check if the selected target is a celestial
+                    const auto* cel = m_solarSystem->findCelestial(m_currentTargetId);
+                    if (cel) {
+                        atlasSelected.name = cel->name;
+                        float dist = glm::distance(playerEntity->getPosition(), cel->position);
+                        // 1 AU = 149,597,870,700 m; display in AU when above 0.01 AU
+                        static constexpr float AU_IN_METERS = 149597870700.0f;
+                        static constexpr float AU_DISPLAY_THRESHOLD = 0.01f * AU_IN_METERS;
+                        if (dist >= AU_DISPLAY_THRESHOLD) {
+                            atlasSelected.distance = dist / AU_IN_METERS;
+                            atlasSelected.distanceUnit = "AU";
+                        } else if (dist >= 1000.0f) {
+                            atlasSelected.distance = dist / 1000.0f;
+                            atlasSelected.distanceUnit = "km";
+                        } else {
+                            atlasSelected.distance = dist;
+                            atlasSelected.distanceUnit = "m";
+                        }
+                    }
                 }
             }
-        }
-        
-        // Update mode indicator text on the HUD
-        m_atlasHUD->setModeIndicator(m_activeModeText);
-        
-        // Reserve context menu / radial menu input areas BEFORE panels
-        // so their clicks aren't stolen by panel body consumption.
-        if (m_contextMenu && m_contextMenu->IsOpen()) {
-            m_contextMenu->ReserveInputArea(*m_atlasCtx);
-        }
+            
+            // Update mode indicator text on the HUD
+            m_atlasHUD->setModeIndicator(m_activeModeText);
+            
+            // Reserve context menu / radial menu input areas BEFORE panels
+            // so their clicks aren't stolen by panel body consumption.
+            if (m_contextMenu && m_contextMenu->IsOpen()) {
+                m_contextMenu->ReserveInputArea(*m_atlasCtx);
+            }
 
-        // Render HUD panels (overview, selected item, ship HUD, etc.)
-        m_atlasHUD->update(*m_atlasCtx, shipData, atlasTargets, atlasOverview, atlasSelected);
+            // Render HUD panels (overview, selected item, ship HUD, etc.)
+            m_atlasHUD->update(*m_atlasCtx, shipData, atlasTargets, atlasOverview, atlasSelected);
 
-        // Render Context Menu AFTER panels so it draws on top visually
-        if (m_contextMenu && m_contextMenu->IsOpen()) {
-            m_contextMenu->RenderAtlas(*m_atlasCtx);
-        }
+            // Render Context Menu AFTER panels so it draws on top visually
+            if (m_contextMenu && m_contextMenu->IsOpen()) {
+                m_contextMenu->RenderAtlas(*m_atlasCtx);
+            }
 
-        // Render Radial Menu on top of everything
-        if (m_radialMenu && m_radialMenuOpen) {
-            m_radialMenu->RenderAtlas(*m_atlasCtx);
+            // Render Radial Menu on top of everything
+            if (m_radialMenu && m_radialMenuOpen) {
+                m_radialMenu->RenderAtlas(*m_atlasCtx);
+            }
+        } else {
+            // ── FPS / on-foot / ship-interior HUD ────────────────────────────
+            // Ship HUD and overview are replaced by a simple crosshair and a
+            // mode label.  Full inventory / minimap panels will be added here
+            // in a future pass.
+            m_atlasHUD->setModeIndicator(m_activeModeText);
+
+            auto& r = m_atlasCtx->renderer();
+            float hw = static_cast<float>(m_window->getWidth())  * 0.5f;
+            float hh = static_cast<float>(m_window->getHeight()) * 0.5f;
+
+            // Only draw the crosshair when cursor is captured (actively
+            // looking around); hide it when the cursor is free (e.g. when
+            // the pause menu is open so you can click its buttons).
+            if (m_fpsCursorCaptured) {
+                const float sz = 8.0f;
+                const float gap = 3.0f;
+                const atlas::Color white(1.0f, 1.0f, 1.0f, 0.85f);
+                // Horizontal bar
+                r.drawRect(atlas::Rect(hw - sz - gap, hh - 1.0f, sz, 2.0f), white);
+                r.drawRect(atlas::Rect(hw + gap,      hh - 1.0f, sz, 2.0f), white);
+                // Vertical bar
+                r.drawRect(atlas::Rect(hw - 1.0f, hh - sz - gap, 2.0f, sz), white);
+                r.drawRect(atlas::Rect(hw - 1.0f, hh + gap,      2.0f, sz), white);
+            }
+
+            // Mode label (e.g. "WALKING", "SPRINTING", "FLYING", "BOOST")
+            if (!m_activeModeText.empty()) {
+                float tw = r.measureText(m_activeModeText.c_str());
+                r.drawText(m_activeModeText.c_str(),
+                           atlas::Vec2(hw - tw * 0.5f,
+                                       static_cast<float>(m_window->getHeight()) * 0.88f),
+                           atlas::Color(0.8f, 0.8f, 0.8f, 0.6f));
+            }
         }
 
         // Render Pause Menu overlay (on top of game HUD)

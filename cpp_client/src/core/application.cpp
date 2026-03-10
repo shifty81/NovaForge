@@ -269,17 +269,36 @@ void Application::initialize() {
             return;
         }
 
+        // Title screen forwards key events to its character-name input field
+        if (m_titleScreen && m_titleScreen->isActive()) {
+            m_titleScreen->handleKey(key, action);
+            return;
+        }
+
         // ESC toggles pause menu (instead of quitting)
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-            // If title screen is active, ignore ESC
-            if (m_titleScreen && m_titleScreen->isActive()) return;
+            // In FPS mode: always release the cursor so the pause menu (and
+            // any other UI) is immediately interactive.  Warp the tracked
+            // mouse position to the screen centre so that the Atlas UI
+            // receives a valid absolute coordinate on the very next frame.
+            if (isInFPSMode() && m_fpsCursorCaptured) {
+                releaseFPSCursor();
+                if (m_window && m_window->getHandle()) {
+                    int w = m_window->getWidth();
+                    int h = m_window->getHeight();
+                    double cx = w * 0.5;
+                    double cy = h * 0.5;
+                    glfwSetCursorPos(m_window->getHandle(), cx, cy);
+                    m_inputHandler->warpMousePosition(cx, cy);
+                }
+            }
+
             m_pauseMenu->toggle();
             return;
         }
 
-        // Don't forward keys when pause menu or title screen is active
-        if ((m_pauseMenu && m_pauseMenu->isOpen()) ||
-            (m_titleScreen && m_titleScreen->isActive())) {
+        // Don't forward keys when pause menu is active
+        if (m_pauseMenu && m_pauseMenu->isOpen()) {
             return;
         }
 
@@ -290,6 +309,11 @@ void Application::initialize() {
         // Forward character input to console when open
         if (m_console && m_console->isOpen()) {
             m_console->handleChar(codepoint);
+            return;
+        }
+        // Forward to title screen name input when active
+        if (m_titleScreen && m_titleScreen->isActive()) {
+            m_titleScreen->handleChar(codepoint);
         }
     });
     

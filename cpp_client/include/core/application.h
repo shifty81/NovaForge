@@ -292,7 +292,10 @@ private:
     // FPS mode input handling
     void handleFPSKeyInput(int key, int action, int mods);
     bool isInFPSMode() const;
+    bool isInFlightMode() const;   // ShipInterior — 6DOF free-flight
     void updateFPSMovement(float deltaTime);
+    void updateOnFootMovement(float deltaTime);   // gravity + floor + jump
+    void updateFlightMovement(float deltaTime);   // 6DOF free-flight, no gravity
     void captureFPSCursor();
     void releaseFPSCursor();
     
@@ -436,13 +439,17 @@ private:
     bool  m_fpsFlashlightOn = false;      // Flashlight toggle
 
     // ── FPS movement constants ─────────────────────────────────────
-    static constexpr float FPS_WALK_SPEED       = 4.0f;     // m/s
-    static constexpr float FPS_SPRINT_SPEED     = 7.0f;     // m/s
-    static constexpr float FPS_CROUCH_SPEED     = 2.0f;     // m/s
-    static constexpr float FPS_JUMP_IMPULSE     = 5.0f;     // m/s upward
-    static constexpr float FPS_GRAVITY          = 9.81f;    // m/s²
-    static constexpr float FPS_STAND_EYE_HEIGHT = 1.8f;     // metres
-    static constexpr float FPS_CROUCH_EYE_HEIGHT= 1.0f;     // metres
+    static constexpr float FPS_WALK_SPEED        = 4.0f;    // m/s
+    static constexpr float FPS_SPRINT_SPEED      = 7.0f;    // m/s
+    static constexpr float FPS_CROUCH_SPEED      = 2.0f;    // m/s
+    static constexpr float FPS_JUMP_IMPULSE      = 5.0f;    // m/s upward
+    static constexpr float FPS_GRAVITY           = 9.81f;   // m/s²
+    static constexpr float FPS_STAND_EYE_HEIGHT  = 1.8f;    // metres
+    static constexpr float FPS_CROUCH_EYE_HEIGHT = 1.0f;    // metres
+
+    // ── Flight movement constants (ShipInterior 6DOF) ─────────────
+    static constexpr float FLIGHT_NORMAL_SPEED   = 8.0f;    // m/s
+    static constexpr float FLIGHT_BOOST_SPEED    = 20.0f;   // m/s
 };
 
 } // namespace atlas

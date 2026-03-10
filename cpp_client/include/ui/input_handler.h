@@ -75,6 +75,19 @@ public:
     double getMouseX() const { return m_lastMouseX; }
     double getMouseY() const { return m_lastMouseY; }
 
+    /**
+     * Warp the tracked mouse position to the given screen coordinates.
+     * Call this after releasing FPS cursor capture so that the UI
+     * receives valid absolute coordinates on the very next frame.
+     */
+    void warpMousePosition(double x, double y) {
+        m_lastMouseX = x;
+        m_lastMouseY = y;
+        m_prevMouseX = x;
+        m_prevMouseY = y;
+        m_firstMouse = false;
+    }
+
     // ── Per-frame button state (for Atlas UI) ───────────────────────
     bool isMouseDown(int button) const    { return (button >= 0 && button < 3) ? m_mouseDown[button] : false; }
     bool isMouseClicked(int button) const { return (button >= 0 && button < 3) ? m_mouseClicked[button] : false; }
