@@ -402,6 +402,10 @@ set(CORE_SOURCES
     src/systems/abyssal_weather_system.cpp
     src/systems/abyssal_escalation_system.cpp
     src/systems/mutaplasmid_system.cpp
+    src/systems/planet_scan_system.cpp
+    src/systems/pi_customs_system.cpp
+    src/systems/tech2_module_system.cpp
+    src/systems/capital_component_system.cpp
     src/systems/sleeper_cache_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
