@@ -1065,6 +1065,39 @@ public:
     COMPONENT_TYPE(PropulsionModuleState)
 };
 
+// ==================== Inertia Modifier ====================
+
+/**
+ * @brief Inertia modifier state for ship agility modules
+ *
+ * Models EVE Online inertia-modification modules (Nanofiber Internal
+ * Structure, Inertial Stabilizers, etc.).  Each module provides an
+ * inertia_reduction factor (0–1 exclusive).  Active modules are subject
+ * to stacking penalties.  effective_inertia and effective_align_time
+ * are recomputed whenever the module set changes.
+ */
+class InertiaModifierState : public ecs::Component {
+public:
+    struct InertiaModule {
+        std::string module_id;
+        std::string name;
+        float       inertia_reduction = 0.0f; // 0–1 exclusive
+        bool        is_active         = true;
+    };
+
+    float base_inertia          = 1.0f;
+    float base_align_time       = 10.0f;  // seconds
+    float effective_inertia     = 1.0f;
+    float effective_align_time  = 10.0f;
+    std::vector<InertiaModule> modules;
+    int   max_modules           = 8;
+    int   total_modifications   = 0;
+    float elapsed               = 0.0f;
+    bool  active                = true;
+
+    COMPONENT_TYPE(InertiaModifierState)
+};
+
 } // namespace components
 } // namespace atlas
 
