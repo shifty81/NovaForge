@@ -406,6 +406,10 @@ void run_aggression_switching_system_tests();
 void run_officer_spawn_system_tests();
 void run_anomaly_spawning_system_tests();
 void run_relay_clone_system_tests();
+void run_aegis_spawn_system_tests();
+void run_sleeper_ai_system_tests();
+void run_order_matching_system_tests();
+void run_blueprint_research_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -809,6 +813,10 @@ int main() {
     run_officer_spawn_system_tests();
     run_anomaly_spawning_system_tests();
     run_relay_clone_system_tests();
+    run_aegis_spawn_system_tests();
+    run_sleeper_ai_system_tests();
+    run_order_matching_system_tests();
+    run_blueprint_research_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

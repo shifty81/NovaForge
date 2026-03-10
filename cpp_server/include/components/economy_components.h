@@ -1202,6 +1202,85 @@ public:
     COMPONENT_TYPE(ResourceRespawnState)
 };
 
+// ==================== Order Matching ====================
+
+/**
+ * @brief Market order matching engine state
+ *
+ * Maintains a price-time-priority order book for a single market region.
+ * Buy and sell orders are matched when a sell price <= the best buy price.
+ * Partial fills are supported.  Each tick processes the pending queue.
+ */
+class OrderMatchingState : public ecs::Component {
+public:
+    enum class Side { Buy, Sell };
+
+    struct BookOrder {
+        std::string order_id;
+        std::string owner_id;
+        Side side = Side::Buy;
+        std::string item_type;
+        int quantity = 0;
+        int filled = 0;
+        float price = 0.0f;
+        float timestamp = 0.0f;         // for FIFO within same price
+        bool cancelled = false;
+    };
+
+    std::string region_id;
+    std::vector<BookOrder> buy_orders;   // sorted best-bid first
+    std::vector<BookOrder> sell_orders;  // sorted best-ask first
+    int max_orders_per_side = 200;
+    int total_matches = 0;
+    int total_volume_traded = 0;
+    float total_value_traded = 0.0f;
+    float broker_fee_rate = 0.02f;       // 2 %
+    float fees_collected = 0.0f;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OrderMatchingState)
+};
+
+// ==================== Blueprint Research ====================
+
+/**
+ * @brief Blueprint research (ME / TE) state
+ *
+ * Tracks blueprint research jobs that improve Material Efficiency (ME)
+ * or Time Efficiency (TE).  Each research level requires progressively
+ * more time.  Max levels are ME 10 and TE 20.
+ */
+class BlueprintResearchState : public ecs::Component {
+public:
+    enum class ResearchType { MaterialEfficiency, TimeEfficiency };
+
+    struct ResearchJob {
+        std::string blueprint_id;
+        ResearchType type = ResearchType::MaterialEfficiency;
+        int current_level = 0;
+        int target_level = 1;
+        float time_required = 600.0f;   // seconds for this job
+        float progress = 0.0f;
+        bool completed = false;
+        bool cancelled = false;
+    };
+
+    std::string facility_id;
+    std::vector<ResearchJob> jobs;
+    int max_concurrent_jobs = 3;
+    float research_speed = 1.0f;         // multiplier from facility / skill
+    int total_completed = 0;
+    int total_cancelled = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    static constexpr int MAX_ME_LEVEL = 10;
+    static constexpr int MAX_TE_LEVEL = 20;
+
+    COMPONENT_TYPE(BlueprintResearchState)
+};
+
 } // namespace components
 } // namespace atlas
 
