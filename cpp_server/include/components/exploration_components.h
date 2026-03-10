@@ -1170,6 +1170,56 @@ public:
     COMPONENT_TYPE(SleeperAIState)
 };
 
+// ==================== Sleeper Cache ====================
+
+/**
+ * @brief Sleeper cache site state
+ *
+ * Models hidden exploration sites in wormhole space containing
+ * valuable Sleeper technology.  Each cache has multiple rooms
+ * with hacking containers and sentry turrets.  Players must hack
+ * containers while avoiding damage from turrets.
+ */
+class SleeperCacheState : public ecs::Component {
+public:
+    enum class CacheTier { Limited, Standard, Superior };
+    enum class RoomStatus { Locked, Open, Cleared, Failed };
+
+    struct Container {
+        std::string container_id;
+        float hack_difficulty = 40.0f;   // coherence points
+        float hack_progress = 0.0f;
+        float loot_value = 0.0f;         // ISK value estimate
+        bool hacked = false;
+        bool exploded = false;            // failed hack → explosion
+    };
+
+    struct CacheRoom {
+        std::string room_id;
+        RoomStatus status = RoomStatus::Locked;
+        std::vector<Container> containers;
+        int sentry_count = 2;
+        float sentry_dps = 100.0f;
+        float sentry_range = 30000.0f;   // meters
+        bool sentries_alive = true;
+    };
+
+    std::string site_id;
+    CacheTier tier = CacheTier::Limited;
+    std::vector<CacheRoom> rooms;
+    int max_rooms = 3;
+    float time_limit = 600.0f;           // seconds before site despawns
+    float time_remaining = 600.0f;
+    float total_loot_value = 0.0f;
+    int containers_hacked = 0;
+    int containers_failed = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+    bool expired = false;
+
+    COMPONENT_TYPE(SleeperCacheState)
+};
+
 } // namespace components
 } // namespace atlas
 

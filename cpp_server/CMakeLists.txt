@@ -391,6 +391,7 @@ set(CORE_SOURCES
     src/systems/relay_clone_system.cpp
     src/systems/aegis_spawn_system.cpp
     src/systems/sleeper_ai_system.cpp
+    src/systems/sleeper_cache_system.cpp
     src/systems/order_matching_system.cpp
     src/systems/blueprint_research_system.cpp
     src/systems/drifter_ai_system.cpp
