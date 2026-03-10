@@ -18,8 +18,8 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] Criminal flagging mechanics (suspect, criminal, weapons timer)
 - [x] Security status tracking range (-10.0 to +10.0) with effects
 - [x] Faction standing system consequences
-- [ ] Runtime AEGIS NPC spawning in server code
-- [ ] Gate gun AI behavior
+- [x] Runtime AEGIS NPC spawning in server code
+- [x] Gate gun AI behavior
 
 ---
 
@@ -35,7 +35,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] Aggression switching based on threat/DPS
 - [ ] NPC fleet compositions
 - [x] Officer/Commander spawns with better loot
-- [ ] Sleeper AI (wormhole space)
+- [x] Sleeper AI (wormhole space)
 - [ ] Drifter/Triglavian equivalents
 
 ---
@@ -84,7 +84,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Basic market data structure, contract/escrow data defined
 **Implementation Needed:**
-- [ ] Order matching engine
+- [x] Order matching engine
 - [x] Broker fees and sales tax data (`data/contracts/contracts.json`)
 - [ ] Order modification/cancellation
 - [ ] Regional price differences
@@ -172,8 +172,8 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Basic blueprint system
 **Implementation Needed:**
-- [ ] Material Efficiency research
-- [ ] Time Efficiency research
+- [x] Material Efficiency research
+- [x] Time Efficiency research
 - [ ] Invention mechanics
 - [ ] Reaction formulas
 - [ ] Capital components

@@ -677,6 +677,52 @@ public:
     COMPONENT_TYPE(AggressionSwitchingState)
 };
 
+// ==================== AEGIS NPC Spawn ====================
+
+/**
+ * @brief AEGIS security force spawning state
+ *
+ * Controls the spawning of AEGIS NPC response fleets in high-security
+ * space when criminal activity is detected.  Response time scales with
+ * the system security level: 1.0 is near-instant, 0.5 is ~20 seconds.
+ * AEGIS forces despawn after the threat is neutralised or expires.
+ */
+class AegisSpawnState : public ecs::Component {
+public:
+    enum class SpawnPhase { Idle, Dispatching, Warping, Engaged, Withdrawing };
+
+    struct DispatchedSquad {
+        std::string squad_id;
+        std::string target_id;         // criminal being pursued
+        int ship_count = 3;
+        float dps_per_ship = 200.0f;
+        float warp_eta = 0.0f;         // seconds until arrival
+        float engagement_time = 0.0f;  // time on-grid
+        float max_engagement = 120.0f; // withdraw after this
+        SpawnPhase phase = SpawnPhase::Dispatching;
+    };
+
+    std::string system_id;
+    float security_level = 1.0f;           // 0.0–1.0
+    float base_response_time = 6.0f;       // seconds at sec 1.0
+    float response_time_scale = 30.0f;     // added seconds at sec 0.5
+    float dispatch_timer = 0.0f;
+    float dispatch_interval = 2.0f;        // re-check interval
+    std::vector<DispatchedSquad> squads;
+    int max_squads = 5;
+    int total_dispatched = 0;
+    int total_kills = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    float responseTimeForSecurity() const {
+        float t = base_response_time + response_time_scale * (1.0f - security_level);
+        return (std::max)(t, base_response_time);
+    }
+
+    COMPONENT_TYPE(AegisSpawnState)
+};
+
 } // namespace components
 } // namespace atlas
 

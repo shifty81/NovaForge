@@ -1124,6 +1124,52 @@ public:
     COMPONENT_TYPE(AnomalySpawningState)
 };
 
+// ==================== Sleeper AI ====================
+
+/**
+ * @brief Sleeper NPC artificial intelligence state
+ *
+ * Models the advanced AI behaviour of Sleeper drones found in wormhole
+ * space.  Sleepers have coordinated target selection, remote-repair
+ * capability, and escalation mechanics where reinforcements warp in
+ * when the player inflicts enough damage.
+ */
+class SleeperAIState : public ecs::Component {
+public:
+    enum class SleeperRole { Sentry, Escort, Guardian, Warden };
+    enum class AlertLevel { Dormant, Alerted, Combat, Escalated };
+
+    struct SleeperUnit {
+        std::string unit_id;
+        SleeperRole role = SleeperRole::Sentry;
+        float hp = 1000.0f;
+        float max_hp = 1000.0f;
+        float dps = 150.0f;
+        float remote_rep_amount = 0.0f;  // per second if Guardian
+        std::string current_target;
+        bool alive = true;
+    };
+
+    std::string site_id;
+    AlertLevel alert_level = AlertLevel::Dormant;
+    std::vector<SleeperUnit> units;
+    int max_units = 10;
+    float damage_threshold = 2000.0f;     // total damage to trigger escalation
+    float damage_taken = 0.0f;
+    float escalation_cooldown = 60.0f;    // seconds between escalation waves
+    float escalation_timer = 0.0f;
+    int escalation_wave = 0;
+    int max_escalation_waves = 3;
+    float target_switch_interval = 5.0f;  // coordinated re-targeting
+    float target_switch_timer = 0.0f;
+    int total_kills = 0;
+    int total_losses = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(SleeperAIState)
+};
+
 } // namespace components
 } // namespace atlas
 
