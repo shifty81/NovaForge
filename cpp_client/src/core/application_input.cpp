@@ -33,20 +33,15 @@ void Application::handleKeyInput(int key, int action, int mods) {
         return;
     }
 
-    // ── Escape always works: release cursor in FPS, open pause menu ──
-    if (key == GLFW_KEY_ESCAPE) {
-        if (isInFPSMode() && m_fpsCursorCaptured) {
-            releaseFPSCursor();
-            return;
-        }
-        // Fall through to pause menu handling by other systems
-    }
-
     // ── FPS Mode Controls ─────────────────────────────────────────────
     // When on foot (Docked, StationInterior, ShipInterior), WASD/Space/etc.
     // drive first-person movement instead of tactical fleet commands.
+    // ESC is handled upstream in the window key callback (releases cursor +
+    // toggles pause menu) so we skip it here to avoid double-handling.
     if (isInFPSMode()) {
-        handleFPSKeyInput(key, action, mods);
+        if (key != GLFW_KEY_ESCAPE) {
+            handleFPSKeyInput(key, action, mods);
+        }
         return;
     }
 
@@ -377,7 +372,10 @@ void Application::handleMouseMove(double x, double y, double deltaX, double delt
         if (m_fpsYaw >  360.0f) m_fpsYaw -= 360.0f;
         if (m_fpsYaw < -360.0f) m_fpsYaw += 360.0f;
 
-        // Apply to camera
+        // Apply to camera — rotateFPS updates the camera's internal yaw/pitch
+        // and recomputes m_fpsForward.  The Application m_fpsYaw/m_fpsPitch
+        // variables above are kept in sync so that movement code uses the
+        // same angles as the visual camera direction.
         m_camera->rotateFPS(static_cast<float>(deltaX) * sensitivity,
                             static_cast<float>(-deltaY) * sensitivity);
         return;  // Don't fall through to tactical camera
@@ -540,6 +538,11 @@ bool Application::isInFPSMode() const {
            m_gameState == GameState::ShipInterior;
 }
 
+bool Application::isInFlightMode() const {
+    // ShipInterior uses 6DOF free-flight physics (no gravity).
+    return m_gameState == GameState::ShipInterior;
+}
+
 void Application::captureFPSCursor() {
     if (m_fpsCursorCaptured) return;
     if (m_window && m_window->getHandle()) {
@@ -558,26 +561,41 @@ void Application::releaseFPSCursor() {
     }
 }
 
+// ── Dispatcher ────────────────────────────────────────────────────────
+
 void Application::updateFPSMovement(float deltaTime) {
+    if (isInFlightMode()) {
+        updateFlightMovement(deltaTime);
+    } else {
+        updateOnFootMovement(deltaTime);
+    }
+}
+
+// ── On-foot movement (Docked / StationInterior) ───────────────────────
+//
+// WASD strafes / walks on the XZ plane relative to the player's look
+// direction.  Gravity is applied every tick; jumping is allowed when
+// grounded.  The camera stays at eye height above the floor.
+
+void Application::updateOnFootMovement(float deltaTime) {
     if (!m_window || !m_window->getHandle()) return;
 
     GLFWwindow* win = m_window->getHandle();
 
-    // ── Poll WASD for continuous movement ──────────────────────────────
-    float moveX = 0.0f;  // strafe: -1 = left, +1 = right
-    float moveZ = 0.0f;  // forward: -1 = backward, +1 = forward
+    // ── Poll WASD ─────────────────────────────────────────────────────
+    float moveX = 0.0f;   // strafe: negative = left, positive = right
+    float moveZ = 0.0f;   // forward: positive = forward (into the scene)
 
     if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) moveZ += 1.0f;
     if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) moveZ -= 1.0f;
     if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) moveX -= 1.0f;
     if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) moveX += 1.0f;
 
-    // ── Sprint / crouch stance ─────────────────────────────────────────
+    // ── Stance ────────────────────────────────────────────────────────
     bool sprintHeld = (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
-    bool crouchHeld = (glfwGetKey(win, GLFW_KEY_C) == GLFW_PRESS) ||
-                      (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
+    bool crouchHeld = (glfwGetKey(win, GLFW_KEY_C)          == GLFW_PRESS) ||
+                      (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL)== GLFW_PRESS);
 
-    // Determine movement speed based on stance
     float speed = FPS_WALK_SPEED;
     if (sprintHeld && !crouchHeld && (moveX != 0.0f || moveZ != 0.0f)) {
         speed = FPS_SPRINT_SPEED;
@@ -591,14 +609,12 @@ void Application::updateFPSMovement(float deltaTime) {
         m_activeModeText.clear();
     }
 
-    // ── Compute world-space movement direction from yaw ────────────────
+    // ── Compute character-relative movement direction from yaw ────────
+    // m_fpsYaw is kept in sync with the camera by handleMouseMove, so
+    // "forward" always points the same direction the player is looking.
     float yawRad = glm::radians(m_fpsYaw);
-    float sinYaw = std::sin(yawRad);
-    float cosYaw = std::cos(yawRad);
-
-    // Forward vector (XZ plane) rotated by yaw
-    glm::vec3 forward(sinYaw, 0.0f, cosYaw);
-    glm::vec3 right(cosYaw, 0.0f, -sinYaw);
+    glm::vec3 forward(std::sin(yawRad), 0.0f, std::cos(yawRad));
+    glm::vec3 right(std::cos(yawRad), 0.0f, -std::sin(yawRad));
 
     glm::vec3 moveDir = forward * moveZ + right * moveX;
     if (glm::length(moveDir) > 0.01f) {
@@ -607,30 +623,97 @@ void Application::updateFPSMovement(float deltaTime) {
 
     glm::vec3 velocity = moveDir * speed;
 
-    // ── Jump ───────────────────────────────────────────────────────────
+    // ── Jump ──────────────────────────────────────────────────────────
     if (m_fpsJumpRequested && m_fpsGrounded) {
-        m_fpsVelY = FPS_JUMP_IMPULSE;
+        m_fpsVelY    = FPS_JUMP_IMPULSE;
         m_fpsGrounded = false;
     }
     m_fpsJumpRequested = false;
 
-    // ── Gravity ────────────────────────────────────────────────────────
+    // ── Gravity ───────────────────────────────────────────────────────
     if (!m_fpsGrounded) {
         m_fpsVelY -= FPS_GRAVITY * deltaTime;
     }
 
-    // ── Apply position ─────────────────────────────────────────────────
+    // ── Apply position ────────────────────────────────────────────────
     glm::vec3 camPos = m_camera->getPosition();
     camPos += velocity * deltaTime;
     camPos.y += m_fpsVelY * deltaTime;
 
-    // Floor collision
+    // Floor collision — clamp eye height
     float eyeHeight = crouchHeld ? FPS_CROUCH_EYE_HEIGHT : FPS_STAND_EYE_HEIGHT;
     if (camPos.y < eyeHeight) {
-        camPos.y = eyeHeight;
-        m_fpsVelY = 0.0f;
+        camPos.y    = eyeHeight;
+        m_fpsVelY   = 0.0f;
         m_fpsGrounded = true;
     }
+
+    m_camera->setFPSPosition(camPos, m_camera->getFPSForward());
+}
+
+// ── 6DOF flight movement (ShipInterior) ──────────────────────────────
+//
+// Inside a ship there is no gravity.  The player flies freely in all
+// six degrees of freedom.  Mouse look steers the view; WASD moves
+// forward/backward/strafe in the view plane; Q/E (or Space/Ctrl) move
+// directly up/down in world space; Shift boosts speed.
+
+void Application::updateFlightMovement(float deltaTime) {
+    if (!m_window || !m_window->getHandle()) return;
+
+    GLFWwindow* win = m_window->getHandle();
+
+    // ── Poll directional keys ─────────────────────────────────────────
+    float moveX = 0.0f;   // strafe
+    float moveZ = 0.0f;   // forward/back
+    float moveY = 0.0f;   // up/down (world Y)
+
+    if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) moveZ += 1.0f;
+    if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) moveZ -= 1.0f;
+    if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) moveX -= 1.0f;
+    if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) moveX += 1.0f;
+
+    // Q / Space = ascend;  E / Left-Ctrl = descend
+    if (glfwGetKey(win, GLFW_KEY_Q)            == GLFW_PRESS ||
+        glfwGetKey(win, GLFW_KEY_SPACE)         == GLFW_PRESS) moveY += 1.0f;
+    if (glfwGetKey(win, GLFW_KEY_E)            == GLFW_PRESS ||
+        glfwGetKey(win, GLFW_KEY_LEFT_CONTROL)  == GLFW_PRESS) moveY -= 1.0f;
+
+    bool boostHeld = (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+
+    float speed = boostHeld ? FLIGHT_BOOST_SPEED : FLIGHT_NORMAL_SPEED;
+
+    if (moveX != 0.0f || moveZ != 0.0f || moveY != 0.0f) {
+        m_activeModeText = boostHeld ? "BOOST" : "FLYING";
+    } else {
+        m_activeModeText.clear();
+    }
+
+    // ── Build movement vector in camera-relative frame ────────────────
+    // Use the camera's actual FPS forward/right vectors so that movement
+    // is always relative to where the player is looking, including pitch.
+    glm::vec3 camForward = m_camera->getFPSForward();
+    // Right vector is perpendicular to forward in the XZ plane (no Y tilt
+    // for strafing so it feels natural — same as standard FPS/EVA controls).
+    float yawRad = glm::radians(m_fpsYaw);
+    glm::vec3 right(std::cos(yawRad), 0.0f, -std::sin(yawRad));
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
+
+    glm::vec3 moveDir = camForward * moveZ + right * moveX + up * moveY;
+    if (glm::length(moveDir) > 0.01f) {
+        moveDir = glm::normalize(moveDir);
+    }
+
+    glm::vec3 velocity = moveDir * speed;
+
+    // ── No gravity — reset vertical velocity ─────────────────────────
+    m_fpsVelY     = 0.0f;
+    m_fpsGrounded = false;
+    m_fpsJumpRequested = false;
+
+    // ── Apply position ────────────────────────────────────────────────
+    glm::vec3 camPos = m_camera->getPosition();
+    camPos += velocity * deltaTime;
 
     m_camera->setFPSPosition(camPos, m_camera->getFPSForward());
 }

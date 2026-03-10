@@ -1,11 +1,15 @@
 #include "ui/atlas/atlas_title_screen.h"
 #include "ui/atlas/atlas_widgets.h"
+#include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
 #include <iostream>
 
 namespace atlas {
+
+// Maximum number of characters allowed in a pilot name.
+static constexpr std::size_t MAX_CHARACTER_NAME_LENGTH = 24;
 
 AtlasTitleScreen::AtlasTitleScreen() {
     std::srand(static_cast<unsigned>(std::time(nullptr)));
@@ -263,6 +267,45 @@ void AtlasTitleScreen::renderCharacterCreation(AtlasContext& ctx) {
 
     panelY += BUTTON_SPACING;
 
+    // ── Character name input ─────────────────────────────────────
+    label(ctx, Vec2(panelX, panelY), "Character Name", theme.accentSecondary);
+    panelY += 24.0f;
+
+    Rect nameBox(panelX, panelY, panelW, BUTTON_HEIGHT);
+    // Draw input box background — highlighted when focused
+    Color boxBg = m_charNameFocused
+        ? theme.accentSecondary.withAlpha(0.18f)
+        : Color(0.08f, 0.09f, 0.11f, 1.0f);
+    r.drawRect(nameBox, boxBg);
+    // Border
+    Color borderCol = m_charNameFocused
+        ? theme.accentSecondary
+        : theme.accentSecondary.withAlpha(0.35f);
+    r.drawRect(Rect(nameBox.x, nameBox.y, nameBox.w, 1.0f), borderCol);
+    r.drawRect(Rect(nameBox.x, nameBox.bottom() - 1.0f, nameBox.w, 1.0f), borderCol);
+    r.drawRect(Rect(nameBox.x, nameBox.y, 1.0f, nameBox.h), borderCol);
+    r.drawRect(Rect(nameBox.right() - 1.0f, nameBox.y, 1.0f, nameBox.h), borderCol);
+    // Text content + blinking cursor when focused
+    std::string displayText = m_charName;
+    if (m_charNameFocused) {
+        // Append a block cursor blinking at 1 Hz using wall clock time.
+        double elapsed = glfwGetTime() - m_charNameFocusTime;
+        if (std::fmod(elapsed, 1.0) < 0.5) displayText += "|";
+    }
+    r.drawText(displayText.c_str(),
+               Vec2(nameBox.x + 8.0f, nameBox.y + (nameBox.h - 14.0f) * 0.5f),
+               theme.textPrimary);
+
+    // Click to focus
+    if (ctx.input().mouseClicked[0] && ctx.isHovered(nameBox)) {
+        m_charNameFocused   = true;
+        m_charNameFocusTime = glfwGetTime();
+    } else if (ctx.input().mouseClicked[0] && !ctx.isHovered(nameBox)) {
+        m_charNameFocused = false;
+    }
+
+    panelY += BUTTON_HEIGHT + BUTTON_SPACING;
+
     // ── Navigation ──────────────────────────────────────────────
     float btnW = 150.0f;
     float gap  = 20.0f;
@@ -275,11 +318,19 @@ void AtlasTitleScreen::renderCharacterCreation(AtlasContext& ctx) {
     }
 
     Rect nextBtn(startX + btnW + gap, panelY, btnW, BUTTON_HEIGHT);
-    if (button(ctx, "Next", nextBtn)) {
+    // Require a non-empty character name before advancing
+    bool nameValid = !m_charName.empty();
+    if (button(ctx, "Next", nextBtn) && nameValid) {
         m_selectedRace      = m_races[m_raceIdx].id;
         m_selectedCareer    = m_careers[m_careerIdx].id;
         resolveStarterShip();
         m_currentPage = Page::SHIP_SELECTION;
+    }
+    if (!nameValid) {
+        float hintW = r.measureText("Enter a name to continue");
+        r.drawText("Enter a name to continue",
+                   Vec2(panelX + (panelW - hintW) * 0.5f, panelY + BUTTON_HEIGHT + 4.0f),
+                   theme.textMuted);
     }
 
     // ── Right panel: 3D character preview viewport ──────────────
@@ -645,12 +696,23 @@ void AtlasTitleScreen::renderCharacterPreviewViewport(AtlasContext& ctx, Rect ar
 
     // ── Orbit camera controls (drag to rotate) ─────────────────
     if (ctx.isHovered(area)) {
-        // Left-drag to orbit the character preview
+        // Left-drag to orbit the character preview.
+        // Track press → drag start → drag delta so the model orbits smoothly
+        // relative to how far the user has dragged, rather than snapping to
+        // the absolute cursor X position.
         if (ctx.input().mouseDown[0]) {
-            // Simple yaw rotation based on horizontal mouse delta
-            // (In a real implementation this would track frame-to-frame delta)
-            float mouseRelX = (ctx.input().mousePos.x - area.x) / area.w;
-            m_previewCamYaw = 180.0f + (mouseRelX - 0.5f) * 120.0f;
+            if (!m_previewDragging) {
+                // Drag just started — record current X as the drag origin
+                m_previewDragging  = true;
+                m_previewDragLastX = ctx.input().mousePos.x;
+            } else {
+                // Accumulate delta
+                float dx = ctx.input().mousePos.x - m_previewDragLastX;
+                m_previewCamYaw   += dx * 0.4f;   // 0.4 deg per pixel
+                m_previewDragLastX = ctx.input().mousePos.x;
+            }
+        } else {
+            m_previewDragging = false;
         }
 
         // Scroll to zoom
@@ -692,6 +754,45 @@ void AtlasTitleScreen::resolveStarterShip() {
     }
     std::cout << "[CharGen] Career=" << m_selectedCareer
               << " => StarterShip=" << m_selectedShipClass << std::endl;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Character name text input — keyboard event forwarding
+// ─────────────────────────────────────────────────────────────────
+
+void AtlasTitleScreen::handleKey(int key, int action) {
+    if (!m_charNameFocused) return;
+    if (action != 1 && action != 2) return;  // GLFW_PRESS=1 or GLFW_REPEAT=2
+
+    // GLFW key codes used here (avoid GLFW header dependency in the .cpp by
+    // using the raw integer values which are stable across GLFW versions):
+    //   BACKSPACE = 259,  DELETE = 261
+    constexpr int KEY_BACKSPACE = 259;
+    constexpr int KEY_DELETE    = 261;
+    constexpr int KEY_ENTER     = 257;
+    constexpr int KEY_ESCAPE    = 256;
+
+    if (key == KEY_BACKSPACE) {
+        if (!m_charName.empty()) {
+            // Erase the last UTF-8 code point (handle multi-byte sequences)
+            // For simplicity: erase one byte at a time, which is correct for
+            // ASCII input (the only practical input for a pilot name).
+            m_charName.pop_back();
+        }
+    } else if (key == KEY_DELETE) {
+        m_charName.clear();
+    } else if (key == KEY_ENTER || key == KEY_ESCAPE) {
+        m_charNameFocused = false;
+    }
+}
+
+void AtlasTitleScreen::handleChar(unsigned int codepoint) {
+    if (!m_charNameFocused) return;
+    // Limit to printable ASCII and the configured max length
+    if (codepoint >= 32 && codepoint < 127 &&
+        m_charName.size() < MAX_CHARACTER_NAME_LENGTH) {
+        m_charName += static_cast<char>(codepoint);
+    }
 }
 
 } // namespace atlas

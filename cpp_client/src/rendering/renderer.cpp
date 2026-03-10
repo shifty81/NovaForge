@@ -20,6 +20,15 @@
 
 namespace atlas {
 
+// ── Hangar surface colours ────────────────────────────────────────────────
+// Defined at file scope so they can be tuned without recompiling all geometry.
+static const glm::vec3 HANGAR_COL_FLOOR  (0.22f, 0.22f, 0.24f);  // dark concrete
+static const glm::vec3 HANGAR_COL_CEILING(0.28f, 0.28f, 0.30f);  // lighter grey metal
+static const glm::vec3 HANGAR_COL_WALL   (0.30f, 0.32f, 0.35f);  // steel blue-grey
+static const glm::vec3 HANGAR_COL_PAD_TOP(0.35f, 0.30f, 0.20f);  // worn amber markings
+static const glm::vec3 HANGAR_COL_PAD_EDG(0.25f, 0.25f, 0.28f);  // dark edge
+static const glm::vec3 HANGAR_COL_CATWALK(0.20f, 0.22f, 0.25f);  // darker catwalk
+
 Renderer::Renderer()
     : m_nebulaVAO(0)
     , m_nebulaVBO(0)
@@ -651,75 +660,81 @@ void Renderer::setupHangar() {
     // Coordinate system: Y-up, the floor is at Y=0, eye level ~1.8m.
     // Hangar dimensions: 80m wide (X), 60m deep (Z), 20m tall (Y).
     //
-    // Each vertex: position (3f) + normal (3f) = 6 floats.
+    // Vertex layout: position (3f) + normal (3f) + colour (3f) = 9 floats.
+    // The colour is provided at attribute location 3 so the entity shader
+    // (which reads aColor at location 3) renders surfaces with proper colour
+    // instead of defaulting to vec3(0,0,0) = black.
 
-    const float W = 40.0f;   // half-width  (X: -40 to +40)
-    const float D = 30.0f;   // half-depth  (Z: -30 to +30)
-    const float H = 20.0f;   // ceiling height
+    const float W = 40.0f;    // half-width  (X: -40 to +40)
+    const float D = 30.0f;    // half-depth  (Z: -30 to +30)
+    const float H = 20.0f;    // ceiling height
     const float padW = 12.0f; // landing pad half-width
     const float padD = 15.0f; // landing pad half-depth
     const float padH = 0.3f;  // pad elevation
 
-    // Helper: emit two triangles for a quad (6 vertices)
+    // Helper: emit two triangles for a coloured quad (6 vertices, 9 floats each)
     std::vector<float> verts;
-    auto quad = [&](glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, glm::vec3 n) {
+    auto quad = [&](glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d,
+                    glm::vec3 n, glm::vec3 col) {
+        auto emit = [&](const glm::vec3& p) {
+            verts.insert(verts.end(), {p.x, p.y, p.z,
+                                       n.x, n.y, n.z,
+                                       col.x, col.y, col.z});
+        };
         // Triangle 1: a-b-c
-        verts.insert(verts.end(), {a.x,a.y,a.z, n.x,n.y,n.z});
-        verts.insert(verts.end(), {b.x,b.y,b.z, n.x,n.y,n.z});
-        verts.insert(verts.end(), {c.x,c.y,c.z, n.x,n.y,n.z});
+        emit(a); emit(b); emit(c);
         // Triangle 2: a-c-d
-        verts.insert(verts.end(), {a.x,a.y,a.z, n.x,n.y,n.z});
-        verts.insert(verts.end(), {c.x,c.y,c.z, n.x,n.y,n.z});
-        verts.insert(verts.end(), {d.x,d.y,d.z, n.x,n.y,n.z});
+        emit(a); emit(c); emit(d);
     };
 
     // Floor (Y=0, normal up)
-    quad({-W,0,-D}, {W,0,-D}, {W,0,D}, {-W,0,D}, {0,1,0});
+    quad({-W,0,-D}, {W,0,-D}, {W,0,D}, {-W,0,D}, {0,1,0}, HANGAR_COL_FLOOR);
 
     // Ceiling (Y=H, normal down)
-    quad({-W,H,D}, {W,H,D}, {W,H,-D}, {-W,H,-D}, {0,-1,0});
+    quad({-W,H,D}, {W,H,D}, {W,H,-D}, {-W,H,-D}, {0,-1,0}, HANGAR_COL_CEILING);
 
     // Back wall (Z=-D, normal +Z)
-    quad({-W,0,-D}, {-W,H,-D}, {W,H,-D}, {W,0,-D}, {0,0,1});
+    quad({-W,0,-D}, {-W,H,-D}, {W,H,-D}, {W,0,-D}, {0,0,1}, HANGAR_COL_WALL);
 
     // Front wall (Z=+D, normal -Z) — hangar door side, half-height opening
     float doorH = 12.0f;
     float doorW = 20.0f;
     // Left section
-    quad({-W,0,D}, {-W,H,D}, {-doorW/2,H,D}, {-doorW/2,0,D}, {0,0,-1});
+    quad({-W,0,D}, {-W,H,D}, {-doorW/2,H,D}, {-doorW/2,0,D}, {0,0,-1}, HANGAR_COL_WALL);
     // Right section
-    quad({doorW/2,0,D}, {doorW/2,H,D}, {W,H,D}, {W,0,D}, {0,0,-1});
+    quad({doorW/2,0,D}, {doorW/2,H,D}, {W,H,D}, {W,0,D}, {0,0,-1}, HANGAR_COL_WALL);
     // Top section (above door)
-    quad({-doorW/2,doorH,D}, {-doorW/2,H,D}, {doorW/2,H,D}, {doorW/2,doorH,D}, {0,0,-1});
+    quad({-doorW/2,doorH,D}, {-doorW/2,H,D}, {doorW/2,H,D}, {doorW/2,doorH,D}, {0,0,-1}, HANGAR_COL_WALL);
 
     // Left wall (X=-W, normal +X)
-    quad({-W,0,D}, {-W,0,-D}, {-W,H,-D}, {-W,H,D}, {1,0,0});
+    quad({-W,0,D}, {-W,0,-D}, {-W,H,-D}, {-W,H,D}, {1,0,0}, HANGAR_COL_WALL);
 
     // Right wall (X=+W, normal -X)
-    quad({W,0,-D}, {W,0,D}, {W,H,D}, {W,H,-D}, {-1,0,0});
+    quad({W,0,-D}, {W,0,D}, {W,H,D}, {W,H,-D}, {-1,0,0}, HANGAR_COL_WALL);
 
     // Landing pad — raised platform in center (top surface, normal up)
-    quad({-padW,padH,-padD}, {padW,padH,-padD}, {padW,padH,padD}, {-padW,padH,padD}, {0,1,0});
+    quad({-padW,padH,-padD}, {padW,padH,-padD}, {padW,padH,padD}, {-padW,padH,padD}, {0,1,0}, HANGAR_COL_PAD_TOP);
     // Pad front edge
-    quad({-padW,0,padD}, {padW,0,padD}, {padW,padH,padD}, {-padW,padH,padD}, {0,0,1});
+    quad({-padW,0,padD}, {padW,0,padD}, {padW,padH,padD}, {-padW,padH,padD}, {0,0,1}, HANGAR_COL_PAD_EDG);
     // Pad back edge
-    quad({padW,0,-padD}, {-padW,0,-padD}, {-padW,padH,-padD}, {padW,padH,-padD}, {0,0,-1});
+    quad({padW,0,-padD}, {-padW,0,-padD}, {-padW,padH,-padD}, {padW,padH,-padD}, {0,0,-1}, HANGAR_COL_PAD_EDG);
     // Pad left edge
-    quad({-padW,0,-padD}, {-padW,0,padD}, {-padW,padH,padD}, {-padW,padH,-padD}, {1,0,0});
+    quad({-padW,0,-padD}, {-padW,0,padD}, {-padW,padH,padD}, {-padW,padH,-padD}, {1,0,0}, HANGAR_COL_PAD_EDG);
     // Pad right edge
-    quad({padW,0,padD}, {padW,0,-padD}, {padW,padH,-padD}, {padW,padH,padD}, {-1,0,0});
+    quad({padW,0,padD}, {padW,0,-padD}, {padW,padH,-padD}, {padW,padH,padD}, {-1,0,0}, HANGAR_COL_PAD_EDG);
 
     // Catwalk rails along the walls (thin raised strips at waist height)
     float railH = 1.1f;
     float railW = 1.5f;
     // Left catwalk
-    quad({-W,0,-D}, {-W+railW,0,-D}, {-W+railW,0,D}, {-W,0,D}, {0,1,0});
-    quad({-W,railH,-D}, {-W+railW,railH,-D}, {-W+railW,railH,D}, {-W,railH,D}, {0,1,0});
+    quad({-W,0,-D}, {-W+railW,0,-D}, {-W+railW,0,D}, {-W,0,D}, {0,1,0}, HANGAR_COL_CATWALK);
+    quad({-W,railH,-D}, {-W+railW,railH,-D}, {-W+railW,railH,D}, {-W,railH,D}, {0,1,0}, HANGAR_COL_CATWALK);
     // Right catwalk
-    quad({W-railW,0,-D}, {W,0,-D}, {W,0,D}, {W-railW,0,D}, {0,1,0});
-    quad({W-railW,railH,-D}, {W,railH,-D}, {W,railH,D}, {W-railW,railH,D}, {0,1,0});
+    quad({W-railW,0,-D}, {W,0,-D}, {W,0,D}, {W-railW,0,D}, {0,1,0}, HANGAR_COL_CATWALK);
+    quad({W-railW,railH,-D}, {W,railH,-D}, {W,railH,D}, {W-railW,railH,D}, {0,1,0}, HANGAR_COL_CATWALK);
 
-    m_hangarVertexCount = static_cast<int>(verts.size()) / 6;
+    // Each vertex is now 9 floats (pos + normal + colour)
+    m_hangarVertexCount = static_cast<int>(verts.size()) / 9;
 
     glGenVertexArrays(1, &m_hangarVAO);
     glGenBuffers(1, &m_hangarVBO);
@@ -728,12 +743,18 @@ void Renderer::setupHangar() {
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(), GL_STATIC_DRAW);
-    // Position: location 0
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    // Position: attribute location 0
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // Normal: location 1
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    // Normal: attribute location 1
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                          (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    // TexCoord (location 2) — not used for hangar, leave disabled (defaults to 0,0)
+    // Colour: attribute location 3 (matches entity shader aColor)
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                          (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(3);
     glBindVertexArray(0);
 
     std::cout << "  Hangar environment: " << m_hangarVertexCount << " vertices" << std::endl;

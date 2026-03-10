@@ -1629,6 +1629,43 @@ public:
     COMPONENT_TYPE(MarketApiState)
 };
 
+// ---------------------------------------------------------------------------
+// MarketWatchlist — price-alert watchlist for market items
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks a player watchlist of market items with alert thresholds.
+ *
+ * Each WatchEntry records the item being watched, the current cached price,
+ * and optional buy/sell alert thresholds.  On each tick updatePrices() is
+ * called externally to refresh cached prices; the system fires an alert when
+ * a threshold is crossed.  max_entries caps the list (default 30).
+ * total_alerts_fired counts all threshold crossings since creation.
+ */
+class MarketWatchlist : public ecs::Component {
+public:
+    enum class AlertType { None, BelowBuyThreshold, AboveSellThreshold };
+
+    struct WatchEntry {
+        std::string id;                       // unique entry id
+        std::string item_name;
+        float       current_price    = 0.0f;
+        float       buy_threshold    = 0.0f;  // alert when price drops below this
+        float       sell_threshold   = 0.0f;  // alert when price rises above this
+        bool        buy_alert_set    = false;
+        bool        sell_alert_set   = false;
+        bool        buy_alert_fired  = false;
+        bool        sell_alert_fired = false;
+    };
+
+    std::vector<WatchEntry> entries;
+    int   max_entries        = 30;
+    int   total_alerts_fired = 0;
+    float elapsed            = 0.0f;
+    bool  active             = true;
+
+    COMPONENT_TYPE(MarketWatchlist)
+};
+
 } // namespace components
 } // namespace atlas
 

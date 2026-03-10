@@ -2230,6 +2230,43 @@ public:
     COMPONENT_TYPE(PlayerNotificationQueue)
 };
 
+// ---------------------------------------------------------------------------
+// DailyQuestState — daily repeatable quest tracking with 24h reset
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks a set of daily objectives that reset every 24 hours.
+ *
+ * Each DailyObjective has an id, description, required_count, current_count,
+ * and a completed flag.  When all objectives are completed the session is
+ * considered complete and bonus_reward is awarded.  A reset_timer counts
+ * down to the next daily reset; on expiry all objectives are cleared and the
+ * day counter increments.  max_objectives caps the list (default 5).
+ */
+class DailyQuestState : public ecs::Component {
+public:
+    struct DailyObjective {
+        std::string id;
+        std::string description;
+        int         required_count  = 1;
+        int         current_count   = 0;
+        bool        completed       = false;
+    };
+
+    std::vector<DailyObjective> objectives;
+    float  reset_timer          = 86400.0f;  // seconds until next reset (24h)
+    float  reset_duration       = 86400.0f;  // configurable reset interval
+    float  bonus_reward         = 0.0f;      // ISK bonus awarded on full completion
+    bool   all_complete         = false;
+    bool   bonus_claimed        = false;
+    int    days_completed       = 0;         // lifetime daily completions
+    int    total_resets         = 0;
+    int    max_objectives       = 5;
+    float  elapsed              = 0.0f;
+    bool   active               = true;
+
+    COMPONENT_TYPE(DailyQuestState)
+};
+
 } // namespace components
 } // namespace atlas
 

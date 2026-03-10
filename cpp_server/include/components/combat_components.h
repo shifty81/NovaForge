@@ -978,6 +978,47 @@ public:
     COMPONENT_TYPE(CombatTimer)
 };
 
+// ---------------------------------------------------------------------------
+// PlayerSessionStats — per-session player performance statistics
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks aggregate statistics for the current play session.
+ *
+ * Counters accumulate from session start until reset is called.
+ * elapsed_time ticks every update while active.  The component records
+ * combat performance (kills/losses/damage), economy activity (ISK earned/
+ * spent), and travel distance so the end-of-session summary can be shown.
+ */
+class PlayerSessionStats : public ecs::Component {
+public:
+    // Combat
+    int   kills              = 0;
+    int   losses             = 0;
+    float damage_dealt       = 0.0f;
+    float damage_received    = 0.0f;
+    int   assists            = 0;
+
+    // Economy
+    float isk_earned         = 0.0f;
+    float isk_spent          = 0.0f;
+    int   trades_completed   = 0;
+    int   items_looted       = 0;
+
+    // Travel
+    float distance_traveled  = 0.0f;  // in AU
+    int   jumps_made         = 0;
+    int   warps_made         = 0;
+
+    // Session timing
+    float elapsed_time       = 0.0f;  // seconds since session start
+    bool  active             = true;
+
+    // Lifetime totals (not reset by resetSession)
+    int   total_sessions     = 0;
+
+    COMPONENT_TYPE(PlayerSessionStats)
+};
+
 } // namespace components
 } // namespace atlas
 
