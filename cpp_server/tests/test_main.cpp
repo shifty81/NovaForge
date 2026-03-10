@@ -453,6 +453,9 @@ void run_fleet_after_action_report_system_tests();
 void run_ecm_jamming_system_tests();
 void run_sensor_dampening_system_tests();
 void run_tracking_disruption_system_tests();
+void run_ship_skin_system_tests();
+void run_propulsion_module_system_tests();
+void run_citadel_management_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -903,6 +906,9 @@ int main() {
     run_ecm_jamming_system_tests();
     run_sensor_dampening_system_tests();
     run_tracking_disruption_system_tests();
+    run_ship_skin_system_tests();
+    run_propulsion_module_system_tests();
+    run_citadel_management_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

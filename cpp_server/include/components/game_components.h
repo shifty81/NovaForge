@@ -2267,6 +2267,43 @@ public:
     COMPONENT_TYPE(DailyQuestState)
 };
 
+// ---------------------------------------------------------------------------
+// ShipSkinCollection — ship skin/SKIN ownership and equip management
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks a player's collection of ship skins (SKINs) and which one
+ *        is currently equipped.
+ *
+ * Each Skin has a rarity tier (Common→Legendary), ship_type restriction,
+ * and primary/secondary colors.  Only one skin may be equipped at a time;
+ * equipping a new one automatically unequips the previous.  The collection
+ * is capped at max_skins (default 100).  total_acquired counts lifetime
+ * acquisitions (including removed skins).
+ */
+class ShipSkinCollection : public ecs::Component {
+public:
+    enum class Rarity { Common, Uncommon, Rare, Epic, Legendary };
+
+    struct Skin {
+        std::string skin_id;
+        std::string name;
+        std::string ship_type;       // e.g. "Rifter", "Raven", "" for universal
+        Rarity      rarity       = Rarity::Common;
+        std::string color_primary;   // hex or named color
+        std::string color_secondary;
+        bool        equipped     = false;
+    };
+
+    std::string owner_id;
+    std::vector<Skin> skins;
+    int   max_skins        = 100;
+    int   total_acquired   = 0;
+    float elapsed          = 0.0f;
+    bool  active           = true;
+
+    COMPONENT_TYPE(ShipSkinCollection)
+};
+
 } // namespace components
 } // namespace atlas
 

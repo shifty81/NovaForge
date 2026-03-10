@@ -1034,6 +1034,37 @@ public:
     COMPONENT_TYPE(WarpBubbleState)
 };
 
+// ==================== Propulsion Module ====================
+
+/**
+ * @brief Propulsion module state (Afterburner / MWD)
+ *
+ * Models EVE Online afterburner and microwarp drive mechanics:
+ * speed multiplier, capacitor drain per cycle, cycle tracking, and
+ * signature radius bloom (MWD only).  The module must be activated
+ * explicitly and consumes capacitor each cycle.  When capacitor
+ * runs out the module deactivates.
+ */
+class PropulsionModuleState : public ecs::Component {
+public:
+    enum class ModuleType { Afterburner, MicrowarpDrive };
+
+    ModuleType  module_type         = ModuleType::Afterburner;
+    float       speed_multiplier    = 1.5f;   // AB default; MWD typically 5.0
+    float       signature_bloom     = 1.0f;   // 1.0 = no bloom; MWD ~5.0
+    float       cap_drain_per_cycle = 10.0f;  // GJ consumed each cycle
+    float       cycle_time          = 5.0f;   // seconds per cycle
+    float       cycle_elapsed       = 0.0f;   // time accumulated in current cycle
+    float       capacitor_remaining = 100.0f; // local capacitor pool (simplified)
+    bool        is_active           = false;
+    int         total_cycles        = 0;
+    float       active_duration     = 0.0f;   // cumulative seconds spent active
+    float       elapsed             = 0.0f;
+    bool        active              = true;    // component active flag
+
+    COMPONENT_TYPE(PropulsionModuleState)
+};
+
 } // namespace components
 } // namespace atlas
 

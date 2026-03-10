@@ -305,6 +305,55 @@ public:
 };
 
 
+// ---------------------------------------------------------------------------
+// CitadelState — player-owned Upwell structure management
+// ---------------------------------------------------------------------------
+/**
+ * @brief Player-owned citadel / Upwell structure state.
+ *
+ * Models three sizes (Astrahus / Fortizar / Keepstar) with services,
+ * fuel consumption, vulnerability windows, and reinforcement timers.
+ * Fuel is consumed per tick based on active services.  When fuel runs
+ * out, all services go offline.  Vulnerability windows allow attacks
+ * that may trigger reinforcement timers.
+ */
+class CitadelState : public ecs::Component {
+public:
+    enum class CitadelType { Astrahus, Fortizar, Keepstar };
+    enum class StructureState { Online, Vulnerable, Reinforced, Destroyed };
+
+    struct Service {
+        std::string service_id;
+        std::string service_name;
+        float       fuel_per_hour = 5.0f;
+        bool        online        = true;
+    };
+
+    CitadelType    type              = CitadelType::Astrahus;
+    StructureState state             = StructureState::Online;
+    std::string    owner_corp_id;
+    std::string    structure_name;
+    float          shield_hp         = 10000.0f;
+    float          shield_hp_max     = 10000.0f;
+    float          armor_hp          = 10000.0f;
+    float          armor_hp_max      = 10000.0f;
+    float          hull_hp           = 10000.0f;
+    float          hull_hp_max       = 10000.0f;
+    std::vector<Service> services;
+    int            max_services      = 5;
+    float          fuel_remaining    = 1000.0f;  // fuel units
+    float          fuel_capacity     = 5000.0f;
+    float          vulnerability_hours = 3.0f;   // hours per week
+    float          reinforcement_timer = 0.0f;   // seconds remaining
+    float          reinforcement_duration = 86400.0f; // default 24h
+    int            total_reinforcements = 0;
+    int            total_services_installed = 0;
+    float          elapsed           = 0.0f;
+    bool           active            = true;
+
+    COMPONENT_TYPE(CitadelState)
+};
+
 } // namespace components
 } // namespace atlas
 

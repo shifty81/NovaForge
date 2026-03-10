@@ -183,7 +183,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 ## Lower Priority (Polish Features)
 
 ### 11. **Character Customization**
-- Ship skins and paint jobs
+- [x] Ship skins and paint jobs (`ship_skin_system.h`)
 - Character portraits
 - Corporation logos
 - Structure skins
@@ -192,11 +192,11 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - Alliance system
 - Corporation wars
 - Wardec mechanics
-- Citadel structures
+- [x] Citadel structures (`citadel_management_system.h`)
 
 ### 13. **Advanced Movement**
-- Microwarp drive signature bloom
-- Afterburner mechanics
+- [x] Microwarp drive signature bloom (`propulsion_module_system.h`)
+- [x] Afterburner mechanics (`propulsion_module_system.h`)
 - Inertia modifiers
 - Warp disruption bubbles (null-sec)
 
