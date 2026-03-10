@@ -68,7 +68,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 **Implementation Needed:**
 - [x] Wormhole generation and connections
 - [x] Wormhole mass/time limits
-- [ ] Sleeper cache sites
+- [x] Sleeper cache sites
 - [x] Null-sec specific mechanics (bubbles, cynos)
 - [x] Dynamic anomaly spawning
 
@@ -137,10 +137,10 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Static mission system only
 **Implementation Needed:**
-- [ ] Dynamic incursion spawning
-- [ ] Multiple difficulty tiers
-- [ ] Fleet coordination rewards
-- [ ] Influence mechanics
+- [x] Dynamic incursion spawning
+- [x] Multiple difficulty tiers
+- [x] Fleet coordination rewards
+- [x] Influence mechanics
 
 ---
 
@@ -157,7 +157,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [ ] Tech II module variants
 - [ ] Faction module drops
 - [ ] Deadspace loot tables
-- [ ] Meta level system (0-5+)
+- [x] Meta level system (0-5+)
 - [x] Implant data with slots and grades (`data/character_creation/implants.json`)
 
 ---
@@ -175,7 +175,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] Material Efficiency research
 - [x] Time Efficiency research
 - [x] Invention mechanics
-- [ ] Reaction formulas
+- [x] Reaction formulas
 - [ ] Capital components
 
 ---

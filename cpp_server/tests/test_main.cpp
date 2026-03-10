@@ -415,6 +415,9 @@ void run_warp_bubble_system_tests();
 void run_invention_system_tests();
 void run_regional_market_system_tests();
 void run_sleeper_cache_system_tests();
+void run_incursion_system_tests();
+void run_meta_level_system_tests();
+void run_reaction_formula_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -827,6 +830,9 @@ int main() {
     run_invention_system_tests();
     run_regional_market_system_tests();
     run_sleeper_cache_system_tests();
+    run_incursion_system_tests();
+    run_meta_level_system_tests();
+    run_reaction_formula_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
