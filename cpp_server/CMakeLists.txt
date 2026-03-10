@@ -417,6 +417,9 @@ set(CORE_SOURCES
     src/systems/trade_window_system.cpp
     src/systems/damage_log_system.cpp
     src/systems/loot_distribution_system.cpp
+    src/systems/combat_timer_system.cpp
+    src/systems/player_notification_queue_system.cpp
+    src/systems/fleet_after_action_report_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -860,6 +863,9 @@ set(SERVER_HEADERS
     include/systems/trade_window_system.h
     include/systems/damage_log_system.h
     include/systems/loot_distribution_system.h
+    include/systems/combat_timer_system.h
+    include/systems/player_notification_queue_system.h
+    include/systems/fleet_after_action_report_system.h
 )
 
 # Steam SDK configuration

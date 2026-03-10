@@ -944,6 +944,40 @@ public:
     COMPONENT_TYPE(LootDistribution)
 };
 
+// ---------------------------------------------------------------------------
+// CombatTimer — EVE-style aggression/weapon/pod-kill timers
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks the three EVE Online combat cooldown timers.
+ *
+ * Aggression timer (default 300 s): set whenever the entity attacks another.
+ * While active the entity cannot safely log off.
+ * Weapon timer (default 60 s): set whenever a weapon is activated.
+ * While active the entity cannot dock at a station or use a jump gate.
+ * Pod-kill timer (default 900 s): set after the entity destroys a capsule.
+ * Each timer counts down to zero on tick.  isInCombat() is true while any
+ * timer is positive.  canSafelyUndock() is false while weapon_timer > 0.
+ */
+class CombatTimer : public ecs::Component {
+public:
+    float aggression_timer      = 0.0f;   // seconds remaining
+    float weapon_timer          = 0.0f;
+    float pod_kill_timer        = 0.0f;
+
+    float aggression_duration   = 300.0f; // configurable default durations
+    float weapon_duration       = 60.0f;
+    float pod_kill_duration     = 900.0f;
+
+    int   total_aggressions     = 0;
+    int   total_weapon_activations = 0;
+    int   total_pod_kills       = 0;
+
+    float elapsed               = 0.0f;
+    bool  active                = true;
+
+    COMPONENT_TYPE(CombatTimer)
+};
+
 } // namespace components
 } // namespace atlas
 
