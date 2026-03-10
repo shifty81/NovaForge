@@ -45,7 +45,7 @@ bool SessionManagerSystem::authenticate(const std::string& entity_id) {
     auto* comp = getComponentFor(entity_id);
     if (!comp) return false;
     if (comp->phase != components::SessionState::Phase::Disconnected) return false;
-    comp->phase = components::SessionState::Phase::Authenticating;
+    // Instant authentication — transition directly to Loading
     comp->phase = components::SessionState::Phase::Loading;
     return true;
 }
