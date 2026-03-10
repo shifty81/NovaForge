@@ -56,7 +56,7 @@ for _name in _submodule_names:
     try:
         _mod = __import__(f".{_name}", globals(), locals(), [_name], 1)
         _submodules[_name] = _mod
-    except Exception as _exc:  # noqa: BLE001
+    except ImportError as _exc:
         _submodules[_name] = None
         _failed_submodules.append((_name, _exc))
         print(f"[AtlasForge] WARNING: failed to import {_name}: {_exc}")
@@ -913,8 +913,9 @@ def unregister():
         if mod is not None and hasattr(mod, "unregister"):
             try:
                 mod.unregister()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as exc:  # noqa: BLE001
+                print(f"[AtlasForge] WARNING: {name}.unregister() failed: {exc}")
+                traceback.print_exc()
     
     del bpy.types.Scene.spaceship_props
     

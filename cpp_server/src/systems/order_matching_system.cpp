@@ -57,15 +57,15 @@ void OrderMatchingSystem::updateComponent(ecs::Entity& entity,
                 if (buy_it->price < sell_it->price) continue;
 
                 // Match!
-                int fill_qty = (std::min)(buy_remaining, sell_remaining);
+                int fill_quantity = (std::min)(buy_remaining, sell_remaining);
                 float trade_price = sell_it->price; // execute at ask
-                float trade_value = trade_price * static_cast<float>(fill_qty);
+                float trade_value = trade_price * static_cast<float>(fill_quantity);
 
-                buy_it->filled += fill_qty;
-                sell_it->filled += fill_qty;
+                buy_it->filled += fill_quantity;
+                sell_it->filled += fill_quantity;
 
                 comp.total_matches++;
-                comp.total_volume_traded += fill_qty;
+                comp.total_volume_traded += fill_quantity;
                 comp.total_value_traded += trade_value;
                 comp.fees_collected += trade_value * comp.broker_fee_rate;
 
