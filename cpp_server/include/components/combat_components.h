@@ -866,6 +866,84 @@ public:
     COMPONENT_TYPE(KillReport)
 };
 
+// ---------------------------------------------------------------------------
+// DamageLog — per-entity hit-by-hit damage event log
+// ---------------------------------------------------------------------------
+/**
+ * @brief Per-entity damage event log
+ *
+ * Records every individual damage hit applied by or to this entity, with
+ * damage type, amount, weapon used, and hit/miss flag.  Entries are capped at
+ * max_entries with oldest-entry eviction.  Separate outgoing/incoming totals
+ * are maintained for quick aggregation queries.
+ */
+class DamageLog : public ecs::Component {
+public:
+    enum class DamageType { EM, Thermal, Kinetic, Explosive };
+
+    struct DamageEntry {
+        std::string attacker_id;
+        std::string defender_id;
+        DamageType  damage_type = DamageType::Kinetic;
+        float       amount      = 0.0f;
+        std::string weapon;
+        bool        hit         = true;
+        float       timestamp   = 0.0f;
+    };
+
+    std::vector<DamageEntry> entries;
+    int   max_entries     = 100;
+    float total_outgoing  = 0.0f;   // damage dealt outward
+    float total_incoming  = 0.0f;   // damage received
+    int   total_misses    = 0;
+    int   total_shots     = 0;
+    float elapsed         = 0.0f;
+    bool  active          = true;
+
+    COMPONENT_TYPE(DamageLog)
+};
+
+// ---------------------------------------------------------------------------
+// LootDistribution — proportional loot/ISK splitting among kill participants
+// ---------------------------------------------------------------------------
+/**
+ * @brief Proportional loot and ISK distribution among kill participants
+ *
+ * Tracks which pilots contributed damage toward a kill (and how much), then
+ * proportionally splits the ISK pool and assigns loot items when distribute()
+ * is called.  The distribution can only be opened once; afterwards the state
+ * moves to Distributed and is immutable.
+ */
+class LootDistribution : public ecs::Component {
+public:
+    enum class State { Idle, Open, Distributed };
+
+    struct Participant {
+        std::string pilot_id;
+        float       damage_dealt = 0.0f;
+        float       isk_share    = 0.0f;  // calculated on distribute()
+    };
+
+    struct LootItem {
+        std::string item_id;
+        std::string item_name;
+        int         quantity    = 0;
+        std::string assigned_to;           // pilot_id; empty = unassigned
+    };
+
+    State                    state            = State::Idle;
+    std::vector<Participant> participants;
+    std::vector<LootItem>    items;
+    float                    isk_pool         = 0.0f;
+    int                      max_participants = 20;
+    int                      max_items        = 50;
+    int                      total_distributions = 0;
+    float                    elapsed          = 0.0f;
+    bool                     active           = true;
+
+    COMPONENT_TYPE(LootDistribution)
+};
+
 } // namespace components
 } // namespace atlas
 

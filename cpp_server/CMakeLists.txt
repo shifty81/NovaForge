@@ -415,6 +415,8 @@ set(CORE_SOURCES
     src/systems/respawn_selection_system.cpp
     src/systems/tutorial_system.cpp
     src/systems/trade_window_system.cpp
+    src/systems/damage_log_system.cpp
+    src/systems/loot_distribution_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -856,6 +858,8 @@ set(SERVER_HEADERS
     include/systems/respawn_selection_system.h
     include/systems/tutorial_system.h
     include/systems/trade_window_system.h
+    include/systems/damage_log_system.h
+    include/systems/loot_distribution_system.h
 )
 
 # Steam SDK configuration

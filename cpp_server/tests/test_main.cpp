@@ -425,6 +425,8 @@ void run_kill_report_system_tests();
 void run_respawn_selection_system_tests();
 void run_tutorial_system_tests();
 void run_trade_window_system_tests();
+void run_damage_log_system_tests();
+void run_loot_distribution_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -847,6 +849,8 @@ int main() {
     run_respawn_selection_system_tests();
     run_tutorial_system_tests();
     run_trade_window_system_tests();
+    run_damage_log_system_tests();
+    run_loot_distribution_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
