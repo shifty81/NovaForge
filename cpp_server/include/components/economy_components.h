@@ -1396,6 +1396,46 @@ struct ReactionFormulaState : public ecs::Component {
     COMPONENT_TYPE(ReactionFormulaState)
 };
 
+/**
+ * @brief Mutaplasmid module mutation state
+ *
+ * Tracks in-progress and completed module mutations.  Each mutation
+ * consumes a mutaplasmid and an eligible module and produces a new
+ * "mutated" module with randomised stat multipliers within a
+ * grade-defined range.
+ */
+class MutaplasmidState : public ecs::Component {
+public:
+    enum class Grade { Unstable, Decayed, Gravid, Overloaded };
+
+    struct StatRoll {
+        std::string stat_name;
+        float min_multiplier = 0.85f;
+        float max_multiplier = 1.15f;
+        float rolled_value = 1.0f;
+        bool rolled = false;
+    };
+
+    struct MutatedModule {
+        std::string original_module_id;
+        std::string mutated_module_id;
+        Grade grade = Grade::Unstable;
+        std::vector<StatRoll> stat_rolls;
+        float overall_quality = 0.0f;   // average (rolled-min)/(max-min) across rolls
+        bool created = false;
+    };
+
+    std::string facility_id;
+    std::vector<MutatedModule> mutations;
+    int max_pending = 5;
+    int total_attempted = 0;
+    int total_created = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(MutaplasmidState)
+};
+
 } // namespace components
 } // namespace atlas
 

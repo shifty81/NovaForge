@@ -207,10 +207,10 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - Guidance disruption (missiles)
 
 ### 15. **Abyssal Deadspace**
-- Filament entry system
-- Time-limited pockets
-- Escalating difficulty
-- Mutaplasmid loot
+- [x] Filament entry system (`abyssal_filament_system.h`)
+- [x] Time-limited pockets (`abyssal_filament_system.h`)
+- [x] Escalating difficulty (`abyssal_escalation_system.h`, `abyssal_weather_system.h`)
+- [x] Mutaplasmid loot (`mutaplasmid_system.h`)
 
 ---
 

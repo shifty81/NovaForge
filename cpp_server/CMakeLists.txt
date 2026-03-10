@@ -398,6 +398,10 @@ set(CORE_SOURCES
     src/systems/warp_bubble_system.cpp
     src/systems/invention_system.cpp
     src/systems/regional_market_system.cpp
+    src/systems/abyssal_filament_system.cpp
+    src/systems/abyssal_weather_system.cpp
+    src/systems/abyssal_escalation_system.cpp
+    src/systems/mutaplasmid_system.cpp
     src/systems/sleeper_cache_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
