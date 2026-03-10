@@ -2190,6 +2190,46 @@ public:
     COMPONENT_TYPE(TradeWindow)
 };
 
+// ---------------------------------------------------------------------------
+// PlayerNotificationQueue — player-facing notification queue
+// ---------------------------------------------------------------------------
+/**
+ * @brief Generic notification queue for player-facing game events.
+ *
+ * Distinct from DamageNotification (combat-only).  Handles any game event
+ * the player should be informed of: mission updates, trade confirmations,
+ * kill report arrivals, system alerts, etc.  Notifications have a
+ * configurable lifetime; expired ones are removed on each tick.
+ */
+class PlayerNotificationQueue : public ecs::Component {
+public:
+    enum class NotificationType {
+        GameEvent,
+        MissionUpdate,
+        TradeEvent,
+        CombatEvent,
+        SystemAlert
+    };
+
+    struct Notification {
+        std::string      id;
+        NotificationType type    = NotificationType::GameEvent;
+        std::string      message;
+        float            timestamp = 0.0f;
+        bool             read      = false;
+        float            lifetime  = 60.0f; // seconds before auto-expire
+    };
+
+    std::vector<Notification> notifications;
+    int   max_notifications    = 50;
+    int   total_pushed         = 0;
+    int   total_expired        = 0;
+    float elapsed              = 0.0f;
+    bool  active               = true;
+
+    COMPONENT_TYPE(PlayerNotificationQueue)
+};
+
 } // namespace components
 } // namespace atlas
 

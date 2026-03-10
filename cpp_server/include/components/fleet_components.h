@@ -934,6 +934,46 @@ public:
     COMPONENT_TYPE(NpcFleetComposition)
 };
 
+// ---------------------------------------------------------------------------
+// FleetAfterActionReport — post-combat fleet performance summary
+// ---------------------------------------------------------------------------
+/**
+ * @brief Records and summarises fleet performance in a combat engagement.
+ *
+ * Opened via startReport(), updated with recordKill/recordLoss/
+ * recordDamageDealt/recordDamageReceived/recordLootShared per fleet
+ * member, then sealed with finalizeReport().  After finalisation the
+ * data is immutable.  getMVP() returns the pilot_id with the highest
+ * damage dealt.
+ */
+class FleetAfterActionReport : public ecs::Component {
+public:
+    enum class State { Idle, Recording, Finalized };
+
+    struct MemberStats {
+        std::string pilot_id;
+        int   kills           = 0;
+        int   losses          = 0;
+        float damage_dealt    = 0.0f;
+        float damage_received = 0.0f;
+        float loot_shared     = 0.0f;
+    };
+
+    State                     state            = State::Idle;
+    std::vector<MemberStats>  members;
+    int                       total_kills      = 0;
+    int                       total_losses     = 0;
+    float                     total_damage     = 0.0f;  // fleet aggregate
+    float                     total_loot       = 0.0f;
+    int                       max_members      = 25;
+    int                       total_reports    = 0;
+    float                     duration         = 0.0f;  // engagement length (s)
+    float                     elapsed          = 0.0f;
+    bool                      active           = true;
+
+    COMPONENT_TYPE(FleetAfterActionReport)
+};
+
 } // namespace components
 } // namespace atlas
 
