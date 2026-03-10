@@ -1436,6 +1436,150 @@ public:
     COMPONENT_TYPE(MutaplasmidState)
 };
 
+/**
+ * @brief Planet scan result state for Planetary Operations
+ *
+ * Tracks active scanning probes launched at a planet, stores scan
+ * results (resource type + richness) and the overall scan progress.
+ */
+class PlanetScanState : public ecs::Component {
+public:
+    struct ScanResult {
+        std::string resource_type;    // e.g. "base_metals"
+        float richness = 0.0f;        // 0.0 – 1.0 (poor … rich)
+        bool confirmed = false;
+    };
+
+    std::string planet_id;
+    std::string planet_type;          // "barren", "temperate", etc.
+    bool scanning = false;
+    float scan_strength = 0.0f;       // probe strength (0–100)
+    float scan_progress = 0.0f;       // 0–100 %
+    float scan_duration = 60.0f;      // seconds to complete a full scan
+    float scan_elapsed = 0.0f;
+    std::vector<ScanResult> results;
+    int probes_launched = 0;
+    int total_scans_completed = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(PlanetScanState)
+};
+
+/**
+ * @brief Planetary-Operations customs office state
+ *
+ * Handles export of PI products from a planet to orbit.  Maintains a
+ * queue of pending export batches; each batch completes after a
+ * configurable delay and incurs an export tax.
+ */
+class PiCustomsState : public ecs::Component {
+public:
+    struct ExportBatch {
+        std::string batch_id;
+        std::string colony_id;
+        std::string resource_type;
+        int quantity = 0;
+        float tax_rate = 0.10f;        // 10 % default
+        float export_duration = 300.0f;// seconds
+        float progress = 0.0f;
+        bool completed = false;
+        bool cancelled = false;
+    };
+
+    std::string customs_office_id;
+    std::string system_id;
+    bool player_owned = false;
+    float tax_rate_corp = 0.05f;       // reduced rate for corp members
+    float tax_rate_stranger = 0.15f;   // rate for others
+    std::vector<ExportBatch> batches;
+    int max_concurrent = 5;
+    int total_exported = 0;
+    int total_batches = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(PiCustomsState)
+};
+
+/**
+ * @brief Tech-II / faction / deadspace module catalogue and crafting state
+ *
+ * Manages a per-character (or per-facility) list of module upgrade
+ * recipes.  Supported categories:
+ *   Tech2     – manufactured via Invention
+ *   Faction   – rare NPC drops (no recipe; loot-table sourced)
+ *   Deadspace – exploration-site drops
+ * Meta levels track item quality; higher = stronger but harder to obtain.
+ */
+class Tech2ModuleState : public ecs::Component {
+public:
+    enum class ModuleCategory { Base, Tech2, Faction, Deadspace };
+
+    struct ModuleEntry {
+        std::string module_id;
+        std::string base_module_id;       // the T1 parent
+        ModuleCategory category = ModuleCategory::Base;
+        int meta_level = 0;               // 0=base, 5=T2, 6=faction, 7=deadspace
+        float stat_multiplier = 1.0f;     // stat improvement over base
+        bool unlocked = false;            // player has obtained at least one
+        int quantity_owned = 0;
+    };
+
+    struct LootTableEntry {
+        std::string source_site;          // "anomaly", "deadspace_pocket", "faction_npc"
+        std::string module_id;
+        float drop_chance = 0.01f;        // 0–1
+    };
+
+    std::string owner_id;
+    std::vector<ModuleEntry> modules;
+    std::vector<LootTableEntry> loot_table;
+    int max_modules = 500;
+    int total_tech2_acquired = 0;
+    int total_faction_acquired = 0;
+    int total_deadspace_acquired = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(Tech2ModuleState)
+};
+
+/**
+ * @brief Capital ship component manufacturing state
+ *
+ * Tracks production jobs for capital-specific components
+ * (e.g. Capital Armor Plates, Capital Capacitor Batteries).
+ * Each job consumes raw materials and produces a capital component
+ * after a time proportional to ME/TE research levels.
+ */
+class CapitalComponentState : public ecs::Component {
+public:
+    struct CapitalJob {
+        std::string job_id;
+        std::string component_type;       // e.g. "cap_armor_plate"
+        std::string blueprint_id;
+        int runs = 1;
+        float time_per_run = 28800.0f;    // 8 hours default
+        float me_bonus = 0.0f;            // material efficiency reduction (0–1)
+        float te_bonus = 0.0f;            // time efficiency reduction (0–1)
+        float progress = 0.0f;            // 0–1
+        bool completed = false;
+        bool cancelled = false;
+        int units_produced = 0;
+    };
+
+    std::string facility_id;
+    std::vector<CapitalJob> jobs;
+    int max_concurrent_jobs = 2;
+    int total_completed = 0;
+    int total_units_produced = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(CapitalComponentState)
+};
+
 } // namespace components
 } // namespace atlas
 

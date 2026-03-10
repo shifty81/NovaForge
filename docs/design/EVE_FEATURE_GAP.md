@@ -121,10 +121,10 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Not implemented
 **Implementation Needed:**
-- [ ] Planet scanning
-- [ ] Resource extraction
-- [ ] Production chains
-- [ ] Customs offices
+- [x] Planet scanning (`planet_scan_system.h`)
+- [x] Resource extraction (`planet_scan_system.h`, `pi_system.h`)
+- [x] Production chains (`pi_system.h`)
+- [x] Customs offices (`pi_customs_system.h`)
 
 ---
 
@@ -154,9 +154,9 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 **Current Status:** Basic modules exist, implant data defined
 **Implementation Needed:**
-- [ ] Tech II module variants
-- [ ] Faction module drops
-- [ ] Deadspace loot tables
+- [x] Tech II module variants (`tech2_module_system.h`)
+- [x] Faction module drops (`tech2_module_system.h`)
+- [x] Deadspace loot tables (`tech2_module_system.h`)
 - [x] Meta level system (0-5+)
 - [x] Implant data with slots and grades (`data/character_creation/implants.json`)
 
@@ -176,7 +176,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] Time Efficiency research
 - [x] Invention mechanics
 - [x] Reaction formulas
-- [ ] Capital components
+- [x] Capital components (`capital_component_system.h`)
 
 ---
 
