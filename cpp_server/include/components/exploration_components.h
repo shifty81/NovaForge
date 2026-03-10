@@ -1220,6 +1220,116 @@ public:
     COMPONENT_TYPE(SleeperCacheState)
 };
 
+// ==================== Abyssal Filament ====================
+
+/**
+ * @brief Abyssal Deadspace filament state
+ *
+ * Tracks a pilot's progress through an Abyssal Deadspace run.
+ * Activating a filament opens a series of up to three sequential
+ * time-limited pockets.  All pockets must be cleared before the
+ * overall timer expires or the pilot is destroyed.
+ */
+class AbyssalFilamentState : public ecs::Component {
+public:
+    enum class FilamentType { Electrical, DarkMatter, ExoticPlasma, Gamma, Firestorm };
+    enum class Tier { T1 = 1, T2, T3, T4, T5 };
+
+    struct PocketEntry {
+        std::string pocket_id;
+        FilamentType type = FilamentType::Electrical;
+        Tier tier = Tier::T1;
+        float time_limit = 1200.0f;    // seconds (20 min)
+        float time_remaining = 1200.0f;
+        bool completed = false;
+        bool failed = false;           // timer expired
+    };
+
+    std::string pilot_id;
+    std::vector<PocketEntry> pockets;  // up to max_pockets entries
+    int current_pocket = 0;            // 0-based index into pockets
+    int max_pockets = 3;
+    int filaments_consumed = 0;
+    int pockets_completed = 0;
+    int pockets_failed = 0;
+    float elapsed = 0.0f;
+    bool active = false;               // false until filament activated
+
+    COMPONENT_TYPE(AbyssalFilamentState)
+};
+
+// ==================== Abyssal Weather ====================
+
+/**
+ * @brief Abyssal Deadspace weather effect state
+ *
+ * Each Abyssal pocket has a weather type that applies global
+ * modifiers to ship systems.  Intensity scales with filament tier.
+ */
+class AbyssalWeatherState : public ecs::Component {
+public:
+    enum class WeatherType { None, Electrical, DarkMatter, ExoticPlasma, Gamma, Firestorm };
+
+    struct WeatherEffect {
+        float turret_optimal_modifier = 1.0f;
+        float missile_velocity_modifier = 1.0f;
+        float drone_speed_modifier = 1.0f;
+        float shield_hp_modifier = 1.0f;
+        float armor_hp_modifier = 1.0f;
+        float hull_hp_modifier = 1.0f;
+        float capacitor_recharge_modifier = 1.0f;
+        float propulsion_modifier = 1.0f;
+        float ew_strength_modifier = 1.0f;
+        float visibility_modifier = 1.0f;
+    };
+
+    std::string pocket_id;
+    WeatherType current_weather = WeatherType::None;
+    WeatherEffect effect;
+    int tier = 1;
+    float intensity = 0.0f;  // 0 until weather is set; 1.0 at T1 → 5.0 at T5
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(AbyssalWeatherState)
+};
+
+// ==================== Abyssal Escalation ====================
+
+/**
+ * @brief Abyssal Deadspace pocket escalation state
+ *
+ * Each pocket contains three sequential waves of Triglavian NPCs.
+ * The third wave spawns a boss whose loot scales with filament tier.
+ * Completing all waves unlocks the exit filament.
+ */
+class AbyssalEscalationState : public ecs::Component {
+public:
+    enum class EscalationPhase { Wave1, Wave2, Boss };
+
+    struct WaveConfig {
+        int npc_count = 5;
+        float npc_base_hp = 5000.0f;
+        float npc_base_dps = 200.0f;
+        bool completed = false;
+    };
+
+    std::string pocket_id;
+    EscalationPhase current_phase = EscalationPhase::Wave1;
+    std::vector<WaveConfig> waves;  // indices 0-2: Wave1, Wave2, Boss
+    int tier = 1;
+    bool boss_spawned = false;
+    bool boss_killed = false;
+    bool run_completed = false;
+    float dps_received = 0.0f;
+    int enemies_killed = 0;
+    int total_loot_value = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(AbyssalEscalationState)
+};
+
 } // namespace components
 } // namespace atlas
 
