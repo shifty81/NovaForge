@@ -149,7 +149,7 @@ static void testCitadelFuelConsumption() {
     comp->fuel_remaining = 5.0f;
 
     sys.update(3.0f);  // consume 3 fuel
-    assertTrue(approxEqual(sys.getFuelRemaining("c1"), 2.0f, 0.1f), "Fuel decreased after tick");
+    assertTrue(approxEqual(sys.getFuelRemaining("c1"), 2.0f), "Fuel decreased after tick");
 
     sys.update(3.0f);  // consume 3 more, exceeds remaining
     assertTrue(approxEqual(sys.getFuelRemaining("c1"), 0.0f), "Fuel depleted to zero");
