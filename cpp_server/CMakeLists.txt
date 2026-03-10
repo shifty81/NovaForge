@@ -412,7 +412,9 @@ set(CORE_SOURCES
     src/systems/player_spawn_system.cpp
     src/systems/d_scan_system.cpp
     src/systems/kill_report_system.cpp
-    src/systems/sleeper_cache_system.cpp
+    src/systems/respawn_selection_system.cpp
+    src/systems/tutorial_system.cpp
+    src/systems/trade_window_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -851,6 +853,9 @@ set(SERVER_HEADERS
     include/systems/control_mode_context_system.h
     include/systems/construction_placement_system.h
     include/systems/hull_class_capability_system.h
+    include/systems/respawn_selection_system.h
+    include/systems/tutorial_system.h
+    include/systems/trade_window_system.h
 )
 
 # Steam SDK configuration

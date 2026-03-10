@@ -422,6 +422,9 @@ void run_session_manager_system_tests();
 void run_player_spawn_system_tests();
 void run_d_scan_system_tests();
 void run_kill_report_system_tests();
+void run_respawn_selection_system_tests();
+void run_tutorial_system_tests();
+void run_trade_window_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -841,6 +844,9 @@ int main() {
     run_player_spawn_system_tests();
     run_d_scan_system_tests();
     run_kill_report_system_tests();
+    run_respawn_selection_system_tests();
+    run_tutorial_system_tests();
+    run_trade_window_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
