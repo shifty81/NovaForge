@@ -201,10 +201,10 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - Warp disruption bubbles (null-sec)
 
 ### 14. **EWAR Expanded**
-- Remote sensor dampening
-- ECM jamming
-- Tracking disruption
-- Guidance disruption (missiles)
+- [x] Remote sensor dampening (`sensor_dampening_system.h`)
+- [x] ECM jamming (`ecm_jamming_system.h`)
+- [x] Tracking disruption (`tracking_disruption_system.h`)
+- [x] Guidance disruption (missiles) (`tracking_disruption_system.h`)
 
 ### 15. **Abyssal Deadspace**
 - [x] Filament entry system (`abyssal_filament_system.h`)

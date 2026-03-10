@@ -1019,6 +1019,143 @@ public:
     COMPONENT_TYPE(PlayerSessionStats)
 };
 
+// ---------------------------------------------------------------------------
+// EcmJammingState — ECM electronic-countermeasures jamming
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks active ECM jammers applied to this entity.
+ *
+ * ECM jammers attempt to break the target's ability to lock onto any ship.
+ * Each cycle a randomised jam attempt is resolved: jam succeeds when
+ * (jam_strength / sensor_strength) >= random(0,1).  While jammed the entity
+ * cannot start or maintain target locks.  Multiple jammers stack additively
+ * in strength.  Each jammer has an independent cycle timer; completing a
+ * cycle either re-applies (on success) or falls off (on failure).
+ */
+class EcmJammingState : public ecs::Component {
+public:
+    struct Jammer {
+        std::string source_id;
+        float       jam_strength  = 1.0f;  // ECM strength points
+        float       cycle_time    = 5.0f;  // seconds per jam cycle
+        float       cycle_elapsed = 0.0f;
+        bool        currently_jamming = false;
+    };
+
+    float sensor_strength       = 10.0f;  // base sensor strength of this entity
+    bool  is_jammed             = false;  // true while at least one jam succeeded
+    int   max_jammers           = 10;
+
+    std::vector<Jammer> jammers;
+
+    int   total_jams_applied    = 0;  // cumulative successful jam cycles
+    int   total_jam_attempts    = 0;  // cumulative jam cycle attempts
+    int   total_lock_breaks     = 0;  // times jamming cleared active locks
+    float elapsed               = 0.0f;
+    bool  active                = true;
+
+    COMPONENT_TYPE(EcmJammingState)
+};
+
+// ---------------------------------------------------------------------------
+// SensorDampeningState — remote sensor dampening
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks active sensor dampeners applied to this entity.
+ *
+ * Sensor dampeners reduce targeting range and scan resolution.  Each
+ * dampener contributes a multiplicative factor (0 < factor <= 1.0).  The
+ * effective_range_factor and effective_scan_res_factor represent the net
+ * product of all active dampeners; the entity's UI caps the displayed lock
+ * range and scan resolution by these factors.  Dampeners have a finite
+ * cycle; they are removed when the source stops cycling.
+ */
+class SensorDampeningState : public ecs::Component {
+public:
+    struct Dampener {
+        std::string source_id;
+        float range_reduction    = 0.25f;  // fraction removed from lock range (0-1)
+        float scan_res_reduction = 0.25f;  // fraction removed from scan resolution (0-1)
+        float cycle_time         = 5.0f;
+        float cycle_elapsed      = 0.0f;
+        bool  active             = true;
+    };
+
+    float base_lock_range        = 100.0f; // km
+    float base_scan_resolution   = 400.0f; // mm
+    float effective_lock_range   = 100.0f; // km (after dampeners)
+    float effective_scan_res     = 400.0f; // mm (after dampeners)
+
+    int   max_dampeners          = 10;
+    std::vector<Dampener> dampeners;
+
+    int   total_dampeners_applied = 0;
+    int   total_dampener_cycles   = 0;
+    float elapsed                 = 0.0f;
+    bool  active_flag             = true;
+
+    COMPONENT_TYPE(SensorDampeningState)
+};
+
+// ---------------------------------------------------------------------------
+// TrackingDisruptionState — turret tracking + missile guidance disruption
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks active tracking disruptors and guidance disruptors.
+ *
+ * Tracking disruptors reduce turret tracking speed and optimal range.
+ * Guidance disruptors increase missile explosion radius and reduce explosion
+ * velocity (causing missiles to deal less damage to small/fast targets).
+ * Both module types stack additively in reduction percentage.  Effective
+ * values are recomputed whenever the disruptor list changes.
+ */
+class TrackingDisruptionState : public ecs::Component {
+public:
+    struct TrackingDisruptor {
+        std::string source_id;
+        float tracking_speed_reduction = 0.30f; // fraction removed (0-1)
+        float optimal_range_reduction  = 0.30f; // fraction removed (0-1)
+        float cycle_time               = 5.0f;
+        float cycle_elapsed            = 0.0f;
+        bool  active                   = true;
+    };
+
+    struct GuidanceDisruptor {
+        std::string source_id;
+        float explosion_radius_increase   = 0.30f; // fraction added (0+)
+        float explosion_velocity_reduction = 0.30f; // fraction removed (0-1)
+        float cycle_time                  = 5.0f;
+        float cycle_elapsed               = 0.0f;
+        bool  active                      = true;
+    };
+
+    // Turret base values
+    float base_tracking_speed    = 1.0f;   // radians per second (normalised)
+    float base_optimal_range     = 50.0f;  // km
+
+    float effective_tracking_speed = 1.0f;
+    float effective_optimal_range  = 50.0f;
+
+    // Missile base values
+    float base_explosion_radius    = 40.0f;  // m
+    float base_explosion_velocity  = 200.0f; // m/s
+
+    float effective_explosion_radius   = 40.0f;
+    float effective_explosion_velocity = 200.0f;
+
+    int   max_disruptors          = 10;
+
+    std::vector<TrackingDisruptor>  tracking_disruptors;
+    std::vector<GuidanceDisruptor>  guidance_disruptors;
+
+    int   total_tracking_disruptors_applied  = 0;
+    int   total_guidance_disruptors_applied  = 0;
+    float elapsed                            = 0.0f;
+    bool  active                             = true;
+
+    COMPONENT_TYPE(TrackingDisruptionState)
+};
+
 } // namespace components
 } // namespace atlas
 
