@@ -450,6 +450,9 @@ void run_warp_auto_comfort_system_tests();
 void run_combat_timer_system_tests();
 void run_player_notification_queue_system_tests();
 void run_fleet_after_action_report_system_tests();
+void run_ecm_jamming_system_tests();
+void run_sensor_dampening_system_tests();
+void run_tracking_disruption_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -897,6 +900,9 @@ int main() {
     run_combat_timer_system_tests();
     run_player_notification_queue_system_tests();
     run_fleet_after_action_report_system_tests();
+    run_ecm_jamming_system_tests();
+    run_sensor_dampening_system_tests();
+    run_tracking_disruption_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

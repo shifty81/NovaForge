@@ -420,6 +420,9 @@ set(CORE_SOURCES
     src/systems/combat_timer_system.cpp
     src/systems/player_notification_queue_system.cpp
     src/systems/fleet_after_action_report_system.cpp
+    src/systems/ecm_jamming_system.cpp
+    src/systems/sensor_dampening_system.cpp
+    src/systems/tracking_disruption_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -866,6 +869,9 @@ set(SERVER_HEADERS
     include/systems/combat_timer_system.h
     include/systems/player_notification_queue_system.h
     include/systems/fleet_after_action_report_system.h
+    include/systems/ecm_jamming_system.h
+    include/systems/sensor_dampening_system.h
+    include/systems/tracking_disruption_system.h
 )
 
 # Steam SDK configuration
