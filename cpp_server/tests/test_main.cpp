@@ -456,6 +456,9 @@ void run_tracking_disruption_system_tests();
 void run_ship_skin_system_tests();
 void run_propulsion_module_system_tests();
 void run_citadel_management_system_tests();
+void run_character_portrait_system_tests();
+void run_inertia_modifier_system_tests();
+void run_alliance_management_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -909,6 +912,9 @@ int main() {
     run_ship_skin_system_tests();
     run_propulsion_module_system_tests();
     run_citadel_management_system_tests();
+    run_character_portrait_system_tests();
+    run_inertia_modifier_system_tests();
+    run_alliance_management_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

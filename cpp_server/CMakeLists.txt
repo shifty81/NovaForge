@@ -426,6 +426,9 @@ set(CORE_SOURCES
     src/systems/ship_skin_system.cpp
     src/systems/propulsion_module_system.cpp
     src/systems/citadel_management_system.cpp
+    src/systems/character_portrait_system.cpp
+    src/systems/inertia_modifier_system.cpp
+    src/systems/alliance_management_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp

@@ -184,12 +184,12 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 ### 11. **Character Customization**
 - [x] Ship skins and paint jobs (`ship_skin_system.h`)
-- Character portraits
+- [x] Character portraits (`character_portrait_system.h`)
 - Corporation logos
 - Structure skins
 
 ### 12. **Social Features (Enhanced)**
-- Alliance system
+- [x] Alliance system (`alliance_management_system.h`)
 - Corporation wars
 - Wardec mechanics
 - [x] Citadel structures (`citadel_management_system.h`)
@@ -197,7 +197,7 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 ### 13. **Advanced Movement**
 - [x] Microwarp drive signature bloom (`propulsion_module_system.h`)
 - [x] Afterburner mechanics (`propulsion_module_system.h`)
-- Inertia modifiers
+- [x] Inertia modifiers (`inertia_modifier_system.h`)
 - Warp disruption bubbles (null-sec)
 
 ### 14. **EWAR Expanded**

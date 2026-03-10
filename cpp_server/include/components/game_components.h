@@ -2304,6 +2304,76 @@ public:
     COMPONENT_TYPE(ShipSkinCollection)
 };
 
+// ---------------------------------------------------------------------------
+// CharacterPortrait — character portrait customization presets
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks a character's portrait customization presets.
+ *
+ * Each PortraitPreset specifies background, lighting, pose, expression,
+ * and camera angle.  One preset is designated active at a time.
+ * Presets are capped at max_presets (default 10).  total_updates counts
+ * the number of field edits applied to the active preset.
+ */
+class CharacterPortrait : public ecs::Component {
+public:
+    struct PortraitPreset {
+        std::string preset_id;
+        std::string name;
+        std::string background;
+        std::string lighting;
+        std::string pose;
+        std::string expression;
+        float       camera_angle = 0.0f;
+    };
+
+    std::string character_name;
+    std::string active_preset_id;
+    std::vector<PortraitPreset> presets;
+    int   max_presets    = 10;
+    int   total_updates  = 0;
+    float elapsed        = 0.0f;
+    bool  active         = true;
+
+    COMPONENT_TYPE(CharacterPortrait)
+};
+
+// ---------------------------------------------------------------------------
+// AllianceState — alliance creation and membership management
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks an alliance entity's membership roster and state.
+ *
+ * An alliance is a group of corporations under one banner.  One
+ * corporation is designated the executor (leader).  Members can
+ * be added or removed, the executor can be changed, and the
+ * alliance can be disbanded.  max_members defaults to 50.
+ */
+class AllianceState : public ecs::Component {
+public:
+    enum class State { Active, Disbanded };
+
+    struct AllianceMember {
+        std::string corp_id;
+        std::string corp_name;
+        float       joined_timestamp = 0.0f;
+        bool        is_executor      = false;
+    };
+
+    std::string alliance_id;
+    std::string alliance_name;
+    std::string ticker;
+    std::string executor_corp_id;
+    State       state               = State::Active;
+    std::vector<AllianceMember> members;
+    int   max_members              = 50;
+    int   total_members_joined     = 0;
+    float elapsed                  = 0.0f;
+    bool  active                   = true;
+
+    COMPONENT_TYPE(AllianceState)
+};
+
 } // namespace components
 } // namespace atlas
 
