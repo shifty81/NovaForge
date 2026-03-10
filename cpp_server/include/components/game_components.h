@@ -2374,6 +2374,120 @@ public:
     COMPONENT_TYPE(AllianceState)
 };
 
+// ---------------------------------------------------------------------------
+// CorporationLogo — corporation emblem layer stack
+// ---------------------------------------------------------------------------
+/**
+ * @brief Manages a corporation's visual emblem as a stack of logo layers.
+ *
+ * Each layer has a type (Background/Foreground/Overlay), color, opacity,
+ * scale and positional offsets.  One layer may be designated the "active"
+ * layer for quick editing.  The logo can be published (locked for display)
+ * or remain a draft.  The collection is capped at max_layers (default 5).
+ * total_edits counts all modifications across the logo's lifetime.
+ */
+class CorporationLogo : public ecs::Component {
+public:
+    enum class LayerType { Background, Foreground, Overlay };
+
+    struct LogoLayer {
+        std::string layer_id;
+        std::string name;
+        LayerType   type      = LayerType::Foreground;
+        std::string color;           // e.g. "#FF4400" or named color
+        float       opacity   = 1.0f;  // 0.0 – 1.0
+        float       scale     = 1.0f;  // > 0
+        float       offset_x  = 0.0f;
+        float       offset_y  = 0.0f;
+    };
+
+    std::string corp_id;
+    std::string corp_name;
+    std::string active_layer_id;
+    bool        published     = false;
+    std::vector<LogoLayer> layers;
+    int   max_layers          = 5;
+    int   total_edits         = 0;
+    float elapsed             = 0.0f;
+    bool  active              = true;
+
+    COMPONENT_TYPE(CorporationLogo)
+};
+
+// ---------------------------------------------------------------------------
+// StructureSkinCollection — Upwell structure cosmetic skin collection
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks a player/corp's collection of Upwell structure skins and
+ *        which one is currently applied to a given structure.
+ *
+ * Structure types mirror the citadel hierarchy.  Only one skin may be
+ * applied at a time; applying a new one automatically removes the previous.
+ * The collection is capped at max_skins (default 50).  total_acquired counts
+ * lifetime acquisitions including removed skins.
+ */
+class StructureSkinCollection : public ecs::Component {
+public:
+    enum class StructureType {
+        Astrahus, Fortizar, Keepstar,
+        Athanor, Tatara,
+        Raitaru, Azbel, Sotiyo
+    };
+    enum class Rarity { Common, Uncommon, Rare, Epic, Legendary };
+
+    struct StructureSkin {
+        std::string   skin_id;
+        std::string   name;
+        StructureType structure_type = StructureType::Astrahus;
+        Rarity        rarity         = Rarity::Common;
+        std::string   color_primary;
+        std::string   color_secondary;
+        bool          applied        = false;
+    };
+
+    std::string owner_id;
+    std::vector<StructureSkin> skins;
+    int   max_skins       = 50;
+    int   total_acquired  = 0;
+    float elapsed         = 0.0f;
+    bool  active          = true;
+
+    COMPONENT_TYPE(StructureSkinCollection)
+};
+
+// ---------------------------------------------------------------------------
+// SkillInjectorState — skill-point extractor and injector management
+// ---------------------------------------------------------------------------
+/**
+ * @brief Models the EVE Online skill injector/extractor mechanic.
+ *
+ * A character can extract unallocated skill points into injector items.
+ * Other characters can inject those SP at a reduced rate once they exceed
+ * the SP threshold (5 M SP: full dose; 5–50 M: 80%; 50–80 M: 60%; > 80 M: 40%).
+ * Injectors are capped at max_injectors (default 20).
+ * total_extracted / total_injected are cumulative counters.
+ */
+class SkillInjectorState : public ecs::Component {
+public:
+    struct InjectorItem {
+        std::string injector_id;
+        int         skill_points   = 500000;  // raw SP stored in the vial
+        std::string source_pilot_id;           // who extracted it
+        bool        used           = false;
+    };
+
+    std::vector<InjectorItem> injectors;
+    int   unallocated_sp          = 0;        // SP available for extraction
+    int   total_sp                = 0;        // lifetime total SP (for dose calc)
+    int   max_injectors           = 20;
+    int   total_extracted         = 0;        // cumulative SP extracted
+    int   total_injected          = 0;        // cumulative SP injected
+    float elapsed                 = 0.0f;
+    bool  active                  = true;
+
+    COMPONENT_TYPE(SkillInjectorState)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -185,8 +185,8 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 ### 11. **Character Customization**
 - [x] Ship skins and paint jobs (`ship_skin_system.h`)
 - [x] Character portraits (`character_portrait_system.h`)
-- Corporation logos
-- Structure skins
+- [x] Corporation logos (`corporation_logo_system.h`)
+- [x] Structure skins (`structure_skin_system.h`)
 
 ### 12. **Social Features (Enhanced)**
 - [x] Alliance system (`alliance_management_system.h`)
