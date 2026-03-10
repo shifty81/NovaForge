@@ -644,6 +644,39 @@ public:
     COMPONENT_TYPE(GateGunState)
 };
 
+/**
+ * @brief NPC aggression switching state
+ *
+ * Tracks threat values for each attacker and determines which target
+ * the NPC should prioritise.  Threat is accumulated from DPS, EWAR,
+ * and proximity bonuses.  The highest-threat target becomes the
+ * primary, with optional hysteresis to avoid constant switching.
+ */
+class AggressionSwitchingState : public ecs::Component {
+public:
+    struct ThreatEntry {
+        std::string entity_id;
+        float accumulated_threat = 0.0f;   // running total
+        float dps_contribution = 0.0f;     // recent DPS from this source
+        float ewar_contribution = 0.0f;    // electronic warfare threat
+        float proximity_bonus = 0.0f;      // close-range bonus
+        float time_on_list = 0.0f;
+    };
+
+    std::string current_target_id;
+    std::vector<ThreatEntry> threat_table;
+    float switch_threshold = 1.2f;         // new target must exceed current by 20%
+    float threat_decay_rate = 0.1f;        // per-second decay on all entries
+    float evaluation_interval = 2.0f;      // seconds between re-evaluations
+    float evaluation_timer = 0.0f;
+    int total_switches = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+    bool locked = false;                   // if true, ignore re-evaluation
+
+    COMPONENT_TYPE(AggressionSwitchingState)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -1973,6 +1973,36 @@ public:
     COMPONENT_TYPE(ConstructionPlacementState)
 };
 
+/**
+ * @brief Relay (jump) clone state
+ *
+ * Manages relay clones installed at stations.  Characters can
+ * jump to a relay clone once per cooldown period, transferring
+ * consciousness.  Implants in the origin body are preserved but
+ * the destination body has its own implant set.
+ */
+class RelayCloneState : public ecs::Component {
+public:
+    struct CloneEntry {
+        std::string clone_id;
+        std::string station_id;
+        std::string station_name;
+        std::vector<std::string> implants;  // implant type IDs
+        float install_time = 0.0f;          // game-time when installed
+    };
+
+    std::string character_id;
+    float jump_cooldown = 86400.0f;       // 24-hour default (seconds)
+    float cooldown_remaining = 0.0f;
+    int max_clones = 1;                   // increased by Infomorph Psychology
+    std::vector<CloneEntry> clones;
+    int total_jumps = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(RelayCloneState)
+};
+
 } // namespace components
 } // namespace atlas
 

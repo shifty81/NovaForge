@@ -405,6 +405,43 @@ public:
     COMPONENT_TYPE(NpcSpawnSchedule)
 };
 
+/**
+ * @brief Officer / Commander NPC spawn state
+ *
+ * Controls the random spawning of rare officer-grade NPCs that drop
+ * faction/officer loot.  Officers have a very low base spawn chance
+ * that increases with system activity and time since last spawn.
+ */
+class OfficerSpawnState : public ecs::Component {
+public:
+    enum class OfficerRank { Commander, Captain, Admiral };
+
+    struct OfficerRecord {
+        std::string officer_id;
+        std::string npc_type;       // e.g. "serpentis_admiral"
+        OfficerRank rank = OfficerRank::Commander;
+        float bounty_multiplier = 5.0f;
+        float loot_quality = 1.0f;  // 1.0 = faction, 2.0 = officer, 3.0 = deadspace
+        bool alive = true;
+        float time_alive = 0.0f;
+    };
+
+    std::string system_id;
+    float base_spawn_chance = 0.001f;   // per evaluation tick
+    float spawn_chance_increase = 0.0005f; // added per minute since last spawn
+    float current_spawn_chance = 0.001f;
+    float evaluation_interval = 60.0f;  // seconds between spawn-chance rolls
+    float evaluation_timer = 0.0f;
+    float time_since_last_spawn = 0.0f;
+    int max_officers = 1;
+    std::vector<OfficerRecord> officers;
+    int total_spawned = 0;
+    int total_killed = 0;
+    float elapsed = 0.0f;
+    bool active = true;
+
+    COMPONENT_TYPE(OfficerSpawnState)
+};
 
 } // namespace components
 } // namespace atlas
