@@ -93,7 +93,7 @@ static void testMarketWatchlistBuyAlert() {
     sys.initialize("p1");
     sys.addEntry("p1", "tritanium", "Tritanium", 5.50f);
 
-    // Buy alert fires when price drops BELOW threshold
+    // Buy alert fires when price drops AT OR BELOW threshold
     assertTrue(sys.setBuyThreshold("p1", "tritanium", 5.0f), "Set buy threshold");
     assertTrue(!sys.hasBuyAlert("p1", "tritanium"), "No alert yet");
     assertTrue(sys.getPendingAlertCount("p1") == 0, "No pending alerts");
@@ -117,7 +117,7 @@ static void testMarketWatchlistSellAlert() {
     sys.initialize("p1");
     sys.addEntry("p1", "plex", "PLEX", 1500000.0f);
 
-    // Sell alert fires when price rises ABOVE threshold
+    // Sell alert fires when price rises AT OR ABOVE threshold
     assertTrue(sys.setSellThreshold("p1", "plex", 2000000.0f), "Set sell threshold");
     assertTrue(!sys.hasSellAlert("p1", "plex"), "No alert yet");
 
