@@ -186,6 +186,10 @@ void Application::initialize() {
     // Wire pause menu callbacks
     m_pauseMenu->setResumeCallback([this]() {
         std::cout << "[PauseMenu] Resumed" << std::endl;
+        // Re-capture FPS cursor so mouse look resumes immediately
+        if (isInFPSMode()) {
+            captureFPSCursor();
+        }
     });
     m_pauseMenu->setSaveCallback([this]() {
         std::cout << "[PauseMenu] Save requested" << std::endl;
@@ -277,23 +281,32 @@ void Application::initialize() {
 
         // ESC toggles pause menu (instead of quitting)
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-            // In FPS mode: always release the cursor so the pause menu (and
-            // any other UI) is immediately interactive.  Warp the tracked
-            // mouse position to the screen centre so that the Atlas UI
-            // receives a valid absolute coordinate on the very next frame.
-            if (isInFPSMode() && m_fpsCursorCaptured) {
-                releaseFPSCursor();
-                if (m_window && m_window->getHandle()) {
-                    int w = m_window->getWidth();
-                    int h = m_window->getHeight();
-                    double cx = w * 0.5;
-                    double cy = h * 0.5;
-                    glfwSetCursorPos(m_window->getHandle(), cx, cy);
-                    m_inputHandler->warpMousePosition(cx, cy);
+            if (m_pauseMenu->isOpen()) {
+                // Closing the pause menu
+                m_pauseMenu->toggle();
+                // Re-capture FPS cursor so mouse look resumes immediately
+                if (isInFPSMode()) {
+                    captureFPSCursor();
                 }
+            } else {
+                // Opening the pause menu
+                // In FPS mode: release the cursor so the pause menu (and
+                // any other UI) is immediately interactive.  Warp the tracked
+                // mouse position to the screen centre so that the Atlas UI
+                // receives a valid absolute coordinate on the very next frame.
+                if (isInFPSMode() && m_fpsCursorCaptured) {
+                    releaseFPSCursor();
+                    if (m_window && m_window->getHandle()) {
+                        int w = m_window->getWidth();
+                        int h = m_window->getHeight();
+                        double cx = w * 0.5;
+                        double cy = h * 0.5;
+                        glfwSetCursorPos(m_window->getHandle(), cx, cy);
+                        m_inputHandler->warpMousePosition(cx, cy);
+                    }
+                }
+                m_pauseMenu->toggle();
             }
-
-            m_pauseMenu->toggle();
             return;
         }
 

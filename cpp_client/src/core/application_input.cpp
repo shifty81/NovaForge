@@ -612,9 +612,10 @@ void Application::updateOnFootMovement(float deltaTime) {
     // ── Compute character-relative movement direction from yaw ────────
     // m_fpsYaw is kept in sync with the camera by handleMouseMove, so
     // "forward" always points the same direction the player is looking.
+    // Convention: yaw=0 → forward along -Z (into the screen).
     float yawRad = glm::radians(m_fpsYaw);
-    glm::vec3 forward(std::sin(yawRad), 0.0f, std::cos(yawRad));
-    glm::vec3 right(std::cos(yawRad), 0.0f, -std::sin(yawRad));
+    glm::vec3 forward(std::sin(yawRad), 0.0f, -std::cos(yawRad));
+    glm::vec3 right(std::cos(yawRad), 0.0f, std::sin(yawRad));
 
     glm::vec3 moveDir = forward * moveZ + right * moveX;
     if (glm::length(moveDir) > 0.01f) {
@@ -695,8 +696,9 @@ void Application::updateFlightMovement(float deltaTime) {
     glm::vec3 camForward = m_camera->getFPSForward();
     // Right vector is perpendicular to forward in the XZ plane (no Y tilt
     // for strafing so it feels natural — same as standard FPS/EVA controls).
+    // Convention: yaw=0 → forward along -Z, right along +X.
     float yawRad = glm::radians(m_fpsYaw);
-    glm::vec3 right(std::cos(yawRad), 0.0f, -std::sin(yawRad));
+    glm::vec3 right(std::cos(yawRad), 0.0f, std::sin(yawRad));
     glm::vec3 up(0.0f, 1.0f, 0.0f);
 
     glm::vec3 moveDir = camForward * moveZ + right * moveX + up * moveY;

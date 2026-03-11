@@ -659,39 +659,197 @@ void AtlasTitleScreen::renderCharacterPreviewViewport(AtlasContext& ctx, Rect ar
         return;
     }
 
-    // ── Fake 3D projection: draw character as stacked body-part boxes ──
-    // The orbit camera yaw/pitch controls the perspective illusion.
-    // Since this is a 2D UI renderer, we approximate the 3rd-person view
-    // by projecting body part boxes with a pseudo-3D offset based on the
-    // camera yaw, giving the effect of viewing the character from behind.
+    // ── 3D perspective projection: draw character as lit body-part boxes ──
+    // Each body part is treated as a 3D box.  We project the eight vertices
+    // of every box through a simple perspective camera orbiting the
+    // character, then draw visible faces with per-face lighting so the
+    // preview looks convincingly three-dimensional.
 
     float centerX = area.x + area.w * 0.5f;
-    float groundY = area.bottom() - 60.0f;       // ground line
-    float scale   = area.h * 0.38f;               // character height in pixels
+    float centerY = area.y + area.h * 0.55f;       // vertical centre of viewport
+    float scale   = area.h * 0.38f;                 // character height in pixels
 
-    // Slight horizontal offset from camera yaw to simulate orbit
-    float yawRad = (m_previewCamYaw - 180.0f) * 3.14159f / 180.0f;
-    float orbitOffsetX = std::sin(yawRad) * 30.0f;
+    // Camera orbit angles
+    float yawRad   = m_previewCamYaw * 3.14159f / 180.0f;
+    float pitchRad = m_previewCamPitch * 3.14159f / 180.0f;
+    float camDist  = m_previewCamDist;
 
-    // Draw ground shadow (ellipse approximated as a flat rect)
-    Rect shadow(centerX - 40.0f + orbitOffsetX, groundY + 2.0f, 80.0f, 8.0f);
-    r.drawRect(shadow, Color(0.0f, 0.0f, 0.0f, 0.3f));
+    // Perspective parameters
+    float focalLen = area.h * 0.9f;   // focal length in pixels
 
-    // Draw each body part as a colored rectangle, stacked upward
+    // Camera position in character-local space (character at origin)
+    float camX =  camDist * std::cos(pitchRad) * std::sin(yawRad);
+    float camY =  camDist * std::sin(pitchRad);
+    float camZ =  camDist * std::cos(pitchRad) * std::cos(yawRad);
+
+    // Camera basis vectors (right-handed, looking at origin)
+    float fwdX = -camX, fwdY = -camY, fwdZ = -camZ;
+    float fwdLen = std::sqrt(fwdX*fwdX + fwdY*fwdY + fwdZ*fwdZ);
+    if (fwdLen > 0.001f) { fwdX /= fwdLen; fwdY /= fwdLen; fwdZ /= fwdLen; }
+
+    // right = normalize(cross(fwd, worldUp))
+    float upX = 0.0f, upY = 1.0f, upZ = 0.0f;
+    float rX = fwdY * upZ - fwdZ * upY;
+    float rY = fwdZ * upX - fwdX * upZ;
+    float rZ = fwdX * upY - fwdY * upX;
+    float rLen = std::sqrt(rX*rX + rY*rY + rZ*rZ);
+    if (rLen > 0.001f) { rX /= rLen; rY /= rLen; rZ /= rLen; }
+
+    // camUp = cross(right, fwd)
+    float cuX = rY * fwdZ - rZ * fwdY;
+    float cuY = rZ * fwdX - rX * fwdZ;
+    float cuZ = rX * fwdY - rY * fwdX;
+
+    // Helper: project a 3D point → 2D screen position (returns false if behind camera)
+    auto project = [&](float px, float py, float pz, float& sx, float& sy) -> bool {
+        // Translate relative to camera
+        float dx = px - camX;
+        float dy = py - camY;
+        float dz = pz - camZ;
+        // Camera-space coordinates
+        float cz = dx * fwdX + dy * fwdY + dz * fwdZ;   // depth
+        if (cz < 0.05f) return false;                      // behind camera
+        float cx = dx * rX + dy * rY + dz * rZ;
+        float cy = dx * cuX + dy * cuY + dz * cuZ;
+        sx = centerX + (cx / cz) * focalLen;
+        sy = centerY - (cy / cz) * focalLen;               // Y-up → screen Y-down
+        return true;
+    };
+
+    // Draw ground grid for spatial reference
+    {
+        Color gridColor = Color(0.15f, 0.18f, 0.22f, 0.5f);
+        float gridSize = 0.6f;
+        for (int i = -3; i <= 3; ++i) {
+            float sx1, sy1, sx2, sy2;
+            float gi = i * gridSize;
+            // Lines along X
+            if (project(gi, 0.0f, -3 * gridSize, sx1, sy1) &&
+                project(gi, 0.0f,  3 * gridSize, sx2, sy2)) {
+                r.drawRect(Rect(std::min(sx1, sx2), std::min(sy1, sy2),
+                                std::max(1.0f, std::abs(sx2 - sx1)),
+                                std::max(1.0f, std::abs(sy2 - sy1))), gridColor);
+            }
+            // Lines along Z
+            if (project(-3 * gridSize, 0.0f, gi, sx1, sy1) &&
+                project( 3 * gridSize, 0.0f, gi, sx2, sy2)) {
+                r.drawRect(Rect(std::min(sx1, sx2), std::min(sy1, sy2),
+                                std::max(1.0f, std::abs(sx2 - sx1)),
+                                std::max(1.0f, std::abs(sy2 - sy1))), gridColor);
+            }
+        }
+    }
+
+    // Draw ground shadow (projected ellipse)
+    {
+        float sx, sy;
+        if (project(0.0f, 0.005f, 0.0f, sx, sy)) {
+            float shadowW = 50.0f / camDist;
+            float shadowH = 10.0f / camDist;
+            r.drawRect(Rect(sx - shadowW, sy - shadowH * 0.5f, shadowW * 2.0f, shadowH),
+                       Color(0.0f, 0.0f, 0.0f, 0.35f));
+        }
+    }
+
+    // Light direction (top-right, slightly behind)
+    float lightX = 0.5f, lightY = 0.8f, lightZ = 0.3f;
+    float lLen = std::sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
+    lightX /= lLen; lightY /= lLen; lightZ /= lLen;
+
+    // Draw each body part as a perspective-projected 3D box
     for (const auto& part : m_previewParts) {
-        float partH = part.scaleY * scale;
-        float partW = part.scaleX * scale;
-        float partX = centerX - partW * 0.5f + orbitOffsetX;
-        float partY = groundY - (part.offsetY * scale) - partH;
+        float hw = part.scaleX * 0.5f;   // half-width  (X)
+        float hh = part.scaleY * 0.5f;   // half-height (Y)
+        float hd = part.scaleZ * 0.5f;   // half-depth  (Z)
+        float baseY = part.offsetY;       // bottom of box
 
-        Rect partRect(partX, partY, partW, partH);
-        r.drawRect(partRect, part.color);
+        // 8 box vertices (in character-local space, character at origin)
+        float verts[8][3] = {
+            {-hw, baseY,      -hd}, { hw, baseY,      -hd},
+            { hw, baseY,       hd}, {-hw, baseY,       hd},
+            {-hw, baseY + part.scaleY, -hd}, { hw, baseY + part.scaleY, -hd},
+            { hw, baseY + part.scaleY,  hd}, {-hw, baseY + part.scaleY,  hd},
+        };
 
-        // Subtle edge highlight (pseudo-3D shading)
-        r.drawRect(Rect(partX, partY, partW, 1.0f),
-                   part.color.withAlpha(0.6f));
-        r.drawRect(Rect(partX, partY, 1.0f, partH),
-                   Color(1.0f, 1.0f, 1.0f, 0.08f));
+        // Project all 8 vertices
+        float sv[8][2];
+        bool visible[8];
+        int visibleCount = 0;
+        for (int i = 0; i < 8; ++i) {
+            visible[i] = project(verts[i][0], verts[i][1], verts[i][2],
+                                 sv[i][0], sv[i][1]);
+            if (visible[i]) ++visibleCount;
+        }
+        if (visibleCount < 3) continue;  // skip if mostly behind camera
+
+        // 6 faces: each defined by 4 vertex indices and an outward normal
+        struct Face {
+            int idx[4];
+            float nx, ny, nz;
+        };
+        Face faces[6] = {
+            {{0, 1, 5, 4},  0.0f,  0.0f, -1.0f},  // front  (-Z)
+            {{2, 3, 7, 6},  0.0f,  0.0f,  1.0f},  // back   (+Z)
+            {{3, 0, 4, 7}, -1.0f,  0.0f,  0.0f},  // left   (-X)
+            {{1, 2, 6, 5},  1.0f,  0.0f,  0.0f},  // right  (+X)
+            {{4, 5, 6, 7},  0.0f,  1.0f,  0.0f},  // top    (+Y)
+            {{0, 3, 2, 1},  0.0f, -1.0f,  0.0f},  // bottom (-Y)
+        };
+
+        for (const auto& face : faces) {
+            // Back-face culling: check if the face normal points toward the camera
+            // Use the first vertex of the face as the reference point.
+            float cx = camX - verts[face.idx[0]][0];
+            float cy = camY - verts[face.idx[0]][1];
+            float cz = camZ - verts[face.idx[0]][2];
+            float dot = cx * face.nx + cy * face.ny + cz * face.nz;
+            if (dot < 0.0f) continue;  // face points away from camera
+
+            // Check that at least 3 vertices are visible
+            int faceVis = 0;
+            for (int i = 0; i < 4; ++i) {
+                if (visible[face.idx[i]]) ++faceVis;
+            }
+            if (faceVis < 3) continue;
+
+            // Compute bounding rect of projected quad
+            float minSX = 1e9f, minSY = 1e9f, maxSX = -1e9f, maxSY = -1e9f;
+            for (int i = 0; i < 4; ++i) {
+                int vi = face.idx[i];
+                if (!visible[vi]) continue;
+                minSX = std::min(minSX, sv[vi][0]);
+                minSY = std::min(minSY, sv[vi][1]);
+                maxSX = std::max(maxSX, sv[vi][0]);
+                maxSY = std::max(maxSY, sv[vi][1]);
+            }
+
+            // Directional lighting: NdotL
+            float ndotl = face.nx * lightX + face.ny * lightY + face.nz * lightZ;
+            ndotl = std::max(0.0f, ndotl);
+            float ambient = 0.25f;
+            float brightness = ambient + (1.0f - ambient) * ndotl;
+
+            Color faceColor(part.color.r * brightness,
+                            part.color.g * brightness,
+                            part.color.b * brightness,
+                            part.color.a);
+
+            // Draw the face as a filled quad (approximated by bounding rect)
+            Rect faceRect(minSX, minSY,
+                          std::max(1.0f, maxSX - minSX),
+                          std::max(1.0f, maxSY - minSY));
+            r.drawRect(faceRect, faceColor);
+
+            // Edge highlight on the top and left edges for depth cue
+            if (face.ny > 0.5f || face.nz < -0.5f) {
+                r.drawRect(Rect(minSX, minSY, maxSX - minSX, 1.0f),
+                           Color(1.0f, 1.0f, 1.0f, 0.12f));
+            }
+            if (face.nx < -0.5f || face.nz < -0.5f) {
+                r.drawRect(Rect(minSX, minSY, 1.0f, maxSY - minSY),
+                           Color(1.0f, 1.0f, 1.0f, 0.08f));
+            }
+        }
     }
 
     // ── Orbit camera controls (drag to rotate) ─────────────────

@@ -165,13 +165,13 @@ void Camera::setViewMode(ViewMode mode) {
         m_fpsPitch = m_pitch;
         // FPS position defaults to the current orbit target (ship center)
         m_fpsPosition = m_target;
-        // Recompute forward from yaw/pitch
+        // Recompute forward from yaw/pitch (convention: yaw=0 → -Z)
         float yr = glm::radians(m_fpsYaw);
         float pr = glm::radians(m_fpsPitch);
         m_fpsForward = glm::normalize(glm::vec3(
             std::cos(pr) * std::sin(yr),
             std::sin(pr),
-            std::cos(pr) * std::cos(yr)
+           -std::cos(pr) * std::cos(yr)
         ));
     }
 
@@ -183,7 +183,9 @@ void Camera::setFPSPosition(const glm::vec3& eyePos, const glm::vec3& lookDir) {
     if (glm::length(lookDir) > 0.001f) {
         m_fpsForward = glm::normalize(lookDir);
         // Derive yaw/pitch from lookDir for consistent mouse-look
-        m_fpsYaw   = glm::degrees(std::atan2(m_fpsForward.x, m_fpsForward.z));
+        // Convention: forward = (cos(p)*sin(y), sin(p), -cos(p)*cos(y))
+        // so yaw = atan2(forward.x, -forward.z)
+        m_fpsYaw   = glm::degrees(std::atan2(m_fpsForward.x, -m_fpsForward.z));
         m_fpsPitch = glm::degrees(std::asin(std::clamp(m_fpsForward.y, -1.0f, 1.0f)));
     }
 }
@@ -198,7 +200,7 @@ void Camera::rotateFPS(float deltaYaw, float deltaPitch) {
     m_fpsForward = glm::normalize(glm::vec3(
         std::cos(pr) * std::sin(yr),
         std::sin(pr),
-        std::cos(pr) * std::cos(yr)
+       -std::cos(pr) * std::cos(yr)
     ));
 }
 
