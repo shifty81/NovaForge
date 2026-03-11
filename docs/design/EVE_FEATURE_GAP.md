@@ -190,15 +190,17 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 
 ### 12. **Social Features (Enhanced)**
 - [x] Alliance system (`alliance_management_system.h`)
-- Corporation wars
-- Wardec mechanics
+- [x] Corporation wars (`war_declaration_system.h`)
+- [x] Wardec mechanics (`war_declaration_system.h`)
 - [x] Citadel structures (`citadel_management_system.h`)
+- [x] Asset safety on structure destruction (`asset_safety_system.h`)
 
 ### 13. **Advanced Movement**
 - [x] Microwarp drive signature bloom (`propulsion_module_system.h`)
 - [x] Afterburner mechanics (`propulsion_module_system.h`)
 - [x] Inertia modifiers (`inertia_modifier_system.h`)
-- Warp disruption bubbles (null-sec)
+- [x] Warp disruption bubbles (null-sec) (`warp_bubble_system.h`)
+- [x] Stasis webifier velocity reduction (`stasis_web_system.h`)
 
 ### 14. **EWAR Expanded**
 - [x] Remote sensor dampening (`sensor_dampening_system.h`)
