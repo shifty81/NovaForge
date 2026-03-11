@@ -641,12 +641,19 @@ void Application::updateOnFootMovement(float deltaTime) {
     camPos += velocity * deltaTime;
     camPos.y += m_fpsVelY * deltaTime;
 
-    // Floor collision — clamp eye height
+    // Floor collision — keep camera at the correct eye height for the
+    // current stance.  When grounded the camera must track the target
+    // eye height so that crouching/standing produces visible movement.
     float eyeHeight = crouchHeld ? FPS_CROUCH_EYE_HEIGHT : FPS_STAND_EYE_HEIGHT;
-    if (camPos.y < eyeHeight) {
+    if (camPos.y <= eyeHeight) {
         camPos.y    = eyeHeight;
         m_fpsVelY   = 0.0f;
         m_fpsGrounded = true;
+    }
+    // When grounded (not jumping/falling), snap to the stance eye height
+    // so that crouching lowers the camera and standing raises it.
+    if (m_fpsGrounded) {
+        camPos.y = eyeHeight;
     }
 
     m_camera->setFPSPosition(camPos, m_camera->getFPSForward());

@@ -168,6 +168,17 @@ void Application::requestStateTransition(GameState newState) {
             // Sync Application-level yaw/pitch so movement matches camera.
             m_fpsYaw   = m_camera->getFPSYaw();
             m_fpsPitch = m_camera->getFPSPitch();
+            // Move the player's ship entity to the hangar landing pad so
+            // it is visible in the hangar's local coordinate system.
+            {
+                auto playerEntity = m_gameClient->getEntityManager().getEntity(m_localPlayerId);
+                if (playerEntity) {
+                    Health currentHealth = playerEntity->getHealth();
+                    glm::vec3 hangarPadPos(0.0f, 0.3f, 0.0f);
+                    m_gameClient->getEntityManager().updateEntityState(
+                        m_localPlayerId, hangarPadPos, glm::vec3(0.0f), 0.0f, currentHealth);
+                }
+            }
             m_activeModeText = "DOCKED";
             break;
         case GameState::StationInterior:
