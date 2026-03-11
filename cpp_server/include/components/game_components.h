@@ -2488,6 +2488,111 @@ public:
     COMPONENT_TYPE(SkillInjectorState)
 };
 
+// ---------------------------------------------------------------------------
+// StasisWebState — stasis webifier velocity reduction
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks stasis webifiers applied to an entity, each reducing
+ *        velocity multiplicatively.  Webs cycle independently; effective
+ *        velocity is recomputed whenever webs are added, removed, or cycle.
+ */
+class StasisWebState : public ecs::Component {
+public:
+    struct Web {
+        std::string web_id;
+        std::string source_id;
+        float strength      = 0.6f;   // velocity reduction factor [0, 1)
+        float cycle_time    = 5.0f;   // seconds per cycle
+        float cycle_elapsed = 0.0f;
+        bool  active        = false;
+    };
+
+    float base_velocity      = 1000.0f;  // m/s, reference speed
+    float effective_velocity = 1000.0f;  // recomputed from active webs
+    std::vector<Web> webs;
+    int   max_webs           = 4;
+    int   total_webs_applied = 0;
+    bool  is_webbed          = false;
+    float elapsed            = 0.0f;
+    bool  active             = true;
+
+    COMPONENT_TYPE(StasisWebState)
+};
+
+// ---------------------------------------------------------------------------
+// AssetSafetyState — player-owned structure asset relocation on destruction
+// ---------------------------------------------------------------------------
+/**
+ * @brief Implements EVE-style asset safety: when a player-owned structure is
+ *        destroyed or unanchored, its contents enter a safety wrap at a
+ *        nearby NPC station and must be claimed within safety_duration seconds.
+ */
+class AssetSafetyState : public ecs::Component {
+public:
+    struct AssetEntry {
+        std::string structure_id;
+        std::string structure_name;
+        std::string asset_id;
+        std::string asset_name;
+        int         quantity      = 1;
+        float       triggered_at  = 0.0f;  // elapsed time when triggered
+        float       expires_in    = 1209600.0f;  // countdown (default 14 days)
+        bool        claimed       = false;
+        bool        expired       = false;
+    };
+
+    std::string owner_id;
+    std::vector<AssetEntry> entries;
+    int   max_entries       = 50;
+    int   total_triggered   = 0;
+    int   total_claimed     = 0;
+    float safety_duration   = 1209600.0f;  // 14 days in seconds
+    float elapsed           = 0.0f;
+    bool  active            = true;
+
+    COMPONENT_TYPE(AssetSafetyState)
+};
+
+// ---------------------------------------------------------------------------
+// CommandBurstState — fleet command burst module
+// ---------------------------------------------------------------------------
+/**
+ * @brief Represents a fleet command burst launcher fitted to a command ship.
+ *        Each burst type provides a different fleet-wide stat boost within
+ *        a configurable radius for the duration of the cycle.
+ */
+class CommandBurstState : public ecs::Component {
+public:
+    enum class BurstType {
+        Shield,      // shield HP / resists boost
+        Armor,       // armor HP / resists boost
+        Navigation,  // speed / agility boost
+        Sensor,      // targeting range / scan resolution boost
+        Mining       // mining yield boost
+    };
+
+    struct Burst {
+        std::string burst_id;
+        BurstType   type          = BurstType::Shield;
+        float       strength      = 0.1f;   // buff multiplier (0, 1]
+        float       radius        = 6000.0f; // effective range in meters
+        float       cycle_time    = 10.0f;  // seconds per activation
+        float       cycle_elapsed = 0.0f;
+        bool        active        = false;
+        int         activations   = 0;      // per-burst activation count
+    };
+
+    std::string commander_id;
+    std::vector<Burst> bursts;
+    int   max_bursts        = 5;
+    int   total_activations = 0;
+    int   total_cycles      = 0;
+    float elapsed           = 0.0f;
+    bool  active            = true;
+
+    COMPONENT_TYPE(CommandBurstState)
+};
+
 } // namespace components
 } // namespace atlas
 

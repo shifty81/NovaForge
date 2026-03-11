@@ -432,6 +432,9 @@ set(CORE_SOURCES
     src/systems/corporation_logo_system.cpp
     src/systems/structure_skin_system.cpp
     src/systems/skill_injector_system.cpp
+    src/systems/stasis_web_system.cpp
+    src/systems/asset_safety_system.cpp
+    src/systems/command_burst_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp

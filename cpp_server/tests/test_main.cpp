@@ -462,6 +462,9 @@ void run_alliance_management_system_tests();
 void run_corporation_logo_system_tests();
 void run_structure_skin_system_tests();
 void run_skill_injector_system_tests();
+void run_stasis_web_system_tests();
+void run_asset_safety_system_tests();
+void run_command_burst_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -921,6 +924,9 @@ int main() {
     run_corporation_logo_system_tests();
     run_structure_skin_system_tests();
     run_skill_injector_system_tests();
+    run_stasis_web_system_tests();
+    run_asset_safety_system_tests();
+    run_command_burst_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
