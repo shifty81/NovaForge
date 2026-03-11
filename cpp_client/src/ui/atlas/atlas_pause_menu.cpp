@@ -41,11 +41,6 @@ void AtlasPauseMenu::render(AtlasContext& ctx) {
     Rect header(panel.x, panel.y, panel.w, theme.headerHeight + 4.0f);
     r.drawRect(header, theme.bgHeader);
 
-    // Consume mouse over the panel
-    if (ctx.isHovered(overlay)) {
-        ctx.consumeMouse();
-    }
-
     switch (m_currentPage) {
         case Page::MAIN:
             renderMainMenu(ctx, panel);
@@ -53,6 +48,13 @@ void AtlasPauseMenu::render(AtlasContext& ctx) {
         case Page::SETTINGS:
             renderSettings(ctx, panel);
             break;
+    }
+
+    // Consume mouse AFTER widgets have had a chance to process clicks.
+    // Consuming before the buttons would set m_mouseConsumed=true so
+    // buttonBehavior() would return false and buttons would never fire.
+    if (ctx.isHovered(overlay)) {
+        ctx.consumeMouse();
     }
 }
 

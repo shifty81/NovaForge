@@ -3309,6 +3309,64 @@ void testAtlasPauseMenuSettings() {
     assertClose(menu.getUiVolume(), 0.0f, "UI volume set to 0.0");
 }
 
+void testAtlasPauseMenuButtonsClickable() {
+    std::cout << "\n=== AtlasPauseMenu: Buttons Clickable ===" << std::endl;
+
+    // Verify that buttons in the pause menu can be clicked.
+    // The overlay background must consume the mouse AFTER buttons have had a
+    // chance to process the click; consuming before would prevent all button
+    // interactions (click-through to game world while menu is open).
+
+    atlas::AtlasContext ctx;
+    ctx.init();
+
+    atlas::AtlasPauseMenu menu;
+    menu.toggle();  // open the menu
+    assertTrue(menu.isOpen(), "Pause menu is open");
+
+    bool resumeCalled = false;
+    menu.setResumeCallback([&]() { resumeCalled = true; });
+
+    // Layout: panel is centered in a 1920×1080 window.
+    // PANEL_WIDTH=360, PANEL_HEIGHT=420
+    // panelX = (1920-360)/2 = 780, panelY = (1080-420)/2 = 330
+    // headerHeight ≈ 24, PADDING = 8, BUTTON_HEIGHT = 36
+    // Resume button: x=780+8=788, y=330+24+4+8=366, w=344, h=36
+    // Button center: (788+172, 366+18) = (960, 384)
+    float btnCenterX = 960.0f;
+    float btnCenterY = 384.0f;
+
+    // Frame 1: press on the Resume button
+    {
+        atlas::InputState input{};
+        input.windowW = 1920;
+        input.windowH = 1080;
+        input.mousePos = {btnCenterX, btnCenterY};
+        input.mouseClicked[0] = true;
+        input.mouseDown[0] = true;
+        ctx.beginFrame(input);
+        menu.render(ctx);
+        ctx.endFrame();
+    }
+
+    // Frame 2: release (click completes)
+    {
+        atlas::InputState input{};
+        input.windowW = 1920;
+        input.windowH = 1080;
+        input.mousePos = {btnCenterX, btnCenterY};
+        input.mouseReleased[0] = true;
+        ctx.beginFrame(input);
+        menu.render(ctx);
+        ctx.endFrame();
+    }
+
+    assertTrue(resumeCalled, "Pause menu Resume button is clickable");
+    assertTrue(!menu.isOpen(), "Pause menu closes after Resume click");
+
+    ctx.shutdown();
+}
+
 // ─── Atlas Title Screen tests ──────────────────────────────────────────
 
 void testAtlasTitleScreenBasics() {
@@ -3516,6 +3574,7 @@ int main() {
     // ── Atlas Pause Menu tests ──────────────────────────────────────────
     testAtlasPauseMenuBasics();
     testAtlasPauseMenuSettings();
+    testAtlasPauseMenuButtonsClickable();
 
     // ── Atlas Title Screen tests ────────────────────────────────────────
     testAtlasTitleScreenBasics();
