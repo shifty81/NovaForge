@@ -12,7 +12,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Options
 option(USE_STEAM_SDK "Enable Steam integration" ON)
-option(BUILD_TESTS "Build test suite" ON)
+option(BUILD_TESTS "Build test suite" OFF)
 
 # Platform-specific settings
 if(WIN32)

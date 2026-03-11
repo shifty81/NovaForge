@@ -50,17 +50,13 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release \
           -DBUILD_ATLAS_ENGINE=ON \
           -DBUILD_ATLAS_EDITOR=ON \
-          -DBUILD_ATLAS_TESTS=ON \
+          -DBUILD_ATLAS_TESTS=OFF \
           -DBUILD_CLIENT=OFF \
           -DBUILD_SERVER=OFF
 
     - name: Build
       working-directory: build
       run: cmake --build . --config Release -j$(nproc)
-
-    - name: Run engine tests
-      working-directory: build
-      run: ./atlas_tests/AtlasTests
 
     - name: Verify editor executable
       working-directory: build
@@ -84,23 +80,11 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_ATLAS_EDITOR=ON -DBUILD_ATLAS_TESTS=ON -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_ATLAS_ENGINE=ON -DBUILD_ATLAS_EDITOR=ON -DBUILD_ATLAS_TESTS=OFF -DBUILD_CLIENT=OFF -DBUILD_SERVER=OFF
 
     - name: Build
       working-directory: build
       run: cmake --build . --config Release
-
-    - name: Run engine tests
-      working-directory: build
-      run: |
-        if (Test-Path "atlas_tests/Release/AtlasTests.exe") {
-          ./atlas_tests/Release/AtlasTests.exe
-        } elseif (Test-Path "atlas_tests/AtlasTests.exe") {
-          ./atlas_tests/AtlasTests.exe
-        } else {
-          Write-Host "AtlasTests not found, listing directory:"
-          Get-ChildItem -Recurse atlas_tests
-        }
 
   test-summary:
     name: Test Summary

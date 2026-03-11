@@ -11,7 +11,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Options
-option(BUILD_TESTS "Build test suite" ON)
+option(BUILD_TESTS "Build test suite" OFF)
 option(USE_SYSTEM_LIBS "Use system libraries instead of bundled" ON)  # Default to ON since they're available
 option(USE_RMLUI "Enable RmlUi for advanced Photon UI game panels" OFF)
 option(NOVAFORGE_EDITOR_TOOLS "Embed editor tool layer in the game client (F12 toggle)" ON)

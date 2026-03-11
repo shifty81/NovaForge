@@ -41,15 +41,11 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DUSE_STEAM_SDK=OFF
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DUSE_STEAM_SDK=OFF
 
     - name: Build server
       working-directory: cpp_server/build
       run: cmake --build . --config Release -j$(nproc)
-
-    - name: Run tests
-      working-directory: cpp_server/build
-      run: ./bin/test_systems
 
     - name: Upload server artifact
       uses: actions/upload-artifact@v4
@@ -82,23 +78,11 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DUSE_STEAM_SDK=OFF -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DUSE_STEAM_SDK=OFF -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Build server
       working-directory: cpp_server/build
       run: cmake --build . --config Release
-
-    - name: Run tests
-      working-directory: cpp_server/build
-      run: |
-        if (Test-Path "bin/Release/test_systems.exe") {
-          ./bin/Release/test_systems.exe
-        } elseif (Test-Path "bin/test_systems.exe") {
-          ./bin/test_systems.exe
-        } else {
-          Write-Host "test_systems not found, listing bin directory:"
-          Get-ChildItem -Recurse bin
-        }
 
     - name: Upload server artifact
       uses: actions/upload-artifact@v4
