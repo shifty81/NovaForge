@@ -438,6 +438,9 @@ set(CORE_SOURCES
     src/systems/target_painter_system.cpp
     src/systems/warp_scrambler_system.cpp
     src/systems/remote_repair_system.cpp
+    src/systems/daily_quest_system.cpp
+    src/systems/market_watchlist_system.cpp
+    src/systems/player_session_stats_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -893,6 +896,9 @@ set(SERVER_HEADERS
     include/systems/target_painter_system.h
     include/systems/warp_scrambler_system.h
     include/systems/remote_repair_system.h
+    include/systems/daily_quest_system.h
+    include/systems/market_watchlist_system.h
+    include/systems/player_session_stats_system.h
 )
 
 # Steam SDK configuration
