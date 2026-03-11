@@ -1098,6 +1098,36 @@ public:
     COMPONENT_TYPE(InertiaModifierState)
 };
 
+// NpcPatrolRoute — NPC patrol route with ordered waypoints
+class NpcPatrolRoute : public ecs::Component {
+public:
+    enum class PatrolMode { Loop, PingPong };
+    enum class Status     { Idle, Traveling, Dwelling };
+
+    struct Waypoint {
+        std::string waypoint_id;
+        float x          = 0.0f;
+        float y          = 0.0f;
+        float z          = 0.0f;
+        float dwell_time = 0.0f;  // seconds to wait at this waypoint (0 = skip dwell)
+    };
+
+    std::vector<Waypoint> waypoints;
+    int         current_index     = 0;
+    int         direction         = 1;           // +1 forward, -1 backward (PingPong)
+    float       dwell_timer       = 0.0f;        // seconds remaining at current waypoint
+    PatrolMode  patrol_mode       = PatrolMode::Loop;
+    Status      status            = Status::Idle;
+    float       speed             = 1.0f;        // arbitrary speed units
+    int         total_circuits    = 0;           // full loops completed
+    int         total_waypoints_visited = 0;
+    int         max_waypoints     = 20;
+    float       elapsed           = 0.0f;
+    bool        active            = true;
+
+    COMPONENT_TYPE(NpcPatrolRoute)
+};
+
 } // namespace components
 } // namespace atlas
 
