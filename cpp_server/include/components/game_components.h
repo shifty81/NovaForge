@@ -2593,6 +2593,107 @@ public:
     COMPONENT_TYPE(CommandBurstState)
 };
 
+// ---------------------------------------------------------------------------
+// TargetPainterState — signature-radius amplification EWAR
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks target painters applied to an entity.  Each painter increases
+ *        the target's effective signature radius multiplicatively, making the
+ *        entity easier to hit by weapons that scale with signature (especially
+ *        missiles).  Painters cycle independently like stasis webs.
+ */
+class TargetPainterState : public ecs::Component {
+public:
+    struct Painter {
+        std::string painter_id;
+        std::string source_id;
+        float strength      = 0.3f;   // signature increase factor (0, 1]
+        float cycle_time    = 5.0f;   // seconds per cycle
+        float cycle_elapsed = 0.0f;
+        bool  active        = false;
+    };
+
+    float base_signature      = 50.0f;   // base signature radius in meters
+    float effective_signature = 50.0f;   // recomputed: base × ∏(1 + strength_i)
+    std::vector<Painter> painters;
+    int   max_painters        = 3;
+    int   total_painters_applied = 0;
+    bool  is_painted          = false;
+    float elapsed             = 0.0f;
+    bool  active              = true;
+
+    COMPONENT_TYPE(TargetPainterState)
+};
+
+// ---------------------------------------------------------------------------
+// WarpScramblerState — warp interdiction point system
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks warp scramblers and disruptors applied to an entity.
+ *        Each module contributes scramble points; when total_scramble_points > 0
+ *        the entity cannot enter warp.  Scramblers (2 pts, short range) also
+ *        disable MWD; disruptors (1 pt, long range) only block warp.
+ */
+class WarpScramblerState : public ecs::Component {
+public:
+    struct Scrambler {
+        std::string scrambler_id;
+        std::string source_id;
+        int   scramble_points = 1;      // 2 for scrambler, 1 for disruptor
+        float optimal_range   = 9000.0f; // meters (scrambler 9 km, disruptor 24 km)
+        float cycle_time      = 5.0f;
+        float cycle_elapsed   = 0.0f;
+        bool  active          = false;
+        bool  is_scrambler    = false;  // true = warp scrambler, false = disruptor
+    };
+
+    int   total_scramble_points  = 0;   // sum of active scrambler points
+    bool  is_warp_scrambled      = false;
+    std::vector<Scrambler> scramblers;
+    int   max_scramblers         = 6;
+    int   total_scrambles_applied = 0;
+    float elapsed                = 0.0f;
+    bool  active                 = true;
+
+    COMPONENT_TYPE(WarpScramblerState)
+};
+
+// ---------------------------------------------------------------------------
+// RemoteRepairState — remote shield/armor/hull logistics modules
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks remote repair modules fitted to a logistics ship.  Each
+ *        module cycles and applies a repair pulse to a remote target entity
+ *        on cycle completion.  Aggregate repair totals are tracked per layer.
+ */
+class RemoteRepairState : public ecs::Component {
+public:
+    enum class RepairType { Shield, Armor, Hull };
+
+    struct RepairModule {
+        std::string module_id;
+        RepairType  type          = RepairType::Shield;
+        float       rep_amount    = 100.0f;  // HP repaired per cycle
+        float       optimal_range = 7500.0f; // meters
+        float       cycle_time    = 5.0f;
+        float       cycle_elapsed = 0.0f;
+        std::string target_id;
+        bool        active        = false;
+        int         total_reps    = 0;       // reps completed by this module
+    };
+
+    std::vector<RepairModule> modules;
+    int   max_modules            = 4;
+    float total_shield_repaired  = 0.0f;
+    float total_armor_repaired   = 0.0f;
+    float total_hull_repaired    = 0.0f;
+    int   total_cycles           = 0;
+    float elapsed                = 0.0f;
+    bool  active                 = true;
+
+    COMPONENT_TYPE(RemoteRepairState)
+};
+
 } // namespace components
 } // namespace atlas
 

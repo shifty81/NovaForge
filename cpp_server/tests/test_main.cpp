@@ -465,6 +465,9 @@ void run_skill_injector_system_tests();
 void run_stasis_web_system_tests();
 void run_asset_safety_system_tests();
 void run_command_burst_system_tests();
+void run_target_painter_system_tests();
+void run_warp_scrambler_system_tests();
+void run_remote_repair_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -927,6 +930,9 @@ int main() {
     run_stasis_web_system_tests();
     run_asset_safety_system_tests();
     run_command_burst_system_tests();
+    run_target_painter_system_tests();
+    run_warp_scrambler_system_tests();
+    run_remote_repair_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
