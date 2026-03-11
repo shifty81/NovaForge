@@ -1,212 +1,264 @@
 #include "systems/npc_patrol_route_system.h"
 #include "ecs/world.h"
 #include "ecs/entity.h"
-#include "components/navigation_components.h"
 #include <algorithm>
-#include <cmath>
 
 namespace atlas {
 namespace systems {
 
-namespace {
-
-using NPR = components::NPCPatrolRoute;
-using Waypoint = components::NPCPatrolRoute::PatrolWaypoint;
-
-Waypoint* findWaypoint(NPR* npr, const std::string& waypoint_id) {
-    for (auto& w : npr->waypoints) {
-        if (w.waypoint_id == waypoint_id) return &w;
-    }
-    return nullptr;
-}
-
-const Waypoint* findWaypointConst(const NPR* npr, const std::string& waypoint_id) {
-    for (const auto& w : npr->waypoints) {
-        if (w.waypoint_id == waypoint_id) return &w;
-    }
-    return nullptr;
-}
-
-const char* stateToString(NPR::PatrolState s) {
-    switch (s) {
-        case NPR::PatrolState::Idle: return "Idle";
-        case NPR::PatrolState::Travelling: return "Travelling";
-        case NPR::PatrolState::Waiting: return "Waiting";
-        case NPR::PatrolState::Alert: return "Alert";
-        case NPR::PatrolState::Complete: return "Complete";
-    }
-    return "Unknown";
-}
-
-} // anonymous namespace
-
-NPCPatrolRouteSystem::NPCPatrolRouteSystem(ecs::World* world)
+NpcPatrolRouteSystem::NpcPatrolRouteSystem(ecs::World* world)
     : SingleComponentSystem(world) {}
 
-void NPCPatrolRouteSystem::updateComponent(ecs::Entity& entity,
-    components::NPCPatrolRoute& comp, float delta_time) {
+// ---------------------------------------------------------------------------
+// Tick
+// ---------------------------------------------------------------------------
+
+void NpcPatrolRouteSystem::updateComponent(ecs::Entity& /*entity*/,
+                                            components::NpcPatrolRoute& comp,
+                                            float delta_time) {
     if (!comp.active) return;
     comp.elapsed += delta_time;
 
-    if (comp.state == NPR::PatrolState::Alert) return; // paused during alert
-    if (comp.state == NPR::PatrolState::Idle) return;
-    if (comp.state == NPR::PatrolState::Complete) return;
+    if (comp.status == components::NpcPatrolRoute::Status::Idle) return;
     if (comp.waypoints.empty()) return;
 
-    if (comp.state == NPR::PatrolState::Waiting) {
-        comp.idle_timer -= delta_time;
-        if (comp.idle_timer <= 0.0f) {
-            comp.idle_timer = 0.0f;
-            comp.current_waypoint_index++;
-            if (comp.current_waypoint_index >= static_cast<int>(comp.waypoints.size())) {
-                comp.total_patrols_completed++;
-                if (comp.loop) {
-                    comp.current_waypoint_index = 0;
-                    comp.state = NPR::PatrolState::Travelling;
-                } else {
-                    comp.state = NPR::PatrolState::Complete;
-                }
-            } else {
-                comp.state = NPR::PatrolState::Travelling;
-            }
-        }
-    } else if (comp.state == NPR::PatrolState::Travelling) {
-        float dist = comp.travel_speed * delta_time;
-        comp.distance_to_next -= dist;
-        if (comp.distance_to_next <= 0.0f) {
-            comp.distance_to_next = 0.0f;
-            comp.waypoints_visited++;
-            const auto& wp = comp.waypoints[comp.current_waypoint_index];
-            comp.idle_timer = wp.idle_time;
-            if (comp.idle_timer > 0.0f) {
-                comp.state = NPR::PatrolState::Waiting;
-            } else {
-                comp.current_waypoint_index++;
-                if (comp.current_waypoint_index >= static_cast<int>(comp.waypoints.size())) {
-                    comp.total_patrols_completed++;
-                    if (comp.loop) {
-                        comp.current_waypoint_index = 0;
-                        comp.state = NPR::PatrolState::Travelling;
-                    } else {
-                        comp.state = NPR::PatrolState::Complete;
-                    }
-                }
-            }
+    if (comp.status == components::NpcPatrolRoute::Status::Dwelling) {
+        comp.dwell_timer -= delta_time;
+        if (comp.dwell_timer <= 0.0f) {
+            comp.dwell_timer = 0.0f;
+            advanceToNext(comp);
         }
     }
+    // Status::Traveling is resolved externally via advanceWaypoint();
+    // the per-tick here handles dwell expiry only.
 }
 
-bool NPCPatrolRouteSystem::initialize(const std::string& entity_id) {
+// ---------------------------------------------------------------------------
+// Lifecycle
+// ---------------------------------------------------------------------------
+
+bool NpcPatrolRouteSystem::initialize(const std::string& entity_id) {
     auto* entity = world_->getEntity(entity_id);
     if (!entity) return false;
-    auto comp = std::make_unique<components::NPCPatrolRoute>();
+    auto comp = std::make_unique<components::NpcPatrolRoute>();
     entity->addComponent(std::move(comp));
     return true;
 }
 
-bool NPCPatrolRouteSystem::addWaypoint(const std::string& entity_id,
-    const std::string& waypoint_id, float x, float y, float z,
-    float idle_time, float alert_radius) {
-    auto* npr = getComponentFor(entity_id);
-    if (!npr) return false;
-    if (static_cast<int>(npr->waypoints.size()) >= npr->max_waypoints) return false;
-    if (findWaypoint(npr, waypoint_id)) return false; // duplicate
+// ---------------------------------------------------------------------------
+// Internal helper
+// ---------------------------------------------------------------------------
 
-    Waypoint w;
-    w.waypoint_id = waypoint_id;
-    w.x = x;
-    w.y = y;
-    w.z = z;
-    w.idle_time = idle_time;
-    w.alert_radius = alert_radius;
-    npr->waypoints.push_back(w);
+void NpcPatrolRouteSystem::advanceToNext(components::NpcPatrolRoute& comp) {
+    if (comp.waypoints.empty()) return;
+
+    const int count = static_cast<int>(comp.waypoints.size());
+
+    if (comp.patrol_mode == components::NpcPatrolRoute::PatrolMode::Loop) {
+        comp.current_index = (comp.current_index + 1) % count;
+        if (comp.current_index == 0) {
+            comp.total_circuits++;
+        }
+    } else {
+        // PingPong
+        comp.current_index += comp.direction;
+        if (comp.current_index >= count) {
+            comp.current_index = count - 2;
+            if (comp.current_index < 0) comp.current_index = 0;
+            comp.direction = -1;
+            comp.total_circuits++;
+        } else if (comp.current_index < 0) {
+            comp.current_index = 1;
+            if (comp.current_index >= count) comp.current_index = 0;
+            comp.direction = 1;
+            comp.total_circuits++;
+        }
+    }
+
+    comp.total_waypoints_visited++;
+
+    float dwell = comp.waypoints[comp.current_index].dwell_time;
+    if (dwell > 0.0f) {
+        comp.dwell_timer = dwell;
+        comp.status      = components::NpcPatrolRoute::Status::Dwelling;
+    } else {
+        comp.status = components::NpcPatrolRoute::Status::Traveling;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Waypoint management
+// ---------------------------------------------------------------------------
+
+bool NpcPatrolRouteSystem::addWaypoint(const std::string& entity_id,
+                                        const std::string& waypoint_id,
+                                        float x, float y, float z,
+                                        float dwell_time) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    if (waypoint_id.empty()) return false;
+    if (dwell_time < 0.0f) return false;
+    if (static_cast<int>(comp->waypoints.size()) >= comp->max_waypoints) return false;
+
+    for (const auto& wp : comp->waypoints) {
+        if (wp.waypoint_id == waypoint_id) return false;
+    }
+
+    components::NpcPatrolRoute::Waypoint wp;
+    wp.waypoint_id = waypoint_id;
+    wp.x           = x;
+    wp.y           = y;
+    wp.z           = z;
+    wp.dwell_time  = dwell_time;
+    comp->waypoints.push_back(wp);
     return true;
 }
 
-bool NPCPatrolRouteSystem::removeWaypoint(const std::string& entity_id,
-    const std::string& waypoint_id) {
-    auto* npr = getComponentFor(entity_id);
-    if (!npr) return false;
-    auto it = std::find_if(npr->waypoints.begin(), npr->waypoints.end(),
-        [&](const Waypoint& w) { return w.waypoint_id == waypoint_id; });
-    if (it == npr->waypoints.end()) return false;
-    npr->waypoints.erase(it);
+bool NpcPatrolRouteSystem::removeWaypoint(const std::string& entity_id,
+                                           const std::string& waypoint_id) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    auto it = std::find_if(comp->waypoints.begin(), comp->waypoints.end(),
+        [&](const components::NpcPatrolRoute::Waypoint& wp) {
+            return wp.waypoint_id == waypoint_id;
+        });
+    if (it == comp->waypoints.end()) return false;
+    comp->waypoints.erase(it);
+    if (!comp->waypoints.empty() &&
+        comp->current_index >= static_cast<int>(comp->waypoints.size())) {
+        comp->current_index = static_cast<int>(comp->waypoints.size()) - 1;
+    }
     return true;
 }
 
-bool NPCPatrolRouteSystem::startPatrol(const std::string& entity_id) {
-    auto* npr = getComponentFor(entity_id);
-    if (!npr || npr->waypoints.empty()) return false;
-    npr->state = NPR::PatrolState::Travelling;
-    npr->current_waypoint_index = 0;
-    npr->distance_to_next = 500.0f; // default distance to first waypoint
-    npr->hostile_detected = false;
-    npr->detected_hostile_id.clear();
+bool NpcPatrolRouteSystem::clearWaypoints(const std::string& entity_id) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    comp->waypoints.clear();
+    comp->current_index = 0;
+    comp->status        = components::NpcPatrolRoute::Status::Idle;
     return true;
 }
 
-bool NPCPatrolRouteSystem::stopPatrol(const std::string& entity_id) {
-    auto* npr = getComponentFor(entity_id);
-    if (!npr) return false;
-    npr->state = NPR::PatrolState::Idle;
+// ---------------------------------------------------------------------------
+// Patrol control
+// ---------------------------------------------------------------------------
+
+bool NpcPatrolRouteSystem::startPatrol(const std::string& entity_id) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    if (comp->waypoints.empty()) return false;
+    if (comp->status != components::NpcPatrolRoute::Status::Idle) return false;
+
+    comp->current_index = 0;
+    comp->direction     = 1;
+    float dwell = comp->waypoints[0].dwell_time;
+    if (dwell > 0.0f) {
+        comp->dwell_timer = dwell;
+        comp->status      = components::NpcPatrolRoute::Status::Dwelling;
+    } else {
+        comp->status = components::NpcPatrolRoute::Status::Traveling;
+    }
+    comp->total_waypoints_visited++;
     return true;
 }
 
-bool NPCPatrolRouteSystem::triggerAlert(const std::string& entity_id,
-    const std::string& hostile_id) {
-    auto* npr = getComponentFor(entity_id);
-    if (!npr) return false;
-    npr->state = NPR::PatrolState::Alert;
-    npr->hostile_detected = true;
-    npr->detected_hostile_id = hostile_id;
-    npr->total_alerts_triggered++;
+bool NpcPatrolRouteSystem::stopPatrol(const std::string& entity_id) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    if (comp->status == components::NpcPatrolRoute::Status::Idle) return false;
+    comp->status      = components::NpcPatrolRoute::Status::Idle;
+    comp->dwell_timer = 0.0f;
     return true;
 }
 
-bool NPCPatrolRouteSystem::clearAlert(const std::string& entity_id) {
-    auto* npr = getComponentFor(entity_id);
-    if (!npr) return false;
-    if (npr->state != NPR::PatrolState::Alert) return false;
-    npr->hostile_detected = false;
-    npr->detected_hostile_id.clear();
-    npr->state = NPR::PatrolState::Travelling;
+bool NpcPatrolRouteSystem::setPatrolMode(
+        const std::string& entity_id,
+        components::NpcPatrolRoute::PatrolMode mode) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    comp->patrol_mode = mode;
     return true;
 }
 
-int NPCPatrolRouteSystem::getWaypointCount(const std::string& entity_id) const {
-    auto* npr = getComponentFor(entity_id);
-    return npr ? static_cast<int>(npr->waypoints.size()) : 0;
+bool NpcPatrolRouteSystem::setSpeed(const std::string& entity_id, float speed) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    if (speed <= 0.0f) return false;
+    comp->speed = speed;
+    return true;
 }
 
-int NPCPatrolRouteSystem::getCurrentWaypointIndex(const std::string& entity_id) const {
-    auto* npr = getComponentFor(entity_id);
-    return npr ? npr->current_waypoint_index : -1;
+bool NpcPatrolRouteSystem::advanceWaypoint(const std::string& entity_id) {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    if (comp->status == components::NpcPatrolRoute::Status::Idle) return false;
+    if (comp->waypoints.empty()) return false;
+    advanceToNext(*comp);
+    return true;
 }
 
-std::string NPCPatrolRouteSystem::getState(const std::string& entity_id) const {
-    auto* npr = getComponentFor(entity_id);
-    if (!npr) return "Unknown";
-    return stateToString(npr->state);
+// ---------------------------------------------------------------------------
+// Queries
+// ---------------------------------------------------------------------------
+
+int NpcPatrolRouteSystem::getWaypointCount(const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? static_cast<int>(comp->waypoints.size()) : 0;
 }
 
-bool NPCPatrolRouteSystem::isHostileDetected(const std::string& entity_id) const {
-    auto* npr = getComponentFor(entity_id);
-    return npr ? npr->hostile_detected : false;
+std::string NpcPatrolRouteSystem::getCurrentWaypointId(
+        const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp || comp->waypoints.empty()) return "";
+    return comp->waypoints[comp->current_index].waypoint_id;
 }
 
-int NPCPatrolRouteSystem::getTotalPatrolsCompleted(const std::string& entity_id) const {
-    auto* npr = getComponentFor(entity_id);
-    return npr ? npr->total_patrols_completed : 0;
+int NpcPatrolRouteSystem::getCurrentWaypointIndex(
+        const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? comp->current_index : 0;
 }
 
-int NPCPatrolRouteSystem::getTotalAlertsTriggered(const std::string& entity_id) const {
-    auto* npr = getComponentFor(entity_id);
-    return npr ? npr->total_alerts_triggered : 0;
+components::NpcPatrolRoute::Status
+NpcPatrolRouteSystem::getStatus(const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? comp->status
+                : components::NpcPatrolRoute::Status::Idle;
 }
 
-int NPCPatrolRouteSystem::getWaypointsVisited(const std::string& entity_id) const {
-    auto* npr = getComponentFor(entity_id);
-    return npr ? npr->waypoints_visited : 0;
+components::NpcPatrolRoute::PatrolMode
+NpcPatrolRouteSystem::getPatrolMode(const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? comp->patrol_mode
+                : components::NpcPatrolRoute::PatrolMode::Loop;
+}
+
+bool NpcPatrolRouteSystem::isPatrolling(const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    if (!comp) return false;
+    return comp->status != components::NpcPatrolRoute::Status::Idle;
+}
+
+float NpcPatrolRouteSystem::getSpeed(const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? comp->speed : 0.0f;
+}
+
+float NpcPatrolRouteSystem::getDwellTimer(const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? comp->dwell_timer : 0.0f;
+}
+
+int NpcPatrolRouteSystem::getTotalCircuits(const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? comp->total_circuits : 0;
+}
+
+int NpcPatrolRouteSystem::getTotalWaypointsVisited(
+        const std::string& entity_id) const {
+    auto* comp = getComponentFor(entity_id);
+    return comp ? comp->total_waypoints_visited : 0;
 }
 
 } // namespace systems
