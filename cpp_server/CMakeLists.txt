@@ -435,6 +435,9 @@ set(CORE_SOURCES
     src/systems/stasis_web_system.cpp
     src/systems/asset_safety_system.cpp
     src/systems/command_burst_system.cpp
+    src/systems/target_painter_system.cpp
+    src/systems/warp_scrambler_system.cpp
+    src/systems/remote_repair_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -884,6 +887,12 @@ set(SERVER_HEADERS
     include/systems/ecm_jamming_system.h
     include/systems/sensor_dampening_system.h
     include/systems/tracking_disruption_system.h
+    include/systems/stasis_web_system.h
+    include/systems/asset_safety_system.h
+    include/systems/command_burst_system.h
+    include/systems/target_painter_system.h
+    include/systems/warp_scrambler_system.h
+    include/systems/remote_repair_system.h
 )
 
 # Steam SDK configuration

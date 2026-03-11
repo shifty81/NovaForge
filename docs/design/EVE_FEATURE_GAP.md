@@ -207,6 +207,14 @@ This document analyzes gameplay features from EVE Online that are missing or inc
 - [x] ECM jamming (`ecm_jamming_system.h`)
 - [x] Tracking disruption (`tracking_disruption_system.h`)
 - [x] Guidance disruption (missiles) (`tracking_disruption_system.h`)
+- [x] Target painter — signature radius amplification (`target_painter_system.h`)
+- [x] Warp scrambler / warp disruptor (`warp_scrambler_system.h`)
+
+### 16. **Logistics & Support**
+- [x] Remote shield repair (`remote_repair_system.h`)
+- [x] Remote armor repair (`remote_repair_system.h`)
+- [x] Remote hull repair (`remote_repair_system.h`)
+- [x] Fleet command bursts (`command_burst_system.h`)
 
 ### 15. **Abyssal Deadspace**
 - [x] Filament entry system (`abyssal_filament_system.h`)
