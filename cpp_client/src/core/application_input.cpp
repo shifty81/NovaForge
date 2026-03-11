@@ -65,12 +65,12 @@ void Application::handleKeyInput(int key, int action, int mods) {
         return;
     }
     
-    // Astralis-style shortcut keys with modifier:
-    // Q + click = Approach (we just toggle approach mode)
-    // W + click = Orbit
-    // E + click = Keep at Range
-    // D + click = Dock/Jump Through
+    // Tactical shortcut keys for navigation commands.
+    // WASD are reserved for direct ship flight (see updateLocalMovement).
+    // Q and E trigger mode-then-click auto-navigation.
+    // Dock/Jump and Warp-to are accessible via right-click context menu.
     if (key == GLFW_KEY_Q) {
+        // Q = Approach — set approach mode then click a target
         m_approachActive = true;
         m_orbitActive = false;
         m_keepRangeActive = false;
@@ -78,14 +78,6 @@ void Application::handleKeyInput(int key, int action, int mods) {
         m_warpModeActive = false;
         m_activeModeText = "APPROACH - click a target";
         std::cout << "[Controls] Approach mode active — click a target" << std::endl;
-    } else if (key == GLFW_KEY_W) {
-        m_approachActive = false;
-        m_orbitActive = true;
-        m_keepRangeActive = false;
-        m_dockingModeActive = false;
-        m_warpModeActive = false;
-        m_activeModeText = "ORBIT - click a target";
-        std::cout << "[Controls] Orbit mode active — click a target" << std::endl;
     } else if (key == GLFW_KEY_E) {
         m_approachActive = false;
         m_orbitActive = false;
@@ -94,26 +86,9 @@ void Application::handleKeyInput(int key, int action, int mods) {
         m_warpModeActive = false;
         m_activeModeText = "KEEP AT RANGE - click a target";
         std::cout << "[Controls] Keep at Range mode active — click a target" << std::endl;
-    } else if (key == GLFW_KEY_D) {
-        m_approachActive = false;
-        m_orbitActive = false;
-        m_keepRangeActive = false;
-        m_dockingModeActive = true;
-        m_warpModeActive = false;
-        m_activeModeText = "DOCK / JUMP - click a station or gate";
-        std::cout << "[Controls] Docking mode active — click a station or gate" << std::endl;
     } else if (key == GLFW_KEY_S && (mods & GLFW_MOD_CONTROL)) {
-        // Ctrl+S = stop ship (Astralis standard) — checked before bare S
+        // Ctrl+S = stop ship
         commandStopShip();
-    } else if (key == GLFW_KEY_S) {
-        // S + Click = Warp To (Astralis standard)
-        m_approachActive = false;
-        m_orbitActive = false;
-        m_keepRangeActive = false;
-        m_dockingModeActive = false;
-        m_warpModeActive = true;
-        m_activeModeText = "WARP TO - click a target";
-        std::cout << "[Controls] Warp mode active — click a target" << std::endl;
     } else if (key == GLFW_KEY_F) {
         // F = Engage/Recall drones (Astralis standard)
         std::cout << "[Controls] Drone command: engage/recall" << std::endl;
@@ -609,13 +584,19 @@ void Application::updateOnFootMovement(float deltaTime) {
         m_activeModeText.clear();
     }
 
-    // ── Compute character-relative movement direction from yaw ────────
-    // m_fpsYaw is kept in sync with the camera by handleMouseMove, so
-    // "forward" always points the same direction the player is looking.
-    // Convention: yaw=0 → forward along -Z (into the screen).
-    float yawRad = glm::radians(m_fpsYaw);
-    glm::vec3 forward(std::sin(yawRad), 0.0f, -std::cos(yawRad));
-    glm::vec3 right(std::cos(yawRad), 0.0f, std::sin(yawRad));
+    // ── Standard FPS movement template ───────────────────────────────
+    // Derive forward and right directly from the live camera orientation.
+    // This is more robust than recomputing from a yaw angle and guarantees
+    // movement is always exactly relative to what the player sees on screen.
+    glm::vec3 camFwd  = m_camera->getFPSForward();
+    // Project forward onto the horizontal plane so looking up/down does not
+    // affect XZ speed (standard FPS behaviour).
+    glm::vec3 forward = glm::vec3(camFwd.x, 0.0f, camFwd.z);
+    if (glm::length(forward) > 0.001f)
+        forward = glm::normalize(forward);
+    else
+        forward = glm::vec3(0.0f, 0.0f, -1.0f);  // fallback: looking straight up/down
+    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
     glm::vec3 moveDir = forward * moveZ + right * moveX;
     if (glm::length(moveDir) > 0.01f) {
@@ -697,15 +678,18 @@ void Application::updateFlightMovement(float deltaTime) {
         m_activeModeText.clear();
     }
 
-    // ── Build movement vector in camera-relative frame ────────────────
-    // Use the camera's actual FPS forward/right vectors so that movement
-    // is always relative to where the player is looking, including pitch.
+    // ── Standard 6DOF flight template ────────────────────────────────
+    // Derive all direction vectors from the live camera so movement is
+    // always exactly what the player sees, with no angle-sync drift.
     glm::vec3 camForward = m_camera->getFPSForward();
-    // Right vector is perpendicular to forward in the XZ plane (no Y tilt
-    // for strafing so it feels natural — same as standard FPS/EVA controls).
-    // Convention: yaw=0 → forward along -Z, right along +X.
-    float yawRad = glm::radians(m_fpsYaw);
-    glm::vec3 right(std::cos(yawRad), 0.0f, std::sin(yawRad));
+    // Horizontal right vector: cross(forward_xz, worldUp).
+    // No Y tilt so strafing feels natural (standard FPS/EVA convention).
+    glm::vec3 fwdXZ = glm::vec3(camForward.x, 0.0f, camForward.z);
+    if (glm::length(fwdXZ) < 0.001f)
+        fwdXZ = glm::vec3(0.0f, 0.0f, -1.0f);  // fallback: looking straight up/down
+    else
+        fwdXZ = glm::normalize(fwdXZ);
+    glm::vec3 right = glm::normalize(glm::cross(fwdXZ, glm::vec3(0.0f, 1.0f, 0.0f)));
     glm::vec3 up(0.0f, 1.0f, 0.0f);
 
     glm::vec3 moveDir = camForward * moveZ + right * moveX + up * moveY;

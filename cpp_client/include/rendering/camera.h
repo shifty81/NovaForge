@@ -54,6 +54,17 @@ public:
     glm::vec3 getPosition() const;
 
     /**
+     * Get the orbit camera's forward direction (from camera toward target).
+     * Useful for deriving ship movement direction in InSpace mode.
+     */
+    glm::vec3 getForward() const { return m_forward; }
+
+    /**
+     * Get the orbit camera's right direction (perpendicular to forward on XZ plane).
+     */
+    glm::vec3 getRight() const { return m_right; }
+
+    /**
      * Camera controls
      */
     void zoom(float delta);

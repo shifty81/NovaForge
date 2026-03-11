@@ -512,43 +512,17 @@ std::unique_ptr<Model> Model::createShipModel(const std::string& shipType, const
         }
     }
 
-    // Fall back to procedural generation
-    // Get faction colors
-    FactionColors colors = getFactionColors(faction);
-
-    // Create appropriate model based on ship type
-    std::unique_ptr<Model> model;
-    if (isFrigate(shipType)) {
-        model = createFrigateModel(colors);
-    } else if (isDestroyer(shipType)) {
-        model = createDestroyerModel(colors);
-    } else if (isMiningBarge(shipType)) {
-        model = createMiningBargeModel(colors);
-    } else if (isTech2Cruiser(shipType)) {
-        model = createTech2CruiserModel(colors);
-    } else if (isCruiser(shipType)) {
-        model = createCruiserModel(colors);
-    } else if (isCommandShip(shipType)) {
-        model = createBattlecruiserModel(colors); // Command Ships share battlecruiser hull size
-    } else if (isBattlecruiser(shipType)) {
-        model = createBattlecruiserModel(colors);
-    } else if (isBattleship(shipType)) {
-        model = createBattleshipModel(colors);
-    } else if (isCarrier(shipType)) {
-        model = createCarrierModel(colors);
-    } else if (isDreadnought(shipType)) {
-        model = createDreadnoughtModel(colors);
-    } else if (isTitan(shipType)) {
-        model = createTitanModel(colors);
-    } else if (isStation(shipType)) {
-        model = createStationModel(colors, shipType);
-    } else if (isAsteroid(shipType)) {
-        model = createAsteroidModel(shipType);
-    } else {
-        model = createGenericModel(colors);
+    // Fall back to the racial-design generator which uses ShipPartLibrary to
+    // assemble ships with engines, turret mounts and faction detail parts,
+    // producing a much more recognisable silhouette than a plain hull cylinder.
+    // Stations and asteroids keep their dedicated generators.
+    if (isStation(shipType)) {
+        return createStationModel(getFactionColors(faction), shipType);
     }
-
-    return model;
+    if (isAsteroid(shipType)) {
+        return createAsteroidModel(shipType);
+    }
+    return createShipModelWithRacialDesign(shipType, faction);
 }
 
 // ==================== Procedural Hull Generation via buildSegmentedHull ====================

@@ -4,7 +4,9 @@
 #include "core/solar_system_scene.h"
 #include "core/ship_physics.h"
 #include "rendering/renderer.h"
+#include "rendering/window.h"
 #include "ui/atlas/atlas_hud.h"
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -156,7 +158,69 @@ void Application::updateLocalMovement(float deltaTime) {
     static constexpr float WARP_EXIT_DIST = 100.0f;         // Exit warp at this range
     static constexpr float ALIGN_TURN_RATE = 1.5f;          // rad/s — how fast ship rotates toward target
     static constexpr float ALIGN_SPEED_FRACTION = 0.75f;    // Must reach 75% max speed to warp
-    
+
+    // ── Standard FPS-style direct ship flight ─────────────────────────
+    // WASD directly controls ship thrust, following the same camera-relative
+    // template used for on-foot movement:
+    //   W / S = thrust forward / backward (camera's projected forward on XZ)
+    //   A / D = thrust left / right (strafe)
+    //   Shift = boost to 3× normal thrust
+    // Holding any WASD key cancels pending tactical auto-navigation so the
+    // player always has direct control.
+    if (m_window && m_window->getHandle()) {
+        GLFWwindow* win = m_window->getHandle();
+
+        float fw = (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS) ?  1.0f : 0.0f;
+        float bk = (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS) ? -1.0f : 0.0f;
+        float lf = (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS) ? -1.0f : 0.0f;
+        float rt = (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS) ?  1.0f : 0.0f;
+
+        float moveZ = fw + bk;  // forward/back
+        float moveX = lf + rt;  // strafe
+
+        if (moveZ != 0.0f || moveX != 0.0f) {
+            // Cancel any pending auto-navigation command — player takes manual control
+            m_currentMoveCommand = MoveCommand::None;
+            m_approachActive     = false;
+            m_orbitActive        = false;
+            m_keepRangeActive    = false;
+            m_dockingModeActive  = false;
+            m_warpModeActive     = false;
+
+            // Derive ship-forward and ship-right from the orbit camera's current
+            // view direction (from camera toward the ship target), projected
+            // onto the horizontal plane — identical convention to on-foot FPS.
+            glm::vec3 camFwd  = m_camera->getForward();
+            glm::vec3 shipFwd = glm::vec3(camFwd.x, 0.0f, camFwd.z);
+            if (glm::length(shipFwd) > 0.001f)
+                shipFwd = glm::normalize(shipFwd);
+            else
+                shipFwd = glm::vec3(0.0f, 0.0f, -1.0f);
+            glm::vec3 crossVec  = glm::cross(shipFwd, glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::vec3 shipRight = (glm::length(crossVec) > 0.001f)
+                                  ? glm::normalize(crossVec)
+                                  : glm::vec3(1.0f, 0.0f, 0.0f);
+
+            glm::vec3 thrustDir = shipFwd * moveZ + shipRight * moveX;
+            if (glm::length(thrustDir) > 0.001f)
+                thrustDir = glm::normalize(thrustDir);
+
+            bool boost = (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+            float thrustAccel = ACCELERATION * (boost ? 3.0f : 1.0f);
+
+            m_playerVelocity += thrustDir * thrustAccel * deltaTime;
+
+            // Clamp to max speed (boost allows up to 3× max)
+            float maxSpd = m_playerMaxSpeed * (boost ? 3.0f : 1.0f);
+            float spd    = glm::length(m_playerVelocity);
+            if (spd > maxSpd)
+                m_playerVelocity = glm::normalize(m_playerVelocity) * maxSpd;
+            m_playerSpeed = glm::length(m_playerVelocity);
+
+            m_activeModeText = boost ? "BOOST" : "FLYING";
+        }
+    }
+
     glm::vec3 playerPos = playerEntity->getPosition();
     
     if (m_currentMoveCommand == MoveCommand::None) {
