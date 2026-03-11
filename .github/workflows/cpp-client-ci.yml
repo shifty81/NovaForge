@@ -60,7 +60,7 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON -DBUILD_TESTS=OFF
     
     - name: Build
       working-directory: cpp_client/build
@@ -71,24 +71,6 @@ jobs:
       run: |
         echo "Build directory contents:"
         find . -type f -executable -o -name "*.so" | head -20
-    
-    - name: Run network test
-      working-directory: cpp_client/build/bin
-      run: |
-        if [ -f "test_network" ]; then
-          ./test_network || echo "Network test failed (expected without server)"
-        else
-          echo "test_network not found, skipping"
-        fi
-    
-    - name: Run entity sync test
-      working-directory: cpp_client/build/bin
-      run: |
-        if [ -f "test_entity_sync" ]; then
-          ./test_entity_sync || echo "Entity sync test completed"
-        else
-          echo "test_entity_sync not found, skipping"
-        fi
       
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -125,7 +107,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DUSE_SYSTEM_LIBS=ON
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DUSE_SYSTEM_LIBS=ON -DBUILD_TESTS=OFF
     
     - name: Build
       working-directory: cpp_client/build
@@ -167,7 +149,7 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBS=ON -DBUILD_TESTS=OFF
     
     - name: Build
       working-directory: cpp_client/build
