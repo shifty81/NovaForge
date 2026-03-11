@@ -645,7 +645,7 @@ void Application::updateOnFootMovement(float deltaTime) {
     // current stance.  When grounded the camera must track the target
     // eye height so that crouching/standing produces visible movement.
     float eyeHeight = crouchHeld ? FPS_CROUCH_EYE_HEIGHT : FPS_STAND_EYE_HEIGHT;
-    if (camPos.y <= eyeHeight) {
+    if (camPos.y < eyeHeight) {
         camPos.y    = eyeHeight;
         m_fpsVelY   = 0.0f;
         m_fpsGrounded = true;
