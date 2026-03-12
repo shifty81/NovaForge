@@ -441,6 +441,9 @@ set(CORE_SOURCES
     src/systems/daily_quest_system.cpp
     src/systems/market_watchlist_system.cpp
     src/systems/player_session_stats_system.cpp
+    src/systems/achievement_system.cpp
+    src/systems/mining_ledger_system.cpp
+    src/systems/fleet_broadcast_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -899,6 +902,9 @@ set(SERVER_HEADERS
     include/systems/daily_quest_system.h
     include/systems/market_watchlist_system.h
     include/systems/player_session_stats_system.h
+    include/systems/achievement_system.h
+    include/systems/mining_ledger_system.h
+    include/systems/fleet_broadcast_system.h
 )
 
 # Steam SDK configuration
