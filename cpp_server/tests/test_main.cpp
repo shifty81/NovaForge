@@ -474,6 +474,14 @@ void run_player_session_stats_system_tests();
 void run_achievement_system_tests();
 void run_mining_ledger_system_tests();
 void run_fleet_broadcast_system_tests();
+void run_player_mode_system_tests();
+void run_control_port_system_tests();
+void run_slot_grid_system_tests();
+void run_density_field_system_tests();
+void run_interior_nav_graph_system_tests();
+void run_drone_logistics_system_tests();
+void run_module_capability_system_tests();
+void run_rig_link_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -945,6 +953,14 @@ int main() {
     run_achievement_system_tests();
     run_mining_ledger_system_tests();
     run_fleet_broadcast_system_tests();
+    run_player_mode_system_tests();
+    run_control_port_system_tests();
+    run_slot_grid_system_tests();
+    run_density_field_system_tests();
+    run_interior_nav_graph_system_tests();
+    run_drone_logistics_system_tests();
+    run_module_capability_system_tests();
+    run_rig_link_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

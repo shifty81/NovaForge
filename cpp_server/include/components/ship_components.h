@@ -1521,6 +1521,94 @@ public:
     COMPONENT_TYPE(MetaLevelState)
 };
 
+// ---------------------------------------------------------------------------
+// SlotGridState — 3-D grid of module slots on a ship hull
+// ---------------------------------------------------------------------------
+class SlotGridState : public ecs::Component {
+public:
+    enum ModuleSize { XS = 0, S, M, L, XL, XXL };
+
+    struct Slot {
+        std::string slot_id;
+        int         x = 0;
+        int         y = 0;
+        int         z = 0;
+        int         size = 0;
+        std::string module_type;
+        bool        occupied  = false;
+        std::string module_id;
+    };
+
+    std::vector<Slot> slots;
+    int         max_slots    = 50;
+    int         grid_width   = 10;
+    int         grid_height  = 10;
+    int         grid_depth   = 5;
+    std::string ship_class;
+    int         tier         = 1;
+    int         total_modules_placed = 0;
+    float       elapsed      = 0.0f;
+    bool        active       = true;
+
+    COMPONENT_TYPE(SlotGridState)
+};
+
+// ---------------------------------------------------------------------------
+// DensityFieldState — voxel density field for procedural hull shaping
+// ---------------------------------------------------------------------------
+class DensityFieldState : public ecs::Component {
+public:
+    struct Voxel {
+        int   x = 0;
+        int   y = 0;
+        int   z = 0;
+        float density = 0.0f;
+    };
+
+    std::vector<Voxel> voxels;
+    int   max_voxels    = 5000;
+    int   field_width   = 20;
+    int   field_height  = 20;
+    int   field_depth   = 10;
+    float iso_value     = 0.5f;
+    bool  symmetry_x    = true;
+    bool  symmetry_y    = false;
+    bool  symmetry_z    = false;
+    int   total_updates = 0;
+    float elapsed       = 0.0f;
+    bool  active        = true;
+
+    COMPONENT_TYPE(DensityFieldState)
+};
+
+// ---------------------------------------------------------------------------
+// ModuleCapabilityState — capabilities provided by installed ship modules
+// ---------------------------------------------------------------------------
+class ModuleCapabilityState : public ecs::Component {
+public:
+    struct Capability {
+        std::string capability_id;
+        std::string capability_type;
+        float       strength = 1.0f;
+        bool        enabled  = true;
+    };
+
+    struct InstalledModule {
+        std::string              module_id;
+        std::string              module_type;
+        int                      size = 0;
+        std::vector<Capability>  capabilities;
+    };
+
+    std::vector<InstalledModule> modules;
+    int   max_modules                  = 30;
+    int   total_capabilities_registered = 0;
+    float elapsed                      = 0.0f;
+    bool  active                       = true;
+
+    COMPONENT_TYPE(ModuleCapabilityState)
+};
+
 } // namespace components
 } // namespace atlas
 

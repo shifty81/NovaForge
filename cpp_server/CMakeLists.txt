@@ -444,6 +444,14 @@ set(CORE_SOURCES
     src/systems/achievement_system.cpp
     src/systems/mining_ledger_system.cpp
     src/systems/fleet_broadcast_system.cpp
+    src/systems/player_mode_system.cpp
+    src/systems/control_port_system.cpp
+    src/systems/slot_grid_system.cpp
+    src/systems/density_field_system.cpp
+    src/systems/interior_nav_graph_system.cpp
+    src/systems/drone_logistics_system.cpp
+    src/systems/module_capability_system.cpp
+    src/systems/rig_link_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -905,6 +913,14 @@ set(SERVER_HEADERS
     include/systems/achievement_system.h
     include/systems/mining_ledger_system.h
     include/systems/fleet_broadcast_system.h
+    include/systems/player_mode_system.h
+    include/systems/control_port_system.h
+    include/systems/slot_grid_system.h
+    include/systems/density_field_system.h
+    include/systems/interior_nav_graph_system.h
+    include/systems/drone_logistics_system.h
+    include/systems/module_capability_system.h
+    include/systems/rig_link_system.h
 )
 
 # Steam SDK configuration

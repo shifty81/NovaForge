@@ -1128,6 +1128,32 @@ public:
     COMPONENT_TYPE(NpcPatrolRoute)
 };
 
+// ---------------------------------------------------------------------------
+// InteriorNavGraphState — walkable navigation graph inside a ship/station
+// ---------------------------------------------------------------------------
+class InteriorNavGraphState : public ecs::Component {
+public:
+    enum NodeType { Door = 0, Ramp, Ladder, Elevator, Airlock, Corridor, Platform };
+
+    struct NavNode {
+        std::string              node_id;
+        int                      node_type      = 0;
+        float                    x              = 0.0f;
+        float                    y              = 0.0f;
+        float                    z              = 0.0f;
+        float                    traversal_cost = 1.0f;
+        std::vector<std::string> connections;
+    };
+
+    std::vector<NavNode> nodes;
+    int   max_nodes           = 200;
+    int   total_path_queries  = 0;
+    float elapsed             = 0.0f;
+    bool  active              = true;
+
+    COMPONENT_TYPE(InteriorNavGraphState)
+};
+
 } // namespace components
 } // namespace atlas
 
