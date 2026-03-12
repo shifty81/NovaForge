@@ -1677,7 +1677,8 @@ public:
  * total_quantity, total_isk, and total_entries across all events.
  * The ledger is capped at max_entries (default 100); oldest entries are
  * purged when the cap is exceeded.  Entries may be filtered by ore_type
- * for reporting.  clearLedger wipes all entries and resets aggregates.
+ * for reporting.  clearLedger wipes all entries but preserves lifetime
+ * aggregates (total_quantity, total_isk, total_entries).
  */
 class MiningLedgerState : public ecs::Component {
 public:
