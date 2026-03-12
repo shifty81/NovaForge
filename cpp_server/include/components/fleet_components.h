@@ -974,6 +974,51 @@ public:
     COMPONENT_TYPE(FleetAfterActionReport)
 };
 
+// ---------------------------------------------------------------------------
+// FleetBroadcastState — fleet broadcast message management
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks fleet broadcast messages (target, align to, warp to,
+ *        need reps, etc.) for coordination among fleet members.
+ *
+ * Each Broadcast has an id, type (Target/AlignTo/WarpTo/NeedShieldReps/
+ * NeedArmorReps/NeedCapacitor/EnemySpotted/HoldPosition), sender_id,
+ * target_label, and a ttl countdown.  Broadcasts expire when ttl reaches 0
+ * and are removed on the next tick.  max_broadcasts caps the active list
+ * (default 20).  total_sent / total_expired track lifetime statistics.
+ */
+class FleetBroadcastState : public ecs::Component {
+public:
+    enum class BroadcastType {
+        Target,
+        AlignTo,
+        WarpTo,
+        NeedShieldReps,
+        NeedArmorReps,
+        NeedCapacitor,
+        EnemySpotted,
+        HoldPosition
+    };
+
+    struct Broadcast {
+        std::string   broadcast_id;
+        BroadcastType type        = BroadcastType::Target;
+        std::string   sender_id;
+        std::string   target_label;  // human-readable description
+        float         ttl         = 30.0f;  // seconds until expiry
+    };
+
+    std::string fleet_id;
+    std::vector<Broadcast> broadcasts;
+    int   max_broadcasts   = 20;
+    int   total_sent       = 0;
+    int   total_expired    = 0;
+    float elapsed          = 0.0f;
+    bool  active           = true;
+
+    COMPONENT_TYPE(FleetBroadcastState)
+};
+
 } // namespace components
 } // namespace atlas
 

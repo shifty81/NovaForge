@@ -1666,6 +1666,42 @@ public:
     COMPONENT_TYPE(MarketWatchlist)
 };
 
+// ---------------------------------------------------------------------------
+// MiningLedgerState — mining session history per player/corp
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks mining history — ore types, quantities, ISK values.
+ *
+ * Each LedgerEntry records a mining event with ore_type, quantity, isk_value,
+ * and a timestamp (elapsed at time of entry).  Aggregate counters track
+ * total_quantity, total_isk, and total_entries across all events.
+ * The ledger is capped at max_entries (default 100); oldest entries are
+ * purged when the cap is exceeded.  Entries may be filtered by ore_type
+ * for reporting.  clearLedger wipes all entries but preserves lifetime
+ * aggregates (total_quantity, total_isk, total_entries).
+ */
+class MiningLedgerState : public ecs::Component {
+public:
+    struct LedgerEntry {
+        std::string entry_id;
+        std::string ore_type;     // e.g. "Veldspar", "Kernite", "Mercoxit"
+        int         quantity   = 0;
+        float       isk_value  = 0.0f;
+        float       timestamp  = 0.0f;  // elapsed time when entry was recorded
+    };
+
+    std::string owner_id;
+    std::vector<LedgerEntry> entries;
+    int   max_entries     = 100;
+    int   total_entries   = 0;   // lifetime (includes purged entries)
+    int   total_quantity  = 0;   // lifetime aggregate quantity
+    float total_isk       = 0.0f;// lifetime aggregate ISK
+    float elapsed         = 0.0f;
+    bool  active          = true;
+
+    COMPONENT_TYPE(MiningLedgerState)
+};
+
 } // namespace components
 } // namespace atlas
 

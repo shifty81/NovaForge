@@ -14,6 +14,9 @@ bl_info = {
     "category": "Add Mesh",
 }
 
+import importlib
+import traceback
+
 import bpy
 from bpy.props import (
     EnumProperty,
@@ -22,8 +25,6 @@ from bpy.props import (
     FloatProperty,
     StringProperty,
 )
-
-import traceback
 
 # Each submodule is imported inside a try/except so that a single broken
 # module does not prevent the entire addon from loading.  Modules that fail
@@ -54,7 +55,7 @@ _failed_submodules = []
 
 for _name in _submodule_names:
     try:
-        _mod = __import__(f".{_name}", globals(), locals(), [_name], 1)
+        _mod = importlib.import_module(f".{_name}", package=__name__)
         _submodules[_name] = _mod
     except Exception as _exc:
         _submodules[_name] = None

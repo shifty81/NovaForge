@@ -2694,6 +2694,45 @@ public:
     COMPONENT_TYPE(RemoteRepairState)
 };
 
+// ---------------------------------------------------------------------------
+// AchievementState — player achievement / milestone tracking
+// ---------------------------------------------------------------------------
+/**
+ * @brief Tracks player achievements with categories, progress, and rewards.
+ *
+ * Each Achievement has an id, name, category, required_count, current_count,
+ * and an unlocked flag.  Achievements belong to a Category (Combat, Economy,
+ * Exploration, Social, Progression).  When current_count reaches
+ * required_count the achievement is marked unlocked and total_unlocked is
+ * incremented.  An optional reward_points value is accumulated in
+ * total_reward_points when unlocked.  max_achievements caps the list
+ * (default 50).
+ */
+class AchievementState : public ecs::Component {
+public:
+    enum class Category { Combat, Economy, Exploration, Social, Progression };
+
+    struct Achievement {
+        std::string id;
+        std::string name;
+        Category    category       = Category::Progression;
+        int         required_count = 1;
+        int         current_count  = 0;
+        bool        unlocked       = false;
+        int         reward_points  = 0;
+    };
+
+    std::vector<Achievement> achievements;
+    int   max_achievements     = 50;
+    int   total_unlocked       = 0;
+    int   total_reward_points  = 0;
+    int   total_progress_calls = 0;
+    float elapsed              = 0.0f;
+    bool  active               = true;
+
+    COMPONENT_TYPE(AchievementState)
+};
+
 } // namespace components
 } // namespace atlas
 

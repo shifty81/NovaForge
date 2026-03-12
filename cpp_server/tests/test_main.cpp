@@ -471,6 +471,9 @@ void run_remote_repair_system_tests();
 void run_daily_quest_system_tests();
 void run_market_watchlist_system_tests();
 void run_player_session_stats_system_tests();
+void run_achievement_system_tests();
+void run_mining_ledger_system_tests();
+void run_fleet_broadcast_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -939,6 +942,9 @@ int main() {
     run_daily_quest_system_tests();
     run_market_watchlist_system_tests();
     run_player_session_stats_system_tests();
+    run_achievement_system_tests();
+    run_mining_ledger_system_tests();
+    run_fleet_broadcast_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
