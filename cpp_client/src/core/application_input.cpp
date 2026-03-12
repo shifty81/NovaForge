@@ -692,7 +692,11 @@ void Application::updateFlightMovement(float deltaTime) {
     glm::vec3 right = glm::normalize(glm::cross(fwdXZ, glm::vec3(0.0f, 1.0f, 0.0f)));
     glm::vec3 up(0.0f, 1.0f, 0.0f);
 
-    glm::vec3 moveDir = camForward * moveZ + right * moveX + up * moveY;
+    // Use Y-flattened forward for WASD so movement stays horizontal
+    // (standard FPS convention).  Full 3D forward is only used if we
+    // want pitch-coupled thrust, but the issue reported it "doesn't
+    // feel right" — flattening matches the on-foot template.
+    glm::vec3 moveDir = fwdXZ * moveZ + right * moveX + up * moveY;
     if (glm::length(moveDir) > 0.01f) {
         moveDir = glm::normalize(moveDir);
     }

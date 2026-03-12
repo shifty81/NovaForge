@@ -56,7 +56,7 @@ for _name in _submodule_names:
     try:
         _mod = __import__(f".{_name}", globals(), locals(), [_name], 1)
         _submodules[_name] = _mod
-    except ImportError as _exc:
+    except Exception as _exc:
         _submodules[_name] = None
         _failed_submodules.append((_name, _exc))
         print(f"[AtlasForge] WARNING: failed to import {_name}: {_exc}")
@@ -408,8 +408,8 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
 
         # Set up animations if requested
         if props.generate_animations:
-            from . import ship_parts as _sp
-            scale = _sp.SHIP_CONFIGS.get(props.ship_class, {}).get('scale', 1.0)
+            from . import ship_generator as _sg
+            scale = _sg.SHIP_CONFIGS.get(props.ship_class, {}).get('scale', 1.0)
             animation_system.setup_ship_animations(
                 hull,
                 scale=scale,
