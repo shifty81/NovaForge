@@ -303,9 +303,15 @@ void Renderer::renderStarfield(Camera& camera) {
     
     // Disable depth writing for starfield
     glDepthMask(GL_FALSE);
+    // Enable shader-controlled point size so gl_PointSize in the vertex
+    // shader takes effect (without this, all points are 1 px).
+    glEnable(GL_PROGRAM_POINT_SIZE);
     
     m_starfieldShader->use();
-    m_starfieldShader->setMat4("view", camera.getViewMatrix());
+    // Strip translation from the view matrix so the starfield appears
+    // infinitely far away regardless of camera position (skybox technique).
+    glm::mat4 viewRotOnly = glm::mat4(glm::mat3(camera.getViewMatrix()));
+    m_starfieldShader->setMat4("view", viewRotOnly);
     m_starfieldShader->setMat4("projection", camera.getProjectionMatrix());
     
     // Pass time for twinkling animation (uses wall clock for frame-rate independent animation)
@@ -316,6 +322,7 @@ void Renderer::renderStarfield(Camera& camera) {
     glDrawArrays(GL_POINTS, 0, m_starCount);
     glBindVertexArray(0);
     
+    glDisable(GL_PROGRAM_POINT_SIZE);
     // Re-enable depth writing
     glDepthMask(GL_TRUE);
 }
