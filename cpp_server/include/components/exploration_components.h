@@ -1330,6 +1330,33 @@ public:
     COMPONENT_TYPE(AbyssalEscalationState)
 };
 
+// ---------------------------------------------------------------------------
+// SignatureAnalysisState — probe scanner signature tracking
+// ---------------------------------------------------------------------------
+class SignatureAnalysisState : public ecs::Component {
+public:
+    enum class SigType { Anomaly, Relic, Data, Gas, Wormhole, Combat };
+
+    struct Signature {
+        std::string sig_id;
+        std::string sig_name;
+        SigType     type                    = SigType::Anomaly;
+        float       strength                = 100.0f;  // 0–100
+        float       scan_progress           = 0.0f;    // 0–100
+        float       scan_strength_required  = 10.0f;
+        bool        identified              = false;
+    };
+
+    std::vector<Signature> signatures;
+    int   max_signatures        = 50;
+    float scan_contribution     = 10.0f;
+    int   total_identified      = 0;
+    float elapsed               = 0.0f;
+    bool  active                = true;
+
+    COMPONENT_TYPE(SignatureAnalysisState)
+};
+
 } // namespace components
 } // namespace atlas
 

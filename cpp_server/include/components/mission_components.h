@@ -296,6 +296,40 @@ public:
     COMPONENT_TYPE(MissionReward)
 };
 
+// ---------------------------------------------------------------------------
+// AgentMissionState — NPC agent mission lifecycle management
+// ---------------------------------------------------------------------------
+class AgentMissionState : public ecs::Component {
+public:
+    enum class MissionStatus { Offered, Active, Completed, Failed, Expired };
+    enum class MissionType  { Combat, Courier, Mining, Exploration };
+
+    struct AgentMission {
+        std::string   mission_id;
+        std::string   mission_name;
+        std::string   agent_id;
+        MissionStatus status          = MissionStatus::Offered;
+        MissionType   type            = MissionType::Combat;
+        float         isk_reward      = 0.0f;
+        int           lp_reward       = 0;
+        float         time_limit      = 3600.0f;
+        float         time_elapsed    = 0.0f;
+        int           offered_count   = 1;
+    };
+
+    std::vector<AgentMission> missions;
+    int   max_missions      = 20;
+    float total_isk_earned  = 0.0f;
+    int   total_lp_earned   = 0;
+    int   total_completed   = 0;
+    int   total_failed      = 0;
+    int   total_expired     = 0;
+    float elapsed           = 0.0f;
+    bool  active            = true;
+
+    COMPONENT_TYPE(AgentMissionState)
+};
+
 } // namespace components
 } // namespace atlas
 

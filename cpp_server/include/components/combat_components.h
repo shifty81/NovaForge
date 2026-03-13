@@ -1156,6 +1156,33 @@ public:
     COMPONENT_TYPE(TrackingDisruptionState)
 };
 
+// ---------------------------------------------------------------------------
+// RepairTimerState — per-ship repair-over-time job tracking
+// ---------------------------------------------------------------------------
+class RepairTimerState : public ecs::Component {
+public:
+    enum class RepairLayer { Hull, Armor, Shield };
+
+    struct RepairJob {
+        std::string  job_id;
+        RepairLayer  layer             = RepairLayer::Hull;
+        float        amount_per_tick   = 0.0f;
+        int          ticks_remaining   = 0;
+        int          ticks_elapsed     = 0;
+        bool         completed         = false;
+    };
+
+    std::vector<RepairJob> jobs;
+    int   max_jobs              = 10;
+    int   total_jobs_started    = 0;
+    int   total_jobs_completed  = 0;
+    float total_repaired        = 0.0f;
+    float elapsed               = 0.0f;
+    bool  active                = true;
+
+    COMPONENT_TYPE(RepairTimerState)
+};
+
 } // namespace components
 } // namespace atlas
 
