@@ -161,42 +161,59 @@ def test_blender_manifest():
         print("✗ blender_manifest.toml is missing (required for Blender 4.2+)")
         return False
 
-    with open(manifest_file, 'r') as f:
-        content = f.read()
+    # Parse TOML properly when available, fall back to basic checks
+    manifest = None
+    try:
+        import tomllib
+        with open(manifest_file, 'rb') as f:
+            manifest = tomllib.load(f)
+    except ImportError:
+        try:
+            import tomli
+            with open(manifest_file, 'rb') as f:
+                manifest = tomli.load(f)
+        except ImportError:
+            pass
 
-    required_fields = [
-        'schema_version',
-        'id',
-        'version',
-        'name',
-        'tagline',
-        'maintainer',
-        'type',
-        'blender_version_min',
-        'license',
-    ]
+    required_fields = {
+        'schema_version': None,
+        'id': None,
+        'version': None,
+        'name': None,
+        'tagline': None,
+        'maintainer': None,
+        'type': 'add-on',
+        'blender_version_min': None,
+        'license': None,
+    }
 
     all_present = True
-    for field in required_fields:
-        # Simple check: field name appears as a key (at the start of a line)
-        found = False
-        for line in content.splitlines():
-            stripped = line.strip()
-            if stripped.startswith(field) and '=' in stripped:
-                found = True
-                break
-        if found:
-            print(f"✓ blender_manifest.toml has '{field}'")
-        else:
-            print(f"✗ blender_manifest.toml missing '{field}'")
-            all_present = False
-
-    # Verify type is "add-on"
-    if 'type = "add-on"' in content:
-        print("✓ type is 'add-on'")
+    if manifest is not None:
+        for field, expected in required_fields.items():
+            if field in manifest:
+                if expected is not None and manifest[field] != expected:
+                    print(f"✗ blender_manifest.toml '{field}' should be '{expected}', got '{manifest[field]}'")
+                    all_present = False
+                else:
+                    print(f"✓ blender_manifest.toml has '{field}'")
+            else:
+                print(f"✗ blender_manifest.toml missing '{field}'")
+                all_present = False
     else:
-        print("✗ type should be 'add-on'")
-        all_present = False
+        # Fallback: basic line-level check when no TOML parser is available
+        with open(manifest_file, 'r') as f:
+            content = f.read()
+        for field, expected in required_fields.items():
+            found = any(
+                line.strip().startswith(field) and '=' in line
+                for line in content.splitlines()
+                if not line.strip().startswith('#')
+            )
+            if found:
+                print(f"✓ blender_manifest.toml has '{field}'")
+            else:
+                print(f"✗ blender_manifest.toml missing '{field}'")
+                all_present = False
 
     return all_present
 

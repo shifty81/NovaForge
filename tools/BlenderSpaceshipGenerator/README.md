@@ -145,7 +145,7 @@ Blender 4.2 introduced the **Extensions** platform. This addon ships a
 3. Go to **Edit → Preferences → Get Extensions** (top bar).
 4. Open the drop-down arrow **▾** next to *Repositories* and choose
    **Install from Disk…**.
-5. Select the ZIP file you created.
+5. Select the `AtlasForgeGenerator.zip` file you created.
 6. The addon will appear under **Add-ons** and is enabled automatically.
 
 ### Blender 2.80 – 4.1 — Install from ZIP
