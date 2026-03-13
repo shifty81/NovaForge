@@ -150,6 +150,57 @@ def test_bl_info():
         return False
 
 
+def test_blender_manifest():
+    """Test that blender_manifest.toml exists and has required fields"""
+    print("\nTesting blender_manifest.toml (Blender 4.2+ extension)...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    manifest_file = os.path.join(addon_path, 'blender_manifest.toml')
+
+    if not os.path.exists(manifest_file):
+        print("✗ blender_manifest.toml is missing (required for Blender 4.2+)")
+        return False
+
+    with open(manifest_file, 'r') as f:
+        content = f.read()
+
+    required_fields = [
+        'schema_version',
+        'id',
+        'version',
+        'name',
+        'tagline',
+        'maintainer',
+        'type',
+        'blender_version_min',
+        'license',
+    ]
+
+    all_present = True
+    for field in required_fields:
+        # Simple check: field name appears as a key (at the start of a line)
+        found = False
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped.startswith(field) and '=' in stripped:
+                found = True
+                break
+        if found:
+            print(f"✓ blender_manifest.toml has '{field}'")
+        else:
+            print(f"✗ blender_manifest.toml missing '{field}'")
+            all_present = False
+
+    # Verify type is "add-on"
+    if 'type = "add-on"' in content:
+        print("✓ type is 'add-on'")
+    else:
+        print("✗ type should be 'add-on'")
+        all_present = False
+
+    return all_present
+
+
 def test_register_functions():
     """Test that register/unregister functions exist"""
     print("\nTesting register/unregister functions...")
@@ -1132,6 +1183,7 @@ def run_tests():
         ("Addon Structure", test_addon_structure),
         ("Python Syntax", test_file_syntax),
         ("bl_info Metadata", test_bl_info),
+        ("Blender Manifest (4.2+)", test_blender_manifest),
         ("Register Functions", test_register_functions),
         ("Documentation", test_documentation),
         ("Turret Hardpoint Configs", test_turret_hardpoint_configs),

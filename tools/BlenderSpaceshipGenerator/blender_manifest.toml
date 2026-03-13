@@ -1,0 +1,18 @@
+schema_version = "1.0.0"
+
+id = "atlasforge_generator"
+version = "3.0.0"
+name = "AtlasForge Generator"
+tagline = "Procedural spaceship, station, and asteroid generator"
+maintainer = "AtlasForge"
+type = "add-on"
+
+website = "https://github.com/shifty81/NovaForge"
+
+tags = ["Add Mesh"]
+
+blender_version_min = "4.2.0"
+
+license = [
+    "SPDX:GPL-3.0-or-later",
+]
