@@ -130,50 +130,64 @@ This addon integrates directly with the Nova Forge project:
 
 ## Installation
 
+### Quickest Way: Download Pre-Built ZIP
+
+Every push to the repository automatically builds ready-to-install ZIP files
+via GitHub Actions.  No manual packaging required.
+
+1. Go to the [**Actions** tab](../../actions/workflows/blender-addon-package.yml)
+   of this repository on GitHub.
+2. Click the latest successful **"Package Blender Addon"** run.
+3. Scroll to the **Artifacts** section and download the ZIP for your Blender
+   version:
+   | File | Blender version |
+   |------|----------------|
+   | `AtlasForgeGenerator-blender42plus` → **`AtlasForgeGenerator.zip`** | Blender **4.2+** (Extensions platform) |
+   | `AtlasForgeGenerator-legacy` → **`AtlasForgeGenerator_legacy.zip`** | Blender **2.80 – 4.1** (legacy Add-ons) |
+
 ### Blender 4.2+ — Install as Extension (Recommended)
 
-Blender 4.2 introduced the **Extensions** platform. This addon ships a
-`blender_manifest.toml` so it works with the new system out of the box.
+Blender 4.2 introduced the **Extensions** platform. Use
+**`AtlasForgeGenerator.zip`** (files at the ZIP root, `blender_manifest.toml`
+included).
 
-1. **Package the addon** — create a ZIP whose *root* contains all addon files
-   (including `blender_manifest.toml`):
-   ```bash
-   cd tools/BlenderSpaceshipGenerator/
-   zip -r ../AtlasForgeGenerator.zip .
-   ```
-2. Open **Blender 4.2+**.
-3. Go to **Edit → Preferences → Get Extensions** (top bar).
-4. Open the drop-down arrow **▾** next to *Repositories* and choose
+1. Open **Blender 4.2+**.
+2. Go to **Edit → Preferences → Get Extensions** (top bar).
+3. Open the drop-down arrow **▾** next to *Repositories* and choose
    **Install from Disk…**.
-5. Select the `AtlasForgeGenerator.zip` file you created.
-6. The addon will appear under **Add-ons** and is enabled automatically.
+4. Select `AtlasForgeGenerator.zip`.
+5. The addon appears under **Add-ons** and is enabled automatically.
 
-### Blender 2.80 – 4.1 — Install from ZIP
+> **Building manually**: `python tools/BlenderSpaceshipGenerator/package.py` in
+> the repo root creates both ZIPs in the repo root.
 
-1. **Package the addon** — create a ZIP with the top-level directory included:
-   ```bash
-   cd tools/
-   zip -r BlenderSpaceshipGenerator.zip BlenderSpaceshipGenerator/
-   ```
-2. Open Blender (2.80 – 4.1).
-3. Go to **Edit → Preferences → Add-ons**.
-4. Click **Install…** (top-right) and select the ZIP file.
-5. Search for **"AtlasForge"** in the add-ons list.
-6. Tick the checkbox next to **AtlasForge Generator** to enable it.
+### Blender 2.80 – 4.1 — Install Legacy Add-on
 
-### Method 3 — Symlink / Copy (any version)
+Use **`AtlasForgeGenerator_legacy.zip`** (files inside a
+`BlenderSpaceshipGenerator/` folder at the ZIP root).
 
-1. Copy (or symlink) the entire `BlenderSpaceshipGenerator/` folder into
-   Blender's addons directory:
-   - **Blender 4.2+**: `~/.config/blender/<version>/extensions/user_default/`
-     (Linux), or the equivalent on macOS/Windows.
-   - **Blender 2.80 – 4.1**:
-     - **Linux**: `~/.config/blender/<version>/scripts/addons/`
-     - **macOS**: `/Users/<you>/Library/Application Support/Blender/<version>/scripts/addons/`
-     - **Windows**: `%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\`
-2. Restart Blender.
-3. Go to **Edit → Preferences → Add-ons**, search for **"AtlasForge"**,
-   and enable the checkbox.
+1. Open Blender (2.80 – 4.1).
+2. Go to **Edit → Preferences → Add-ons**.
+3. Click **Install…** (top-right) and select `AtlasForgeGenerator_legacy.zip`.
+4. Search for **"AtlasForge"** in the add-ons list.
+5. Tick the checkbox next to **AtlasForge Generator** to enable it.
+
+### Method 3 — Direct Copy (any version)
+
+Copy (or symlink) the entire `BlenderSpaceshipGenerator/` folder into
+Blender's addons directory:
+
+| Blender version | OS | Path |
+|-----------------|----|------|
+| 4.2+ | Linux | `~/.config/blender/<version>/extensions/user_default/` |
+| 4.2+ | macOS | `~/Library/Application Support/Blender/<version>/extensions/user_default/` |
+| 4.2+ | Windows | `%APPDATA%\Blender Foundation\Blender\<version>\extensions\user_default\` |
+| 2.80–4.1 | Linux | `~/.config/blender/<version>/scripts/addons/` |
+| 2.80–4.1 | macOS | `~/Library/Application Support/Blender/<version>/scripts/addons/` |
+| 2.80–4.1 | Windows | `%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\` |
+
+Restart Blender, then go to **Edit → Preferences → Add-ons**, search for
+**"AtlasForge"**, and enable the checkbox.
 
 ### Verifying the Installation
 
@@ -195,9 +209,10 @@ After enabling the addon you should see:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Addon installed but not visible (Blender 4.2+) | Missing `blender_manifest.toml` in the ZIP, or ZIP has wrong structure | Re-create the ZIP from *inside* the addon folder so `blender_manifest.toml` is at the root. See "Blender 4.2+" instructions above |
-| Addon checkbox appears but no sidebar tab | A submodule import error prevented `register()` from running | Check the Blender system console for `[AtlasForge] WARNING` messages |
-| "No module named '…'" error | ZIP was packed without the top-level directory | Re-create the ZIP so the folder `BlenderSpaceshipGenerator/` is at the root (Blender < 4.2) |
+| Addon not visible after install (Blender 4.2+) | ZIP has wrong structure — `blender_manifest.toml` must be at the ZIP root | Use the pre-built **`AtlasForgeGenerator.zip`** from CI artifacts, or run `python tools/BlenderSpaceshipGenerator/package.py` |
+| Nothing shown after install (Blender < 4.2) | ZIP structure wrong — folder `BlenderSpaceshipGenerator/` must be at ZIP root | Use the pre-built **`AtlasForgeGenerator_legacy.zip`** from CI artifacts |
+| Addon checkbox appears but no **AtlasForge** sidebar tab | Submodule import error stopped `register()` partway | Open system console; look for `[AtlasForge] WARNING` lines; report them as an issue |
+| `"No module named '…'"` error in console | ZIP was packed at the wrong level | Use the pre-built ZIPs or run `package.py` |
 | Blender version error | Addon requires Blender 2.80+ | Upgrade Blender |
 
 ## Usage

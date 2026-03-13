@@ -1009,13 +1009,25 @@ def register():
     else:
         _load_submodules()
 
+    # Register each class individually so that a single failure does not
+    # prevent the remaining classes (including the main panel) from loading.
+    registered_count = 0
     for cls in classes:
-        bpy.utils.register_class(cls)
-    
-    bpy.types.Scene.spaceship_props = bpy.props.PointerProperty(
-        type=SpaceshipGeneratorProperties
-    )
-    
+        try:
+            bpy.utils.register_class(cls)
+            registered_count += 1
+        except Exception as exc:  # noqa: BLE001
+            print(f"[AtlasForge] WARNING: register_class({cls.__name__}) failed: {exc}")
+            traceback.print_exc()
+
+    try:
+        bpy.types.Scene.spaceship_props = bpy.props.PointerProperty(
+            type=SpaceshipGeneratorProperties
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"[AtlasForge] WARNING: could not attach spaceship_props to Scene: {exc}")
+        traceback.print_exc()
+
     # Register submodules — skip any that failed to import
     for name in _submodule_names:
         mod = _submodules.get(name)
@@ -1026,7 +1038,7 @@ def register():
                 print(f"[AtlasForge] WARNING: {name}.register() failed: {exc}")
 
     # Inform the user that the addon loaded successfully
-    print(f"[AtlasForge] Addon registered ({len(classes)} classes)")
+    print(f"[AtlasForge] Addon registered ({registered_count}/{len(classes)} classes)")
     if _failed_submodules:
         for name, exc in _failed_submodules:
             print(f"[AtlasForge]   ⚠ {name}: {exc}")
@@ -1047,10 +1059,17 @@ def unregister():
 
     _submodules.clear()
 
-    del bpy.types.Scene.spaceship_props
-    
+    if hasattr(bpy.types.Scene, "spaceship_props"):
+        try:
+            del bpy.types.Scene.spaceship_props
+        except Exception as exc:  # noqa: BLE001
+            print(f"[AtlasForge] WARNING: could not remove spaceship_props: {exc}")
+
     for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[AtlasForge] WARNING: unregister_class({cls.__name__}) failed: {exc}")
 
     print("[AtlasForge] Addon unregistered")
 
