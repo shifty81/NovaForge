@@ -150,6 +150,74 @@ def test_bl_info():
         return False
 
 
+def test_blender_manifest():
+    """Test that blender_manifest.toml exists and has required fields"""
+    print("\nTesting blender_manifest.toml (Blender 4.2+ extension)...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    manifest_file = os.path.join(addon_path, 'blender_manifest.toml')
+
+    if not os.path.exists(manifest_file):
+        print("✗ blender_manifest.toml is missing (required for Blender 4.2+)")
+        return False
+
+    # Parse TOML properly when available, fall back to basic checks
+    manifest = None
+    try:
+        import tomllib
+        with open(manifest_file, 'rb') as f:
+            manifest = tomllib.load(f)
+    except ImportError:
+        try:
+            import tomli
+            with open(manifest_file, 'rb') as f:
+                manifest = tomli.load(f)
+        except ImportError:
+            pass
+
+    required_fields = {
+        'schema_version': None,
+        'id': None,
+        'version': None,
+        'name': None,
+        'tagline': None,
+        'maintainer': None,
+        'type': 'add-on',
+        'blender_version_min': None,
+        'license': None,
+    }
+
+    all_present = True
+    if manifest is not None:
+        for field, expected in required_fields.items():
+            if field in manifest:
+                if expected is not None and manifest[field] != expected:
+                    print(f"✗ blender_manifest.toml '{field}' should be '{expected}', got '{manifest[field]}'")
+                    all_present = False
+                else:
+                    print(f"✓ blender_manifest.toml has '{field}'")
+            else:
+                print(f"✗ blender_manifest.toml missing '{field}'")
+                all_present = False
+    else:
+        # Fallback: basic line-level check when no TOML parser is available
+        with open(manifest_file, 'r') as f:
+            content = f.read()
+        for field, expected in required_fields.items():
+            found = any(
+                line.strip().startswith(field) and '=' in line
+                for line in content.splitlines()
+                if not line.strip().startswith('#')
+            )
+            if found:
+                print(f"✓ blender_manifest.toml has '{field}'")
+            else:
+                print(f"✗ blender_manifest.toml missing '{field}'")
+                all_present = False
+
+    return all_present
+
+
 def test_register_functions():
     """Test that register/unregister functions exist"""
     print("\nTesting register/unregister functions...")
@@ -1132,6 +1200,7 @@ def run_tests():
         ("Addon Structure", test_addon_structure),
         ("Python Syntax", test_file_syntax),
         ("bl_info Metadata", test_bl_info),
+        ("Blender Manifest (4.2+)", test_blender_manifest),
         ("Register Functions", test_register_functions),
         ("Documentation", test_documentation),
         ("Turret Hardpoint Configs", test_turret_hardpoint_configs),

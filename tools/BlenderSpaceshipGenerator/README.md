@@ -130,27 +130,47 @@ This addon integrates directly with the Nova Forge project:
 
 ## Installation
 
-### Method 1 — Install from ZIP (Recommended)
+### Blender 4.2+ — Install as Extension (Recommended)
 
-1. **Package the addon**: Create a ZIP file named `BlenderSpaceshipGenerator.zip`
-   containing the `BlenderSpaceshipGenerator/` folder. On the command line:
+Blender 4.2 introduced the **Extensions** platform. This addon ships a
+`blender_manifest.toml` so it works with the new system out of the box.
+
+1. **Package the addon** — create a ZIP whose *root* contains all addon files
+   (including `blender_manifest.toml`):
+   ```bash
+   cd tools/BlenderSpaceshipGenerator/
+   zip -r ../AtlasForgeGenerator.zip .
+   ```
+2. Open **Blender 4.2+**.
+3. Go to **Edit → Preferences → Get Extensions** (top bar).
+4. Open the drop-down arrow **▾** next to *Repositories* and choose
+   **Install from Disk…**.
+5. Select the `AtlasForgeGenerator.zip` file you created.
+6. The addon will appear under **Add-ons** and is enabled automatically.
+
+### Blender 2.80 – 4.1 — Install from ZIP
+
+1. **Package the addon** — create a ZIP with the top-level directory included:
    ```bash
    cd tools/
    zip -r BlenderSpaceshipGenerator.zip BlenderSpaceshipGenerator/
    ```
-2. Open Blender (2.80 or newer).
+2. Open Blender (2.80 – 4.1).
 3. Go to **Edit → Preferences → Add-ons**.
 4. Click **Install…** (top-right) and select the ZIP file.
 5. Search for **"AtlasForge"** in the add-ons list.
 6. Tick the checkbox next to **AtlasForge Generator** to enable it.
 
-### Method 2 — Symlink / Copy
+### Method 3 — Symlink / Copy (any version)
 
 1. Copy (or symlink) the entire `BlenderSpaceshipGenerator/` folder into
    Blender's addons directory:
-   - **Linux**: `~/.config/blender/<version>/scripts/addons/`
-   - **macOS**: `/Users/<you>/Library/Application Support/Blender/<version>/scripts/addons/`
-   - **Windows**: `%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\`
+   - **Blender 4.2+**: `~/.config/blender/<version>/extensions/user_default/`
+     (Linux), or the equivalent on macOS/Windows.
+   - **Blender 2.80 – 4.1**:
+     - **Linux**: `~/.config/blender/<version>/scripts/addons/`
+     - **macOS**: `/Users/<you>/Library/Application Support/Blender/<version>/scripts/addons/`
+     - **Windows**: `%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\`
 2. Restart Blender.
 3. Go to **Edit → Preferences → Add-ons**, search for **"AtlasForge"**,
    and enable the checkbox.
@@ -175,8 +195,9 @@ After enabling the addon you should see:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
+| Addon installed but not visible (Blender 4.2+) | Missing `blender_manifest.toml` in the ZIP, or ZIP has wrong structure | Re-create the ZIP from *inside* the addon folder so `blender_manifest.toml` is at the root. See "Blender 4.2+" instructions above |
 | Addon checkbox appears but no sidebar tab | A submodule import error prevented `register()` from running | Check the Blender system console for `[AtlasForge] WARNING` messages |
-| "No module named '…'" error | ZIP was packed without the top-level directory | Re-create the ZIP so the folder `BlenderSpaceshipGenerator/` is at the root |
+| "No module named '…'" error | ZIP was packed without the top-level directory | Re-create the ZIP so the folder `BlenderSpaceshipGenerator/` is at the root (Blender < 4.2) |
 | Blender version error | Addon requires Blender 2.80+ | Upgrade Blender |
 
 ## Usage
