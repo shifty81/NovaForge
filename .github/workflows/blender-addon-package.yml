@@ -1,0 +1,61 @@
+name: Package Blender Addon
+
+on:
+  push:
+    branches: [ main, develop, 'copilot/**' ]
+    paths:
+      - 'tools/BlenderSpaceshipGenerator/**'
+      - '.github/workflows/blender-addon-package.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'tools/BlenderSpaceshipGenerator/**'
+      - '.github/workflows/blender-addon-package.yml'
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Build Addon ZIPs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate addon structure
+        run: python tools/BlenderSpaceshipGenerator/test_validation.py
+
+      - name: Build addon ZIPs
+        run: python tools/BlenderSpaceshipGenerator/package.py dist/
+
+      - name: Upload Extension ZIP (Blender 4.2+)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AtlasForgeGenerator-blender42plus
+          path: dist/AtlasForgeGenerator.zip
+          retention-days: 30
+
+      - name: Upload Legacy ZIP (Blender 2.80-4.1)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AtlasForgeGenerator-legacy
+          path: dist/AtlasForgeGenerator_legacy.zip
+          retention-days: 30
+
+      - name: Upload ZIPs to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/AtlasForgeGenerator.zip
+            dist/AtlasForgeGenerator_legacy.zip
