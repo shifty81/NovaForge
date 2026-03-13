@@ -1702,6 +1702,34 @@ public:
     COMPONENT_TYPE(MiningLedgerState)
 };
 
+// ---------------------------------------------------------------------------
+// DroneLogisticsState — automated drone-based item transfer queues
+// ---------------------------------------------------------------------------
+class DroneLogisticsState : public ecs::Component {
+public:
+    struct TransferRequest {
+        std::string request_id;
+        std::string source_port;
+        std::string dest_port;
+        std::string item_type;
+        int         amount     = 0;
+        bool        completed  = false;
+        float       started_at = 0.0f;
+    };
+
+    std::vector<TransferRequest> requests;
+    int   max_requests              = 100;
+    bool  fleet_deploy_mode         = false;
+    int   total_transfers_completed = 0;
+    float total_items_transferred   = 0.0f;
+    int   active_drones             = 0;
+    int   max_drones                = 5;
+    float elapsed                   = 0.0f;
+    bool  active                    = true;
+
+    COMPONENT_TYPE(DroneLogisticsState)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -1119,6 +1119,76 @@ public:
     COMPONENT_TYPE(FleetCommandTerminal)
 };
 
+// ---------------------------------------------------------------------------
+// PlayerModeState — tracks which view/control mode the player is in
+// ---------------------------------------------------------------------------
+class PlayerModeState : public ecs::Component {
+public:
+    enum PlayerMode { FPS = 0, Cockpit, Turret, Drone, FleetCommand, StrategicMap, Editor, Spectator };
+
+    PlayerMode  current_mode       = PlayerMode::FPS;
+    PlayerMode  previous_mode      = PlayerMode::FPS;
+    std::string bound_entity_id;
+    float       transition_time    = 0.5f;
+    float       transition_progress = 0.0f;
+    bool        in_transition      = false;
+    int         total_mode_switches = 0;
+    float       elapsed            = 0.0f;
+    bool        active             = true;
+
+    COMPONENT_TYPE(PlayerModeState)
+};
+
+// ---------------------------------------------------------------------------
+// ControlPortState — interactive ports on ships/structures players can occupy
+// ---------------------------------------------------------------------------
+class ControlPortState : public ecs::Component {
+public:
+    struct Port {
+        std::string port_id;
+        std::string port_type;
+        int         enter_mode = 0;
+        std::string connected_system_id;
+        bool        occupied   = false;
+        std::string occupant_id;
+        float       use_time   = 0.0f;
+    };
+
+    std::vector<Port> ports;
+    int   max_ports   = 20;
+    int   total_uses  = 0;
+    float elapsed     = 0.0f;
+    bool  active      = true;
+
+    COMPONENT_TYPE(ControlPortState)
+};
+
+// ---------------------------------------------------------------------------
+// RigLinkState — links a player rig to a ship and provides stat bonuses
+// ---------------------------------------------------------------------------
+class RigLinkState : public ecs::Component {
+public:
+    struct RigStat {
+        std::string stat_name;
+        float       base_value = 0.0f;
+        float       bonus      = 0.0f;
+    };
+
+    std::vector<RigStat> stats;
+    std::string linked_ship_id;
+    std::string linked_port_id;
+    bool        is_linked       = false;
+    float       link_quality    = 1.0f;
+    int         interface_level = 1;
+    int         max_stats       = 20;
+    int         total_links     = 0;
+    int         total_unlinks   = 0;
+    float       elapsed         = 0.0f;
+    bool        active          = true;
+
+    COMPONENT_TYPE(RigLinkState)
+};
+
 } // namespace components
 } // namespace atlas
 

@@ -26,9 +26,13 @@ from bpy.props import (
     StringProperty,
 )
 
-# Each submodule is imported inside a try/except so that a single broken
-# module does not prevent the entire addon from loading.  Modules that fail
-# are set to ``None`` and skipped during registration.
+# ---------------------------------------------------------------------------
+# Deferred submodule loading
+# ---------------------------------------------------------------------------
+# Submodule imports are kept out of module-level scope so that Blender can
+# always read ``bl_info`` without triggering heavyweight or broken imports.
+# The dict is populated in ``register()`` and cleared in ``unregister()``.
+
 _submodule_names = [
     "ship_generator",
     "ship_parts",
@@ -48,42 +52,63 @@ _submodule_names = [
     "damage_system",
     "power_system",
     "build_validator",
+    "density_field",
+    "slot_grid",
+    "traversal_system",
+    "fleet_logistics",
+    "rig_system",
 ]
 
-_submodules = {}
-_failed_submodules = []
+_submodules: dict = {}
+_failed_submodules: list = []
 
-for _name in _submodule_names:
-    try:
-        _mod = importlib.import_module(f".{_name}", package=__name__)
-        _submodules[_name] = _mod
-    except Exception as _exc:
-        _submodules[_name] = None
-        _failed_submodules.append((_name, _exc))
-        print(f"[AtlasForge] WARNING: failed to import {_name}: {_exc}")
-        traceback.print_exc()
 
-# Expose successfully loaded submodules as module-level attributes so that
-# operators written as ``ship_generator.generate_spaceship(...)`` continue to
-# work unchanged.
-ship_generator = _submodules.get("ship_generator")
-ship_parts = _submodules.get("ship_parts")
-interior_generator = _submodules.get("interior_generator")
-module_system = _submodules.get("module_system")
-atlas_exporter = _submodules.get("atlas_exporter")
-station_generator = _submodules.get("station_generator")
-asteroid_generator = _submodules.get("asteroid_generator")
-texture_generator = _submodules.get("texture_generator")
-brick_system = _submodules.get("brick_system")
-pcg_panel = _submodules.get("pcg_panel")
-novaforge_importer = _submodules.get("novaforge_importer")
-render_setup = _submodules.get("render_setup")
-lod_generator = _submodules.get("lod_generator")
-collision_generator = _submodules.get("collision_generator")
-animation_system = _submodules.get("animation_system")
-damage_system = _submodules.get("damage_system")
-power_system = _submodules.get("power_system")
-build_validator = _submodules.get("build_validator")
+def _load_submodules():
+    """Import (or reload) every submodule listed in ``_submodule_names``.
+
+    Populates ``_submodules`` and ``_failed_submodules``.  Each submodule
+    that fails is set to ``None`` so operators can detect missing modules.
+    """
+    _failed_submodules.clear()
+    for name in _submodule_names:
+        try:
+            mod = importlib.import_module(f".{name}", package=__name__)
+            _submodules[name] = mod
+        except Exception as exc:
+            _submodules[name] = None
+            _failed_submodules.append((name, exc))
+            print(f"[AtlasForge] WARNING: failed to import {name}: {exc}")
+            traceback.print_exc()
+
+
+def _reload_submodules():
+    """Reload already-imported submodules (for addon hot-reload in Blender)."""
+    _failed_submodules.clear()
+    for name in _submodule_names:
+        existing = _submodules.get(name)
+        if existing is not None:
+            try:
+                _submodules[name] = importlib.reload(existing)
+            except Exception as exc:
+                _submodules[name] = None
+                _failed_submodules.append((name, exc))
+                print(f"[AtlasForge] WARNING: failed to reload {name}: {exc}")
+                traceback.print_exc()
+        else:
+            # Was not loaded before — try a fresh import
+            try:
+                mod = importlib.import_module(f".{name}", package=__name__)
+                _submodules[name] = mod
+            except Exception as exc:
+                _submodules[name] = None
+                _failed_submodules.append((name, exc))
+                print(f"[AtlasForge] WARNING: failed to import {name}: {exc}")
+                traceback.print_exc()
+
+
+def _get_mod(name):
+    """Return the loaded submodule *name*, or ``None`` if unavailable."""
+    return _submodules.get(name)
 
 
 class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
@@ -364,10 +389,15 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
+        sg = _get_mod("ship_generator")
+        if sg is None:
+            self.report({'ERROR'}, "ship_generator not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
         
         # Generate the spaceship
-        hull = ship_generator.generate_spaceship(
+        hull = sg.generate_spaceship(
             ship_class=props.ship_class,
             seed=props.seed,
             generate_interior=props.generate_interior,
@@ -382,40 +412,55 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
 
         # Apply procedural textures if requested
         if props.generate_textures:
-            texture_generator.apply_textures_to_ship(
-                hull,
-                style=props.style,
-                seed=props.seed,
-                weathering=props.weathering,
-            )
+            tg = _get_mod("texture_generator")
+            if tg is None:
+                self.report({'WARNING'}, "texture_generator not loaded, skipping textures")
+            else:
+                tg.apply_textures_to_ship(
+                    hull,
+                    style=props.style,
+                    seed=props.seed,
+                    weathering=props.weathering,
+                )
 
         # Generate LODs if requested
         if props.generate_lods:
-            lod_generator.generate_lods(
-                hull,
-                ship_class=props.ship_class,
-                naming_prefix=props.naming_prefix,
-            )
+            lg = _get_mod("lod_generator")
+            if lg is None:
+                self.report({'WARNING'}, "lod_generator not loaded, skipping LODs")
+            else:
+                lg.generate_lods(
+                    hull,
+                    ship_class=props.ship_class,
+                    naming_prefix=props.naming_prefix,
+                )
 
         # Generate collision mesh if requested
         if props.generate_collision:
-            col_type = None if props.collision_type == 'AUTO' else props.collision_type
-            collision_generator.generate_collision_mesh(
-                hull,
-                collision_type=col_type,
-                ship_class=props.ship_class,
-                naming_prefix=props.naming_prefix,
-            )
+            cg = _get_mod("collision_generator")
+            if cg is None:
+                self.report({'WARNING'}, "collision_generator not loaded, skipping collision")
+            else:
+                col_type = None if props.collision_type == 'AUTO' else props.collision_type
+                cg.generate_collision_mesh(
+                    hull,
+                    collision_type=col_type,
+                    ship_class=props.ship_class,
+                    naming_prefix=props.naming_prefix,
+                )
 
         # Set up animations if requested
         if props.generate_animations:
-            from . import ship_generator as _sg
-            scale = _sg.SHIP_CONFIGS.get(props.ship_class, {}).get('scale', 1.0)
-            animation_system.setup_ship_animations(
-                hull,
-                scale=scale,
-                naming_prefix=props.naming_prefix,
-            )
+            anim = _get_mod("animation_system")
+            if anim is None:
+                self.report({'WARNING'}, "animation_system not loaded, skipping animations")
+            else:
+                scale = sg.SHIP_CONFIGS.get(props.ship_class, {}).get('scale', 1.0)
+                anim.setup_ship_animations(
+                    hull,
+                    scale=scale,
+                    naming_prefix=props.naming_prefix,
+                )
 
         self.report({'INFO'}, f"Generated {props.ship_class} class spaceship")
         return {'FINISHED'}
@@ -428,6 +473,15 @@ class SPACESHIP_OT_import_novaforge(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        ae = _get_mod("atlas_exporter")
+        sg = _get_mod("ship_generator")
+        if ae is None:
+            self.report({'ERROR'}, "atlas_exporter not loaded")
+            return {'CANCELLED'}
+        if sg is None:
+            self.report({'ERROR'}, "ship_generator not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
         json_path = bpy.path.abspath(props.novaforge_json_path)
 
@@ -441,15 +495,15 @@ class SPACESHIP_OT_import_novaforge(bpy.types.Operator):
             return {'CANCELLED'}
 
         try:
-            ships = atlas_exporter.load_ship_data(json_path)
+            ships = ae.load_ship_data(json_path)
         except Exception as e:
             self.report({'ERROR'}, f"Failed to load JSON: {e}")
             return {'CANCELLED'}
 
         count = 0
         for ship_id, ship_data in ships.items():
-            config = atlas_exporter.parse_ship_config(ship_data)
-            ship_generator.generate_spaceship(
+            config = ae.parse_ship_config(ship_data)
+            sg.generate_spaceship(
                 ship_class=config['ship_class'],
                 seed=config['seed'],
                 generate_interior=config['generate_interior'],
@@ -471,6 +525,11 @@ class SPACESHIP_OT_export_obj(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
+        ae = _get_mod("atlas_exporter")
+        if ae is None:
+            self.report({'ERROR'}, "atlas_exporter not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
         export_dir = bpy.path.abspath(props.novaforge_export_path)
 
@@ -495,7 +554,7 @@ class SPACESHIP_OT_export_obj(bpy.types.Operator):
         for child in obj.children_recursive:
             child.select_set(True)
 
-        atlas_exporter.export_obj(filepath)
+        ae.export_obj(filepath)
 
         self.report({'INFO'}, f"Exported to {filepath}")
         return {'FINISHED'}
@@ -508,8 +567,13 @@ class SPACESHIP_OT_generate_station(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        stg = _get_mod("station_generator")
+        if stg is None:
+            self.report({'ERROR'}, "station_generator not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
-        station_generator.generate_station(
+        stg.generate_station(
             station_type=props.station_type,
             faction=props.station_faction,
             seed=props.seed,
@@ -525,8 +589,13 @@ class SPACESHIP_OT_generate_asteroid_belt(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        ag = _get_mod("asteroid_generator")
+        if ag is None:
+            self.report({'ERROR'}, "asteroid_generator not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
-        asteroid_generator.generate_asteroid_belt(
+        ag.generate_asteroid_belt(
             layout=props.belt_layout,
             ore_types=[props.belt_ore_type],
             count=props.belt_count,
@@ -572,6 +641,15 @@ class SPACESHIP_OT_import_novaforge_dir(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        ni = _get_mod("novaforge_importer")
+        sg = _get_mod("ship_generator")
+        if ni is None:
+            self.report({'ERROR'}, "novaforge_importer not loaded")
+            return {'CANCELLED'}
+        if sg is None:
+            self.report({'ERROR'}, "ship_generator not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
         data_dir = bpy.path.abspath(props.novaforge_data_dir)
 
@@ -584,15 +662,15 @@ class SPACESHIP_OT_import_novaforge_dir(bpy.types.Operator):
             self.report({'ERROR'}, f"Directory not found: {data_dir}")
             return {'CANCELLED'}
 
-        ships = novaforge_importer.load_ships_from_directory(data_dir)
+        ships = ni.load_ships_from_directory(data_dir)
         if not ships:
             self.report({'WARNING'}, "No ship definitions found in directory")
             return {'CANCELLED'}
 
         # Generate the first ship found
         ship_id, ship_def = next(iter(ships.items()))
-        params = novaforge_importer.ship_to_generator_params(ship_def)
-        ship_generator.generate_spaceship(**{
+        params = ni.ship_to_generator_params(ship_def)
+        sg.generate_spaceship(**{
             k: v for k, v in params.items()
             if k in ('ship_class', 'seed', 'style', 'turret_hardpoints',
                      'hull_taper', 'generate_interior', 'module_slots',
@@ -610,6 +688,15 @@ class SPACESHIP_OT_batch_novaforge(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        ni = _get_mod("novaforge_importer")
+        sg = _get_mod("ship_generator")
+        if ni is None:
+            self.report({'ERROR'}, "novaforge_importer not loaded")
+            return {'CANCELLED'}
+        if sg is None:
+            self.report({'ERROR'}, "ship_generator not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
         data_dir = bpy.path.abspath(props.novaforge_data_dir)
 
@@ -622,8 +709,8 @@ class SPACESHIP_OT_batch_novaforge(bpy.types.Operator):
             self.report({'ERROR'}, f"Directory not found: {data_dir}")
             return {'CANCELLED'}
 
-        ships = novaforge_importer.load_ships_from_directory(data_dir)
-        all_params = novaforge_importer.get_all_generator_params(ships)
+        ships = ni.load_ships_from_directory(data_dir)
+        all_params = ni.get_all_generator_params(ships)
 
         count = 0
         for ship_id, params in all_params:
@@ -633,7 +720,7 @@ class SPACESHIP_OT_batch_novaforge(bpy.types.Operator):
                          'hull_taper', 'generate_interior', 'module_slots',
                          'naming_prefix')
             }
-            ship_generator.generate_spaceship(**gen_kwargs)
+            sg.generate_spaceship(**gen_kwargs)
             count += 1
 
         self.report({'INFO'}, f"Batch generated {count} ships from project data")
@@ -647,12 +734,17 @@ class SPACESHIP_OT_catalog_render(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        rs = _get_mod("render_setup")
+        if rs is None:
+            self.report({'ERROR'}, "render_setup not loaded")
+            return {'CANCELLED'}
+
         obj = context.active_object
         if obj is None:
             self.report({'ERROR'}, "Select a ship object first")
             return {'CANCELLED'}
 
-        render_setup.setup_catalog_render(obj)
+        rs.setup_catalog_render(obj)
         self.report({'INFO'}, "Catalog render configured")
         return {'FINISHED'}
 
@@ -665,6 +757,19 @@ class SPACESHIP_OT_batch_generate(bpy.types.Operator):
 
     def execute(self, context):
         import os
+
+        ni = _get_mod("novaforge_importer")
+        sg = _get_mod("ship_generator")
+        ae = _get_mod("atlas_exporter")
+        if ni is None:
+            self.report({'ERROR'}, "novaforge_importer not loaded")
+            return {'CANCELLED'}
+        if sg is None:
+            self.report({'ERROR'}, "ship_generator not loaded")
+            return {'CANCELLED'}
+        if ae is None:
+            self.report({'ERROR'}, "atlas_exporter not loaded")
+            return {'CANCELLED'}
 
         props = context.scene.spaceship_props
         output_dir = bpy.path.abspath(props.batch_output_path)
@@ -680,8 +785,8 @@ class SPACESHIP_OT_batch_generate(bpy.types.Operator):
             self.report({'ERROR'}, "Set a valid project data directory")
             return {'CANCELLED'}
 
-        ships = novaforge_importer.load_ships_from_directory(data_dir)
-        all_params = novaforge_importer.get_all_generator_params(ships)
+        ships = ni.load_ships_from_directory(data_dir)
+        all_params = ni.get_all_generator_params(ships)
 
         count = 0
         for ship_id, params in all_params:
@@ -691,7 +796,7 @@ class SPACESHIP_OT_batch_generate(bpy.types.Operator):
                          'hull_taper', 'generate_interior', 'module_slots',
                          'naming_prefix')
             }
-            hull = ship_generator.generate_spaceship(**gen_kwargs)
+            hull = sg.generate_spaceship(**gen_kwargs)
 
             # Export OBJ
             filepath = os.path.join(output_dir, f"{ship_id}.obj")
@@ -699,7 +804,7 @@ class SPACESHIP_OT_batch_generate(bpy.types.Operator):
             hull.select_set(True)
             for child in hull.children_recursive:
                 child.select_set(True)
-            atlas_exporter.export_obj(filepath)
+            ae.export_obj(filepath)
             count += 1
 
         self.report({'INFO'}, f"Batch exported {count} ships to {output_dir}")
@@ -715,6 +820,19 @@ class SPACESHIP_OT_novaforge_pipeline(bpy.types.Operator):
     def execute(self, context):
         import os
 
+        ni = _get_mod("novaforge_importer")
+        sg = _get_mod("ship_generator")
+        ae = _get_mod("atlas_exporter")
+        if ni is None:
+            self.report({'ERROR'}, "novaforge_importer not loaded")
+            return {'CANCELLED'}
+        if sg is None:
+            self.report({'ERROR'}, "ship_generator not loaded")
+            return {'CANCELLED'}
+        if ae is None:
+            self.report({'ERROR'}, "atlas_exporter not loaded")
+            return {'CANCELLED'}
+
         props = context.scene.spaceship_props
         data_dir = bpy.path.abspath(props.novaforge_data_dir)
         output_dir = bpy.path.abspath(props.batch_output_path or props.novaforge_export_path)
@@ -729,8 +847,11 @@ class SPACESHIP_OT_novaforge_pipeline(bpy.types.Operator):
 
         os.makedirs(output_dir, exist_ok=True)
 
-        ships = novaforge_importer.load_ships_from_directory(data_dir)
-        all_params = novaforge_importer.get_all_generator_params(ships)
+        ships = ni.load_ships_from_directory(data_dir)
+        all_params = ni.get_all_generator_params(ships)
+
+        tg = _get_mod("texture_generator")
+        lg = _get_mod("lod_generator")
 
         count = 0
         for ship_id, params in all_params:
@@ -740,11 +861,11 @@ class SPACESHIP_OT_novaforge_pipeline(bpy.types.Operator):
                          'hull_taper', 'generate_interior', 'module_slots',
                          'naming_prefix')
             }
-            hull = ship_generator.generate_spaceship(**gen_kwargs)
+            hull = sg.generate_spaceship(**gen_kwargs)
 
             # Apply textures
-            if props.generate_textures:
-                texture_generator.apply_textures_to_ship(
+            if props.generate_textures and tg is not None:
+                tg.apply_textures_to_ship(
                     hull,
                     style=params.get('style', 'SOLARI'),
                     seed=params.get('seed', 1),
@@ -752,8 +873,8 @@ class SPACESHIP_OT_novaforge_pipeline(bpy.types.Operator):
                 )
 
             # Generate LODs
-            if props.generate_lods:
-                lod_generator.generate_lods(
+            if props.generate_lods and lg is not None:
+                lg.generate_lods(
                     hull,
                     ship_class=params.get('ship_class', 'FRIGATE'),
                     naming_prefix=params.get('naming_prefix', ''),
@@ -765,7 +886,7 @@ class SPACESHIP_OT_novaforge_pipeline(bpy.types.Operator):
             hull.select_set(True)
             for child in hull.children_recursive:
                 child.select_set(True)
-            atlas_exporter.export_obj(filepath)
+            ae.export_obj(filepath)
             count += 1
 
         self.report({'INFO'}, f"Pipeline exported {count} ships to {output_dir}")
@@ -882,6 +1003,12 @@ classes = (
 
 
 def register():
+    # Load submodules on first registration; reload on subsequent calls
+    if _submodules:
+        _reload_submodules()
+    else:
+        _load_submodules()
+
     for cls in classes:
         bpy.utils.register_class(cls)
     
@@ -917,7 +1044,9 @@ def unregister():
             except Exception as exc:  # noqa: BLE001
                 print(f"[AtlasForge] WARNING: {name}.unregister() failed: {exc}")
                 traceback.print_exc()
-    
+
+    _submodules.clear()
+
     del bpy.types.Scene.spaceship_props
     
     for cls in reversed(classes):
