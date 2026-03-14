@@ -336,8 +336,8 @@ See the [Modding Guide](docs/MODDING_GUIDE.md) for details.
 | 10 | **Tactical Overlay** — 2.5D view, range rings | ✅ | 📋 | Renderer TODO |
 | 11 | **Fleet Civilization** — 25 ships, stations, cargo | ✅ | 📋 | Design complete |
 | 12 | **Ship Gen v2** — Spine hulls, faction silhouettes | ✅ | 📋 | Mesh gen TODO |
-| 13 | **FPS & Interiors** — Rigs, survival, crews | 🔧 | 📋 | ~80% systems |
-| 14 | **Vehicles & Planets** — Rovers, bikes, terrain | 🔧 | 📋 | ~60% systems |
+| 13 | **FPS & Interiors** — Rigs, survival, crews | ✅ | 📋 | Server complete |
+| 14 | **Vehicles & Planets** — Rovers, bikes, terrain | ✅ | 📋 | Server complete |
 | 15 | **Turrets, Market, Legends** — Weapons, myths | ✅ | 📋 | Visuals TODO |
 
 > ✅ Done · 🔧 Partial · 🔄 Active · 📋 Not started
