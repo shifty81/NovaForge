@@ -1181,6 +1181,44 @@ public:
     COMPONENT_TYPE(BookmarkState)
 };
 
+/**
+ * @brief Asteroid-belt survey scanner state
+ *
+ * Scans asteroid fields to discover ore types, quantities, and estimated
+ * ISK values.  Each scan takes scan_duration seconds and produces a
+ * SurveyResult entry.  Results are capped at max_results (default 20);
+ * inserts are rejected when at capacity.  Lifetime counters track total
+ * scans completed and total estimated value scanned.
+ */
+class SurveyScannerState : public ecs::Component {
+public:
+    enum class ScanStatus { Idle, Scanning, Complete };
+
+    struct SurveyResult {
+        std::string result_id;
+        std::string asteroid_id;
+        std::string ore_type;
+        float quantity       = 0.0f;
+        float estimated_value = 0.0f;
+        float distance       = 0.0f;
+    };
+
+    ScanStatus  status            = ScanStatus::Idle;
+    std::string target_belt_id;
+    float scan_duration           = 8.0f;   // seconds for a complete survey
+    float scan_timer              = 0.0f;   // counts up while Scanning
+    float scan_range              = 15000.0f; // max scan range in metres
+    float scan_deviation          = 0.05f;  // ±5 % quantity error
+    std::vector<SurveyResult> results;
+    int   max_results             = 20;
+    int   total_scans_completed   = 0;
+    float total_value_scanned     = 0.0f;
+    float elapsed                 = 0.0f;
+    bool  active                  = true;
+
+    COMPONENT_TYPE(SurveyScannerState)
+};
+
 } // namespace components
 } // namespace atlas
 

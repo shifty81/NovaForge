@@ -490,6 +490,9 @@ void run_moon_mining_scheduler_system_tests();
 void run_bookmark_system_tests();
 void run_hangar_system_tests();
 void run_notification_system_tests();
+void run_survey_scanner_system_tests();
+void run_fuel_block_system_tests();
+void run_jump_clone_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -977,6 +980,9 @@ int main() {
     run_bookmark_system_tests();
     run_hangar_system_tests();
     run_notification_system_tests();
+    run_survey_scanner_system_tests();
+    run_fuel_block_system_tests();
+    run_jump_clone_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

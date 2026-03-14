@@ -2709,6 +2709,45 @@ public:
     COMPONENT_TYPE(AchievementState)
 };
 
+/**
+ * @brief Jump clone management state
+ *
+ * Manages a player's jump clones.  Each clone is installed at a specific
+ * station and may carry its own set of implants.  Jumping between clones
+ * incurs a cooldown (default 24 hours) that counts down per-tick.  The
+ * maximum number of clones is capped at max_clones (default 10, raised by
+ * the Infomorph Psychology skill equivalent).
+ */
+class JumpCloneState : public ecs::Component {
+public:
+    struct Implant {
+        std::string implant_id;
+        std::string name;
+        int         slot = 0;       // 1-10
+    };
+
+    struct JumpClone {
+        std::string clone_id;
+        std::string station_id;
+        std::string station_name;
+        std::vector<Implant> implants;
+    };
+
+    std::string active_clone_id;
+    std::string active_station_id;
+    std::vector<JumpClone> clones;
+    int   max_clones             = 10;
+    float cooldown_duration      = 86400.0f; // 24 hours in seconds
+    float cooldown_remaining     = 0.0f;
+    int   total_jumps            = 0;
+    int   total_clones_destroyed = 0;
+    int   total_clones_installed = 0;
+    float elapsed                = 0.0f;
+    bool  active                 = true;
+
+    COMPONENT_TYPE(JumpCloneState)
+};
+
 } // namespace components
 } // namespace atlas
 
