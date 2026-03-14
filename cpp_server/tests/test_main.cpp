@@ -487,6 +487,9 @@ void run_agent_mission_system_tests();
 void run_corp_tax_ledger_system_tests();
 void run_fighter_squadron_system_tests();
 void run_moon_mining_scheduler_system_tests();
+void run_bookmark_system_tests();
+void run_hangar_system_tests();
+void run_notification_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -971,6 +974,9 @@ int main() {
     run_corp_tax_ledger_system_tests();
     run_fighter_squadron_system_tests();
     run_moon_mining_scheduler_system_tests();
+    run_bookmark_system_tests();
+    run_hangar_system_tests();
+    run_notification_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;

@@ -1154,6 +1154,33 @@ public:
     COMPONENT_TYPE(InteriorNavGraphState)
 };
 
+// ---------------------------------------------------------------------------
+// BookmarkState — saved space-location bookmarks
+// ---------------------------------------------------------------------------
+class BookmarkState : public ecs::Component {
+public:
+    enum class BookmarkType { Location, Container, Wreck, Station, Anomaly };
+
+    struct Bookmark {
+        std::string  bookmark_id;
+        std::string  label;
+        std::string  folder;
+        std::string  system_name;
+        BookmarkType type = BookmarkType::Location;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+    };
+
+    std::vector<Bookmark> bookmarks;
+    int   max_bookmarks            = 500;
+    int   total_bookmarks_created  = 0;
+    float elapsed                  = 0.0f;
+    bool  active                   = true;
+
+    COMPONENT_TYPE(BookmarkState)
+};
+
 } // namespace components
 } // namespace atlas
 

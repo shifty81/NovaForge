@@ -1609,6 +1609,30 @@ public:
     COMPONENT_TYPE(ModuleCapabilityState)
 };
 
+// ---------------------------------------------------------------------------
+// HangarState — ship hangar storage management
+// ---------------------------------------------------------------------------
+class HangarState : public ecs::Component {
+public:
+    struct HangarShip {
+        std::string ship_id;
+        std::string ship_type;
+        std::string ship_name;
+        bool        is_active    = false;
+        float       insurance    = 0.0f;
+    };
+
+    std::string station_id;
+    std::vector<HangarShip> ships;
+    int   max_ships               = 50;
+    int   total_ships_stored      = 0;
+    int   total_ships_retrieved   = 0;
+    float elapsed                 = 0.0f;
+    bool  active                  = true;
+
+    COMPONENT_TYPE(HangarState)
+};
+
 } // namespace components
 } // namespace atlas
 
