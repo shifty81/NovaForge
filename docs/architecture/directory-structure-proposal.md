@@ -1,164 +1,247 @@
 # NovaForge — Streamlined Directory Structure Proposal
 
-**Status:** Draft
-**Date:** 2026-03-08
+Status: Draft (created 2026-03-08)
 
-This document proposes a more streamlined, scalable directory structure for `shifty81/NovaForge`, with special attention to cross-cutting systems like **Chat** (UI + networking + persistence + moderation).
+This document proposes a more streamlined, scalable directory structure for the `shifty81/NovaForge` repository, with special attention to adding large cross-cutting systems like **Chat** (client UI + networking + persistence + moderation).
 
----
-
-## Current Structure
-
-```
-NovaForge/
-├── .github/           # CI workflows
-├── assets/            # Game assets (textures, models, sounds)
-├── atlas_tests/       # Atlas engine / editor tests (headless CI)
-├── cpp_client/        # Game client (C++/OpenGL)
-│   ├── include/       # Headers
-│   │   ├── core/      # Application, camera, session
-│   │   ├── network/   # TCP client, protocol, network manager
-│   │   ├── rendering/ # OpenGL renderer, shaders, materials
-│   │   └── ui/        # RML UI, Atlas widgets, HUD
-│   └── src/           # Implementations
-├── cpp_server/        # Authoritative game server
-│   ├── include/       # Headers
-│   │   ├── components/# ECS component definitions (15 files, 11K+ lines)
-│   │   ├── ecs/       # Entity, World, System base classes
-│   │   ├── handlers/  # Message handlers (Combat, Station, Movement, etc.)
-│   │   ├── network/   # TCP server, protocol handler
-│   │   └── systems/   # 316 ECS systems
-│   ├── src/           # Implementations
-│   └── tests/         # Per-system test suites (363 files, 12K+ assertions)
-├── data/              # JSON config, ship definitions, missions
-├── docs/              # Documentation (ROADMAP, guides, design docs)
-├── editor/            # Atlas Editor (tools, panels, commands)
-└── engine/            # Atlas Engine core (ECS, math, audio, net, animation)
-```
+> Note: This proposal is based on the **current top-level repo layout** only. A deeper, more precise plan should be finalized after reviewing the internal structure of `cpp_client/`, `cpp_server/`, `engine/`, and `editor/`.
 
 ---
 
-## Identified Issues
+## 1) Current top-level structure (observed)
 
-1. **No shared protocol library** — Client and server each define `ProtocolHandler` independently. Message types are duplicated.
-2. **No shared domain types** — Player IDs, character IDs, channel enums defined separately in client and server.
-3. **Cross-cutting features** (like Chat) require touching both `cpp_client/` and `cpp_server/` with no shared contract.
-4. **Test organization** — `atlas_tests/` (engine/editor) and `cpp_server/tests/` (ECS systems) use different frameworks.
-
----
-
-## Proposed Changes
-
-### Phase 1: Add `cpp_common/` Shared Library (Minimal Disruption)
-
-Create a new shared library that both client and server link against:
-
-```
-cpp_common/
-├── CMakeLists.txt
-└── include/
-    └── novaforge/
-        ├── protocol/
-        │   ├── message_types.h      # Shared MessageType enum
-        │   ├── chat_messages.h      # Chat-specific message structs
-        │   └── serialization.h      # Shared JSON helpers
-        ├── types/
-        │   ├── player_id.h          # Strong-typed player/character IDs
-        │   ├── channel_types.h      # ChatStreamType, SystemCategory enums
-        │   └── time_types.h         # Timestamp utilities
-        └── chat/
-            ├── chat_types.h         # ChatMessage, ChatSendResult structs
-            └── chat_constants.h     # Rate limits, max lengths, retention
-```
-
-**Impact:** No existing files need to move. Client and server add `cpp_common` as a dependency.
-
-### Phase 2: Client Chat Integration
-
-Add chat-specific code under the existing client structure:
-
-```
+```text
+.github/
+assets/
+atlas_tests/
 cpp_client/
-├── include/
-│   ├── chat/
-│   │   ├── chat_service.h           # Domain API (send/receive, ring buffer)
-│   │   └── chat_store.h             # Per-stream message storage
-│   └── ui/
-│       └── atlas/
-│           ├── chat_widget.h        # Chat panel (tabs, input, scrollback)
-│           └── chat_tab_bar.h       # Tab bar with flash/unread indicators
-└── src/
-    ├── chat/
-    │   ├── chat_service.cpp
-    │   └── chat_store.cpp
-    └── ui/
-        └── atlas/
-            ├── chat_widget.cpp
-            └── chat_tab_bar.cpp
-```
-
-### Phase 3: Server Chat Handler
-
-Add dedicated chat handler following existing `IMessageHandler` pattern:
-
-```
 cpp_server/
-├── include/
-│   └── handlers/
-│       └── chat_handler.h           # IMessageHandler for chat messages
-└── src/
-    └── handlers/
-        └── chat_handler.cpp
+data/
+docs/
+editor/
+engine/
+schemas/
+scripts/
+specs/
+testing/
+tools/
++ root build/config files (CMakeLists.txt, Dockerfile, README.md, etc.)
+```
+
+This is already close to a good “monorepo” layout: engine + client + server + editor + assets + documentation.
+
+---
+
+## 2) Primary goals of streamlining
+
+### 2.1 Reduce duplication between client/server
+Cross-cutting systems like Chat need shared items:
+- Protocol message definitions (message IDs, payload structs)
+- Common ID types (player/character IDs)
+- Error codes and rate-limit reasons
+- Shared serialization helpers
+
+If these live separately in `cpp_client/` and `cpp_server/`, they drift over time.
+
+### 2.2 Keep layering clean
+A consistent layering avoids spaghetti:
+- **UI** should not directly talk to sockets
+- **Networking** should not own UI logic
+- **Services (domain)** should expose simple APIs (send message, subscribe to stream)
+- **Server** should be authoritative (validation/routing/persistence)
+
+### 2.3 Make room for big features (Chat, friends, guilds, inventory, etc.)
+Large systems become maintainable when they have predictable “homes” in the tree.
+
+---
+
+## 3) Recommended approach: “Minimal disruption + shared common library”
+
+Rather than renaming large folders immediately, the most practical streamlining step is:
+
+### Add a shared `common/` (or `cpp_common/`) library
+This becomes the single source of truth for:
+- Protocol messages + serialization rules
+- Shared types (IDs, timestamps, enums)
+- Shared utilities that are not UI-specific and not server-only
+
+Example:
+
+```text
+common/
+  include/
+    novaforge/
+      common/
+        ids.h
+        time.h
+        error_codes.h
+      protocol/
+        message_id.h
+        chat_messages.h
+        admin_console_messages.h
+        serialization.h
+  src/ (optional; only if you need compiled translation units)
+```
+
+Both `cpp_client` and `cpp_server` link against `common`.
+
+---
+
+## 4) Target “streamlined” repo structure (recommended)
+
+This is a target layout to evolve toward over time. You can adopt it gradually.
+
+```text
+engine/                 # engine core libs (render, ECS, math, platform)
+common/                 # shared types + protocol + serialization helpers
+cpp_client/             # game client app
+cpp_server/             # game server app/services
+editor/                 # tools/editor runtime
+
+assets/
+data/
+
+docs/
+specs/
+schemas/
+scripts/
+tools/
+tests/                  # recommended: unify atlas_tests + testing into tests/
+cmake/                  # optional: CMake modules/toolchains/helpers
+```
+
+> Optional future rename:
+> - `cpp_client/` → `client/`
+> - `cpp_server/` → `server/`
+> Do this only if/when you want a larger cleanup.
+
+---
+
+## 5) Recommended internal layout (client/server)
+
+This is the structure that keeps Chat (and similar systems) clean.
+
+### 5.1 Client internals (conceptual)
+```text
+cpp_client/
+  include/
+    novaforge/client/...
+  src/
+    app/                 # application bootstrap, main loop, state management
+    ui/
+      hud/
+      widgets/
+        chat/            # chat UI widgets
+    net/
+      transport/         # TCP/UDP sockets, connection, reliability primitives
+      protocol_handlers/ # mapping protocol messages -> service calls
+    services/
+      chat/              # ChatService, ChatStore, history, ack logic
+```
+
+### 5.2 Server internals (conceptual)
+```text
+cpp_server/
+  include/
+    novaforge/server/...
+  src/
+    net/
+      transport/         # TCP/UDP sockets, session management
+      protocol_handlers/ # decode -> validate -> dispatch
+    services/
+      chat/              # authoritative routing, validation, rate limits
+    persistence/
+      chat/              # storage + retention (90 days), pruning jobs
 ```
 
 ---
 
-## Future Phases (Not in This PR)
+## 6) Chat-specific placement (matches “no ImGui, custom UI”)
 
-### Phase 4: Consolidate Protocol Definitions
+Chat is naturally split into three layers:
 
-Migrate `MessageType` enum from both `cpp_server/include/network/protocol_handler.h` and `cpp_client/include/network/protocol_handler.h` into `cpp_common/include/novaforge/protocol/message_types.h`.
+### 6.1 UI layer (client)
+- `cpp_client/src/ui/widgets/chat/`
+- Components:
+  - `ChatWidget` (history view + input + tab bar)
+  - `ChatTabBar` (tabs + flashing/unread badges)
+  - `ChatDMTabView` (DM sub-tabs)
+  - `ChatSystemTabView` (System category sub-tabs)
 
-### Phase 5: Rename Directories (Optional, Breaking)
+### 6.2 Domain/service layer (client)
+- `cpp_client/src/services/chat/`
+- Components:
+  - `ChatService` (API used by UI: Send, OpenDM, RequestHistory)
+  - `ChatStore` (ring buffers; last 1000; unread/flash tracking)
+  - `ChatStreamKey` (Global/Local(solarSystemId)/Party/Guild/Whisper(threadId)/System)
+  - Delivery semantics:
+    - No out-of-order display
+    - Guaranteed delivery using ack/retry or reliable ordered transport
 
-| Current | Proposed | Rationale |
-|---------|----------|-----------|
-| `cpp_client/` | `client/` | Shorter, C++ is implied |
-| `cpp_server/` | `server/` | Shorter, C++ is implied |
-| `atlas_tests/` | `tests/atlas/` | Group all tests |
-
-**Note:** This is a large breaking change that should be done in a dedicated PR with full CI verification.
+### 6.3 Protocol layer (shared)
+- `common/include/novaforge/protocol/chat_messages.h`
+- Defines message payloads:
+  - `ChatSend`
+  - `ChatMessage`
+  - `ChatAck`
+  - `ChatSendResult`
+  - `ChatHistoryChunk`
+  - `AdminCommandSend` / `AdminCommandResult` (Server tab / console)
 
 ---
 
-## Build Integration
+## 7) Tests + docs consolidation (recommended)
+You currently have both:
+- `atlas_tests/`
+- `testing/`
 
-### CMake Changes
+Recommendation: consolidate to:
 
-```cmake
-# cpp_common/CMakeLists.txt
-add_library(novaforge_common INTERFACE)
-target_include_directories(novaforge_common INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-# cpp_server/CMakeLists.txt — add dependency
-target_link_libraries(novaforge_core PUBLIC novaforge_common)
-
-# cpp_client/CMakeLists.txt — add dependency
-target_link_libraries(atlas_client PUBLIC novaforge_common)
+```text
+tests/
+  unit/
+  integration/
+  load/
 ```
 
+If there is a strong reason to keep both, define clear intent:
+- `atlas_tests/` = engine-level tests for Atlas components
+- `testing/` = gameplay/server integration tests
+
+But unifying under `tests/` reduces confusion.
+
 ---
 
-## Summary
+## 8) Migration strategy (practical step-by-step)
 
-| Phase | Scope | Breaking? | Files Moved? |
-|-------|-------|-----------|-------------|
-| 1 | Add `cpp_common/` | No | No |
-| 2 | Client chat code | No | No |
-| 3 | Server chat handler | No | No |
-| 4 | Consolidate protocol | Low risk | Yes (copy + alias) |
-| 5 | Rename dirs | High risk | Yes |
+### Phase A: Add common/ without moving existing code
+1. Create `common/` CMake target (or equivalent).
+2. Move (or duplicate initially) protocol definitions into `common/`.
+3. Update client/server builds to link `common/`.
 
-**Recommendation:** Implement Phases 1–3 now. Phases 4–5 can be done incrementally in future PRs.
+### Phase B: Add Chat with minimal disruption
+1. Add `common/protocol/chat_messages.*`.
+2. Add server chat service + persistence hooks.
+3. Add client ChatService + ChatStore.
+4. Add custom UI widgets under client UI tree.
+5. Wire input focus (Enter to open chat, Esc to close) into your existing input system.
+
+### Phase C: Optional cleanup
+1. Consolidate `testing/` and `atlas_tests/` into `tests/` if desired.
+2. Consider renaming `cpp_client/` and `cpp_server/` for brevity.
+3. Add `cmake/` folder if build helpers grow.
+
+---
+
+## 9) Notes / open items for finalizing this plan
+To finalize a “deep dive” version of this proposal, we should inspect:
+- Where the current custom UI widgets live
+- Where key/text input is handled
+- Where networking messages are encoded/decoded and dispatched
+- Whether there is already a shared types/protocol library pattern
+
+Once those are identified, we can produce:
+- An exact file-by-file placement for Chat
+- A concrete set of refactors that improve cohesion without breaking builds
+
+---

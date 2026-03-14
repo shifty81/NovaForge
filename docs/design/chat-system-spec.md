@@ -1,236 +1,429 @@
 # NovaForge — Chat System (Full Design Spec)
 
-**Status:** Draft v1
-**Date:** 2026-03-08
-**Scope:** Implement full in-game Chat in `shifty81/NovaForge` with **custom UI** (no ImGui), server-authoritative enforcement, guaranteed delivery, strict in-order display, emojis, tabs w/ activity flashing, and persistence (90-day retention).
+Status: Draft v1  
+Date: 2026-03-08  
+Scope: **Implement full in-game Chat** in `shifty81/NovaForge` with **custom UI** (no ImGui), server-authoritative enforcement, guaranteed delivery, strict in-order display, emojis, tabs w/ activity flashing, and persistence (90-day retention).
 
 ---
 
-## 1. Tab / Channel Model
+## 0) Summary of requirements (locked)
 
-### Top-Level Tabs
+### Chat types / tabs
+- Global
+- Local (**Solar System** scope)
+- Party
+- Guild
+- Whisper (**DM sub-tabs per peer**)
+- System (**parent + category sub-tabs**)
+- Server tab (admin console style: commands + output)
 
-| Tab | Channel Type | Scope | Notes |
-|-----|-------------|-------|-------|
-| **Global** | `global` | All players on shard | Broadcast |
-| **Local** | `local` | Same solar system | Server determines recipients by `solar_system_id` |
-| **Party** | `party` | Party members | Keyed by `party_id` |
-| **Guild** | `guild` | Guild/Corp members | Keyed by `guild_id` |
-| **Whisper** | `whisper` | 1:1 DMs | Container tab with **DM sub-tabs per peer** |
-| **System** | `system` | Server announcements, moderation, errors | Sub-tabs: All, Moderation, Errors, Announcements |
-| **Server** | `admin_console` | Admin-only console | Command input + server output stream |
+### UI behavior
+- Tabbed UI; tabs **flash / highlight on activity** when not focused
+- Unread counters per tab and per DM/system sub-tab
+- Click sender name to open DM tab and view character page (character page is out-of-scope here, but chat must provide the IDs needed)
 
-### Sub-Tabs
+### Transport / authority
+- Server-authoritative:
+  - rate limits
+  - spam checks
+  - mute/ban enforcement
+  - identity attachment (player ID, character ID, display name)
+- Ordering: **no out-of-order display**
+- Delivery: **guaranteed**
+- Works whether underlying transport ends up being TCP, UDP, or mixed (protocol supports ACK-based recovery)
 
-- **Whisper** → DM sub-tabs per peer character (e.g., "DM: Luna")
-- **System** → Category sub-tabs: All (default), Moderation, Errors, Announcements
+### Emojis
+- Supports both:
+  - Unicode emoji (UTF-8)
+  - shortcodes (e.g. `:heart:`), allowing future sprite mapping
 
-### Flashing / Activity Rules
-
-Each tab maintains:
-- `unread_count` — incremented on message arrival when tab is not focused
-- `has_mention` — (future) set when player name appears in message
-- `flash_state` — boolean for animation toggle
-- `last_activity_time` — timestamp of most recent message
-
-When a message arrives for a tab that is **not** focused:
-1. Increment `unread_count`
-2. Start flashing that tab (alternating color every ~500ms or pulsing alpha)
-
-When user clicks/focuses a tab:
-1. `unread_count = 0`
-2. Stop flashing
-
-For DM sub-tabs, the **Whisper parent tab** also flashes if any child has unread.
-
----
-
-## 2. Stream Identity Model
-
-Each message belongs to a **stream** identified by:
-
-```
-stream_type  = Global | Local | Party | Guild | Whisper | System | AdminConsole
-stream_key   = (depends on type)
-  - Local:   solar_system_id
-  - Party:   party_id
-  - Guild:   guild_id
-  - Whisper: thread_id = (min(sender_char_id, peer_char_id), max(...))
-  - System / Global: 0
-```
-
-Each stream has a **monotonic `server_seq`** for guaranteed ordered display.
+### Persistence
+- Client: keep last **1000** messages per stream locally (in-memory; optionally persisted to disk later)
+- Server: store full logs with **90-day retention**, including whispers (DMs)
+- Client can request recent history on connect/reconnect/open-tab
 
 ---
 
-## 3. Message Structure
+## 1) Concepts & terminology
 
-### ChatMessage (Server → Client)
+### 1.1 Channel vs Stream
+- **Channel** is the semantic type: Global/Local/Party/Guild/Whisper/System/ServerConsole.
+- **Stream** is a concrete ordered message sequence with its own monotonic server sequence number.
+  - Example streams:
+    - Global stream
+    - Local stream for solarSystemId=42
+    - Whisper thread stream for (charA,charB)
+    - System stream (single stream, with category filtering)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `stream_type` | enum | Channel type |
-| `stream_key` | string | Stream identifier |
-| `server_seq` | uint64 | Monotonic sequence per stream |
-| `server_msg_id` | string | Unique message ID |
-| `timestamp_utc_ms` | uint64 | Server timestamp |
-| `sender_player_id` | string | Authoritative player ID |
-| `sender_character_id` | string | Authoritative character ID |
-| `sender_character_name` | string | Display name (server-attached) |
-| `text` | string | UTF-8 message body (may include emoji/shortcodes) |
-| `flags` | uint32 | Bitfield: system, moderation, broadcast, etc. |
-| `system_category` | enum | (System only) All, Moderation, Errors, Announcements |
-
-### ChatSend (Client → Server)
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `channel` | enum | Target channel type |
-| `target_character_id` | string | Required for Whisper |
-| `client_msg_id` | string | Client-assigned UUID for ack correlation |
-| `text` | string | UTF-8 message body |
-
-### ChatSendResult (Server → Client, ack to sender)
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `client_msg_id` | string | Echo of client's ID |
-| `success` | bool | Whether message was accepted |
-| `error_code` | enum | `none`, `rate_limited`, `muted`, `too_long`, `invalid_channel` |
-| `server_msg_id` | string | Assigned server ID (if success) |
-
-### ChatHistoryChunk (Server → Client, on join/reconnect)
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `stream_type` | enum | Channel type |
-| `stream_key` | string | Stream identifier |
-| `messages` | array | List of ChatMessage objects |
-
-### AdminCommandSend (Client → Server)
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `command_text` | string | Admin command to execute |
-| `client_cmd_id` | string | Correlation ID |
-
-### AdminCommandResult (Server → Client)
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `client_cmd_id` | string | Correlation ID |
-| `output` | string | Command output text |
-| `success` | bool | Whether command succeeded |
+### 1.2 Strict ordering
+- A client must **render messages per stream** strictly in `server_seq` order.
+- If message `server_seq = N+1` arrives before `N`, the client buffers `N+1` until `N` arrives (bounded wait + recovery via history request/ACK mechanism).
 
 ---
 
-## 4. Emoji Support
+## 2) UI / UX Specification
 
-- **Unicode emoji:** UTF-8 passthrough; font must support rendering
-- **Custom shortcodes:** `:heart:`, `:pog:`, etc. — client parses and renders inline
-- **Server validation:** Enforce max length on UTF-8 bytes (512 max)
-- **v1:** Render shortcodes as colored text; add sprite substitution later
+### 2.1 Top-level tabs
+1. Global
+2. Local (Solar System)
+3. Party
+4. Guild
+5. Whisper
+6. System
+7. Server (admin console)
 
----
+### 2.2 Whisper DM sub-tabs
+- Under **Whisper**:
+  - Each DM peer is a sub-tab named by the peer’s character name.
+  - There is an optional "Whisper: All" sub-tab (optional; can be added later).
+- Opening a DM:
+  - clicking a player name -> "Whisper" creates/focuses the DM sub-tab
+  - typing command `/w <name> <msg>` creates/focuses DM sub-tab
 
-## 5. Transport & Reliability
+### 2.3 System category sub-tabs
+Under **System**, show:
+- System: All (always includes every system message)
+- System: Announcements
+- System: Moderation
+- System: Errors
 
-- Server assigns increasing `server_seq` per stream
-- Client displays messages strictly in `server_seq` order, buffering gaps
-- TCP transport provides reliable ordered delivery at the socket level
-- Application-level `server_seq` provides safety net for display ordering
+Routing rules:
+- Every system message appears in **System: All**
+- Additionally appears in the category sub-tab matching `system_category`
 
----
+### 2.4 Activity flashing + unread counts
+Each (sub)tab maintains:
+- `unread_count`
+- `has_activity` (or `flash_until_time`)
+- optional `has_mention` (future)
 
-## 6. Rate Limiting & Moderation
+Rules:
+- If a message arrives for a tab/sub-tab that is not currently focused:
+  - increment unread_count
+  - mark activity for flashing/highlight
+- When a tab/sub-tab becomes focused:
+  - reset that tab’s unread_count to 0
+  - clear activity flashing for that tab/sub-tab
+- Parent tabs aggregate:
+  - Whisper parent shows unread sum of DM sub-tabs
+  - System parent shows unread sum of category sub-tabs
+  - Parent flashes if any child has activity
 
-| Rule | Value |
-|------|-------|
-| Max message length | 512 UTF-8 bytes |
-| Rate limit | 3 messages / 5 seconds per player per channel |
-| Mute | Server enforces; muted players get `ChatSendResult.error_code = muted` |
-| Ban | Banned players cannot join channels |
-| Profanity filter | Optional server-side; v1 can skip |
+Visual recommendation (non-annoying):
+- Always show unread badge.
+- Flash/highlight for first N seconds (e.g., 5s) after activity, then remain highlighted until read.
 
----
+### 2.5 Input focus behavior
+- Press **Enter**:
+  - if chat is closed -> open chat and focus input
+  - if chat is open and input has text -> send (or add newline if you support multi-line)
+- Press **Esc**:
+  - blur/unfocus input (closes chat input mode)
+- While input focused:
+  - gameplay keybinds should not trigger (chat consumes input)
+- Support command parsing:
+  - `/g`, `/l`, `/p`, `/guild` etc.
+  - `/w <name> <text>`
+  - `/r <text>` reply to last whisper (optional v1)
 
-## 7. Identity
-
-- **Display name:** Character name (server-attached, authoritative)
-- **Signed with:** `player_id` + `character_id` (server-attached)
-- **Clicking a player name:** Opens character info page / friend request
-
----
-
-## 8. Persistence
-
-| Scope | Storage | Retention |
-|-------|---------|-----------|
-| Client | In-memory ring buffer per tab | 1000 messages |
-| Server | Full logs per stream | 90 days |
-| Whispers | Server-persisted | 90 days |
-
-On join/reconnect, client requests last N messages for:
-- Global, System, Local (current system)
-- Party/Guild (if member)
-- Recent DM threads
-
----
-
-## 9. Server Console (Admin Tab)
-
-- `AdminCommandSend`: client → server (`command_text`)
-- `AdminCommandResult`: server → client (`output`, `success`)
-- Permission gate: server checks admin role before executing
-- Not a normal chat channel — separate message class
-
----
-
-## 10. Implementation Architecture
-
-### Three Layers
-
-1. **Chat UI** (client-only): Tab bar, message view, input box, scrollback
-2. **Chat Domain** (shared logic): Message struct, channel enum, formatting, spam throttle
-3. **Chat Transport** (client ↔ server): Packet definitions, send queue, receive handlers
-
-### Server-Side Files
-
-| File | Purpose |
-|------|---------|
-| `cpp_server/include/handlers/chat_handler.h` | `IMessageHandler` for CHAT messages |
-| `cpp_server/src/handlers/chat_handler.cpp` | Route/validate/broadcast chat messages |
-| `cpp_server/include/systems/chat_system.h` | Existing ECS system (channels, members, moderation) |
-| `cpp_server/include/components/social_components.h` | `ChatChannel` component (expanded) |
-
-### Client-Side Files
-
-| File | Purpose |
-|------|---------|
-| `cpp_client/include/chat/chat_service.h` | Domain API: send/receive, ring buffer, stream mgmt |
-| `cpp_client/src/chat/chat_service.cpp` | Implementation |
-| `cpp_client/include/ui/atlas/chat_widget.h` | Atlas UI chat panel with tabs |
-| `cpp_client/src/ui/atlas/chat_widget.cpp` | Implementation |
-
-### Protocol Files
-
-| File | Purpose |
-|------|---------|
-| `cpp_server/include/network/protocol_handler.h` | Extended with chat-specific message types |
+### 2.6 Text rendering
+- Must support UTF-8 including Unicode emoji.
+- Additionally parse shortcodes `:name:` as inline tokens:
+  - v1: render as colored text token if sprites aren’t implemented
+  - v2: map to sprite atlas icons if desired
+- Limits:
+  - Max chars: pick a v1 number (e.g., 512 bytes UTF-8)
+  - Must prevent UI overflow (wrapping, truncation in list view with full copy on hover if desired)
 
 ---
 
-## 11. Protocol Message Types (Extended)
+## 3) Identity & data carried by each message
 
-New additions to `MessageType` enum:
+### 3.1 Identity fields (authoritative from server)
+Each delivered chat message includes:
+- `sender_player_id` (unique)
+- `sender_character_id` (unique)
+- `sender_character_name` (display)
+- `timestamp_utc_ms` (server time)
 
-```
-CHAT_SEND           // Client → Server: send a chat message
-CHAT_MESSAGE        // Server → Client: broadcast a chat message
-CHAT_SEND_RESULT    // Server → Client: ack/error for sent message
-CHAT_HISTORY        // Server → Client: history chunk on join
-CHAT_JOIN           // Client → Server: join a channel
-CHAT_LEAVE          // Client → Server: leave a channel
-ADMIN_COMMAND_SEND  // Client → Server: admin console command
-ADMIN_COMMAND_RESULT // Server → Client: admin command response
-```
+Client must treat these as **read-only** and not user-controlled.
+
+### 3.2 Character page integration
+Chat must expose:
+- `sender_character_id` and `sender_player_id`
+so the UI can open the character page when clicked (out of scope here).
+
+---
+
+## 4) Scope rules per channel
+
+### 4.1 Global
+- Delivered to all connected players who have access (normal).
+
+### 4.2 Local (Solar System)
+- Delivered to all players currently in the same `solar_system_id`.
+- The server determines `solar_system_id` from player state (not from the client’s message payload).
+
+### 4.3 Party
+- Delivered to members of the sender’s party.
+- If sender is not in a party, server returns error.
+
+### 4.4 Guild
+- Delivered to members of the sender’s guild.
+- If sender is not in a guild, server returns error.
+
+### 4.5 Whisper (DM)
+- Delivered only to sender and target peer.
+- Persisted server-side (90 days).
+- Delivery should fail with explicit error if:
+  - target not found
+  - target offline (depending on design; optional: still store for later delivery)
+  - sender muted
+  - sender blocked by target (if you implement blocks later)
+
+### 4.6 System
+- Server-generated only.
+- Used for:
+  - announcements
+  - moderation notices (mute/ban actions, warnings)
+  - errors (rate-limit feedback, delivery failures)
+- Client should not send System messages.
+
+### 4.7 Server (admin console)
+- Only for authorized users (role/permission check).
+- Supports:
+  - sending commands
+  - receiving server output
+- Not a normal player chat channel.
+
+---
+
+## 5) Reliability, ordering, and synchronization
+
+### 5.1 Server sequence numbers
+For each stream, the server maintains:
+- `server_seq` (uint64) monotonically increasing per stream.
+
+Each message delivered includes:
+- `stream_id` (or `stream_type + stream_key`)
+- `server_seq`
+
+The client:
+- tracks `expected_next_seq` per stream
+- buffers future messages until gaps are filled
+- requests missing messages if a gap persists beyond a short timeout
+
+### 5.2 ACK model (transport-independent)
+Client sends periodic ACKs per stream:
+- `highest_contiguous_server_seq_received` for that stream
+
+Server retains a bounded resend/history buffer to ensure delivery (plus long-term persistence for 90 days).
+
+### 5.3 Handling disconnects/reconnects
+On reconnect:
+- client sends `ChatSyncRequest` containing last known `highest_contiguous_server_seq_received` for key streams
+- server replies with `ChatHistoryChunk` (or multiple chunks) to fill gaps
+
+### 5.4 Guaranteed delivery definition (practical)
+Guaranteed delivery here means:
+- If the client is connected and authenticated, and the server accepts the message,
+  then the message will eventually appear in the client’s stream (no silent drops),
+  assuming the connection remains usable (or can reconnect and resync).
+
+---
+
+## 6) Message protocol (suggested)
+
+> Exact binary/JSON encoding depends on NovaForge’s current networking layer. The *fields and semantics* should stay consistent.
+
+### 6.1 Common types
+- `PlayerId` (uint64)
+- `CharacterId` (uint64)
+- `MessageId` (uint64 or UUID)
+- `TimestampUtcMs` (uint64)
+- `StreamType` enum
+- `SystemCategory` enum
+- `StreamKey` (uint64; meaning depends on stream type)
+
+### 6.2 Client -> Server messages
+
+#### `ChatSend`
+Fields:
+- `client_msg_id` (unique per client send)
+- `channel` (Global | Local | Party | Guild | Whisper)
+- `target_character_id` (required for Whisper; otherwise 0)
+- `text` (UTF-8)
+Notes:
+- Client never specifies `sender_*`
+- Client never specifies solarSystemId/partyId/guildId; server derives from authoritative state
+
+#### `ChatAck`
+Fields:
+- `stream_type`
+- `stream_key`
+- `highest_contiguous_server_seq`
+
+#### `ChatHistoryRequest`
+Fields:
+- `stream_type`
+- `stream_key`
+- Either:
+  - `after_server_seq` (request newer), OR
+  - `range_start` + `range_end`
+- `max_messages`
+
+#### `AdminCommandSend`
+Fields:
+- `client_cmd_id`
+- `command_text`
+
+### 6.3 Server -> Client messages
+
+#### `ChatMessage`
+Fields:
+- `stream_type`
+- `stream_key`
+- `server_seq`
+- `server_msg_id`
+- `timestamp_utc_ms`
+- `sender_player_id`
+- `sender_character_id`
+- `sender_character_name`
+- `text`
+- if `stream_type == System`: `system_category`
+
+#### `ChatSendResult`
+Fields:
+- `client_msg_id`
+- `result` (Ok | Error)
+- `error_code` (Muted | RateLimited | TooLong | NotInParty | NotInGuild | TargetNotFound | Unauthorized | Unknown)
+- `human_message` (optional; often also delivered as a System:Errors message)
+
+#### `ChatHistoryChunk`
+Fields:
+- `stream_type`
+- `stream_key`
+- `messages[]` (array of ChatMessage, ordered by server_seq ascending)
+
+#### `AdminCommandResult`
+Fields:
+- `client_cmd_id`
+- `timestamp_utc_ms`
+- `stdout`
+- `stderr`
+- `exit_code`
+
+---
+
+## 7) Server responsibilities
+
+### 7.1 Validation
+- length limits (bytes)
+- allowed characters (UTF-8 validation)
+- rate limiting (per player, per channel)
+- mute/ban enforcement
+- permissions for AdminConsole
+
+### 7.2 Routing
+- Global -> all
+- Local -> all in same solar system
+- Party/Guild -> members
+- Whisper -> sender + target (and optional offline storage + later delivery)
+
+### 7.3 Persistence (90-day retention)
+Store messages with:
+- stream identifiers
+- server_seq
+- timestamp
+- sender identifiers
+- text
+- system category (if any)
+
+Retention:
+- periodic cleanup job deletes records older than 90 days
+
+---
+
+## 8) Client responsibilities
+
+### 8.1 ChatService (domain)
+Expose:
+- `SendGlobal(text)`
+- `SendLocal(text)`
+- `SendParty(text)`
+- `SendGuild(text)`
+- `SendWhisper(targetCharacterId, text)`
+- `OpenDM(targetCharacterId)`
+- `RequestHistory(stream, after_seq, max)`
+- `OnChatMessageReceived` event/callback subscription
+
+### 8.2 ChatStore (state)
+Maintain:
+- ring buffer per stream (cap 1000)
+- per-stream ordering state:
+  - `expected_next_seq`
+  - out-of-order buffer map (seq -> message)
+- unread/flash state per tab/sub-tab
+
+### 8.3 UI widgets
+- Subscribe to store events and redraw when:
+  - new message added
+  - unread counts changed
+  - focus/tab changes
+
+---
+
+## 9) Emoji handling details
+
+### 9.1 Unicode emoji
+- Send as UTF-8.
+- Ensure font fallback supports emoji (implementation detail of your custom UI text renderer).
+
+### 9.2 Shortcodes
+- Client parses patterns like `:heart:` into tokens.
+- v1: render token as `:heart:` but styled (color/background)
+- v2: map to sprite index (requires a registry of shortcode -> sprite)
+
+Server-side:
+- does not need to interpret; can store raw text
+- optional: validate allow-list of shortcodes later
+
+---
+
+## 10) MVP milestones (recommended implementation order)
+
+### Milestone 1: Protocol + basic delivery
+- Define chat protocol messages and register them in net layer
+- Server: accept Global chat, broadcast to all
+- Client: display Global chat list + send input
+
+### Milestone 2: Streams + ordering + ACK
+- Add server_seq
+- Add buffering and strict ordering on client
+- Add ACKs + history request on reconnect
+
+### Milestone 3: Tabs + flashing + unread counts
+- Implement tab UI and activity indicators
+
+### Milestone 4: Local/Party/Guild routing
+- Local uses solar system membership
+- Party/Guild uses membership state
+
+### Milestone 5: Whispers with DM sub-tabs + persistence
+- DM routing + per-thread stream IDs
+- Persist DM logs server-side 90 days
+- History request support
+
+### Milestone 6: System categories + admin console tab
+- System:All/Announcements/Moderation/Errors sub-tabs
+- Admin command send/result with permission checks
+
+---
+
+## 11) Open decisions (optional; can be set later)
+- Maximum message size (suggest 512 bytes UTF-8 to start)
+- Whether whispers to offline users deliver later (store-and-forward) or error out
+- Mention/highlight rules (`@name`) and notification sounds
+- Profanity filtering approach
+
+---
