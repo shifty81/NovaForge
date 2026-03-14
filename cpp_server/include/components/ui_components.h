@@ -662,6 +662,32 @@ public:
     COMPONENT_TYPE(RelayCloneInstallUiState)
 };
 
+// ---------------------------------------------------------------------------
+// NotificationState — in-game notification management
+// ---------------------------------------------------------------------------
+class NotificationState : public ecs::Component {
+public:
+    enum class NotifType { Info, Warning, Error, Achievement, Combat, Trade };
+
+    struct Notification {
+        std::string notif_id;
+        std::string message;
+        NotifType   type       = NotifType::Info;
+        bool        read       = false;
+        float       timestamp  = 0.0f;
+        float       lifetime   = 60.0f;
+    };
+
+    std::vector<Notification> notifications;
+    int   max_notifications        = 100;
+    int   total_notifications_sent = 0;
+    int   total_expired            = 0;
+    float elapsed                  = 0.0f;
+    bool  active                   = true;
+
+    COMPONENT_TYPE(NotificationState)
+};
+
 } // namespace components
 } // namespace atlas
 

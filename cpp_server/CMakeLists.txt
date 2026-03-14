@@ -457,6 +457,9 @@ set(CORE_SOURCES
     src/systems/corp_tax_ledger_system.cpp
     src/systems/fighter_squadron_system.cpp
     src/systems/moon_mining_scheduler_system.cpp
+    src/systems/bookmark_system.cpp
+    src/systems/hangar_system.cpp
+    src/systems/notification_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -931,6 +934,9 @@ set(SERVER_HEADERS
     include/systems/corp_tax_ledger_system.h
     include/systems/fighter_squadron_system.h
     include/systems/moon_mining_scheduler_system.h
+    include/systems/bookmark_system.h
+    include/systems/hangar_system.h
+    include/systems/notification_system.h
 )
 
 # Steam SDK configuration
