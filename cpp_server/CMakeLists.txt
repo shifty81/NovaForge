@@ -452,6 +452,8 @@ set(CORE_SOURCES
     src/systems/drone_logistics_system.cpp
     src/systems/module_capability_system.cpp
     src/systems/rig_link_system.cpp
+    src/systems/repair_timer_system.cpp
+    src/systems/agent_mission_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -921,6 +923,8 @@ set(SERVER_HEADERS
     include/systems/drone_logistics_system.h
     include/systems/module_capability_system.h
     include/systems/rig_link_system.h
+    include/systems/repair_timer_system.h
+    include/systems/agent_mission_system.h
 )
 
 # Steam SDK configuration

@@ -1671,30 +1671,6 @@ public:
     COMPONENT_TYPE(CapacitorWarfareState)
 };
 
-class SignatureAnalysisState : public ecs::Component {
-public:
-    struct SignatureReading {
-        std::string sig_id;
-        std::string sig_type;
-        float signal_strength = 0.0f;
-        float scan_resolution = 0.0f;
-        bool identified = false;
-    };
-
-    std::vector<SignatureReading> readings;
-    int max_readings = 50;
-
-    float scan_power = 1.0f;
-    float analysis_speed = 1.0f;
-    int total_identified = 0;
-    int total_scans = 0;
-
-    float elapsed = 0.0f;
-    bool active = true;
-
-    COMPONENT_TYPE(SignatureAnalysisState)
-};
-
 class OverheatManagementState : public ecs::Component {
 public:
     struct ModuleHeat {
