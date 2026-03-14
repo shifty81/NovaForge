@@ -1801,6 +1801,43 @@ public:
     COMPONENT_TYPE(MoonMiningSchedulerState)
 };
 
+/**
+ * @brief Structure fuel block management state
+ *
+ * Tracks fuel reserves for a structure (citadel, refinery, engineering
+ * complex, etc.).  Each fuel type has a quantity, max capacity, and per-
+ * second consumption rate.  The per-tick update drains fuel; when any
+ * reserve hits zero the structure enters an offline state.  A low-fuel
+ * warning fires when remaining fuel falls below low_fuel_threshold
+ * seconds of consumption.
+ */
+class FuelBlockState : public ecs::Component {
+public:
+    enum class FuelType { Standard, Nitrogen, Helium, Hydrogen, Oxygen };
+
+    struct FuelReserve {
+        std::string   reserve_id;
+        FuelType      fuel_type       = FuelType::Standard;
+        float         quantity        = 0.0f;
+        float         max_quantity    = 1000.0f;
+        float         consumption_rate = 1.0f; // units per second
+    };
+
+    std::string structure_id;
+    std::vector<FuelReserve> reserves;
+    int   max_reserves           = 5;
+    float low_fuel_threshold     = 3600.0f; // seconds of fuel remaining
+    bool  is_online              = true;
+    bool  low_fuel_warning       = false;
+    int   total_refuels          = 0;
+    float total_fuel_consumed    = 0.0f;
+    int   total_offline_events   = 0;
+    float elapsed                = 0.0f;
+    bool  active                 = true;
+
+    COMPONENT_TYPE(FuelBlockState)
+};
+
 } // namespace components
 } // namespace atlas
 

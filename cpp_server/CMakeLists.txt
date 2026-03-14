@@ -460,6 +460,9 @@ set(CORE_SOURCES
     src/systems/bookmark_system.cpp
     src/systems/hangar_system.cpp
     src/systems/notification_system.cpp
+    src/systems/survey_scanner_system.cpp
+    src/systems/fuel_block_system.cpp
+    src/systems/jump_clone_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -937,6 +940,9 @@ set(SERVER_HEADERS
     include/systems/bookmark_system.h
     include/systems/hangar_system.h
     include/systems/notification_system.h
+    include/systems/survey_scanner_system.h
+    include/systems/fuel_block_system.h
+    include/systems/jump_clone_system.h
 )
 
 # Steam SDK configuration
