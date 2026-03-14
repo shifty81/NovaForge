@@ -57,16 +57,46 @@ void ViewportPanel::Draw() {
     atlas::separator(ctx, {b.x + pad, y}, b.w - 2.0f * pad);
     y += pad;
 
-    // Object list
-    for (auto& obj : m_objects) {
-        if (y + rowH > b.y + b.h - 2.0f * (rowH + pad) - pad) break;
-        std::string objLabel = obj.name + " [" + obj.type + "]";
-        if (obj.selected) objLabel = "> " + objLabel;
-        atlas::Rect row{b.x + pad, y, b.w - 2.0f * pad, rowH};
-        if (atlas::button(ctx, objLabel.c_str(), row)) {
-            SelectObject(obj.id);
+    // Object list — scrollable region
+    float listTop = y;
+    float listBottom = b.y + b.h - pad;
+    if (!m_pendingChanges.empty()) {
+        listBottom -= (rowH + 2.0f * pad);  // reserve space for buttons
+    }
+    float listH = listBottom - listTop;
+
+    if (listH > 0.0f && !m_objects.empty()) {
+        float contentH = static_cast<float>(m_objects.size()) * (rowH + pad);
+
+        // Handle scroll input
+        atlas::Rect listRect{b.x + pad, listTop, b.w - 2.0f * pad, listH};
+        if (ctx.isHovered(listRect)) {
+            m_scrollOffset -= ctx.input().scrollY * rowH * 2.0f;
         }
-        y += rowH + pad;
+        float maxScroll = std::max(0.0f, contentH - listH);
+        if (m_scrollOffset < 0.0f) m_scrollOffset = 0.0f;
+        if (m_scrollOffset > maxScroll) m_scrollOffset = maxScroll;
+
+        // Render visible object rows
+        for (size_t i = 0; i < m_objects.size(); ++i) {
+            float objY = listTop + static_cast<float>(i) * (rowH + pad)
+                         - m_scrollOffset;
+            if (objY + rowH < listTop || objY > listBottom) continue;
+            auto& obj = m_objects[i];
+            std::string objLabel = obj.name + " [" + obj.type + "]";
+            if (obj.selected) objLabel = "> " + objLabel;
+            atlas::Rect row{b.x + pad, objY, b.w - 2.0f * pad, rowH};
+            if (atlas::button(ctx, objLabel.c_str(), row)) {
+                SelectObject(obj.id);
+            }
+        }
+
+        // Scrollbar
+        if (contentH > listH) {
+            atlas::Rect scrollTrack{b.x + b.w - pad - ctx.theme().scrollbarWidth,
+                                    listTop, ctx.theme().scrollbarWidth, listH};
+            atlas::scrollbar(ctx, scrollTrack, m_scrollOffset, contentH, listH);
+        }
     }
 
     // Commit / Discard buttons (when pending changes)

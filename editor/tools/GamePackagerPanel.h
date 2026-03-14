@@ -65,6 +65,7 @@ private:
     PackageSettings m_settings;
     PackageStatus m_status;
     atlas::PanelState m_panelState;
+    float m_scrollOffset = 0.0f;
 };
 
 }
