@@ -9,7 +9,7 @@ living documentation in `docs/`.
 | Directory | Contents | Count |
 |-----------|----------|-------|
 | `sessions/` | Development session logs, implementation summaries, project status snapshots | 59 |
-| `phases/` | Superseded phase-specific documents | 2 |
+| `phases/` | Completed phase documentation (Phase 4–7 records, client integration summaries) | 22 |
 | `fixes/` | Build fix records (now in git history) | 4 |
 | `getting-started/` | Legacy getting-started guides (Python-era) | 4 |
 
@@ -20,8 +20,37 @@ living documentation in `docs/`.
 | `CPP_MIGRATION_ROADMAP.md` | Original C++ migration plan |
 | `DEVELOPMENT_ROADMAP.md` | Early Atlas Engine development roadmap |
 | `IMMEDIATE_ACTION_PLAN.md` | Historical action plan |
-| `NEXT_TASKS.md` | Previous task tracking |
+| `NEXT_TASKS.md` | System implementation tracking log |
 | `QUICK_REFERENCE.md` | Legacy quick reference (referenced Python workflow) |
+| `serverbuildissues.txt` | Historical server build issue notes |
+| `ideas and improvements.txt` | Historical brainstorm and improvement notes |
+
+## Archived Phase Documents (phases/)
+
+Completed phase records moved from `docs/development/` and `docs/cpp_client/`:
+
+| File | Origin | Description |
+|------|--------|-------------|
+| `PHASE5_ENHANCEMENTS.md` | development/ | Phase 5 enhancements (complete) |
+| `PHASE5_POLISH.md` | development/ | Phase 5 polish pass (complete) |
+| `PHASE5_UI_UX_ENHANCEMENTS.md` | development/ | Phase 5 UI/UX work (complete) |
+| `PHASE5_VISUAL_FEATURE_MAP.md` | development/ | Phase 5 visual features (complete) |
+| `PHASE6_CONTENT_EXPANSION.md` | development/ | Phase 6 content expansion (complete) |
+| `PHASE6_SHIP_MODELS.md` | development/ | Phase 6 ship models (complete) |
+| `PHASE6_TECH2_CRUISERS.md` | development/ | Phase 6 Tech II cruisers (complete) |
+| `PHASE7_MINING.md` | development/ | Phase 7 mining core (complete) |
+| `PHASE7_ICE_MINING.md` | development/ | Phase 7 ice mining (complete) |
+| `PHASE7_RESEARCH_INVENTION.md` | development/ | Phase 7 research & invention (complete) |
+| `PHASE7_PLANETARY_INTERACTION.md` | development/ | Phase 7 planetary interaction (complete) |
+| `CLIENT_UPDATES.md` | development/ | Python client updates for C++ server (complete) |
+| `CLIENT_INTEGRATION_SUMMARY.md` | development/ | Phase 6 client integration summary (complete) |
+| `DEFERRED_RENDERING.md` | cpp_client/ | Deferred rendering implementation (complete) |
+| `PHASE4.5_ENHANCED_UI.md` | cpp_client/ | Phase 4.5 enhanced UI (complete) |
+| `PHASE4.6_ADVANCED_FEATURES.md` | cpp_client/ | Phase 4.6 advanced features (complete) |
+| `PHASE4.7_NETWORK_INTEGRATION.md` | cpp_client/ | Phase 4.7 network integration (complete) |
+| `PHASE4_NETWORK.md` | cpp_client/ | Phase 4 network client (complete) |
+| `POST_PROCESSING.md` | cpp_client/ | Post-processing pipeline (complete) |
+| `SETUP_COMPLETE.md` | cpp_client/ | Client setup completion checklist (complete) |
 
 ## Archived Getting-Started Guides
 
