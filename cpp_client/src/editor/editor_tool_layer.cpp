@@ -118,62 +118,42 @@ void EditorToolLayer::init() {
 
     // ── Build dock layout ────────────────────────────────────────
     //
-    //  ┌─────────────────────────────┬──────────────┐
-    //  │                             │  PCG Preview  │
-    //  │         Viewport            ├──────────────┤
-    //  │                             │  Ship Arch.  │
-    //  ├─────────────────────────────┼──────────────┤
-    //  │  Scene Graph / Data Browser │ Asset Style  │
-    //  │  Module / NPC / Fleet       │ Packager     │
-    //  └─────────────────────────────┴──────────────┘
+    //  ┌──────────────────────────────┬──────────────────┐
+    //  │                              │  PCG Preview /   │
+    //  │   (Empty — 3D game world     │  Ship Archetype /│
+    //  │    visible through overlay)  │  Gen Style / ... │
+    //  │                              │  (tabs)          │
+    //  ├──────────────────────────────┤                  │
+    //  │  Viewport / Scene Graph /    │                  │
+    //  │  Data Browser / ...  (tabs)  │                  │
+    //  └──────────────────────────────┴──────────────────┘
     //
     auto& root = m_layout->Root();
     root.split = DockSplit::Horizontal;
-    root.splitRatio = 0.65f;
+    root.splitRatio = 0.70f;
 
     root.a = std::make_unique<DockNode>();
     root.b = std::make_unique<DockNode>();
 
-    // Left: viewport on top, tool tabs on bottom
+    // Left: empty viewport on top, tool tabs on bottom
     root.a->split = DockSplit::Vertical;
-    root.a->splitRatio = 0.70f;
-    root.a->a = std::make_unique<DockNode>();
+    root.a->splitRatio = 0.75f;
+    root.a->a = std::make_unique<DockNode>();  // Empty — game world
     root.a->b = std::make_unique<DockNode>();
-    root.a->a->panel = m_viewport.get();
     root.a->b->split = DockSplit::Tab;
-    root.a->b->tabs  = {m_sceneGraph.get(), m_dataBrowser.get(),
-                         m_moduleEditor.get(), m_npcEditor.get(),
-                         m_fleetFormation.get(), m_assetPalette.get(),
-                         m_physicsTuner.get()};
+    root.a->b->tabs  = {m_viewport.get(), m_sceneGraph.get(),
+                         m_dataBrowser.get(), m_moduleEditor.get(),
+                         m_npcEditor.get(), m_fleetFormation.get(),
+                         m_assetPalette.get(), m_physicsTuner.get()};
     root.a->b->activeTab = 0;
 
-    // Right: PCG panels on top, asset style + packager on bottom
-    root.b->split = DockSplit::Vertical;
-    root.b->splitRatio = 0.60f;
-    root.b->a = std::make_unique<DockNode>();
-    root.b->b = std::make_unique<DockNode>();
-
-    root.b->a->split = DockSplit::Vertical;
-    root.b->a->splitRatio = 0.33f;
-    root.b->a->a = std::make_unique<DockNode>();
-    root.b->a->b = std::make_unique<DockNode>();
-    root.b->a->a->split = DockSplit::Tab;
-    root.b->a->a->tabs  = {m_pcgPreview.get(), m_characterSelect.get(),
-                            m_missionEditor.get(), m_galaxyMap.get()};
-    root.b->a->a->activeTab = 0;
-    root.b->a->b->split = DockSplit::Vertical;
-    root.b->a->b->splitRatio = 0.50f;
-    root.b->a->b->a = std::make_unique<DockNode>();
-    root.b->a->b->b = std::make_unique<DockNode>();
-    root.b->a->b->a->panel = m_shipArchetype.get();
-    root.b->a->b->b->panel = m_genStyle.get();
-
-    root.b->b->split = DockSplit::Vertical;
-    root.b->b->splitRatio = 0.50f;
-    root.b->b->a = std::make_unique<DockNode>();
-    root.b->b->b = std::make_unique<DockNode>();
-    root.b->b->a->panel = m_assetStyle.get();
-    root.b->b->b->panel = m_packager.get();
+    // Right: single tab group with all inspector/tool panels
+    root.b->split = DockSplit::Tab;
+    root.b->tabs  = {m_pcgPreview.get(), m_shipArchetype.get(),
+                     m_genStyle.get(), m_assetStyle.get(),
+                     m_packager.get(), m_characterSelect.get(),
+                     m_missionEditor.get(), m_galaxyMap.get()};
+    root.b->activeTab = 0;
 
     // ── Wire undo/redo keybinds ──────────────────────────────────
     m_keybinds->RegisterCallback("Undo", [this]() {
@@ -303,14 +283,13 @@ void EditorToolLayer::draw(atlas::AtlasContext& ctx) {
 
     m_layout->SetContext(&ctx);
 
-    // Draw a semi-transparent scrim so the game scene is visible underneath
-    // the editor panels.  This replaces the old fully-opaque panel coverage
-    // that produced a black-screen effect.
+    // Draw a subtle scrim so the game scene remains clearly visible
+    // behind the editor panels.
     {
         float w = static_cast<float>(ctx.input().windowW);
         float h = static_cast<float>(ctx.input().windowH);
         atlas::Rect fullScreen{0.0f, 0.0f, w, h};
-        ctx.renderer().drawRect(fullScreen, atlas::Color(0.0f, 0.0f, 0.0f, 0.45f));
+        ctx.renderer().drawRect(fullScreen, atlas::Color(0.0f, 0.0f, 0.0f, 0.15f));
     }
 
     // Process any queued commands

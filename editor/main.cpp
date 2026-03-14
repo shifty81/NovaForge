@@ -201,16 +201,15 @@ int main() {
 
     // ── Build dock layout ─────────────────────────────────────
     //
-    //  ┌─────────────────────────────┬──────────────┐
-    //  │                             │  PCG Preview  │
-    //  │         Viewport            ├──────────────┤
-    //  │   (live game scene with     │  Ship Arch.  │
-    //  │    click-drag editing)      ├──────────────┤
-    //  │                             │  Gen Style   │
-    //  ├─────────────────────────────┼──────────────┤
-    //  │  Console / ECS / Net /      │ Asset Style  │
-    //  │  Live Scene                 │ Packager     │
-    //  └─────────────────────────────┴──────────────┘
+    //  ┌──────────────────────────────┬──────────────────┐
+    //  │                              │  PCG Preview /   │
+    //  │   (Empty — 3D game world     │  Ship Archetype /│
+    //  │    visible through overlay)  │  Gen Style / ... │
+    //  │                              │  (tabs)          │
+    //  ├──────────────────────────────┤                  │
+    //  │  Viewport / Console / ECS /  │                  │
+    //  │  Scene Graph / ...  (tabs)   │                  │
+    //  └──────────────────────────────┴──────────────────┘
     //
     atlas::editor::EditorLayout layout;
     layout.RegisterPanel(&viewport);
@@ -239,56 +238,33 @@ int main() {
     layout.RegisterPanel(&insuranceOverview);
     layout.RegisterPanel(&colonyManager);
 
-    // Root: horizontal split — left (viewport area) | right (tool panels)
+    // Root: horizontal split — left (viewport + tool tabs) | right (inspector tabs)
     auto& root = layout.Root();
     root.split = atlas::editor::DockSplit::Horizontal;
-    root.splitRatio = 0.65f;
+    root.splitRatio = 0.70f;
 
     root.a = std::make_unique<atlas::editor::DockNode>();
     root.b = std::make_unique<atlas::editor::DockNode>();
 
-    // Left side: vertical split — top (viewport) | bottom (console/inspectors)
+    // Left side: vertical split — top (empty 3D viewport) | bottom (tool tabs)
     root.a->split = atlas::editor::DockSplit::Vertical;
-    root.a->splitRatio = 0.70f;
-    root.a->a = std::make_unique<atlas::editor::DockNode>();
+    root.a->splitRatio = 0.75f;
+    root.a->a = std::make_unique<atlas::editor::DockNode>();  // Empty — game world
     root.a->b = std::make_unique<atlas::editor::DockNode>();
-    root.a->a->panel = &viewport;
     root.a->b->split = atlas::editor::DockSplit::Tab;
-    root.a->b->tabs = {&console, &ecsInspector, &netInspector, &sceneGraph,
-                        &dataBrowser, &moduleEditor, &npcEditor, &fleetFormation};
+    root.a->b->tabs = {&viewport, &console, &ecsInspector, &netInspector,
+                        &sceneGraph, &liveScene, &dataBrowser, &moduleEditor,
+                        &npcEditor, &fleetFormation};
     root.a->b->activeTab = 0;
 
-    // Right side: vertical split — top (PCG preview + tools) | bottom (asset/packager)
-    root.b->split = atlas::editor::DockSplit::Vertical;
-    root.b->splitRatio = 0.60f;
-    root.b->a = std::make_unique<atlas::editor::DockNode>();
-    root.b->b = std::make_unique<atlas::editor::DockNode>();
-
-    // Right-top: vertical chain of PCG panels
-    root.b->a->split = atlas::editor::DockSplit::Vertical;
-    root.b->a->splitRatio = 0.33f;
-    root.b->a->a = std::make_unique<atlas::editor::DockNode>();
-    root.b->a->b = std::make_unique<atlas::editor::DockNode>();
-    root.b->a->a->split = atlas::editor::DockSplit::Tab;
-    root.b->a->a->tabs = {&pcgPreview, &characterSelect, &missionEditor, &galaxyMap,
-                          &solarSystemEditor, &modelImport, &stationEditor,
-                          &tradeRoute, &combatLog, &insuranceOverview,
-                          &colonyManager};
-    root.b->a->a->activeTab = 0;
-    root.b->a->b->split = atlas::editor::DockSplit::Vertical;
-    root.b->a->b->splitRatio = 0.50f;
-    root.b->a->b->a = std::make_unique<atlas::editor::DockNode>();
-    root.b->a->b->b = std::make_unique<atlas::editor::DockNode>();
-    root.b->a->b->a->panel = &shipArchetype;
-    root.b->a->b->b->panel = &genStyle;
-
-    // Right-bottom: asset style + packager
-    root.b->b->split = atlas::editor::DockSplit::Vertical;
-    root.b->b->splitRatio = 0.50f;
-    root.b->b->a = std::make_unique<atlas::editor::DockNode>();
-    root.b->b->b = std::make_unique<atlas::editor::DockNode>();
-    root.b->b->a->panel = &assetStyle;
-    root.b->b->b->panel = &packager;
+    // Right side: single tab group with all inspector/tool panels
+    root.b->split = atlas::editor::DockSplit::Tab;
+    root.b->tabs = {&pcgPreview, &shipArchetype, &genStyle, &assetStyle,
+                    &packager, &characterSelect, &missionEditor, &galaxyMap,
+                    &solarSystemEditor, &modelImport, &stationEditor,
+                    &tradeRoute, &combatLog, &insuranceOverview,
+                    &colonyManager};
+    root.b->activeTab = 0;
 
     std::cout << "[Editor] Layout built with " << layout.Panels().size()
               << " panels" << std::endl;

@@ -215,6 +215,7 @@ private:
     static const ViewportTransform s_defaultTransform;
 
     atlas::PanelState m_viewportPanelState;
+    float m_scrollOffset = 0.0f;
 };
 
 } // namespace atlas::editor

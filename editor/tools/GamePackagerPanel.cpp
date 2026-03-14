@@ -18,7 +18,6 @@ void GamePackagerPanel::Draw() {
     const atlas::Rect& b = m_panelState.bounds;
     const float headerH = ctx.theme().headerHeight;
     float y = b.y + headerH + pad;
-    float scrollOff = 0.0f;
 
     // Build target toggle
     {
@@ -97,7 +96,7 @@ void GamePackagerPanel::Draw() {
 
     // Log area
     atlas::Rect logRect{b.x + pad, y, b.w - 2.0f * pad, b.y + b.h - y - pad};
-    atlas::combatLogWidget(ctx, logRect, m_status.log, scrollOff);
+    atlas::combatLogWidget(ctx, logRect, m_status.log, m_scrollOffset);
 
     atlas::panelEnd(ctx);
 }
