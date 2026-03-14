@@ -454,6 +454,9 @@ set(CORE_SOURCES
     src/systems/rig_link_system.cpp
     src/systems/repair_timer_system.cpp
     src/systems/agent_mission_system.cpp
+    src/systems/corp_tax_ledger_system.cpp
+    src/systems/fighter_squadron_system.cpp
+    src/systems/moon_mining_scheduler_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -925,6 +928,9 @@ set(SERVER_HEADERS
     include/systems/rig_link_system.h
     include/systems/repair_timer_system.h
     include/systems/agent_mission_system.h
+    include/systems/corp_tax_ledger_system.h
+    include/systems/fighter_squadron_system.h
+    include/systems/moon_mining_scheduler_system.h
 )
 
 # Steam SDK configuration
