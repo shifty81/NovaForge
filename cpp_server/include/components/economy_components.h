@@ -1730,6 +1730,77 @@ public:
     COMPONENT_TYPE(DroneLogisticsState)
 };
 
+// ---------------------------------------------------------------------------
+// CorpTaxLedgerState — corporation tax ledger tracking
+// ---------------------------------------------------------------------------
+/**
+ * Tracks tax entries collected from member activities (bounties, mission
+ * rewards, PI, industry, market).  Each entry records the member, the gross
+ * amount, the applied tax rate, and the resulting tax collected.  The ledger
+ * caps at max_entries (default 200).  Lifetime aggregates are maintained in
+ * total_collected and total_entries_ever.
+ */
+class CorpTaxLedgerState : public ecs::Component {
+public:
+    enum class TaxType { Bounty, Mission, PI, Industry, Market };
+
+    struct TaxEntry {
+        std::string entry_id;
+        TaxType     tax_type        = TaxType::Bounty;
+        std::string member_id;
+        double      gross_amount    = 0.0;
+        double      tax_rate        = 0.0;
+        double      tax_collected   = 0.0;
+        float       timestamp       = 0.0f;
+    };
+
+    std::string corp_id;
+    std::vector<TaxEntry> entries;
+    int    max_entries         = 200;
+    double default_tax_rate    = 0.10;     // 10 %
+    double total_collected     = 0.0;
+    int    total_entries_ever  = 0;
+    float  elapsed             = 0.0f;
+    bool   active              = true;
+
+    COMPONENT_TYPE(CorpTaxLedgerState)
+};
+
+// ---------------------------------------------------------------------------
+// MoonMiningSchedulerState — moon mining extraction scheduling
+// ---------------------------------------------------------------------------
+/**
+ * Manages moon drill extraction cycles for a Refinery structure.
+ * An extraction begins with a scheduled duration; each tick counts down.
+ * When ready the chunk can be fractured (detonated) which makes it
+ * available for belt mining.  Tracks extraction history and total yield.
+ */
+class MoonMiningSchedulerState : public ecs::Component {
+public:
+    enum class ExtractionStatus { Idle, Extracting, Ready, Fractured };
+
+    struct Extraction {
+        std::string extraction_id;
+        std::string moon_id;
+        std::string ore_type;
+        float       duration          = 0.0f;  // scheduled duration (s)
+        float       time_remaining    = 0.0f;
+        float       estimated_yield   = 0.0f;  // m³
+        ExtractionStatus status       = ExtractionStatus::Idle;
+    };
+
+    std::string structure_id;
+    std::vector<Extraction> extractions;
+    int   max_extractions           = 10;
+    int   total_extractions_started = 0;
+    int   total_fractured           = 0;
+    float total_yield               = 0.0f;
+    float elapsed                   = 0.0f;
+    bool  active                    = true;
+
+    COMPONENT_TYPE(MoonMiningSchedulerState)
+};
+
 } // namespace components
 } // namespace atlas
 

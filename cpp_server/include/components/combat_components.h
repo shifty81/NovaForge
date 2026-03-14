@@ -1183,6 +1183,43 @@ public:
     COMPONENT_TYPE(RepairTimerState)
 };
 
+// ---------------------------------------------------------------------------
+// FighterSquadronState — carrier fighter squadron management
+// ---------------------------------------------------------------------------
+/**
+ * Manages fighter squadrons launched from a carrier or supercarrier.
+ * Each squadron has a type (Light / Support / Heavy), health, ammo,
+ * and an active flag.  Launching adds a squadron; recalling removes it.
+ * Per-tick updates can drain ammo on active squadrons.  max_squadrons
+ * caps the number in space simultaneously (default 5).
+ */
+class FighterSquadronState : public ecs::Component {
+public:
+    enum class SquadronType { Light, Support, Heavy };
+
+    struct Squadron {
+        std::string   squadron_id;
+        std::string   name;
+        SquadronType  type          = SquadronType::Light;
+        int           max_health    = 100;
+        int           current_health = 100;
+        int           max_ammo      = 100;
+        int           current_ammo  = 100;
+        bool          launched      = false;
+        int           kills         = 0;
+    };
+
+    std::vector<Squadron> squadrons;
+    int   max_squadrons         = 5;
+    int   total_launched        = 0;
+    int   total_recalled        = 0;
+    int   total_kills           = 0;
+    float elapsed               = 0.0f;
+    bool  active                = true;
+
+    COMPONENT_TYPE(FighterSquadronState)
+};
+
 } // namespace components
 } // namespace atlas
 

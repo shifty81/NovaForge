@@ -484,6 +484,9 @@ void run_module_capability_system_tests();
 void run_rig_link_system_tests();
 void run_repair_timer_system_tests();
 void run_agent_mission_system_tests();
+void run_corp_tax_ledger_system_tests();
+void run_fighter_squadron_system_tests();
+void run_moon_mining_scheduler_system_tests();
 
 int main() {
     std::cout << "========================================" << std::endl;
@@ -965,6 +968,9 @@ int main() {
     run_rig_link_system_tests();
     run_repair_timer_system_tests();
     run_agent_mission_system_tests();
+    run_corp_tax_ledger_system_tests();
+    run_fighter_squadron_system_tests();
+    run_moon_mining_scheduler_system_tests();
 
     std::cout << "\n========================================" << std::endl;
     std::cout << "Results: " << testsPassed << "/" << testsRun << " tests passed" << std::endl;
