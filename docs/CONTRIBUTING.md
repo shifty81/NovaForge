@@ -1,6 +1,6 @@
-# Contributing to Atlas
+# Contributing to Nova Forge
 
-Thank you for your interest in contributing to Atlas! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to Nova Forge! This document provides guidelines for contributing to the project.
 
 ## 📋 Table of Contents
 
@@ -36,7 +36,7 @@ Before creating bug reports, please check the existing issues to avoid duplicate
 
 Feature suggestions are welcome! Please:
 
-- Check the [roadmap](docs/ROADMAP.md) first
+- Check the [roadmap](ROADMAP.md) first
 - Search existing issues for similar suggestions
 - Provide clear use cases and benefits
 - Consider implementation complexity
@@ -289,14 +289,14 @@ Help is especially welcome in these areas:
 
 ### 🔥 High Priority
 
-1. **3D Graphics Implementation**
-   - Experience with Unreal Engine 5, Unity, or OpenGL
-   - See [docs/features/LANGUAGE_AND_3D_OPTIONS.md](docs/features/LANGUAGE_AND_3D_OPTIONS.md)
+1. **Vertical Slice Integration**
+   - Wire up server systems to client rendering and UI
+   - End-to-end gameplay in one star system
 
-2. **Additional Ships & Content**
-   - More ship definitions (Tech II, Battleships)
-   - More modules and variations
-   - New missions and storylines
+2. **Client Polish & Optimization**
+   - Performance profiling (20 Hz server, 60 FPS client with 500+ entities)
+   - Network smoothness at 100ms latency
+   - Spatial partitioning for rendering
 
 3. **Testing & Bug Reports**
    - Test existing features
@@ -305,46 +305,45 @@ Help is especially welcome in these areas:
 
 ### 📊 Medium Priority
 
-1. **Corporation System**
-   - Corporation management features
-   - Roles and permissions
-   - Corp hangars and wallets
-
-2. **UI/UX Improvements**
-   - Enhanced ImGui/OpenGL UI
+1. **UI/UX Improvements**
+   - Atlas UI polish and theming
    - Better visual feedback
-   - Improved HUD elements
+   - HUD improvements
 
-3. **Performance Optimization**
-   - Profiling and optimization
-   - Spatial partitioning
-   - Interest management
+2. **Additional Ships & Content**
+   - More ship definitions and variations
+   - More modules and variations
+   - New missions and storylines
+
+3. **Content Balance Pass**
+   - Missions, rewards, difficulty scaling
+   - Tuning for solo and co-op play
 
 ### 📝 Low Priority
 
-1. **Advanced Features** (Phase 7 in roadmap)
-   - Mining improvements
-   - Planetary interaction
-   - Wormhole space
+1. **Community Tools**
+   - Mission editor improvements
+   - Ship designer polish
+   - Mod manager UX
 
 2. **Additional Content**
    - More NPC varieties
    - More mission types
    - Exploration sites
 
-3. **Community Tools**
-   - Mission editor
-   - Ship designer
-   - Mod manager
+3. **Documentation**
+   - API reference improvements
+   - Tutorial expansion
+   - System design documentation
 
 ---
 
 ## Questions?
 
-- **Documentation**: Check [docs/](docs/) folder
+- **Documentation**: Check the docs in this folder
 - **Issues**: Search or create an issue on GitHub
 - **Discussions**: Use GitHub Discussions for questions
-- **Roadmap**: See [docs/ROADMAP.md](docs/ROADMAP.md)
+- **Roadmap**: See [ROADMAP.md](ROADMAP.md)
 
 ---
 
