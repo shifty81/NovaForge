@@ -52,6 +52,7 @@ PRESET_KEYS = [
     'generate_lighting',
     'greeble_density',
     'generate_furniture',
+    'protect_overrides',
 ]
 
 

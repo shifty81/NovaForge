@@ -61,6 +61,9 @@ _submodule_names = [
     "greeble_system",
     "preset_library",
     "furniture_system",
+    "version_registry",
+    "override_manager",
+    "template_manager",
 ]
 
 _submodules: dict = {}
@@ -391,6 +394,38 @@ class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
         default=False
     )
 
+    protect_overrides: BoolProperty(
+        name="Protect Manual Overrides",
+        description="Skip objects marked af_manual_override during regeneration",
+        default=True
+    )
+
+    template_name: StringProperty(
+        name="Template Name",
+        description="Name for saving or loading a ship template",
+        default=""
+    )
+
+    template_category: EnumProperty(
+        name="Category",
+        description="Template category",
+        items=[
+            ('ship', "Ship", "Ship templates"),
+            ('station', "Station", "Station templates"),
+            ('fleet', "Fleet", "Fleet templates"),
+            ('asteroid', "Asteroid", "Asteroid templates"),
+            ('character', "Character", "Character templates"),
+        ],
+        default='ship'
+    )
+
+    template_dir: StringProperty(
+        name="Template Directory",
+        description="Central directory to import templates from",
+        subtype='DIR_PATH',
+        default=""
+    )
+
     preset_name: StringProperty(
         name="Preset Name",
         description="Name for saving or loading a generation preset",
@@ -425,6 +460,17 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
             return {'CANCELLED'}
 
         props = context.scene.spaceship_props
+
+        # Manual override protection: warn about protected objects
+        if props.protect_overrides:
+            om = _get_mod("override_manager")
+            if om is not None:
+                for obj in context.scene.objects:
+                    if om.is_protected(obj):
+                        self.report(
+                            {'INFO'},
+                            f"Skipping protected object: {obj.name}",
+                        )
         
         # Generate the spaceship
         hull = sg.generate_spaceship(
@@ -532,6 +578,15 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
                     seed=props.seed,
                     naming_prefix=props.naming_prefix,
                 )
+
+        # Embed version metadata on the hull
+        vr = _get_mod("version_registry")
+        if vr is not None and hull is not None:
+            try:
+                import json as _json
+                hull["af_versions"] = _json.dumps(vr.version_stamp())
+            except Exception:
+                pass  # skip if hull doesn't support custom properties
 
         self.report({'INFO'}, f"Generated {props.ship_class} class spaceship")
         return {'FINISHED'}
@@ -1058,6 +1113,135 @@ class SPACESHIP_OT_delete_preset(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class SPACESHIP_OT_save_template(bpy.types.Operator):
+    """Save the current generation settings as a named template"""
+    bl_idname = "mesh.save_ship_template"
+    bl_label = "Save Template"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        tm = _get_mod("template_manager")
+        pl = _get_mod("preset_library")
+        if tm is None:
+            self.report({'ERROR'}, "template_manager not loaded")
+            return {'CANCELLED'}
+
+        props = context.scene.spaceship_props
+        name = props.template_name.strip()
+        category = props.template_category
+
+        if not name:
+            self.report({'ERROR'}, "Enter a template name first")
+            return {'CANCELLED'}
+
+        # Gather current properties into a dict
+        data = {}
+        if pl is not None:
+            for key in pl.PRESET_KEYS:
+                if hasattr(props, key):
+                    data[key] = getattr(props, key)
+
+        tdir = props.template_dir.strip() or None
+        filepath = tm.save_template(name, data, category=category,
+                                    template_dir=tdir)
+        self.report({'INFO'}, f"Template '{name}' saved to {filepath}")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_load_template(bpy.types.Operator):
+    """Load a template by name and category"""
+    bl_idname = "mesh.load_ship_template"
+    bl_label = "Load Template"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        tm = _get_mod("template_manager")
+        if tm is None:
+            self.report({'ERROR'}, "template_manager not loaded")
+            return {'CANCELLED'}
+
+        props = context.scene.spaceship_props
+        name = props.template_name.strip()
+        category = props.template_category
+
+        if not name:
+            self.report({'ERROR'}, "Enter a template name first")
+            return {'CANCELLED'}
+
+        tdir = props.template_dir.strip() or None
+        try:
+            data = tm.load_template(name, category=category,
+                                    template_dir=tdir)
+        except FileNotFoundError:
+            self.report({'ERROR'}, f"Template '{name}' not found in {category}")
+            return {'CANCELLED'}
+
+        for key, value in data.items():
+            if hasattr(props, key):
+                try:
+                    setattr(props, key, value)
+                except Exception:
+                    pass
+
+        self.report({'INFO'}, f"Template '{name}' loaded")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_delete_template(bpy.types.Operator):
+    """Delete a saved template"""
+    bl_idname = "mesh.delete_ship_template"
+    bl_label = "Delete Template"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        tm = _get_mod("template_manager")
+        if tm is None:
+            self.report({'ERROR'}, "template_manager not loaded")
+            return {'CANCELLED'}
+
+        props = context.scene.spaceship_props
+        name = props.template_name.strip()
+        category = props.template_category
+
+        if not name:
+            self.report({'ERROR'}, "Enter a template name first")
+            return {'CANCELLED'}
+
+        tdir = props.template_dir.strip() or None
+        if tm.delete_template(name, category=category, template_dir=tdir):
+            self.report({'INFO'}, f"Template '{name}' deleted")
+        else:
+            self.report({'WARNING'}, f"Template '{name}' not found")
+
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_import_templates(bpy.types.Operator):
+    """Import all JSON templates from a directory"""
+    bl_idname = "mesh.import_templates_dir"
+    bl_label = "Import Templates"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        tm = _get_mod("template_manager")
+        if tm is None:
+            self.report({'ERROR'}, "template_manager not loaded")
+            return {'CANCELLED'}
+
+        props = context.scene.spaceship_props
+        source = props.template_dir.strip()
+        if not source:
+            self.report({'ERROR'}, "Set a template directory first")
+            return {'CANCELLED'}
+
+        imported = tm.import_templates_from_directory(source)
+        self.report(
+            {'INFO'},
+            f"Imported {len(imported)} template(s) from {source}",
+        )
+        return {'FINISHED'}
+
+
 class SPACESHIP_PT_main_panel(bpy.types.Panel):
     """Main panel for AtlasForge generator"""
     bl_label = "AtlasForge Generator"
@@ -1159,6 +1343,21 @@ class SPACESHIP_PT_main_panel(bpy.types.Panel):
         row.operator("mesh.load_ship_preset", icon='FILE_FOLDER')
         row.operator("mesh.delete_ship_preset", icon='TRASH')
 
+        layout.separator()
+        layout.label(text="Templates:")
+        layout.prop(props, "template_name")
+        layout.prop(props, "template_category")
+        layout.prop(props, "template_dir")
+        row = layout.row(align=True)
+        row.operator("mesh.save_ship_template", icon='FILE_TICK')
+        row.operator("mesh.load_ship_template", icon='FILE_FOLDER')
+        row.operator("mesh.delete_ship_template", icon='TRASH')
+        layout.operator("mesh.import_templates_dir", icon='IMPORT')
+
+        layout.separator()
+        layout.label(text="Override Protection:")
+        layout.prop(props, "protect_overrides")
+
 
 # Registration
 classes = (
@@ -1177,6 +1376,10 @@ classes = (
     SPACESHIP_OT_save_preset,
     SPACESHIP_OT_load_preset,
     SPACESHIP_OT_delete_preset,
+    SPACESHIP_OT_save_template,
+    SPACESHIP_OT_load_template,
+    SPACESHIP_OT_delete_template,
+    SPACESHIP_OT_import_templates,
     SPACESHIP_PT_main_panel,
 )
 
