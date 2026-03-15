@@ -22,6 +22,7 @@ if _addon_root not in sys.path:
 from pcg_pipeline import galaxy_generator
 from pcg_pipeline import system_generator
 from pcg_pipeline import planet_generator
+from pcg_pipeline import terrain_generator
 from pcg_pipeline import station_generator
 from pcg_pipeline import ship_generator
 from pcg_pipeline import character_generator
@@ -53,8 +54,8 @@ def test_system_structure():
     """System must contain required top-level keys."""
     print("\nTesting system structure...")
     system = system_generator.generate_system(12345, "test_sys")
-    required = {"system_id", "seed", "stars", "planets", "stations",
-                "ships", "characters"}
+    required = {"system_id", "seed", "stars", "planets", "terrains",
+                "stations", "ships", "characters"}
     missing = required - set(system.keys())
     _assert(not missing, f"System missing keys: {missing}")
     _assert(len(system["stars"]) >= 1, "System must have at least one star")
@@ -162,6 +163,92 @@ def test_character_generation():
     return True
 
 
+def test_terrain_determinism():
+    """Same seed must produce identical terrain."""
+    print("\nTesting terrain determinism...")
+    t1 = terrain_generator.generate_terrain(42, "planet_test", biome="temperate",
+                                            grid_size=16)
+    t2 = terrain_generator.generate_terrain(42, "planet_test", biome="temperate",
+                                            grid_size=16)
+    _assert(json.dumps(t1, sort_keys=True) == json.dumps(t2, sort_keys=True),
+            "Terrain output differs for the same seed")
+    _assert(len(t1["heightmap"]) == 16, "Expected 16-row heightmap")
+    _assert(len(t1["heightmap"][0]) == 16, "Expected 16-column heightmap")
+    print("✓ Terrain determinism verified")
+    return True
+
+
+def test_terrain_biome_features():
+    """Each biome must produce features from its preset list."""
+    print("\nTesting terrain biome features...")
+    for biome, preset in terrain_generator.BIOME_PRESETS.items():
+        t = terrain_generator.generate_terrain(99, f"planet_{biome}",
+                                               biome=biome, grid_size=16,
+                                               temperature_k=300.0)
+        _assert(t["biome"] == biome, f"Biome mismatch: {t['biome']}")
+        _assert(t["grid_size"] == 16, "Grid size mismatch")
+        _assert(len(t["features"]) >= 1, f"No features for biome {biome}")
+        for feat in t["features"]:
+            _assert(feat["type"] in preset["features"],
+                    f"Feature '{feat['type']}' not valid for {biome}")
+        _assert(len(t["resources"]) >= 1, f"No resources for biome {biome}")
+        for res in t["resources"]:
+            _assert(res["type"] in preset["resource_types"],
+                    f"Resource '{res['type']}' not valid for {biome}")
+    print(f"✓ All {len(terrain_generator.BIOME_PRESETS)} biomes produce "
+          f"valid features and resources")
+    return True
+
+
+def test_terrain_heightmap_range():
+    """Heightmap values must be clamped to [0, 1]."""
+    print("\nTesting terrain heightmap range...")
+    for seed in range(100):
+        t = terrain_generator.generate_terrain(seed, f"planet_{seed}",
+                                               biome="volcanic", grid_size=8)
+        for row in t["heightmap"]:
+            for h in row:
+                _assert(0.0 <= h <= 1.0,
+                        f"Height {h} out of [0,1] range (seed={seed})")
+    print("✓ Heightmap values in [0,1] across 100 seeds")
+    return True
+
+
+def test_terrain_grid_clamp():
+    """Grid size must be clamped to [4, 128]."""
+    print("\nTesting terrain grid size clamping...")
+    t_small = terrain_generator.generate_terrain(1, "p", grid_size=1)
+    _assert(t_small["grid_size"] == 4, "Grid not clamped to minimum 4")
+    _assert(len(t_small["heightmap"]) == 4, "Heightmap rows mismatch")
+
+    t_large = terrain_generator.generate_terrain(1, "p", grid_size=999)
+    _assert(t_large["grid_size"] == 128, "Grid not clamped to maximum 128")
+    _assert(len(t_large["heightmap"]) == 128, "Heightmap rows mismatch")
+    print("✓ Grid size clamping works correctly")
+    return True
+
+
+def test_terrain_stats():
+    """Terrain stats must be present and consistent with heightmap."""
+    print("\nTesting terrain stats...")
+    t = terrain_generator.generate_terrain(42, "p", biome="forest",
+                                           grid_size=16)
+    stats = t["stats"]
+    _assert("min_height" in stats, "Missing min_height")
+    _assert("max_height" in stats, "Missing max_height")
+    _assert("avg_height" in stats, "Missing avg_height")
+    _assert("num_features" in stats, "Missing num_features")
+    _assert("num_resources" in stats, "Missing num_resources")
+    _assert(stats["min_height"] <= stats["avg_height"] <= stats["max_height"],
+            "Stats ordering violated: min <= avg <= max")
+    _assert(stats["num_features"] == len(t["features"]),
+            "Feature count mismatch")
+    _assert(stats["num_resources"] == len(t["resources"]),
+            "Resource count mismatch")
+    print("✓ Terrain stats are consistent")
+    return True
+
+
 def test_batch_generate():
     """Batch generate must produce all expected output files."""
     print("\nTesting batch generation...")
@@ -185,6 +272,12 @@ def test_batch_generate():
                     os.path.join(tmpdir, "planets",
                                  f"{planet['planet_id']}.json")),
                     f"Planet file for {planet['planet_id']} not created")
+
+            for terrain in system.get("terrains", []):
+                _assert(os.path.isfile(
+                    os.path.join(tmpdir, "terrains",
+                                 f"{terrain['planet_id']}_terrain.json")),
+                    f"Terrain file for {terrain['planet_id']} not created")
 
             for ship in system["ships"]:
                 _assert(os.path.isfile(
@@ -239,8 +332,8 @@ def test_pipeline_package_imports():
     import pcg_pipeline
     expected = [
         "galaxy_generator", "system_generator", "planet_generator",
-        "station_generator", "ship_generator", "character_generator",
-        "batch_generate",
+        "terrain_generator", "station_generator", "ship_generator",
+        "character_generator", "batch_generate",
     ]
     for name in expected:
         _assert(hasattr(pcg_pipeline, name),
@@ -265,6 +358,11 @@ def run_tests():
         ("Star Types", test_star_types),
         ("Planet Biomes", test_planet_biomes),
         ("Planet Foliage & Liquids", test_planet_foliage_and_liquids),
+        ("Terrain Determinism", test_terrain_determinism),
+        ("Terrain Biome Features", test_terrain_biome_features),
+        ("Terrain Heightmap Range", test_terrain_heightmap_range),
+        ("Terrain Grid Clamp", test_terrain_grid_clamp),
+        ("Terrain Stats", test_terrain_stats),
         ("Station Generation", test_station_generation),
         ("Ship Generation", test_ship_generation),
         ("Character Generation", test_character_generation),

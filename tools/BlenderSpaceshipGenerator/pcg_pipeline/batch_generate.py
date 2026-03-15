@@ -41,7 +41,7 @@ def generate_universe(seed=123456, num_systems=5, output_dir="build",
     galaxy = galaxy_generator.generate_galaxy(seed, num_systems)
 
     # Ensure output directories exist
-    dirs = ["systems", "planets", "stations", "ships", "characters"]
+    dirs = ["systems", "planets", "terrains", "stations", "ships", "characters"]
     for d in dirs:
         os.makedirs(os.path.join(output_dir, d), exist_ok=True)
 
@@ -67,6 +67,14 @@ def generate_universe(seed=123456, num_systems=5, output_dir="build",
                                   f"{planet['planet_id']}.json")
             with open(p_path, "w") as fh:
                 json.dump(planet, fh, indent=2)
+                fh.write("\n")
+
+        # Terrain metadata
+        for terrain in system.get("terrains", []):
+            t_path = os.path.join(output_dir, "terrains",
+                                  f"{terrain['planet_id']}_terrain.json")
+            with open(t_path, "w") as fh:
+                json.dump(terrain, fh, indent=2)
                 fh.write("\n")
 
         # Station metadata
@@ -128,12 +136,14 @@ def main(argv=None):
     )
 
     total_planets = sum(len(s["planets"]) for s in galaxy["systems"])
+    total_terrains = sum(len(s.get("terrains", [])) for s in galaxy["systems"])
     total_stations = sum(len(s["stations"]) for s in galaxy["systems"])
     total_ships = sum(len(s["ships"]) for s in galaxy["systems"])
     total_chars = sum(len(s["characters"]) for s in galaxy["systems"])
 
     print(f"✓ Generated {len(galaxy['systems'])} systems, "
-          f"{total_planets} planets, {total_stations} stations, "
+          f"{total_planets} planets, {total_terrains} terrains, "
+          f"{total_stations} stations, "
           f"{total_ships} ships, {total_chars} characters")
     print(f"✓ Output written to {os.path.abspath(args.output_dir)}/")
     return 0

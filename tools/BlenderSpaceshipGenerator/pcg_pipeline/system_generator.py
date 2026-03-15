@@ -9,6 +9,7 @@ drive planet generation parameters.
 import random
 
 from . import planet_generator
+from . import terrain_generator as terrain_gen
 from . import station_generator as station_gen
 from . import ship_generator as ship_gen
 from . import character_generator as char_gen
@@ -67,6 +68,19 @@ def generate_system(system_seed, system_id):
         )
         planets.append(planet)
 
+    # Terrain — one surface patch per planet
+    terrains = []
+    for planet in planets:
+        terrain_seed = rng.randint(0, 999999)
+        terrain = terrain_gen.generate_terrain(
+            terrain_seed,
+            planet_id=planet["planet_id"],
+            biome=planet["biome"],
+            grid_size=16,
+            temperature_k=planet["temperature_k"],
+        )
+        terrains.append(terrain)
+
     # Stations — attached to suitable planets
     stations = []
     for planet in planets:
@@ -107,6 +121,7 @@ def generate_system(system_seed, system_id):
         "seed": system_seed,
         "stars": stars,
         "planets": planets,
+        "terrains": terrains,
         "stations": stations,
         "ships": ships,
         "characters": characters,

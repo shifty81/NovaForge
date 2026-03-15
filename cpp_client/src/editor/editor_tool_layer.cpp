@@ -27,6 +27,10 @@
 #include "ai/TemplateAIBackend.h"
 #include "editor/scene_bookmark_manager.h"
 #include "editor/layer_tag_system.h"
+#include "editor/snap_align_tool.h"
+#include "editor/camera_view_tool.h"
+#include "editor/animation_editor_tool.h"
+#include "editor/ik_rig_tool.h"
 #include "ui/atlas/atlas_context.h"
 
 #include <iostream>
@@ -96,6 +100,20 @@ void EditorToolLayer::init() {
     // ── Editor utilities ─────────────────────────────────────────
     m_bookmarkManager = std::make_unique<SceneBookmarkManager>();
     m_layerTagSystem  = std::make_unique<LayerTagSystem>();
+
+    // ── Phase 1 tools ────────────────────────────────────────────
+    m_snapAlignTool  = std::make_unique<SnapAlignTool>(
+        m_undoableCommandBus, m_deltaEditStore);
+    m_cameraViewTool = std::make_unique<CameraViewTool>(
+        m_undoableCommandBus, m_deltaEditStore);
+
+    // ── Phase 2 tools ────────────────────────────────────────────
+    m_animationEditor = std::make_unique<AnimationEditorTool>(
+        m_undoableCommandBus, m_deltaEditStore);
+    m_ikRigTool       = std::make_unique<IKRigTool>(
+        m_undoableCommandBus, m_deltaEditStore);
+    // m_simController and m_selectionManager are value members (no init needed)
+    // m_prefabLibrary is a value member (no init needed)
 
     // ── Register panels with layout ──────────────────────────────
     m_layout->RegisterPanel(m_viewport.get());
@@ -243,6 +261,13 @@ void EditorToolLayer::shutdown() {
     m_layout->SetContext(nullptr);
 
     m_liveScene.reset();
+    m_ikRigTool.reset();
+    m_animationEditor.reset();
+    m_cameraViewTool.reset();
+    m_snapAlignTool.reset();
+    m_selectionManager.ClearSelection();
+    m_prefabLibrary.Clear();
+    m_simController.Reset();
     m_layerTagSystem.reset();
     m_bookmarkManager.reset();
     m_physicsTuner.reset();
@@ -342,6 +367,22 @@ SceneBookmarkManager& EditorToolLayer::bookmarkManager() {
 
 LayerTagSystem& EditorToolLayer::layerTagSystem() {
     return *m_layerTagSystem;
+}
+
+SnapAlignTool& EditorToolLayer::snapAlignTool() {
+    return *m_snapAlignTool;
+}
+
+CameraViewTool& EditorToolLayer::cameraViewTool() {
+    return *m_cameraViewTool;
+}
+
+AnimationEditorTool& EditorToolLayer::animationEditorTool() {
+    return *m_animationEditor;
+}
+
+IKRigTool& EditorToolLayer::ikRigTool() {
+    return *m_ikRigTool;
 }
 
 } // namespace atlas::editor
