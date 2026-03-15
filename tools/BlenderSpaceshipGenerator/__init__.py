@@ -57,6 +57,9 @@ _submodule_names = [
     "traversal_system",
     "fleet_logistics",
     "rig_system",
+    "lighting_system",
+    "greeble_system",
+    "preset_library",
 ]
 
 _submodules: dict = {}
@@ -367,6 +370,26 @@ class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
         default=False
     )
 
+    generate_lighting: BoolProperty(
+        name="Generate Lighting",
+        description="Add interior and exterior lights (room lights, engine glow, nav lights)",
+        default=False
+    )
+
+    greeble_density: FloatProperty(
+        name="Greeble Density",
+        description="Surface detail density (0 = none, 1 = maximum coverage)",
+        default=0.0,
+        min=0.0,
+        max=1.0
+    )
+
+    preset_name: StringProperty(
+        name="Preset Name",
+        description="Name for saving or loading a generation preset",
+        default=""
+    )
+
     novaforge_data_dir: StringProperty(
         name="Data Directory",
         description="Path to project data/ships/ directory for batch import",
@@ -459,6 +482,33 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
                 anim.setup_ship_animations(
                     hull,
                     scale=scale,
+                    naming_prefix=props.naming_prefix,
+                )
+
+        # Set up lighting if requested
+        if props.generate_lighting:
+            lit = _get_mod("lighting_system")
+            if lit is None:
+                self.report({'WARNING'}, "lighting_system not loaded, skipping lighting")
+            else:
+                scale = sg.SHIP_CONFIGS.get(props.ship_class, {}).get('scale', 1.0)
+                lit.setup_ship_lighting(
+                    hull,
+                    scale=scale,
+                    generate_interior=props.generate_interior,
+                    naming_prefix=props.naming_prefix,
+                )
+
+        # Apply greebles if requested
+        if props.greeble_density > 0:
+            gbl = _get_mod("greeble_system")
+            if gbl is None:
+                self.report({'WARNING'}, "greeble_system not loaded, skipping greebles")
+            else:
+                gbl.apply_greebles(
+                    hull,
+                    seed=props.seed,
+                    density=props.greeble_density,
                     naming_prefix=props.naming_prefix,
                 )
 
@@ -893,6 +943,100 @@ class SPACESHIP_OT_novaforge_pipeline(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class SPACESHIP_OT_save_preset(bpy.types.Operator):
+    """Save the current generation settings as a named preset"""
+    bl_idname = "mesh.save_ship_preset"
+    bl_label = "Save Preset"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        pl = _get_mod("preset_library")
+        if pl is None:
+            self.report({'ERROR'}, "preset_library not loaded")
+            return {'CANCELLED'}
+
+        props = context.scene.spaceship_props
+        name = props.preset_name.strip()
+
+        if not name:
+            self.report({'ERROR'}, "Enter a preset name first")
+            return {'CANCELLED'}
+
+        # Gather current properties into a dict
+        props_dict = {}
+        for key in pl.PRESET_KEYS:
+            if hasattr(props, key):
+                props_dict[key] = getattr(props, key)
+
+        filepath = pl.save_preset(name, props_dict)
+        self.report({'INFO'}, f"Preset '{name}' saved to {filepath}")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_load_preset(bpy.types.Operator):
+    """Load a generation preset by name"""
+    bl_idname = "mesh.load_ship_preset"
+    bl_label = "Load Preset"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        pl = _get_mod("preset_library")
+        if pl is None:
+            self.report({'ERROR'}, "preset_library not loaded")
+            return {'CANCELLED'}
+
+        props = context.scene.spaceship_props
+        name = props.preset_name.strip()
+
+        if not name:
+            self.report({'ERROR'}, "Enter a preset name first")
+            return {'CANCELLED'}
+
+        try:
+            data = pl.load_preset(name)
+        except FileNotFoundError:
+            self.report({'ERROR'}, f"Preset '{name}' not found")
+            return {'CANCELLED'}
+
+        # Apply loaded values to the scene properties
+        for key, value in data.items():
+            if hasattr(props, key):
+                try:
+                    setattr(props, key, value)
+                except Exception:
+                    pass  # skip incompatible types
+
+        self.report({'INFO'}, f"Preset '{name}' loaded")
+        return {'FINISHED'}
+
+
+class SPACESHIP_OT_delete_preset(bpy.types.Operator):
+    """Delete a saved generation preset"""
+    bl_idname = "mesh.delete_ship_preset"
+    bl_label = "Delete Preset"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        pl = _get_mod("preset_library")
+        if pl is None:
+            self.report({'ERROR'}, "preset_library not loaded")
+            return {'CANCELLED'}
+
+        props = context.scene.spaceship_props
+        name = props.preset_name.strip()
+
+        if not name:
+            self.report({'ERROR'}, "Enter a preset name first")
+            return {'CANCELLED'}
+
+        if pl.delete_preset(name):
+            self.report({'INFO'}, f"Preset '{name}' deleted")
+        else:
+            self.report({'WARNING'}, f"Preset '{name}' not found")
+
+        return {'FINISHED'}
+
+
 class SPACESHIP_PT_main_panel(bpy.types.Panel):
     """Main panel for AtlasForge generator"""
     bl_label = "AtlasForge Generator"
@@ -982,6 +1126,16 @@ class SPACESHIP_PT_main_panel(bpy.types.Panel):
         if props.generate_collision:
             layout.prop(props, "collision_type")
         layout.prop(props, "generate_animations")
+        layout.prop(props, "generate_lighting")
+        layout.prop(props, "greeble_density")
+
+        layout.separator()
+        layout.label(text="Presets:")
+        layout.prop(props, "preset_name")
+        row = layout.row(align=True)
+        row.operator("mesh.save_ship_preset", icon='FILE_TICK')
+        row.operator("mesh.load_ship_preset", icon='FILE_FOLDER')
+        row.operator("mesh.delete_ship_preset", icon='TRASH')
 
 
 # Registration
@@ -998,6 +1152,9 @@ classes = (
     SPACESHIP_OT_catalog_render,
     SPACESHIP_OT_batch_generate,
     SPACESHIP_OT_novaforge_pipeline,
+    SPACESHIP_OT_save_preset,
+    SPACESHIP_OT_load_preset,
+    SPACESHIP_OT_delete_preset,
     SPACESHIP_PT_main_panel,
 )
 

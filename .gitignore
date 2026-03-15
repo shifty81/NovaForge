@@ -140,6 +140,7 @@ cpp_client/assets/reference_models/Vulcan Dkyr Class/
 
 # UI layout presets (user-generated, not tracked)
 ui_layouts/
+tools/BlenderSpaceshipGenerator/presets/
 cpp_client/build_atlas_test/
 cpp_server/build/
 build/

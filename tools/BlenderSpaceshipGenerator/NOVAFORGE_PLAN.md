@@ -63,8 +63,8 @@ merged into specific projects and customized for their needs.
 
 ### 🔲 Not Yet Implemented
 
-- Galaxy / system / planet generators (Python)
-- Character mesh generation
+- ~~Galaxy / system / planet generators (Python)~~ ✓ Implemented (pcg_pipeline)
+- ~~Character mesh generation~~ ✓ Implemented (character_generator)
 - C++ procedural hull meshing integration (pybind11)
 - Blender ↔ C++ texture pipeline
 - Unified material system (solid / liquid / gas)
@@ -207,8 +207,17 @@ AtlasForgeGenerator/
 │   ├── galaxy_generator.py
 │   ├── system_generator.py
 │   ├── planet_generator.py
+│   ├── terrain_generator.py
 │   ├── character_generator.py
 │   └── batch_generate.py
+├── density_field.py              # (existing) procedural geometry computation
+├── slot_grid.py                  # (existing) modular slot placement
+├── traversal_system.py           # (existing) interior navigation
+├── fleet_logistics.py            # (existing) fleet-level logistics
+├── rig_system.py                 # (existing) character rigging
+├── lighting_system.py            # interior/exterior ship lighting
+├── greeble_system.py             # surface detail pass (panels, vents, pipes)
+├── preset_library.py             # save/load generation presets (JSON)
 ├── README.md
 ├── USAGE.md
 ├── EXAMPLES.md
