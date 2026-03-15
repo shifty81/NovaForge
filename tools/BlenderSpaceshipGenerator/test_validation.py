@@ -48,6 +48,9 @@ def test_addon_structure():
         'greeble_system.py',
         'preset_library.py',
         'furniture_system.py',
+        'version_registry.py',
+        'override_manager.py',
+        'template_manager.py',
     ]
     
     all_exist = True
@@ -91,6 +94,9 @@ def test_file_syntax():
         'greeble_system.py',
         'preset_library.py',
         'furniture_system.py',
+        'version_registry.py',
+        'override_manager.py',
+        'template_manager.py',
     ]
     
     all_valid = True
@@ -1471,6 +1477,477 @@ def test_furniture_system():
     return all_valid
 
 
+def test_version_registry():
+    """Test the version_registry module"""
+    print("\nTesting version registry module...")
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    all_valid = True
+
+    # Import the module
+    sys.path.insert(0, addon_path)
+    try:
+        import version_registry
+    except ImportError as e:
+        print(f"✗ Cannot import version_registry: {e}")
+        return False
+
+    # Check MODULE_VERSIONS exists and has entries
+    if hasattr(version_registry, 'MODULE_VERSIONS'):
+        mv = version_registry.MODULE_VERSIONS
+        print(f"✓ MODULE_VERSIONS constant found ({len(mv)} modules)")
+    else:
+        print("✗ MODULE_VERSIONS constant missing")
+        all_valid = False
+        return all_valid
+
+    # Check key modules are versioned
+    required_modules = [
+        'ship_generator', 'ship_parts', 'interior_generator',
+        'module_system', 'lighting_system', 'greeble_system',
+        'preset_library', 'furniture_system',
+    ]
+    for mod in required_modules:
+        if mod in mv:
+            print(f"✓ {mod} versioned: {mv[mod]}")
+        else:
+            print(f"✗ {mod} missing from MODULE_VERSIONS")
+            all_valid = False
+
+    # Test get_module_version
+    if hasattr(version_registry, 'get_module_version'):
+        v = version_registry.get_module_version('ship_generator')
+        if v != "0.0.0":
+            print(f"✓ get_module_version returns valid version: {v}")
+        else:
+            print("✗ get_module_version returned default for known module")
+            all_valid = False
+        # Unknown module returns "0.0.0"
+        v_unknown = version_registry.get_module_version('nonexistent_module')
+        if v_unknown == "0.0.0":
+            print("✓ get_module_version returns '0.0.0' for unknown module")
+        else:
+            print(f"✗ get_module_version returned {v_unknown} for unknown module")
+            all_valid = False
+    else:
+        print("✗ get_module_version function missing")
+        all_valid = False
+
+    # Test get_all_versions
+    if hasattr(version_registry, 'get_all_versions'):
+        avs = version_registry.get_all_versions()
+        if isinstance(avs, dict) and len(avs) > 0:
+            print(f"✓ get_all_versions returns dict with {len(avs)} entries")
+        else:
+            print("✗ get_all_versions returned invalid result")
+            all_valid = False
+    else:
+        print("✗ get_all_versions function missing")
+        all_valid = False
+
+    # Test check_compatibility
+    if hasattr(version_registry, 'check_compatibility'):
+        # ship_generator is 3.0.0, so requiring 3.0.0 should be compatible
+        if version_registry.check_compatibility('ship_generator', '3.0.0'):
+            print("✓ check_compatibility(ship_generator, 3.0.0) = True")
+        else:
+            print("✗ check_compatibility should return True for same version")
+            all_valid = False
+        # Requiring 4.0.0 should be incompatible
+        if not version_registry.check_compatibility('ship_generator', '4.0.0'):
+            print("✓ check_compatibility(ship_generator, 4.0.0) = False")
+        else:
+            print("✗ check_compatibility should return False for higher major")
+            all_valid = False
+    else:
+        print("✗ check_compatibility function missing")
+        all_valid = False
+
+    # Test version_stamp
+    if hasattr(version_registry, 'version_stamp'):
+        stamp = version_registry.version_stamp()
+        if 'addon_version' in stamp and 'modules' in stamp:
+            print(f"✓ version_stamp returns valid structure")
+        else:
+            print("✗ version_stamp missing expected keys")
+            all_valid = False
+    else:
+        print("✗ version_stamp function missing")
+        all_valid = False
+
+    # Test register/unregister
+    for fn in ('register', 'unregister'):
+        if hasattr(version_registry, fn):
+            print(f"✓ {fn} function found")
+        else:
+            print(f"✗ {fn} function missing")
+            all_valid = False
+
+    return all_valid
+
+
+def test_override_manager():
+    """Test the override_manager module"""
+    print("\nTesting override manager module...")
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    all_valid = True
+
+    # AST-based validation
+    filepath = os.path.join(addon_path, 'override_manager.py')
+    try:
+        with open(filepath) as f:
+            tree = ast.parse(f.read())
+    except SyntaxError as e:
+        print(f"✗ Syntax error: {e}")
+        return False
+
+    # Check for required constants and functions
+    names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+        elif isinstance(node, ast.FunctionDef):
+            names.add(node.name)
+
+    required_items = [
+        'OVERRIDE_PROP',
+        'is_protected',
+        'set_protected',
+        'collect_protected',
+        'filter_children',
+        'clear_all_overrides',
+        'count_protected',
+        'register',
+        'unregister',
+    ]
+    for item in required_items:
+        if item in names:
+            print(f"✓ {item} found")
+        else:
+            print(f"✗ {item} missing")
+            all_valid = False
+
+    # Functional test: import and test with None objects
+    sys.path.insert(0, addon_path)
+    try:
+        import override_manager
+        # is_protected(None) should return False
+        if not override_manager.is_protected(None):
+            print("✓ is_protected(None) returns False")
+        else:
+            print("✗ is_protected(None) should return False")
+            all_valid = False
+
+        # set_protected(None) should return False
+        if not override_manager.set_protected(None):
+            print("✓ set_protected(None) returns False")
+        else:
+            print("✗ set_protected(None) should return False")
+            all_valid = False
+
+        # collect_protected(None) should return empty list
+        if override_manager.collect_protected(None) == []:
+            print("✓ collect_protected(None) returns []")
+        else:
+            print("✗ collect_protected(None) should return []")
+            all_valid = False
+
+        # filter_children(None) should return empty list
+        if override_manager.filter_children(None) == []:
+            print("✓ filter_children(None) returns []")
+        else:
+            print("✗ filter_children(None) should return []")
+            all_valid = False
+
+        # count_protected(None) should return 0
+        if override_manager.count_protected(None) == 0:
+            print("✓ count_protected(None) returns 0")
+        else:
+            print("✗ count_protected(None) should return 0")
+            all_valid = False
+
+        # clear_all_overrides(None) should return 0
+        if override_manager.clear_all_overrides(None) == 0:
+            print("✓ clear_all_overrides(None) returns 0")
+        else:
+            print("✗ clear_all_overrides(None) should return 0")
+            all_valid = False
+
+        # Check OVERRIDE_PROP value
+        if override_manager.OVERRIDE_PROP == "af_manual_override":
+            print("✓ OVERRIDE_PROP = 'af_manual_override'")
+        else:
+            print(f"✗ OVERRIDE_PROP = {override_manager.OVERRIDE_PROP!r}")
+            all_valid = False
+
+    except ImportError as e:
+        print(f"✗ Cannot import override_manager: {e}")
+        all_valid = False
+
+    return all_valid
+
+
+def test_template_manager():
+    """Test the template_manager module"""
+    print("\nTesting template manager module...")
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    all_valid = True
+
+    import tempfile
+    import shutil
+
+    sys.path.insert(0, addon_path)
+    try:
+        import template_manager
+    except ImportError as e:
+        print(f"✗ Cannot import template_manager: {e}")
+        return False
+
+    # Check constants
+    if hasattr(template_manager, 'TEMPLATE_VERSION'):
+        print(f"✓ TEMPLATE_VERSION = {template_manager.TEMPLATE_VERSION}")
+    else:
+        print("✗ TEMPLATE_VERSION missing")
+        all_valid = False
+
+    if hasattr(template_manager, 'TEMPLATE_CATEGORIES'):
+        cats = template_manager.TEMPLATE_CATEGORIES
+        expected = {'ship', 'station', 'fleet', 'asteroid', 'character'}
+        if set(cats) == expected:
+            print(f"✓ TEMPLATE_CATEGORIES has {len(cats)} categories")
+        else:
+            print(f"✗ TEMPLATE_CATEGORIES mismatch: {set(cats)} vs {expected}")
+            all_valid = False
+    else:
+        print("✗ TEMPLATE_CATEGORIES missing")
+        all_valid = False
+
+    # Check functions exist
+    required_fns = [
+        'save_template', 'load_template', 'delete_template',
+        'list_templates', 'discover_templates', 'get_template_info',
+        'import_templates_from_directory', 'register', 'unregister',
+    ]
+    for fn in required_fns:
+        if hasattr(template_manager, fn):
+            print(f"✓ {fn} function found")
+        else:
+            print(f"✗ {fn} function missing")
+            all_valid = False
+
+    # Functional round-trip test with temp directory
+    tmpdir = tempfile.mkdtemp(prefix="af_templates_test_")
+    try:
+        # Save a template
+        data = {"ship_class": "CRUISER", "style": "X4", "seed": 42}
+        fp = template_manager.save_template("TestCruiser", data,
+                                            category="ship",
+                                            template_dir=tmpdir)
+        if os.path.isfile(fp):
+            print("✓ save_template creates file")
+        else:
+            print("✗ save_template did not create file")
+            all_valid = False
+
+        # List templates
+        names = template_manager.list_templates(category="ship",
+                                                template_dir=tmpdir)
+        if "TestCruiser" in names:
+            print("✓ list_templates finds saved template")
+        else:
+            print(f"✗ list_templates returned {names}")
+            all_valid = False
+
+        # Load template
+        loaded = template_manager.load_template("TestCruiser", category="ship",
+                                                template_dir=tmpdir)
+        if loaded.get("ship_class") == "CRUISER" and loaded.get("seed") == 42:
+            print("✓ load_template round-trip correct")
+        else:
+            print(f"✗ load_template returned {loaded}")
+            all_valid = False
+
+        # Get info
+        info = template_manager.get_template_info("TestCruiser",
+                                                  category="ship",
+                                                  template_dir=tmpdir)
+        if info is not None and info.get("name") == "TestCruiser":
+            print("✓ get_template_info returns metadata")
+        else:
+            print(f"✗ get_template_info returned {info}")
+            all_valid = False
+
+        # Discover templates
+        disc = template_manager.discover_templates(template_dir=tmpdir)
+        if "ship" in disc and "TestCruiser" in disc["ship"]:
+            print("✓ discover_templates finds template")
+        else:
+            print(f"✗ discover_templates returned {disc}")
+            all_valid = False
+
+        # Delete template
+        if template_manager.delete_template("TestCruiser", category="ship",
+                                            template_dir=tmpdir):
+            print("✓ delete_template returns True")
+        else:
+            print("✗ delete_template returned False")
+            all_valid = False
+
+        # Verify deletion
+        remaining = template_manager.list_templates(category="ship",
+                                                    template_dir=tmpdir)
+        if "TestCruiser" not in remaining:
+            print("✓ Template removed after delete")
+        else:
+            print("✗ Template still exists after delete")
+            all_valid = False
+
+        # Error cases
+        try:
+            template_manager.save_template("", {}, template_dir=tmpdir)
+            print("✗ save_template should raise ValueError for empty name")
+            all_valid = False
+        except ValueError:
+            print("✓ save_template raises ValueError for empty name")
+
+        try:
+            template_manager.load_template("nonexistent", template_dir=tmpdir)
+            print("✗ load_template should raise FileNotFoundError")
+            all_valid = False
+        except FileNotFoundError:
+            print("✓ load_template raises FileNotFoundError for missing")
+
+        try:
+            template_manager.save_template("x", {}, category="invalid",
+                                           template_dir=tmpdir)
+            print("✗ save_template should raise ValueError for bad category")
+            all_valid = False
+        except ValueError:
+            print("✓ save_template raises ValueError for invalid category")
+
+        # Import from directory test
+        import_dir = os.path.join(tmpdir, "import_source")
+        os.makedirs(import_dir, exist_ok=True)
+        import json
+        with open(os.path.join(import_dir, "imported_ship.json"), "w") as fh:
+            json.dump({"_name": "ImportedShip", "_category": "ship",
+                        "ship_class": "FIGHTER"}, fh)
+        imported = template_manager.import_templates_from_directory(
+            import_dir, template_dir=tmpdir)
+        if len(imported) == 1 and imported[0][0] == "ImportedShip":
+            print("✓ import_templates_from_directory works")
+        else:
+            print(f"✗ import_templates_from_directory returned {imported}")
+            all_valid = False
+
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    return all_valid
+
+
+def test_character_mesh_generation():
+    """Test that character generator produces mesh geometry data"""
+    print("\nTesting character mesh generation...")
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    all_valid = True
+
+    sys.path.insert(0, os.path.join(addon_path, 'pcg_pipeline'))
+    try:
+        from pcg_pipeline import character_generator
+    except ImportError:
+        # Try direct import
+        sys.path.insert(0, addon_path)
+        try:
+            from pcg_pipeline import character_generator
+        except ImportError as e:
+            print(f"✗ Cannot import character_generator: {e}")
+            return False
+
+    # Generate a character
+    char = character_generator.generate_character(seed=42, char_id="test_char")
+
+    # Check metadata fields (backwards compatible)
+    for field in ('char_id', 'seed', 'race', 'body_type', 'cyber_limbs'):
+        if field in char:
+            print(f"✓ metadata field '{field}' present")
+        else:
+            print(f"✗ metadata field '{field}' missing")
+            all_valid = False
+
+    # Check mesh_parts
+    if 'mesh_parts' in char:
+        parts = char['mesh_parts']
+        print(f"✓ mesh_parts present with {len(parts)} body parts")
+
+        expected_parts = [
+            'head', 'torso',
+            'left_upper_arm', 'left_lower_arm',
+            'right_upper_arm', 'right_lower_arm',
+            'left_upper_leg', 'left_lower_leg',
+            'right_upper_leg', 'right_lower_leg',
+        ]
+        for part_name in expected_parts:
+            if part_name in parts:
+                p = parts[part_name]
+                has_verts = 'vertices' in p and len(p['vertices']) > 0
+                has_faces = 'faces' in p and len(p['faces']) > 0
+                if has_verts and has_faces:
+                    print(f"✓ {part_name}: {len(p['vertices'])} verts, "
+                          f"{len(p['faces'])} faces")
+                else:
+                    print(f"✗ {part_name}: missing vertices or faces")
+                    all_valid = False
+            else:
+                print(f"✗ {part_name} missing from mesh_parts")
+                all_valid = False
+    else:
+        print("✗ mesh_parts missing from character data")
+        all_valid = False
+
+    # Determinism test
+    char2 = character_generator.generate_character(seed=42, char_id="test_char")
+    if char['mesh_parts']['head']['vertices'] == char2['mesh_parts']['head']['vertices']:
+        print("✓ Mesh generation is deterministic (same seed = same mesh)")
+    else:
+        print("✗ Mesh generation is NOT deterministic")
+        all_valid = False
+
+    # Different seed gives different mesh
+    char3 = character_generator.generate_character(seed=99, char_id="test_char2")
+    if char3['mesh_parts']['head']['vertices'] != char['mesh_parts']['head']['vertices']:
+        print("✓ Different seed produces different mesh")
+    else:
+        print("✗ Different seed produced identical mesh")
+        all_valid = False
+
+    # Check race/body_type modifiers exist
+    if hasattr(character_generator, '_RACE_MODIFIERS'):
+        mods = character_generator._RACE_MODIFIERS
+        if len(mods) == len(character_generator.RACES):
+            print(f"✓ _RACE_MODIFIERS covers all {len(mods)} races")
+        else:
+            print(f"✗ _RACE_MODIFIERS has {len(mods)} entries, expected {len(character_generator.RACES)}")
+            all_valid = False
+    else:
+        print("✗ _RACE_MODIFIERS not found")
+        all_valid = False
+
+    if hasattr(character_generator, '_BODY_TYPE_MODIFIERS'):
+        mods = character_generator._BODY_TYPE_MODIFIERS
+        if len(mods) == len(character_generator.BODY_TYPES):
+            print(f"✓ _BODY_TYPE_MODIFIERS covers all {len(mods)} body types")
+        else:
+            print(f"✗ _BODY_TYPE_MODIFIERS has {len(mods)} entries")
+            all_valid = False
+    else:
+        print("✗ _BODY_TYPE_MODIFIERS not found")
+        all_valid = False
+
+    return all_valid
+
+
 def run_tests():
     """Run all validation tests"""
     print("=" * 60)
@@ -1509,6 +1986,10 @@ def run_tests():
         ("Greeble System", test_greeble_system),
         ("Preset Library", test_preset_library),
         ("Furniture System", test_furniture_system),
+        ("Version Registry", test_version_registry),
+        ("Override Manager", test_override_manager),
+        ("Template Manager", test_template_manager),
+        ("Character Mesh Generation", test_character_mesh_generation),
     ]
     
     results = []
