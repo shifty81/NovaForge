@@ -65,6 +65,13 @@ INCLUDE_FILES = [
     "station_generator.py",
     "texture_generator.py",
     "traversal_system.py",
+    "lighting_system.py",
+    "greeble_system.py",
+    "preset_library.py",
+    "furniture_system.py",
+    "version_registry.py",
+    "override_manager.py",
+    "template_manager.py",
 ]
 
 INCLUDE_DIRS = [
