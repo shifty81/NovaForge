@@ -266,7 +266,7 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
     # ------------------------------------------------------------------
     cockpit = ship_parts.generate_cockpit(
         scale=scale,
-        position=(0, scale * 0.8, 0),
+        position=(0, scale * 0.35, scale * 0.12),
         ship_class=ship_class,
         style=style,
         naming_prefix=naming_prefix

@@ -332,8 +332,8 @@ def generate_engines(count=2, scale=1.0, symmetry=True, style='MIXED', naming_pr
     engines = []
     base_engine_size = scale * 0.2
 
-    # Position engines at the rear of the ship
-    rear_position = -scale * 0.9
+    # Position engines at the rear of the ship (hull spans Y from -scale*0.5 to +scale*0.5)
+    rear_position = -scale * 0.45
 
     # Pre-compute archetype for each logical engine slot
     archetypes = [
@@ -524,11 +524,15 @@ def generate_wings(scale=1.0, symmetry=True, style='MIXED', naming_prefix=''):
 
     right_wing = _build_wing(
         _prefixed_name(naming_prefix, "Wing_Right"), 1)
+    # Offset so the wing root sits at the hull edge (+X half-width)
+    right_wing.location.x = scale * 0.25
     wings.append(right_wing)
 
     if symmetry:
         left_wing = _build_wing(
             _prefixed_name(naming_prefix, "Wing_Left"), -1)
+        # Mirror offset so the left-wing root sits at the hull edge (-X half-width)
+        left_wing.location.x = -scale * 0.25
         wings.append(left_wing)
 
     return wings

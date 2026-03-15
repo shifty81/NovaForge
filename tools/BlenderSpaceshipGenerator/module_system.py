@@ -158,16 +158,18 @@ def create_module(module_type, scale=1.0, index=0, naming_prefix=''):
         Module object
     """
     config = MODULE_TYPES[module_type]
-    module_scale = scale * config['scale_factor']
+    # Modules are equipment-scale: ~15 % of ship scale so they sit as
+    # surface details rather than structures rivaling the hull in size.
+    module_scale = scale * config['scale_factor'] * 0.15
     module_name = _prefixed_name(naming_prefix, config['name'])
-    
-    # Calculate position (distributed along ship)
-    angle = (index / 4) * 2 * math.pi  # Distribute around ship
-    radius = scale * 0.4
-    x_pos = radius * math.cos(angle)
-    z_pos = radius * math.sin(angle)
-    y_pos = (index - 1) * scale * 0.3  # Spread along length
-    
+
+    # Place modules along the dorsal (top) surface of the hull.
+    # Hull half-height ≈ scale*0.15; offset slightly above surface.
+    # Distribute along Y so modules don't overlap.
+    y_pos = (index - 0.5) * scale * 0.25
+    x_pos = 0.0
+    z_pos = scale * 0.16  # just above hull top
+
     position = (x_pos, y_pos, z_pos)
     
     # Create module based on shape

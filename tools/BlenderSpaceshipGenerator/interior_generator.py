@@ -239,7 +239,7 @@ def generate_cockpit_interior(scale=1.0, naming_prefix=''):
     room_w = scale * 0.35
     room_d = scale * 0.25
     room_h = ROOM_HEIGHT * 0.85
-    pos = (0, scale * 0.7, -scale * 0.15)
+    pos = (0, scale * 0.25, -scale * 0.08)
 
     # Enclosed room with angled front — use 'north' doorway as the
     # window/viewport opening
@@ -300,7 +300,7 @@ def generate_bridge(scale=1.0, naming_prefix=''):
     room_w = scale * 0.55
     room_d = scale * 0.4
     room_h = ROOM_HEIGHT
-    pos = (0, scale * 0.7, -scale * 0.15)
+    pos = (0, scale * 0.25, -scale * 0.08)
 
     objects.extend(_create_enclosed_room(
         "Bridge", room_w, room_d, room_h, pos,
@@ -439,7 +439,7 @@ def generate_crew_quarters(scale=1.0, bunks=4, naming_prefix=''):
     room_width = max(3.0, bunks * 0.8)
     room_depth = 4.0
     room_h = ROOM_HEIGHT
-    pos = (scale * 0.3, -scale * 0.3, -scale * 0.15)
+    pos = (scale * 0.15, -scale * 0.2, -scale * 0.08)
 
     objects.extend(_create_enclosed_room(
         "Quarters", room_width, room_depth, room_h, pos,
@@ -498,7 +498,7 @@ def generate_cargo_bay(scale=1.0, naming_prefix=''):
     bay_width = scale * 0.5
     bay_depth = scale * 0.4
     bay_height = ROOM_HEIGHT * 1.5
-    pos = (0, -scale * 0.5, -scale * 0.15)
+    pos = (0, -scale * 0.2, -scale * 0.08)
 
     objects.extend(_create_enclosed_room(
         "Cargo_Bay", bay_width, bay_depth, bay_height, pos,
@@ -548,7 +548,7 @@ def generate_engine_room(scale=1.0, naming_prefix=''):
     room_width = scale * 0.4
     room_depth = scale * 0.3
     room_h = ROOM_HEIGHT
-    pos = (0, -scale * 0.8, -scale * 0.15)
+    pos = (0, -scale * 0.3, -scale * 0.08)
 
     objects.extend(_create_enclosed_room(
         "Engine_Room", room_width, room_depth, room_h, pos,
