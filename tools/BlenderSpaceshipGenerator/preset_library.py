@@ -29,7 +29,7 @@ _DEFAULT_PRESET_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 PRESET_VERSION = 1
 
-# Keys that are persisted in a preset.
+# Keys that are persisted in a preset (20 parameters).
 PRESET_KEYS = [
     'ship_class',
     'style',
