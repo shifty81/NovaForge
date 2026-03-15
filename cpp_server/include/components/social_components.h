@@ -354,6 +354,42 @@ public:
     COMPONENT_TYPE(CitadelState)
 };
 
+// ---------------------------------------------------------------------------
+// AccessListState — access control list management for structures/containers
+// ---------------------------------------------------------------------------
+/**
+ * @brief Manages access control lists for player-owned structures and
+ *        containers.  Each ACL entry grants or blocks a specific member.
+ *        Entries may have a TTL that counts down per-tick; expired entries
+ *        are auto-removed.  A default_policy controls access for members
+ *        not on any list.  max_entries caps the total number of entries
+ *        (default 50).
+ */
+class AccessListState : public ecs::Component {
+public:
+    enum class Permission { Allow, Block };
+
+    struct AclEntry {
+        std::string entry_id;
+        std::string member_id;
+        Permission  permission = Permission::Allow;
+        float       ttl        = 0.0f;   // 0 = permanent
+    };
+
+    std::string owner_id;
+    std::string structure_id;
+    Permission  default_policy = Permission::Block;
+    std::vector<AclEntry> entries;
+    int   max_entries          = 50;
+    int   total_entries_added  = 0;
+    int   total_entries_expired = 0;
+    int   total_access_checks  = 0;
+    float elapsed              = 0.0f;
+    bool  active               = true;
+
+    COMPONENT_TYPE(AccessListState)
+};
+
 } // namespace components
 } // namespace atlas
 
