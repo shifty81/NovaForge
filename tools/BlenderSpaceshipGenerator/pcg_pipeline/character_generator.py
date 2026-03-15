@@ -54,6 +54,9 @@ _BODY_TYPE_MODIFIERS = {
 # Number of subdivisions around each cylindrical limb segment.
 _LIMB_SEGMENTS = 8
 
+# Decimal precision for vertex coordinates.
+_VERTEX_PRECISION = 5
+
 
 # ---------------------------------------------------------------------------
 # Mesh primitive helpers
@@ -97,7 +100,9 @@ def _make_cylinder(cx, cy, cz_bottom, radius, height, segments=_LIMB_SEGMENTS,
             angle = i * angle_step
             x = cx + radius * math.cos(angle)
             y = cy + radius * math.sin(angle)
-            verts.append((round(x, 5), round(y, 5), round(z, 5)))
+            verts.append((round(x, _VERTEX_PRECISION),
+                          round(y, _VERTEX_PRECISION),
+                          round(z, _VERTEX_PRECISION)))
 
     o = vertex_offset
     faces = []
@@ -129,7 +134,9 @@ def _make_sphere(cx, cy, cz, radius, rings=4, segments=_LIMB_SEGMENTS,
             theta = 2.0 * math.pi * s / segments
             x = cx + ring_r * math.cos(theta)
             y = cy + ring_r * math.sin(theta)
-            verts.append((round(x, 5), round(y, 5), round(z, 5)))
+            verts.append((round(x, _VERTEX_PRECISION),
+                          round(y, _VERTEX_PRECISION),
+                          round(z, _VERTEX_PRECISION)))
     # Top pole
     verts.append((cx, cy, cz + radius))
 

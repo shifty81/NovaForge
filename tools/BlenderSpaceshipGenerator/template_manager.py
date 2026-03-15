@@ -58,7 +58,7 @@ def _category_dir(category, template_dir=None):
     return _ensure_dir(os.path.join(base, category))
 
 
-def _sanitise_name(name):
+def _sanitize_name(name):
     """Return a filesystem-safe version of *name*."""
     return "".join(c if (c.isalnum() or c in "-_") else "_" for c in name)
 
@@ -66,7 +66,7 @@ def _sanitise_name(name):
 def _template_path(name, category, template_dir=None):
     """Full file path for a template."""
     d = _category_dir(category, template_dir)
-    safe = _sanitise_name(name)
+    safe = _sanitize_name(name)
     return os.path.join(d, f"{safe}.json")
 
 

@@ -121,12 +121,12 @@ def version_stamp():
     Example::
 
         {
-            "addon_version": "3.0.0",
+            "generator_version": "3.0.0",
             "modules": {"ship_generator": "3.0.0", ...}
         }
     """
     return {
-        "addon_version": get_module_version("ship_generator"),
+        "generator_version": get_module_version("ship_generator"),
         "modules": get_all_versions(),
     }
 

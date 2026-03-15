@@ -1565,7 +1565,7 @@ def test_version_registry():
     # Test version_stamp
     if hasattr(version_registry, 'version_stamp'):
         stamp = version_registry.version_stamp()
-        if 'addon_version' in stamp and 'modules' in stamp:
+        if 'generator_version' in stamp and 'modules' in stamp:
             print(f"✓ version_stamp returns valid structure")
         else:
             print("✗ version_stamp missing expected keys")
@@ -1906,9 +1906,13 @@ def test_character_mesh_generation():
         print("✗ mesh_parts missing from character data")
         all_valid = False
 
-    # Determinism test
+    # Determinism test — check all mesh parts
     char2 = character_generator.generate_character(seed=42, char_id="test_char")
-    if char['mesh_parts']['head']['vertices'] == char2['mesh_parts']['head']['vertices']:
+    all_match = all(
+        char['mesh_parts'][part]['vertices'] == char2['mesh_parts'][part]['vertices']
+        for part in char['mesh_parts']
+    )
+    if all_match:
         print("✓ Mesh generation is deterministic (same seed = same mesh)")
     else:
         print("✗ Mesh generation is NOT deterministic")

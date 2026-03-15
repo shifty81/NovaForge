@@ -165,15 +165,15 @@ emergent feedback loops (economy, warfare, migration).
 
 ---
 
-## 9. Phase 7 — Addon Update System
+## 9. Phase 7 — Addon Update System ✅ COMPLETE
 
 **Goal:** Keep the Blender addon evergreen as projects evolve.
 
-| Feature | Description |
-|---------|-------------|
-| **Auto-import templates** | Load new JSON/YAML templates from a central directory |
-| **Versioned generators** | Each generator module carries a version |
-| **Manual override protection** | Objects with `af_manual_override = True` are skipped by regeneration |
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Auto-import templates** | Load new JSON/YAML templates from a central directory | ✅ `template_manager.py` |
+| **Versioned generators** | Each generator module carries a version | ✅ `version_registry.py` |
+| **Manual override protection** | Objects with `af_manual_override = True` are skipped by regeneration | ✅ `override_manager.py` |
 
 ---
 

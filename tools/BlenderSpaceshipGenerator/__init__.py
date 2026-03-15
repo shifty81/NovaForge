@@ -582,8 +582,11 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
         # Embed version metadata on the hull
         vr = _get_mod("version_registry")
         if vr is not None and hull is not None:
-            import json as _json
-            hull["af_versions"] = _json.dumps(vr.version_stamp())
+            try:
+                import json as _json
+                hull["af_versions"] = _json.dumps(vr.version_stamp())
+            except Exception:
+                pass  # skip if hull doesn't support custom properties
 
         self.report({'INFO'}, f"Generated {props.ship_class} class spaceship")
         return {'FINISHED'}

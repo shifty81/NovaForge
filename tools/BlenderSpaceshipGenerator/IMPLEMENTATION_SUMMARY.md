@@ -229,6 +229,16 @@ While not implemented in this initial version, the architecture supports:
 11. ~~PCG pipeline integration~~ ✓ Implemented (universe → galaxy → system → planet → station → ship → character)
 12. ~~CLI batch generation~~ ✓ Implemented (`python -m pcg_pipeline`)
 
+### Phase 7 — Addon Update System ✓ Implemented
+
+13. ~~Versioned generators~~ ✓ Implemented (`version_registry.py` — semantic version tracking for all 27+ modules with compatibility checking and version stamps)
+14. ~~Manual override protection~~ ✓ Implemented (`override_manager.py` — `af_manual_override` custom property on objects; protected objects skipped during regeneration)
+15. ~~Template manager (auto-import templates)~~ ✓ Implemented (`template_manager.py` — JSON template save/load/delete/discover/import across 5 categories: ship, station, fleet, asteroid, character)
+
+### Character Mesh Generation ✓ Enhanced
+
+16. ~~Character mesh generation~~ ✓ Enhanced (`character_generator.py` now generates full humanoid mesh geometry — head sphere, torso box, cylindrical limbs — with race/body-type proportional modifiers, deterministic seed-based generation)
+
 ## Success Criteria Met
 
 ✓ **Modular Ship Generation**: Complete system with hull, cockpit, engines, wings, weapons  
@@ -240,6 +250,9 @@ While not implemented in this initial version, the architecture supports:
 ✓ **Documentation**: Comprehensive guides  
 ✓ **Code Quality**: Clean, tested, secure  
 ✓ **Extensibility**: Easy to add features  
+✓ **Version Tracking**: Semantic versioning for all generator modules  
+✓ **Override Protection**: Manual edits preserved during regeneration  
+✓ **Template System**: Category-based template import/export  
 
 ## Conclusion
 
