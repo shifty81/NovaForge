@@ -58,14 +58,17 @@ def generate_hull(segments=5, scale=1.0, complexity=1.0, symmetry=True, style='M
     y_positions = [hull_length * (i / (seg_count - 1) - 0.5) for i in range(seg_count)]
 
     # Per-segment taper factor: 1.0 at centre, narrowing at nose and tail
+    _REAR_TAPER_MIN = 0.35   # minimum rear cross-section factor
+    _NOSE_TAPER_MIN = 0.30   # minimum nose cross-section factor
+
     taper_factors = []
     for i in range(seg_count):
         t = i / (seg_count - 1)  # 0 = rear, 1 = front
         # Smooth taper: full width in middle third, narrows toward ends
         if t < 0.25:
-            factor = 0.35 + 0.65 * (t / 0.25)
+            factor = _REAR_TAPER_MIN + (1.0 - _REAR_TAPER_MIN) * (t / 0.25)
         elif t > 0.8:
-            factor = 0.3 + 0.7 * ((1.0 - t) / 0.2)
+            factor = _NOSE_TAPER_MIN + (1.0 - _NOSE_TAPER_MIN) * ((1.0 - t) / 0.2)
         else:
             factor = 1.0
         taper_factors.append(factor)

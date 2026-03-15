@@ -506,18 +506,20 @@ def generate_cargo_bay(scale=1.0, naming_prefix=''):
 
     px, py, pz = pos
 
-    # Cargo containers — stacked crates
+    # Cargo containers — stacked crates arranged in a grid with gaps
     container_w = 0.7
     container_d = 0.7
     container_h = 0.9
     cols = 3
     rows = 2
-    x_start = px - (cols - 1) * container_w * 0.6
+    crate_spacing = container_w * 1.2  # gap between crate centres
+    # Centre the grid within the bay
+    x_start = px - (cols - 1) * crate_spacing * 0.5
     y_start = py - bay_depth * 0.25
 
     for i in range(cols):
         for j in range(rows):
-            cx = x_start + i * container_w * 1.2
+            cx = x_start + i * crate_spacing
             cy = y_start + j * container_d * 1.2
             bpy.ops.mesh.primitive_cube_add(
                 size=1,
