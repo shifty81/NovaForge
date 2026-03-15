@@ -10,6 +10,7 @@ import bpy
 import bmesh
 import random
 import math
+from mathutils import Vector
 from . import brick_system
 
 
@@ -37,8 +38,9 @@ def create_mesh_object(name, verts, edges, faces):
 def generate_hull(segments=5, scale=1.0, complexity=1.0, symmetry=True, style='MIXED',
                   naming_prefix=''):
     """
-    Generate the main hull of the spaceship
-    
+    Generate the main hull of the spaceship using a bmesh octagonal profile
+    extruded along the Y axis with nose/tail tapering.
+
     Args:
         segments: Number of hull segments
         scale: Overall scale factor
@@ -47,35 +49,73 @@ def generate_hull(segments=5, scale=1.0, complexity=1.0, symmetry=True, style='M
         style: Design style
         naming_prefix: Project naming prefix
     """
-    # Create base hull mesh
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 0))
-    hull = bpy.context.active_object
-    hull.name = _prefixed_name(naming_prefix, "Hull")
-    
-    # Scale to ship size
-    hull.scale = (scale * 0.5, scale, scale * 0.3)
-    bpy.ops.object.transform_apply(scale=True)
-    
-    # Enter edit mode to modify geometry
+    half_width = scale * 0.25
+    half_height = scale * 0.15
+    hull_length = scale
+
+    num_sides = 8
+    seg_count = max(3, segments)
+    y_positions = [hull_length * (i / (seg_count - 1) - 0.5) for i in range(seg_count)]
+
+    # Per-segment taper factor: 1.0 at centre, narrowing at nose and tail
+    taper_factors = []
+    for i in range(seg_count):
+        t = i / (seg_count - 1)  # 0 = rear, 1 = front
+        # Smooth taper: full width in middle third, narrows toward ends
+        if t < 0.25:
+            factor = 0.35 + 0.65 * (t / 0.25)
+        elif t > 0.8:
+            factor = 0.3 + 0.7 * ((1.0 - t) / 0.2)
+        else:
+            factor = 1.0
+        taper_factors.append(factor)
+
+    mesh = bpy.data.meshes.new(_prefixed_name(naming_prefix, "Hull_Mesh"))
+    bm = bmesh.new()
+
+    ring_vert_lists = []
+    for si, y in enumerate(y_positions):
+        tf = taper_factors[si]
+        ring_verts = []
+        for vi in range(num_sides):
+            angle = 2.0 * math.pi * vi / num_sides
+            x = math.cos(angle) * half_width * tf
+            z = math.sin(angle) * half_height * tf
+            # Random organic displacement scaled by complexity
+            disp = random.uniform(-0.012, 0.012) * scale * complexity
+            ring_verts.append(bm.verts.new(Vector((x + disp, y, z + disp))))
+        ring_vert_lists.append(ring_verts)
+
+    bm.verts.ensure_lookup_table()
+
+    # Connect adjacent rings with quad faces
+    for si in range(seg_count - 1):
+        cur = ring_vert_lists[si]
+        nxt = ring_vert_lists[si + 1]
+        for vi in range(num_sides):
+            vi_next = (vi + 1) % num_sides
+            bm.faces.new([cur[vi], nxt[vi], nxt[vi_next], cur[vi_next]])
+
+    # Cap the rear (index 0) and front (index -1)
+    rear_face = bm.faces.new(ring_vert_lists[0][::-1])
+    front_face = bm.faces.new(ring_vert_lists[-1])
+
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+
+    hull = bpy.data.objects.new(_prefixed_name(naming_prefix, "Hull"), mesh)
+    bpy.context.collection.objects.link(hull)
     bpy.context.view_layer.objects.active = hull
-    bpy.ops.object.mode_set(mode='EDIT')
-    
-    # Add subdivisions based on complexity
-    subdiv_levels = max(1, int(complexity * 2))
-    bpy.ops.mesh.subdivide(number_cuts=subdiv_levels)
-    
-    # Add some variation to vertices
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
+    hull.select_set(True)
+
     # Apply style-specific modifications
     if style == 'X4':
-        # X4 style: Angular, geometric
         apply_x4_style(hull, scale)
     elif style == 'ELITE':
-        # Elite style: Sleek, aerodynamic
         apply_elite_style(hull, scale)
     elif style == 'EVE':
-        # Eve style: Organic, flowing
         apply_eve_style(hull, scale)
     elif style == 'SOLARI':
         apply_solari_style(hull, scale)
@@ -88,21 +128,20 @@ def generate_hull(segments=5, scale=1.0, complexity=1.0, symmetry=True, style='M
     elif style == 'NMS':
         apply_nms_style(hull, scale)
     else:
-        # Mixed style
         apply_mixed_style(hull, scale)
-    
+
     # Add smooth shading
     bpy.ops.object.shade_smooth()
-    
+
     # Add subdivision surface modifier for smoother look
     modifier = hull.modifiers.new(name="Subdivision", type='SUBSURF')
     modifier.levels = 1
     modifier.render_levels = 2
-    
+
     # Add edge split for hard edges
     edge_split = hull.modifiers.new(name="EdgeSplit", type='EDGE_SPLIT')
     edge_split.split_angle = math.radians(30)
-    
+
     return hull
 
 
@@ -208,8 +247,11 @@ def apply_nms_style(hull, scale):
 def generate_cockpit(scale=1.0, position=(0, 0, 0), ship_class='FIGHTER', style='MIXED',
                      naming_prefix=''):
     """
-    Generate cockpit/bridge for the ship
-    
+    Generate cockpit/bridge dome canopy for the ship.
+
+    Creates a UV-sphere dome scaled for a windshield look with a flat base
+    ring so it sits flush on the hull.
+
     Args:
         scale: Ship scale factor
         position: Position relative to hull
@@ -217,24 +259,55 @@ def generate_cockpit(scale=1.0, position=(0, 0, 0), ship_class='FIGHTER', style=
         style: Design style
         naming_prefix: Project naming prefix
     """
-    # Create cockpit as a modified cube
-    bpy.ops.mesh.primitive_cube_add(size=scale * 0.3, location=position)
-    cockpit = bpy.context.active_object
-    cockpit.name = _prefixed_name(naming_prefix, "Cockpit")
-    
-    # Scale to appropriate proportions
-    cockpit.scale = (0.8, 1.2, 0.6)
-    bpy.ops.object.transform_apply(scale=True)
-    
-    # Taper the front for viewing angle
+    dome_radius = scale * 0.15
+
+    # Build dome from a UV sphere, keeping only the upper hemisphere
+    mesh = bpy.data.meshes.new(_prefixed_name(naming_prefix, "Cockpit_Mesh"))
+    bm = bmesh.new()
+
+    # Create a UV sphere inside bmesh
+    bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=8,
+                              radius=dome_radius)
+    bm.verts.ensure_lookup_table()
+
+    # Remove lower-hemisphere vertices (z < -0.01 relative to centre)
+    to_delete = [v for v in bm.verts if v.co.z < -dome_radius * 0.05]
+    bmesh.ops.delete(bm, geom=to_delete, context='VERTS')
+
+    # Scale for a windshield canopy shape: wider in X, stretched in Y, squashed in Z
+    for v in bm.verts:
+        v.co.x *= 1.1
+        v.co.y *= 1.6
+        v.co.z *= 0.7
+
+    # Create a flat base ring to sit flush on the hull
+    bm.verts.ensure_lookup_table()
+    boundary_edges = [e for e in bm.edges if e.is_boundary]
+    if boundary_edges:
+        boundary_verts = set()
+        for e in boundary_edges:
+            boundary_verts.update(e.verts)
+        # Flatten base ring to z=0
+        for v in boundary_verts:
+            v.co.z = 0.0
+        # Fill the base opening
+        bmesh.ops.edgenet_fill(bm, edges=boundary_edges)
+
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+
+    cockpit = bpy.data.objects.new(
+        _prefixed_name(naming_prefix, "Cockpit"), mesh)
+    cockpit.location = position
+    bpy.context.collection.objects.link(cockpit)
     bpy.context.view_layer.objects.active = cockpit
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.subdivide(number_cuts=2)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
+    cockpit.select_set(True)
+
     # Add smooth shading
     bpy.ops.object.shade_smooth()
-    
+
     return cockpit
 
 
@@ -369,8 +442,11 @@ def _add_nozzle_flare(engine_obj, engine_size, naming_prefix=''):
 
 def generate_wings(scale=1.0, symmetry=True, style='MIXED', naming_prefix=''):
     """
-    Generate wing structures
-    
+    Generate swept-back wing structures with airfoil-like taper.
+
+    Each wing is built from bmesh quads: wider and thicker at the root,
+    narrower and thinner at the tip, with a swept-back leading edge.
+
     Args:
         scale: Ship scale factor
         symmetry: Use symmetrical design
@@ -378,32 +454,80 @@ def generate_wings(scale=1.0, symmetry=True, style='MIXED', naming_prefix=''):
         naming_prefix: Project naming prefix
     """
     wings = []
-    wing_length = scale * 0.8
-    wing_width = scale * 0.15
-    
-    # Left wing
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(wing_length * 0.5, 0, 0)
-    )
-    left_wing = bpy.context.active_object
-    left_wing.name = _prefixed_name(naming_prefix, "Wing_Left")
-    left_wing.scale = (wing_length, wing_width, wing_width * 0.3)
-    bpy.ops.object.transform_apply(scale=True)
-    wings.append(left_wing)
-    
+    span = scale * 0.8
+    root_chord = scale * 0.3
+    tip_chord = root_chord * 0.35
+    root_thickness = scale * 0.04
+    tip_thickness = root_thickness * 0.3
+    sweep_back = root_chord * 0.4  # leading-edge sweep offset
+
+    def _build_wing(name, sign):
+        """Build one wing on the given side (sign: +1 = right/+X, -1 = left/-X)."""
+        mesh = bpy.data.meshes.new(name + "_Mesh")
+        bm = bmesh.new()
+
+        # Root profile (at X = 0, sits against the hull)
+        r_le_y = root_chord * 0.5   # leading edge Y
+        r_te_y = -root_chord * 0.5  # trailing edge Y
+        rt = root_thickness * 0.5
+
+        # Tip profile (at X = sign * span)
+        t_le_y = r_le_y - sweep_back + tip_chord * 0.5
+        t_te_y = t_le_y - tip_chord
+        tt = tip_thickness * 0.5
+        tip_x = sign * span
+
+        # Trailing edge is thinner than the leading edge for an airfoil look
+        te_thin = 0.5
+
+        # Root quad (4 verts): top-LE, top-TE, bot-TE, bot-LE
+        r_tl = bm.verts.new(Vector((0, r_le_y, rt)))
+        r_tt = bm.verts.new(Vector((0, r_te_y, rt * te_thin)))
+        r_bt = bm.verts.new(Vector((0, r_te_y, -rt * te_thin)))
+        r_bl = bm.verts.new(Vector((0, r_le_y, -rt)))
+
+        # Tip quad
+        t_tl = bm.verts.new(Vector((tip_x, t_le_y, tt)))
+        t_tt = bm.verts.new(Vector((tip_x, t_te_y, tt * te_thin)))
+        t_bt = bm.verts.new(Vector((tip_x, t_te_y, -tt * te_thin)))
+        t_bl = bm.verts.new(Vector((tip_x, t_le_y, -tt)))
+
+        # Faces connecting root to tip (6 faces: top, bottom, LE, TE, root cap, tip cap)
+        if sign > 0:
+            bm.faces.new([r_tl, r_tt, t_tt, t_tl])  # top
+            bm.faces.new([r_bt, r_bl, t_bl, t_bt])  # bottom
+            bm.faces.new([r_tl, t_tl, t_bl, r_bl])  # leading edge
+            bm.faces.new([r_tt, r_bt, t_bt, t_tt])  # trailing edge
+            bm.faces.new([r_tl, r_bl, r_bt, r_tt])  # root cap
+            bm.faces.new([t_tl, t_tt, t_bt, t_bl])  # tip cap
+        else:
+            bm.faces.new([r_tl, t_tl, t_tt, r_tt])  # top
+            bm.faces.new([r_bt, t_bt, t_bl, r_bl])  # bottom
+            bm.faces.new([r_tl, r_bl, t_bl, t_tl])  # leading edge
+            bm.faces.new([r_tt, t_tt, t_bt, r_bt])  # trailing edge
+            bm.faces.new([r_tl, r_tt, r_bt, r_bl])  # root cap
+            bm.faces.new([t_tl, t_bl, t_bt, t_tt])  # tip cap
+
+        bm.normal_update()
+        bm.to_mesh(mesh)
+        bm.free()
+        mesh.update()
+
+        obj = bpy.data.objects.new(name, mesh)
+        bpy.context.collection.objects.link(obj)
+        bpy.context.view_layer.objects.active = obj
+        obj.select_set(True)
+        return obj
+
+    right_wing = _build_wing(
+        _prefixed_name(naming_prefix, "Wing_Right"), 1)
+    wings.append(right_wing)
+
     if symmetry:
-        # Right wing
-        bpy.ops.mesh.primitive_cube_add(
-            size=1,
-            location=(-wing_length * 0.5, 0, 0)
-        )
-        right_wing = bpy.context.active_object
-        right_wing.name = _prefixed_name(naming_prefix, "Wing_Right")
-        right_wing.scale = (wing_length, wing_width, wing_width * 0.3)
-        bpy.ops.object.transform_apply(scale=True)
-        wings.append(right_wing)
-    
+        left_wing = _build_wing(
+            _prefixed_name(naming_prefix, "Wing_Left"), -1)
+        wings.append(left_wing)
+
     return wings
 
 

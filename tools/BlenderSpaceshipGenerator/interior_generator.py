@@ -24,6 +24,9 @@ CORRIDOR_WIDTH = 1.5
 CORRIDOR_HEIGHT = 2.5
 ROOM_HEIGHT = 3.0
 
+# Wall thickness used by the enclosed-room helper
+_WALL_THICKNESS = 0.08
+
 
 # Mapping from module type to interior room metadata
 MODULE_ROOM_TYPES = {
@@ -67,6 +70,123 @@ def _prefixed_name(prefix, name):
     return name
 
 
+def _create_enclosed_room(name, width, depth, height, position,
+                          naming_prefix, door_wall='south'):
+    """Create a fully enclosed room with floor, ceiling, four walls, and a
+    doorway cutout on one wall.
+
+    The doorway is created by splitting the chosen wall into two pieces with
+    a gap of :data:`DOOR_WIDTH` x :data:`DOOR_HEIGHT` in the centre.
+
+    Args:
+        name: Base name for the room objects.
+        width: Room width (X extent).
+        depth: Room depth (Y extent).
+        height: Room height (Z extent).
+        position: Centre-bottom ``(x, y, z)`` of the room floor.
+        naming_prefix: Project naming prefix.
+        door_wall: Which wall gets the doorway — ``'south'`` (-Y),
+            ``'north'`` (+Y), ``'east'`` (+X), or ``'west'`` (-X).
+
+    Returns:
+        List of created Blender objects.
+    """
+    objects = []
+    px, py, pz = position
+    hw = width / 2.0
+    hd = depth / 2.0
+    wt = _WALL_THICKNESS
+
+    def _add_box(suffix, loc, sx, sy, sz):
+        bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+        obj = bpy.context.active_object
+        obj.name = _prefixed_name(naming_prefix, f"{name}_{suffix}")
+        obj.scale = (sx, sy, sz)
+        bpy.ops.object.transform_apply(scale=True)
+        objects.append(obj)
+        return obj
+
+    # Floor
+    _add_box("Floor", (px, py, pz), width, depth, wt)
+
+    # Ceiling
+    _add_box("Ceiling", (px, py, pz + height), width, depth, wt)
+
+    # --- Walls (each is a thin box; the door_wall is split) ---
+    wall_defs = {
+        'north': {
+            'loc': (px, py + hd, pz + height / 2),
+            'size': (width, wt, height),
+            'axis': 'x',
+        },
+        'south': {
+            'loc': (px, py - hd, pz + height / 2),
+            'size': (width, wt, height),
+            'axis': 'x',
+        },
+        'east': {
+            'loc': (px + hw, py, pz + height / 2),
+            'size': (wt, depth, height),
+            'axis': 'y',
+        },
+        'west': {
+            'loc': (px - hw, py, pz + height / 2),
+            'size': (wt, depth, height),
+            'axis': 'y',
+        },
+    }
+
+    for wall_key, wd in wall_defs.items():
+        lx, ly, lz = wd['loc']
+        sx, sy, sz = wd['size']
+
+        if wall_key == door_wall:
+            # Split into two pieces with a gap for the door.
+            # Subtract wall thickness so the door panel edges don't
+            # extend past the room corner.
+            if wd['axis'] == 'x':
+                span = sx  # total wall span along X
+                door_hw = min(DOOR_WIDTH / 2.0, span / 2.0 - wt)
+                left_w = span / 2.0 - door_hw
+                right_w = left_w
+                if left_w > wt:
+                    _add_box(f"Wall_{wall_key}_L",
+                             (lx - door_hw - left_w / 2, ly, lz),
+                             left_w, sy, sz)
+                if right_w > wt:
+                    _add_box(f"Wall_{wall_key}_R",
+                             (lx + door_hw + right_w / 2, ly, lz),
+                             right_w, sy, sz)
+                # Lintel above door
+                lintel_h = height - DOOR_HEIGHT
+                if lintel_h > wt:
+                    _add_box(f"Wall_{wall_key}_Lintel",
+                             (lx, ly, pz + DOOR_HEIGHT + lintel_h / 2),
+                             DOOR_WIDTH, sy, lintel_h)
+            else:
+                span = sy
+                door_hd = min(DOOR_WIDTH / 2.0, span / 2.0 - wt)
+                front_d = span / 2.0 - door_hd
+                back_d = front_d
+                if front_d > wt:
+                    _add_box(f"Wall_{wall_key}_F",
+                             (lx, ly - door_hd - front_d / 2, lz),
+                             sx, front_d, sz)
+                if back_d > wt:
+                    _add_box(f"Wall_{wall_key}_B",
+                             (lx, ly + door_hd + back_d / 2, lz),
+                             sx, back_d, sz)
+                lintel_h = height - DOOR_HEIGHT
+                if lintel_h > wt:
+                    _add_box(f"Wall_{wall_key}_Lintel",
+                             (lx, ly, pz + DOOR_HEIGHT + lintel_h / 2),
+                             sx, DOOR_WIDTH, lintel_h)
+        else:
+            _add_box(f"Wall_{wall_key}", (lx, ly, lz), sx, sy, sz)
+
+    return objects
+
+
 def generate_interior(ship_class='FIGHTER', scale=1.0, crew_capacity=1, naming_prefix=''):
     """
     Generate complete interior for a ship
@@ -107,110 +227,139 @@ def generate_interior(ship_class='FIGHTER', scale=1.0, crew_capacity=1, naming_p
 
 def generate_cockpit_interior(scale=1.0, naming_prefix=''):
     """
-    Generate cockpit/pilot area interior
-    
+    Generate cockpit/pilot area interior as an enclosed room with console
+    and pilot seat.
+
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
     """
     objects = []
-    
-    # Create cockpit floor
+
+    room_w = scale * 0.35
+    room_d = scale * 0.25
+    room_h = ROOM_HEIGHT * 0.85
+    pos = (0, scale * 0.7, -scale * 0.15)
+
+    # Enclosed room with angled front — use 'north' doorway as the
+    # window/viewport opening
+    objects.extend(_create_enclosed_room(
+        "Cockpit", room_w, room_d, room_h, pos,
+        naming_prefix, door_wall='north'))
+
+    px, py, pz = pos
+
+    # Console (beveled-look wide box at the front of the room)
     bpy.ops.mesh.primitive_cube_add(
         size=1,
-        location=(0, scale * 0.7, -scale * 0.15)
-    )
-    floor = bpy.context.active_object
-    floor.name = _prefixed_name(naming_prefix, "Cockpit_Floor")
-    floor.scale = (scale * 0.4, scale * 0.3, 0.05)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(floor)
-    
-    # Create pilot seat
-    bpy.ops.mesh.primitive_cube_add(
-        size=0.5,
-        location=(0, scale * 0.65, -scale * 0.1)
-    )
-    seat = bpy.context.active_object
-    seat.name = _prefixed_name(naming_prefix, "Pilot_Seat")
-    objects.append(seat)
-    
-    # Create control panel
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(0, scale * 0.8, -scale * 0.05)
-    )
+        location=(px, py + room_d * 0.35, pz + room_h * 0.35))
     panel = bpy.context.active_object
-    panel.name = _prefixed_name(naming_prefix, "Control_Panel")
-    panel.scale = (scale * 0.3, 0.1, scale * 0.2)
+    panel.name = _prefixed_name(naming_prefix, "Cockpit_Console")
+    panel.scale = (room_w * 0.7, 0.12, room_h * 0.22)
     bpy.ops.object.transform_apply(scale=True)
+    # Bevel the console edges
+    bevel = panel.modifiers.new(name="Bevel", type='BEVEL')
+    bevel.width = 0.02
+    bevel.segments = 2
     objects.append(panel)
-    
+
+    # Pilot seat — seat base + backrest
+    seat_x, seat_y, seat_z = px, py - room_d * 0.1, pz
+    bpy.ops.mesh.primitive_cube_add(
+        size=1,
+        location=(seat_x, seat_y, seat_z + 0.25))
+    seat_base = bpy.context.active_object
+    seat_base.name = _prefixed_name(naming_prefix, "Pilot_Seat_Base")
+    seat_base.scale = (0.4, 0.4, 0.12)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(seat_base)
+
+    bpy.ops.mesh.primitive_cube_add(
+        size=1,
+        location=(seat_x, seat_y - 0.18, seat_z + 0.55))
+    backrest = bpy.context.active_object
+    backrest.name = _prefixed_name(naming_prefix, "Pilot_Seat_Back")
+    backrest.scale = (0.35, 0.08, 0.35)
+    bpy.ops.object.transform_apply(scale=True)
+    objects.append(backrest)
+
     return objects
 
 
 def generate_bridge(scale=1.0, naming_prefix=''):
     """
-    Generate bridge for large ships
-    
+    Generate bridge for large ships — an enclosed room with command chair,
+    navigation console, and helm/ops stations.
+
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
     """
     objects = []
-    
-    # Bridge floor
+
+    room_w = scale * 0.55
+    room_d = scale * 0.4
+    room_h = ROOM_HEIGHT
+    pos = (0, scale * 0.7, -scale * 0.15)
+
+    objects.extend(_create_enclosed_room(
+        "Bridge", room_w, room_d, room_h, pos,
+        naming_prefix, door_wall='south'))
+
+    px, py, pz = pos
+
+    # Command chair (centre, slightly raised)
     bpy.ops.mesh.primitive_cube_add(
         size=1,
-        location=(0, scale * 0.7, -scale * 0.15)
-    )
-    floor = bpy.context.active_object
-    floor.name = _prefixed_name(naming_prefix, "Bridge_Floor")
-    floor.scale = (scale * 0.6, scale * 0.4, 0.05)
+        location=(px, py, pz + 0.3))
+    cmd_base = bpy.context.active_object
+    cmd_base.name = _prefixed_name(naming_prefix, "Command_Chair_Base")
+    cmd_base.scale = (0.5, 0.5, 0.15)
     bpy.ops.object.transform_apply(scale=True)
-    objects.append(floor)
-    
-    # Bridge walls
-    wall_height = ROOM_HEIGHT
-    
-    # Front wall
+    objects.append(cmd_base)
+
     bpy.ops.mesh.primitive_cube_add(
         size=1,
-        location=(0, scale * 0.9, -scale * 0.15 + wall_height / 2)
-    )
-    front_wall = bpy.context.active_object
-    front_wall.name = _prefixed_name(naming_prefix, "Bridge_Wall_Front")
-    front_wall.scale = (scale * 0.6, 0.1, wall_height)
+        location=(px, py - 0.22, pz + 0.6))
+    cmd_back = bpy.context.active_object
+    cmd_back.name = _prefixed_name(naming_prefix, "Command_Chair_Back")
+    cmd_back.scale = (0.45, 0.08, 0.4)
     bpy.ops.object.transform_apply(scale=True)
-    objects.append(front_wall)
-    
-    # Command chair
-    bpy.ops.mesh.primitive_cube_add(
-        size=0.7,
-        location=(0, scale * 0.7, -scale * 0.1)
-    )
-    command_chair = bpy.context.active_object
-    command_chair.name = _prefixed_name(naming_prefix, "Command_Chair")
-    objects.append(command_chair)
-    
-    # Navigation console
+    objects.append(cmd_back)
+
+    # Forward console stations (nav + ops)
+    for i, (label, x_off) in enumerate(
+            [("Nav_Console", -room_w * 0.28), ("Ops_Console", room_w * 0.28)]):
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(px + x_off, py + room_d * 0.3, pz + room_h * 0.28))
+        console = bpy.context.active_object
+        console.name = _prefixed_name(naming_prefix, label)
+        console.scale = (room_w * 0.28, 0.15, room_h * 0.25)
+        bpy.ops.object.transform_apply(scale=True)
+        bevel = console.modifiers.new(name="Bevel", type='BEVEL')
+        bevel.width = 0.015
+        bevel.segments = 2
+        objects.append(console)
+
+    # Helm console (front centre)
     bpy.ops.mesh.primitive_cube_add(
         size=1,
-        location=(scale * 0.2, scale * 0.75, -scale * 0.05)
-    )
-    nav_console = bpy.context.active_object
-    nav_console.name = _prefixed_name(naming_prefix, "Nav_Console")
-    nav_console.scale = (0.4, 0.4, 0.6)
+        location=(px, py + room_d * 0.38, pz + room_h * 0.22))
+    helm = bpy.context.active_object
+    helm.name = _prefixed_name(naming_prefix, "Helm_Console")
+    helm.scale = (room_w * 0.22, 0.12, room_h * 0.18)
     bpy.ops.object.transform_apply(scale=True)
-    objects.append(nav_console)
-    
+    objects.append(helm)
+
     return objects
 
 
 def generate_corridor(scale=1.0, length=5.0, start_pos=(0, 0, 0), naming_prefix=''):
     """
-    Generate a corridor segment
-    
+    Generate a corridor segment as a proper rectangular tube with floor,
+    ceiling, and two side walls.
+
     Args:
         scale: Ship scale factor
         length: Length of corridor
@@ -218,52 +367,36 @@ def generate_corridor(scale=1.0, length=5.0, start_pos=(0, 0, 0), naming_prefix=
         naming_prefix: Project naming prefix
     """
     objects = []
-    
-    # Corridor floor
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(start_pos[0], start_pos[1] + length / 2, start_pos[2])
-    )
-    floor = bpy.context.active_object
-    floor.name = _prefixed_name(naming_prefix, "Corridor_Floor")
-    floor.scale = (CORRIDOR_WIDTH, length, 0.05)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(floor)
-    
-    # Corridor ceiling
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(start_pos[0], start_pos[1] + length / 2, start_pos[2] + CORRIDOR_HEIGHT)
-    )
-    ceiling = bpy.context.active_object
-    ceiling.name = _prefixed_name(naming_prefix, "Corridor_Ceiling")
-    ceiling.scale = (CORRIDOR_WIDTH, length, 0.05)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(ceiling)
-    
-    # Corridor walls
+    sx, sy, sz = start_pos
+    wt = _WALL_THICKNESS
+    cw = CORRIDOR_WIDTH
+    ch = CORRIDOR_HEIGHT
+    mid_y = sy + length / 2.0
+
+    def _add_box(suffix, loc, bx, by, bz):
+        bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+        obj = bpy.context.active_object
+        obj.name = _prefixed_name(naming_prefix, f"Corridor_{suffix}")
+        obj.scale = (bx, by, bz)
+        bpy.ops.object.transform_apply(scale=True)
+        objects.append(obj)
+
+    # Floor
+    _add_box("Floor", (sx, mid_y, sz), cw, length, wt)
+
+    # Ceiling
+    _add_box("Ceiling", (sx, mid_y, sz + ch), cw, length, wt)
+
     # Left wall
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(start_pos[0] - CORRIDOR_WIDTH / 2, start_pos[1] + length / 2, start_pos[2] + CORRIDOR_HEIGHT / 2)
-    )
-    left_wall = bpy.context.active_object
-    left_wall.name = _prefixed_name(naming_prefix, "Corridor_Wall_Left")
-    left_wall.scale = (0.1, length, CORRIDOR_HEIGHT)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(left_wall)
-    
+    _add_box("Wall_Left",
+             (sx - cw / 2.0, mid_y, sz + ch / 2.0),
+             wt, length, ch)
+
     # Right wall
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(start_pos[0] + CORRIDOR_WIDTH / 2, start_pos[1] + length / 2, start_pos[2] + CORRIDOR_HEIGHT / 2)
-    )
-    right_wall = bpy.context.active_object
-    right_wall.name = _prefixed_name(naming_prefix, "Corridor_Wall_Right")
-    right_wall.scale = (0.1, length, CORRIDOR_HEIGHT)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(right_wall)
-    
+    _add_box("Wall_Right",
+             (sx + cw / 2.0, mid_y, sz + ch / 2.0),
+             wt, length, ch)
+
     return objects
 
 
@@ -294,134 +427,174 @@ def generate_corridor_network(scale=1.0, crew_capacity=10, naming_prefix=''):
 
 def generate_crew_quarters(scale=1.0, bunks=4, naming_prefix=''):
     """
-    Generate crew quarters with bunks
-    
+    Generate crew quarters as an enclosed room with stacked bunk beds.
+
     Args:
         scale: Ship scale factor
         bunks: Number of bunks to create
         naming_prefix: Project naming prefix
     """
     objects = []
-    
-    # Room floor
+
     room_width = max(3.0, bunks * 0.8)
     room_depth = 4.0
-    
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(scale * 0.3, -scale * 0.3, -scale * 0.15)
-    )
-    floor = bpy.context.active_object
-    floor.name = _prefixed_name(naming_prefix, "Quarters_Floor")
-    floor.scale = (room_width, room_depth, 0.05)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(floor)
-    
-    # Create bunks
-    bunk_spacing = room_width / bunks if bunks > 0 else 1.0
+    room_h = ROOM_HEIGHT
+    pos = (scale * 0.3, -scale * 0.3, -scale * 0.15)
+
+    objects.extend(_create_enclosed_room(
+        "Quarters", room_width, room_depth, room_h, pos,
+        naming_prefix, door_wall='north'))
+
+    px, py, pz = pos
+
+    # Create stacked bunk beds along the walls
+    bunk_spacing = room_width / max(bunks, 1)
     for i in range(bunks):
-        x_pos = scale * 0.3 - room_width / 2 + (i + 0.5) * bunk_spacing
+        x_pos = px - room_width / 2 + (i + 0.5) * bunk_spacing
+        # Lower bunk
         bpy.ops.mesh.primitive_cube_add(
             size=1,
-            location=(x_pos, -scale * 0.3 + room_depth / 2 - 0.5, -scale * 0.1)
-        )
-        bunk = bpy.context.active_object
-        bunk.name = _prefixed_name(naming_prefix, f"Bunk_{i+1}")
-        bunk.scale = (0.8, 2.0, 0.3)
+            location=(x_pos, py + room_depth * 0.25, pz + 0.25))
+        lower = bpy.context.active_object
+        lower.name = _prefixed_name(naming_prefix, f"Bunk_Lower_{i+1}")
+        lower.scale = (0.75, 1.9, 0.1)
         bpy.ops.object.transform_apply(scale=True)
-        objects.append(bunk)
-    
+        objects.append(lower)
+
+        # Upper bunk
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(x_pos, py + room_depth * 0.25, pz + 1.35))
+        upper = bpy.context.active_object
+        upper.name = _prefixed_name(naming_prefix, f"Bunk_Upper_{i+1}")
+        upper.scale = (0.75, 1.9, 0.1)
+        bpy.ops.object.transform_apply(scale=True)
+        objects.append(upper)
+
+        # Vertical supports for each bunk frame
+        for sx_off in (-0.32, 0.32):
+            bpy.ops.mesh.primitive_cube_add(
+                size=1,
+                location=(x_pos + sx_off, py + room_depth * 0.25, pz + 0.8))
+            post = bpy.context.active_object
+            post.name = _prefixed_name(naming_prefix, f"Bunk_Post_{i+1}")
+            post.scale = (0.04, 0.04, 1.2)
+            bpy.ops.object.transform_apply(scale=True)
+            objects.append(post)
+
     return objects
 
 
 def generate_cargo_bay(scale=1.0, naming_prefix=''):
     """
-    Generate cargo bay area
-    
+    Generate cargo bay area as a large enclosed room with cargo containers.
+
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
     """
     objects = []
-    
-    # Large open area for cargo
+
     bay_width = scale * 0.5
     bay_depth = scale * 0.4
     bay_height = ROOM_HEIGHT * 1.5
-    
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(0, -scale * 0.5, -scale * 0.15)
-    )
-    floor = bpy.context.active_object
-    floor.name = _prefixed_name(naming_prefix, "Cargo_Bay_Floor")
-    floor.scale = (bay_width, bay_depth, 0.1)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(floor)
-    
-    # Add cargo containers
-    for i in range(3):
-        for j in range(2):
-            x_pos = -bay_width / 3 + i * bay_width / 3
-            y_pos = -scale * 0.5 - bay_depth / 4 + j * bay_depth / 2
+    pos = (0, -scale * 0.5, -scale * 0.15)
+
+    objects.extend(_create_enclosed_room(
+        "Cargo_Bay", bay_width, bay_depth, bay_height, pos,
+        naming_prefix, door_wall='north'))
+
+    px, py, pz = pos
+
+    # Cargo containers — stacked crates
+    container_w = 0.7
+    container_d = 0.7
+    container_h = 0.9
+    cols = 3
+    rows = 2
+    x_start = px - (cols - 1) * container_w * 0.6
+    y_start = py - bay_depth * 0.25
+
+    for i in range(cols):
+        for j in range(rows):
+            cx = x_start + i * container_w * 1.2
+            cy = y_start + j * container_d * 1.2
             bpy.ops.mesh.primitive_cube_add(
                 size=1,
-                location=(x_pos, y_pos, -scale * 0.1)
-            )
-            container = bpy.context.active_object
-            container.name = _prefixed_name(naming_prefix, f"Cargo_Container_{i}_{j}")
-            container.scale = (0.8, 0.8, 1.0)
+                location=(cx, cy, pz + container_h * 0.5 + _WALL_THICKNESS))
+            crate = bpy.context.active_object
+            crate.name = _prefixed_name(naming_prefix,
+                                        f"Cargo_Container_{i}_{j}")
+            crate.scale = (container_w, container_d, container_h)
             bpy.ops.object.transform_apply(scale=True)
-            objects.append(container)
-    
+            objects.append(crate)
+
     return objects
 
 
 def generate_engine_room(scale=1.0, naming_prefix=''):
     """
-    Generate engine room with machinery
-    
+    Generate engine room as an enclosed room with reactor cylinder and
+    pipe details.
+
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
     """
     objects = []
-    
-    # Engine room floor
+
     room_width = scale * 0.4
     room_depth = scale * 0.3
-    
-    bpy.ops.mesh.primitive_cube_add(
-        size=1,
-        location=(0, -scale * 0.8, -scale * 0.15)
-    )
-    floor = bpy.context.active_object
-    floor.name = _prefixed_name(naming_prefix, "Engine_Room_Floor")
-    floor.scale = (room_width, room_depth, 0.05)
-    bpy.ops.object.transform_apply(scale=True)
-    objects.append(floor)
-    
-    # Reactor core (central)
+    room_h = ROOM_HEIGHT
+    pos = (0, -scale * 0.8, -scale * 0.15)
+
+    objects.extend(_create_enclosed_room(
+        "Engine_Room", room_width, room_depth, room_h, pos,
+        naming_prefix, door_wall='north'))
+
+    px, py, pz = pos
+
+    # Reactor core — central glowing cylinder
+    core_radius = min(room_width, room_depth) * 0.22
+    core_height = room_h * 0.8
+    core_pos = (px, py, pz + core_height / 2.0 + _WALL_THICKNESS)
     bpy.ops.mesh.primitive_cylinder_add(
-        radius=scale * 0.1,
-        depth=ROOM_HEIGHT,
-        location=(0, -scale * 0.8, -scale * 0.15 + ROOM_HEIGHT / 2)
-    )
+        radius=core_radius,
+        depth=core_height,
+        location=core_pos)
     core = bpy.context.active_object
     core.name = _prefixed_name(naming_prefix, "Reactor_Core")
     objects.append(core)
-    
-    # Add glowing material to core
+
+    # Glowing material for core
     mat = bpy.data.materials.new(name="Reactor_Glow")
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
     emission = nodes.new(type='ShaderNodeEmission')
-    emission.inputs['Color'].default_value = (0.8, 0.3, 0.1, 1.0)  # Orange glow
+    emission.inputs['Color'].default_value = (0.8, 0.3, 0.1, 1.0)
     emission.inputs['Strength'].default_value = 3.0
     output = nodes.get('Material Output')
-    mat.node_tree.links.new(emission.outputs['Emission'], output.inputs['Surface'])
+    mat.node_tree.links.new(emission.outputs['Emission'],
+                            output.inputs['Surface'])
     core.data.materials.append(mat)
-    
+
+    # Pipe details — horizontal cylinders running along walls
+    pipe_r = 0.04
+    for side in (-1, 1):
+        for h_frac in (0.3, 0.6):
+            pipe_y = py
+            pipe_x = px + side * room_width * 0.42
+            pipe_z = pz + room_h * h_frac
+            bpy.ops.mesh.primitive_cylinder_add(
+                radius=pipe_r,
+                depth=room_depth * 0.8,
+                location=(pipe_x, pipe_y, pipe_z))
+            pipe = bpy.context.active_object
+            pipe.name = _prefixed_name(naming_prefix, "Eng_Pipe")
+            pipe.rotation_euler = (math.radians(90), 0, 0)
+            bpy.ops.object.transform_apply(rotation=True)
+            objects.append(pipe)
+
     return objects
 
 
