@@ -224,7 +224,7 @@ While not implemented in this initial version, the architecture supports:
 6. ~~LOD system (performance)~~ ✓ Implemented (LOD0/LOD1/LOD2 tiers in metadata)
 7. ~~Export presets (game engines)~~ ✓ Implemented (OBJ export for Atlas)
 8. ~~Preset library (save/load)~~ ✓ Implemented (JSON-based preset save/load/delete)
-9. Advanced interiors (furniture)
+9. ~~Advanced interiors (furniture)~~ ✓ Implemented (7 furniture types: chair, table, console, locker, bed, monitor, workbench; room-type-aware placement across 12 room types)
 10. ~~Physics support (collision meshes)~~ ✓ Implemented (box, convex hull, multi-convex)
 11. ~~PCG pipeline integration~~ ✓ Implemented (universe → galaxy → system → planet → station → ship → character)
 12. ~~CLI batch generation~~ ✓ Implemented (`python -m pcg_pipeline`)

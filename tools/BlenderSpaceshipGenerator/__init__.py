@@ -60,6 +60,7 @@ _submodule_names = [
     "lighting_system",
     "greeble_system",
     "preset_library",
+    "furniture_system",
 ]
 
 _submodules: dict = {}
@@ -384,6 +385,12 @@ class SpaceshipGeneratorProperties(bpy.types.PropertyGroup):
         max=1.0
     )
 
+    generate_furniture: BoolProperty(
+        name="Generate Furniture",
+        description="Place room-appropriate furniture inside interior spaces",
+        default=False
+    )
+
     preset_name: StringProperty(
         name="Preset Name",
         description="Name for saving or loading a generation preset",
@@ -509,6 +516,20 @@ class SPACESHIP_OT_generate(bpy.types.Operator):
                     hull,
                     seed=props.seed,
                     density=props.greeble_density,
+                    naming_prefix=props.naming_prefix,
+                )
+
+        # Place interior furniture if requested
+        if props.generate_furniture and props.generate_interior:
+            furn = _get_mod("furniture_system")
+            if furn is None:
+                self.report({'WARNING'}, "furniture_system not loaded, skipping furniture")
+            else:
+                scale = sg.SHIP_CONFIGS.get(props.ship_class, {}).get('scale', 1.0)
+                furn.populate_ship_furniture(
+                    hull,
+                    scale=scale,
+                    seed=props.seed,
                     naming_prefix=props.naming_prefix,
                 )
 
@@ -1128,6 +1149,7 @@ class SPACESHIP_PT_main_panel(bpy.types.Panel):
         layout.prop(props, "generate_animations")
         layout.prop(props, "generate_lighting")
         layout.prop(props, "greeble_density")
+        layout.prop(props, "generate_furniture")
 
         layout.separator()
         layout.label(text="Presets:")

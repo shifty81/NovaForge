@@ -51,6 +51,7 @@ PRESET_KEYS = [
     'generate_animations',
     'generate_lighting',
     'greeble_density',
+    'generate_furniture',
 ]
 
 
