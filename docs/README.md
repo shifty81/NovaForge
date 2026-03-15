@@ -43,6 +43,7 @@ Feature documentation, new systems, and capabilities.
 - [**NEW_FEATURES.md**](features/NEW_FEATURES.md) - Complete feature documentation
 - [**FEATURE_IMPLEMENTATION_SUMMARY.md**](features/FEATURE_IMPLEMENTATION_SUMMARY.md) - Summary of implemented features
 - [**VISUAL_CAPABILITIES.md**](features/VISUAL_CAPABILITIES.md) - GUI/visual documentation
+- [**CREATOR_EDIT_MODE.md**](features/CREATOR_EDIT_MODE.md) - In-game Creator Edit Mode (F12) spec, controls, persistence, and implementation roadmap
 
 ### 🖥️ [C++ Client](cpp_client/)
 Client-specific documentation and setup guides.

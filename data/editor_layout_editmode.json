@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "mode": "creator_edit",
+  "description": "Default Creator Edit Mode dock layout. Left 22% SceneGraph/DataBrowser, Right 26% AssetPalette/LiveSceneManager, Bottom 22% PCGPreview/GenerationStyle/AssetStyle, Centre is the live game view. Regenerate via Layout > Reset Edit Layout.",
+  "docks": {
+    "left": {
+      "ratio": 0.22,
+      "tabs": ["SceneGraphPanel", "DataBrowserPanel"],
+      "active": 0
+    },
+    "right": {
+      "ratio": 0.26,
+      "tabs": ["AssetPalettePanel", "LiveSceneManager"],
+      "active": 0
+    },
+    "bottom": {
+      "ratio": 0.22,
+      "tabs": ["PCGPreviewPanel", "GenerationStylePanel", "AssetStylePanel"],
+      "active": 0
+    },
+    "center": {
+      "tabs": [],
+      "active": -1,
+      "_note": "Live game view. If DockNode requires a panel, insert SpacerPanel here."
+    }
+  }
+}
