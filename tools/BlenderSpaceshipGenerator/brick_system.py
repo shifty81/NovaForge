@@ -312,6 +312,22 @@ def snap_to_grid(position, grid_size):
     return tuple(round(v / grid_size) * grid_size for v in position)
 
 
+def snap_to_grid_half(position, grid_size):
+    """Snap a 3-tuple *position* to the nearest half-cell centre.
+
+    Grid cells are centred at ``grid_size/2, 3*grid_size/2, 5*grid_size/2, …``
+    (i.e. the grid *starts* at ``grid_size * 0.5`` rather than 0).  This
+    places every part at the centre of a grid cell rather than at a corner,
+    giving a clean modular layout and higher visual detail.
+
+    Example (grid_size = 1.0):
+        snap_to_grid_half((0.35, 0.18, -0.45), 1.0)
+        → (0.5, 0.5, -0.5)
+    """
+    half = grid_size * 0.5
+    return tuple(round((v - half) / grid_size) * grid_size + half for v in position)
+
+
 def validate_snap(brick_type_name, position, grid_size):
     """Return ``True`` if *position* is aligned to the grid."""
     snapped = snap_to_grid(position, grid_size)

@@ -14,6 +14,7 @@ type string to produce the appropriate room geometry.
 import bpy
 import random
 import math
+from . import brick_system
 
 
 # Standard human scale for FPV (in Blender units, approximately meters)
@@ -187,7 +188,8 @@ def _create_enclosed_room(name, width, depth, height, position,
     return objects
 
 
-def generate_interior(ship_class='FIGHTER', scale=1.0, crew_capacity=1, naming_prefix=''):
+def generate_interior(ship_class='FIGHTER', scale=1.0, crew_capacity=1, naming_prefix='',
+                      grid_size=1.0):
     """
     Generate complete interior for a ship
     
@@ -196,6 +198,7 @@ def generate_interior(ship_class='FIGHTER', scale=1.0, crew_capacity=1, naming_p
         scale: Ship scale factor
         crew_capacity: Number of crew members
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     
     Returns:
         List of interior objects
@@ -208,24 +211,37 @@ def generate_interior(ship_class='FIGHTER', scale=1.0, crew_capacity=1, naming_p
     # Determine interior layout based on ship class
     if ship_class in ['SHUTTLE', 'FIGHTER']:
         # Small ships: Simple cockpit area
-        interior_objects.extend(generate_cockpit_interior(scale, naming_prefix=naming_prefix))
+        interior_objects.extend(generate_cockpit_interior(scale, naming_prefix=naming_prefix,
+                                                          grid_size=grid_size))
     elif ship_class in ['CORVETTE', 'FRIGATE']:
         # Medium ships: Cockpit + small crew area
-        interior_objects.extend(generate_cockpit_interior(scale, naming_prefix=naming_prefix))
-        interior_objects.extend(generate_corridor(scale, length=scale * 0.5, naming_prefix=naming_prefix))
-        interior_objects.extend(generate_crew_quarters(scale, bunks=crew_capacity, naming_prefix=naming_prefix))
+        interior_objects.extend(generate_cockpit_interior(scale, naming_prefix=naming_prefix,
+                                                          grid_size=grid_size))
+        interior_objects.extend(generate_corridor(scale, length=scale * 0.5,
+                                                  naming_prefix=naming_prefix,
+                                                  grid_size=grid_size))
+        interior_objects.extend(generate_crew_quarters(scale, bunks=crew_capacity,
+                                                       naming_prefix=naming_prefix,
+                                                       grid_size=grid_size))
     else:
         # Large ships: Full interior with multiple rooms
-        interior_objects.extend(generate_bridge(scale, naming_prefix=naming_prefix))
-        interior_objects.extend(generate_corridor_network(scale, crew_capacity, naming_prefix=naming_prefix))
-        interior_objects.extend(generate_crew_quarters(scale, bunks=crew_capacity, naming_prefix=naming_prefix))
-        interior_objects.extend(generate_cargo_bay(scale, naming_prefix=naming_prefix))
-        interior_objects.extend(generate_engine_room(scale, naming_prefix=naming_prefix))
+        interior_objects.extend(generate_bridge(scale, naming_prefix=naming_prefix,
+                                                grid_size=grid_size))
+        interior_objects.extend(generate_corridor_network(scale, crew_capacity,
+                                                          naming_prefix=naming_prefix,
+                                                          grid_size=grid_size))
+        interior_objects.extend(generate_crew_quarters(scale, bunks=crew_capacity,
+                                                       naming_prefix=naming_prefix,
+                                                       grid_size=grid_size))
+        interior_objects.extend(generate_cargo_bay(scale, naming_prefix=naming_prefix,
+                                                   grid_size=grid_size))
+        interior_objects.extend(generate_engine_room(scale, naming_prefix=naming_prefix,
+                                                     grid_size=grid_size))
     
     return interior_objects
 
 
-def generate_cockpit_interior(scale=1.0, naming_prefix=''):
+def generate_cockpit_interior(scale=1.0, naming_prefix='', grid_size=1.0):
     """
     Generate cockpit/pilot area interior as an enclosed room with console
     and pilot seat.
@@ -233,13 +249,14 @@ def generate_cockpit_interior(scale=1.0, naming_prefix=''):
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     objects = []
 
     room_w = scale * 0.35
     room_d = scale * 0.25
     room_h = ROOM_HEIGHT * 0.85
-    pos = (0, scale * 0.7, -scale * 0.15)
+    pos = brick_system.snap_to_grid_half((0, scale * 0.25, -scale * 0.08), grid_size)
 
     # Enclosed room with angled front — use 'north' doorway as the
     # window/viewport opening
@@ -286,7 +303,7 @@ def generate_cockpit_interior(scale=1.0, naming_prefix=''):
     return objects
 
 
-def generate_bridge(scale=1.0, naming_prefix=''):
+def generate_bridge(scale=1.0, naming_prefix='', grid_size=1.0):
     """
     Generate bridge for large ships — an enclosed room with command chair,
     navigation console, and helm/ops stations.
@@ -294,13 +311,14 @@ def generate_bridge(scale=1.0, naming_prefix=''):
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     objects = []
 
     room_w = scale * 0.55
     room_d = scale * 0.4
     room_h = ROOM_HEIGHT
-    pos = (0, scale * 0.7, -scale * 0.15)
+    pos = brick_system.snap_to_grid_half((0, scale * 0.25, -scale * 0.08), grid_size)
 
     objects.extend(_create_enclosed_room(
         "Bridge", room_w, room_d, room_h, pos,
@@ -355,7 +373,8 @@ def generate_bridge(scale=1.0, naming_prefix=''):
     return objects
 
 
-def generate_corridor(scale=1.0, length=5.0, start_pos=(0, 0, 0), naming_prefix=''):
+def generate_corridor(scale=1.0, length=5.0, start_pos=(0, 0, 0), naming_prefix='',
+                      grid_size=1.0):
     """
     Generate a corridor segment as a proper rectangular tube with floor,
     ceiling, and two side walls.
@@ -363,11 +382,13 @@ def generate_corridor(scale=1.0, length=5.0, start_pos=(0, 0, 0), naming_prefix=
     Args:
         scale: Ship scale factor
         length: Length of corridor
-        start_pos: Starting position
+        start_pos: Nominal starting position; snapped to the nearest
+            half-cell grid centre inside this function.
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     objects = []
-    sx, sy, sz = start_pos
+    sx, sy, sz = brick_system.snap_to_grid_half(start_pos, grid_size)
     wt = _WALL_THICKNESS
     cw = CORRIDOR_WIDTH
     ch = CORRIDOR_HEIGHT
@@ -400,7 +421,7 @@ def generate_corridor(scale=1.0, length=5.0, start_pos=(0, 0, 0), naming_prefix=
     return objects
 
 
-def generate_corridor_network(scale=1.0, crew_capacity=10, naming_prefix=''):
+def generate_corridor_network(scale=1.0, crew_capacity=10, naming_prefix='', grid_size=1.0):
     """
     Generate network of corridors connecting ship areas
     
@@ -408,24 +429,30 @@ def generate_corridor_network(scale=1.0, crew_capacity=10, naming_prefix=''):
         scale: Ship scale factor
         crew_capacity: Number of crew (affects corridor count)
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     objects = []
     
     # Main corridor running along ship center
     main_length = scale * 0.6
-    objects.extend(generate_corridor(scale, main_length, (0, 0, -scale * 0.15), naming_prefix=naming_prefix))
-    
+    objects.extend(generate_corridor(scale, main_length, (0, 0, -scale * 0.15),
+                                     naming_prefix=naming_prefix, grid_size=grid_size))
+
     # Add side corridors for larger ships
     if crew_capacity > 20:
         # Side corridors
         side_length = scale * 0.3
-        objects.extend(generate_corridor(scale, side_length, (CORRIDOR_WIDTH, scale * 0.2, -scale * 0.15), naming_prefix=naming_prefix))
-        objects.extend(generate_corridor(scale, side_length, (-CORRIDOR_WIDTH, scale * 0.2, -scale * 0.15), naming_prefix=naming_prefix))
-    
+        objects.extend(generate_corridor(scale, side_length,
+                                         (CORRIDOR_WIDTH, scale * 0.2, -scale * 0.15),
+                                         naming_prefix=naming_prefix, grid_size=grid_size))
+        objects.extend(generate_corridor(scale, side_length,
+                                         (-CORRIDOR_WIDTH, scale * 0.2, -scale * 0.15),
+                                         naming_prefix=naming_prefix, grid_size=grid_size))
+
     return objects
 
 
-def generate_crew_quarters(scale=1.0, bunks=4, naming_prefix=''):
+def generate_crew_quarters(scale=1.0, bunks=4, naming_prefix='', grid_size=1.0):
     """
     Generate crew quarters as an enclosed room with stacked bunk beds.
 
@@ -433,13 +460,14 @@ def generate_crew_quarters(scale=1.0, bunks=4, naming_prefix=''):
         scale: Ship scale factor
         bunks: Number of bunks to create
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     objects = []
 
     room_width = max(3.0, bunks * 0.8)
     room_depth = 4.0
     room_h = ROOM_HEIGHT
-    pos = (scale * 0.3, -scale * 0.3, -scale * 0.15)
+    pos = brick_system.snap_to_grid_half((scale * 0.15, -scale * 0.2, -scale * 0.08), grid_size)
 
     objects.extend(_create_enclosed_room(
         "Quarters", room_width, room_depth, room_h, pos,
@@ -485,20 +513,21 @@ def generate_crew_quarters(scale=1.0, bunks=4, naming_prefix=''):
     return objects
 
 
-def generate_cargo_bay(scale=1.0, naming_prefix=''):
+def generate_cargo_bay(scale=1.0, naming_prefix='', grid_size=1.0):
     """
     Generate cargo bay area as a large enclosed room with cargo containers.
 
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     objects = []
 
     bay_width = scale * 0.5
     bay_depth = scale * 0.4
     bay_height = ROOM_HEIGHT * 1.5
-    pos = (0, -scale * 0.5, -scale * 0.15)
+    pos = brick_system.snap_to_grid_half((0, -scale * 0.2, -scale * 0.08), grid_size)
 
     objects.extend(_create_enclosed_room(
         "Cargo_Bay", bay_width, bay_depth, bay_height, pos,
@@ -534,7 +563,7 @@ def generate_cargo_bay(scale=1.0, naming_prefix=''):
     return objects
 
 
-def generate_engine_room(scale=1.0, naming_prefix=''):
+def generate_engine_room(scale=1.0, naming_prefix='', grid_size=1.0):
     """
     Generate engine room as an enclosed room with reactor cylinder and
     pipe details.
@@ -542,13 +571,14 @@ def generate_engine_room(scale=1.0, naming_prefix=''):
     Args:
         scale: Ship scale factor
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     objects = []
 
     room_width = scale * 0.4
     room_depth = scale * 0.3
     room_h = ROOM_HEIGHT
-    pos = (0, -scale * 0.8, -scale * 0.15)
+    pos = brick_system.snap_to_grid_half((0, -scale * 0.3, -scale * 0.08), grid_size)
 
     objects.extend(_create_enclosed_room(
         "Engine_Room", room_width, room_depth, room_h, pos,
@@ -627,7 +657,7 @@ def generate_doorway(position=(0, 0, 0), rotation=(0, 0, 0), naming_prefix=''):
 # ---------------------------------------------------------------------------
 
 
-def generate_module_rooms(fitted_module_types, scale=1.0, naming_prefix=''):
+def generate_module_rooms(fitted_module_types, scale=1.0, naming_prefix='', grid_size=1.0):
     """Generate interior rooms for every unique fitted module type.
 
     Args:
@@ -635,6 +665,7 @@ def generate_module_rooms(fitted_module_types, scale=1.0, naming_prefix=''):
             (e.g. ``['WEAPON', 'SHIELD']``).
         scale: Ship scale factor.
         naming_prefix: Project naming prefix.
+        grid_size: Snap grid cell size from brick_system.
 
     Returns:
         List of Blender objects comprising all generated rooms.
@@ -645,13 +676,14 @@ def generate_module_rooms(fitted_module_types, scale=1.0, naming_prefix=''):
         room_objects = generate_module_room(
             module_type, scale, idx, len(type_list),
             naming_prefix=naming_prefix,
+            grid_size=grid_size,
         )
         all_objects.extend(room_objects)
     return all_objects
 
 
 def generate_module_room(module_type, scale=1.0, index=0, total=1,
-                         naming_prefix=''):
+                         naming_prefix='', grid_size=1.0):
     """Generate a single interior room for *module_type*.
 
     The room is placed along the port (negative-X) side of the ship so it
@@ -664,6 +696,7 @@ def generate_module_room(module_type, scale=1.0, index=0, total=1,
         index: Room index (for positioning among peers).
         total: Total number of module rooms being generated.
         naming_prefix: Project naming prefix.
+        grid_size: Snap grid cell size from brick_system.
 
     Returns:
         List of Blender objects for the room.
@@ -680,7 +713,7 @@ def generate_module_room(module_type, scale=1.0, index=0, total=1,
     y_pos = -y_spread / 2 + (index + 0.5) * y_spread / max(total, 1)
     x_pos = -scale * 0.3  # port side
 
-    base_pos = (x_pos, y_pos, -scale * 0.15)
+    base_pos = brick_system.snap_to_grid_half((x_pos, y_pos, -scale * 0.15), grid_size)
     room_name = room_info['room_name']
 
     # Dispatch to specialised room builders

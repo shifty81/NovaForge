@@ -10,6 +10,7 @@ such as antenna arrays, armor plating, and weapon ports are added).
 import bpy
 import random
 import math
+from . import brick_system
 
 
 # Module types
@@ -96,7 +97,8 @@ def _prefixed_name(prefix, name):
     return name
 
 
-def generate_modules(count=2, scale=1.0, ship_class='FIGHTER', naming_prefix=''):
+def generate_modules(count=2, scale=1.0, ship_class='FIGHTER', naming_prefix='',
+                     grid_size=1.0):
     """
     Generate module attachments for the ship
     
@@ -105,6 +107,7 @@ def generate_modules(count=2, scale=1.0, ship_class='FIGHTER', naming_prefix='')
         scale: Ship scale factor
         ship_class: Type of ship (affects module types)
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     
     Returns:
         List of module objects
@@ -117,7 +120,8 @@ def generate_modules(count=2, scale=1.0, ship_class='FIGHTER', naming_prefix='')
     # Generate modules
     for i in range(count):
         module_type = random.choice(available_types)
-        module = create_module(module_type, scale, i, naming_prefix=naming_prefix)
+        module = create_module(module_type, scale, i, naming_prefix=naming_prefix,
+                               grid_size=grid_size)
         modules.append(module)
     
     return modules
@@ -144,7 +148,7 @@ def get_available_modules(ship_class):
         return list(MODULE_TYPES.keys())
 
 
-def create_module(module_type, scale=1.0, index=0, naming_prefix=''):
+def create_module(module_type, scale=1.0, index=0, naming_prefix='', grid_size=1.0):
     """
     Create a single module
     
@@ -153,22 +157,27 @@ def create_module(module_type, scale=1.0, index=0, naming_prefix=''):
         scale: Ship scale factor
         index: Module index for positioning
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     
     Returns:
         Module object
     """
     config = MODULE_TYPES[module_type]
-    module_scale = scale * config['scale_factor']
+    # Module visual size: scale_factor (0.5–1.5) × 0.15 × ship scale.
+    # This keeps modules in the equipment-detail range (~7–22 % of ship
+    # scale) so they sit as surface fittings rather than hull-sized structures.
+    module_scale = scale * config['scale_factor'] * 0.15
     module_name = _prefixed_name(naming_prefix, config['name'])
-    
-    # Calculate position (distributed along ship)
-    angle = (index / 4) * 2 * math.pi  # Distribute around ship
-    radius = scale * 0.4
-    x_pos = radius * math.cos(angle)
-    z_pos = radius * math.sin(angle)
-    y_pos = (index - 1) * scale * 0.3  # Spread along length
-    
-    position = (x_pos, y_pos, z_pos)
+
+    # Place modules along the dorsal (top) surface of the hull.
+    # Hull half-height ≈ scale*0.15; offset slightly above surface.
+    # Distribute along Y so modules don't overlap.
+    y_pos = (index - 0.5) * scale * 0.25
+    x_pos = 0.0
+    z_pos = scale * 0.16  # just above hull top
+
+    # Snap to half-cell grid centres for modular alignment
+    position = brick_system.snap_to_grid_half((x_pos, y_pos, z_pos), grid_size)
     
     # Create module based on shape
     if config['shape'] == 'box':

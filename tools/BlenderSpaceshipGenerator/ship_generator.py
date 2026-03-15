@@ -266,10 +266,11 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
     # ------------------------------------------------------------------
     cockpit = ship_parts.generate_cockpit(
         scale=scale,
-        position=(0, scale * 0.8, 0),
+        position=(0, scale * 0.35, scale * 0.12),
         ship_class=ship_class,
         style=style,
-        naming_prefix=naming_prefix
+        naming_prefix=naming_prefix,
+        grid_size=grid_size,
     )
     collection.objects.link(cockpit)
     placed_bricks.append({'type': 'REACTOR_CORE', 'pos': [0, scale * 0.8, 0]})
@@ -282,7 +283,8 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
             scale=scale,
             symmetry=symmetry,
             style=style,
-            naming_prefix=naming_prefix
+            naming_prefix=naming_prefix,
+            grid_size=grid_size,
         )
         for wing in wings:
             collection.objects.link(wing)
@@ -299,7 +301,8 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
         scale=scale,
         symmetry=symmetry,
         style=style,
-        naming_prefix=naming_prefix
+        naming_prefix=naming_prefix,
+        grid_size=grid_size,
     )
     for i, engine in enumerate(engines):
         collection.objects.link(engine)
@@ -318,7 +321,8 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
             count=config['weapons'],
             scale=scale,
             symmetry=symmetry,
-            naming_prefix=naming_prefix
+            naming_prefix=naming_prefix,
+            grid_size=grid_size,
         )
         for weapon in weapons:
             collection.objects.link(weapon)
@@ -334,7 +338,8 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
             count=turret_count,
             scale=scale,
             symmetry=symmetry,
-            naming_prefix=naming_prefix
+            naming_prefix=naming_prefix,
+            grid_size=grid_size,
         )
         for turret in turrets:
             collection.objects.link(turret)
@@ -353,7 +358,8 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
             count=module_slots,
             scale=scale,
             ship_class=ship_class,
-            naming_prefix=naming_prefix
+            naming_prefix=naming_prefix,
+            grid_size=grid_size,
         )
         for module in modules:
             collection.objects.link(module)
@@ -381,7 +387,8 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
             ship_class=ship_class,
             scale=scale,
             crew_capacity=config['crew_capacity'],
-            naming_prefix=naming_prefix
+            naming_prefix=naming_prefix,
+            grid_size=grid_size,
         )
         for obj in interior_objects:
             collection.objects.link(obj)
@@ -390,6 +397,7 @@ def generate_spaceship(ship_class='FIGHTER', seed=1, generate_interior=True,
         if fitted_types:
             module_rooms = interior_generator.generate_module_rooms(
                 fitted_types, scale=scale, naming_prefix=naming_prefix,
+                grid_size=grid_size,
             )
             for obj in module_rooms:
                 collection.objects.link(obj)
