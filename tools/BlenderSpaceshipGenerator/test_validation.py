@@ -47,6 +47,7 @@ def test_addon_structure():
         'lighting_system.py',
         'greeble_system.py',
         'preset_library.py',
+        'furniture_system.py',
     ]
     
     all_exist = True
@@ -89,6 +90,7 @@ def test_file_syntax():
         'lighting_system.py',
         'greeble_system.py',
         'preset_library.py',
+        'furniture_system.py',
     ]
     
     all_valid = True
@@ -1375,6 +1377,100 @@ def test_preset_library():
     return all_valid
 
 
+def test_furniture_system():
+    """Test the furniture system module"""
+    print("\nTesting furniture system module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    fs_path = os.path.join(addon_path, 'furniture_system.py')
+
+    if not os.path.exists(fs_path):
+        print("✗ furniture_system.py not found")
+        return False
+
+    with open(fs_path, 'r') as f:
+        content = f.read()
+
+    # Check required constants
+    checks = {
+        'FURNITURE_TYPES': 'FURNITURE_TYPES constant',
+        'ROOM_FURNITURE_MAP': 'ROOM_FURNITURE_MAP constant',
+        'MAX_FURNITURE_ITEMS': 'MAX_FURNITURE_ITEMS constant',
+        'def populate_ship_furniture(': 'populate_ship_furniture function',
+        'def get_furniture_types(': 'get_furniture_types function',
+        'def get_room_furniture_map(': 'get_room_furniture_map function',
+        'def register()': 'register function',
+        'def unregister()': 'unregister function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    # Functional test — import module (no bpy dependency for data dicts)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("furniture_system", fs_path)
+    try:
+        # We can at least verify the module parses and constants are correct
+        tree = ast.parse(content)
+
+        # Extract FURNITURE_TYPES keys
+        furn_keys = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == 'FURNITURE_TYPES':
+                        if isinstance(node.value, ast.Dict):
+                            for k in node.value.keys:
+                                if isinstance(k, ast.Constant):
+                                    furn_keys.add(k.value)
+
+        expected_types = {'CHAIR', 'TABLE', 'CONSOLE', 'LOCKER', 'BED',
+                          'MONITOR', 'WORKBENCH'}
+        if furn_keys == expected_types:
+            print(f"✓ All {len(expected_types)} furniture types defined")
+        else:
+            missing = expected_types - furn_keys
+            extra = furn_keys - expected_types
+            if missing:
+                print(f"✗ Missing furniture types: {missing}")
+                all_valid = False
+            if extra:
+                print(f"  (extra types found: {extra})")
+
+        # Extract ROOM_FURNITURE_MAP keys
+        room_keys = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == 'ROOM_FURNITURE_MAP':
+                        if isinstance(node.value, ast.Dict):
+                            for k in node.value.keys:
+                                if isinstance(k, ast.Constant):
+                                    room_keys.add(k.value)
+
+        expected_rooms = {'cockpit', 'bridge', 'corridor', 'quarters', 'cargo',
+                          'engine', 'reactor', 'hangar', 'weapon', 'sensor',
+                          'power', 'shield'}
+        if room_keys == expected_rooms:
+            print(f"✓ All {len(expected_rooms)} room mappings defined")
+        else:
+            missing = expected_rooms - room_keys
+            if missing:
+                print(f"✗ Missing room mappings: {missing}")
+                all_valid = False
+
+    except SyntaxError as e:
+        print(f"✗ Syntax error in furniture_system.py: {e}")
+        all_valid = False
+
+    return all_valid
+
+
 def run_tests():
     """Run all validation tests"""
     print("=" * 60)
@@ -1412,6 +1508,7 @@ def run_tests():
         ("Lighting System", test_lighting_system),
         ("Greeble System", test_greeble_system),
         ("Preset Library", test_preset_library),
+        ("Furniture System", test_furniture_system),
     ]
     
     results = []
