@@ -248,7 +248,7 @@ def apply_nms_style(hull, scale):
 
 
 def generate_cockpit(scale=1.0, position=(0, 0, 0), ship_class='FIGHTER', style='MIXED',
-                     naming_prefix=''):
+                     naming_prefix='', grid_size=1.0):
     """
     Generate cockpit/bridge dome canopy for the ship.
 
@@ -257,12 +257,17 @@ def generate_cockpit(scale=1.0, position=(0, 0, 0), ship_class='FIGHTER', style=
 
     Args:
         scale: Ship scale factor
-        position: Position relative to hull
+        position: Nominal position relative to hull; snapped to the nearest
+            half-cell grid centre inside this function.
         ship_class: Type of ship
         style: Design style
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     dome_radius = scale * 0.15
+
+    # Snap cockpit origin to the nearest half-cell centre for grid alignment
+    position = brick_system.snap_to_grid_half(position, grid_size)
 
     # Build dome from a UV sphere, keeping only the upper hemisphere
     mesh = bpy.data.meshes.new(_prefixed_name(naming_prefix, "Cockpit_Mesh"))
@@ -314,7 +319,8 @@ def generate_cockpit(scale=1.0, position=(0, 0, 0), ship_class='FIGHTER', style=
     return cockpit
 
 
-def generate_engines(count=2, scale=1.0, symmetry=True, style='MIXED', naming_prefix=''):
+def generate_engines(count=2, scale=1.0, symmetry=True, style='MIXED', naming_prefix='',
+                     grid_size=1.0):
     """
     Generate engine units with archetype-based variation.
 
@@ -328,6 +334,7 @@ def generate_engines(count=2, scale=1.0, symmetry=True, style='MIXED', naming_pr
         symmetry: Use symmetrical placement
         style: Design style
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     engines = []
     base_engine_size = scale * 0.2
@@ -352,11 +359,15 @@ def generate_engines(count=2, scale=1.0, symmetry=True, style='MIXED', naming_pr
             engine_size = base_engine_size * arch['radius_factor']
             depth = engine_size * 2 * random.uniform(*arch['depth_range'])
 
+            # Snap engine positions to half-cell grid centres
+            left_pos = brick_system.snap_to_grid_half((offset, rear_position, 0), grid_size)
+            right_pos = brick_system.snap_to_grid_half((-offset, rear_position, 0), grid_size)
+
             # Left engine
             bpy.ops.mesh.primitive_cylinder_add(
                 radius=engine_size,
                 depth=depth,
-                location=(offset, rear_position, 0)
+                location=left_pos
             )
             left_engine = bpy.context.active_object
             left_engine.name = _prefixed_name(naming_prefix, f"Engine_L{i+1}")
@@ -372,7 +383,7 @@ def generate_engines(count=2, scale=1.0, symmetry=True, style='MIXED', naming_pr
             bpy.ops.mesh.primitive_cylinder_add(
                 radius=engine_size,
                 depth=depth,
-                location=(-offset, rear_position, 0)
+                location=right_pos
             )
             right_engine = bpy.context.active_object
             right_engine.name = _prefixed_name(naming_prefix, f"Engine_R{i+1}")
@@ -392,10 +403,13 @@ def generate_engines(count=2, scale=1.0, symmetry=True, style='MIXED', naming_pr
             engine_size = base_engine_size * arch['radius_factor']
             depth = engine_size * 2 * random.uniform(*arch['depth_range'])
 
+            # Snap engine position to half-cell grid centre
+            eng_pos = brick_system.snap_to_grid_half((x_offset, rear_position, 0), grid_size)
+
             bpy.ops.mesh.primitive_cylinder_add(
                 radius=engine_size,
                 depth=depth,
-                location=(x_offset, rear_position, 0)
+                location=eng_pos
             )
             engine = bpy.context.active_object
             engine.name = _prefixed_name(naming_prefix, f"Engine_{i+1}")
@@ -443,7 +457,8 @@ def _add_nozzle_flare(engine_obj, engine_size, naming_prefix=''):
     flare.parent = engine_obj
 
 
-def generate_wings(scale=1.0, symmetry=True, style='MIXED', naming_prefix=''):
+def generate_wings(scale=1.0, symmetry=True, style='MIXED', naming_prefix='',
+                   grid_size=1.0):
     """
     Generate swept-back wing structures with airfoil-like taper.
 
@@ -455,6 +470,7 @@ def generate_wings(scale=1.0, symmetry=True, style='MIXED', naming_prefix=''):
         symmetry: Use symmetrical design
         style: Design style
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     wings = []
     span = scale * 0.8
@@ -524,21 +540,23 @@ def generate_wings(scale=1.0, symmetry=True, style='MIXED', naming_prefix=''):
 
     right_wing = _build_wing(
         _prefixed_name(naming_prefix, "Wing_Right"), 1)
-    # Offset so the wing root sits at the hull edge (+X half-width)
-    right_wing.location.x = scale * 0.25
+    # Offset so the wing root sits at the hull edge (+X half-width), snapped to grid
+    raw_x = scale * 0.25
+    right_wing.location.x = brick_system.snap_to_grid_half((raw_x, 0, 0), grid_size)[0]
     wings.append(right_wing)
 
     if symmetry:
         left_wing = _build_wing(
             _prefixed_name(naming_prefix, "Wing_Left"), -1)
         # Mirror offset so the left-wing root sits at the hull edge (-X half-width)
-        left_wing.location.x = -scale * 0.25
+        left_wing.location.x = -brick_system.snap_to_grid_half((raw_x, 0, 0), grid_size)[0]
         wings.append(left_wing)
 
     return wings
 
 
-def generate_weapon_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix=''):
+def generate_weapon_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix='',
+                               grid_size=1.0):
     """
     Generate weapon hardpoint markers
     
@@ -547,25 +565,28 @@ def generate_weapon_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix=
         scale: Ship scale factor
         symmetry: Use symmetrical placement
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
     """
     hardpoints = []
     hardpoint_size = scale * 0.1
-    
+
     positions = []
     if symmetry and count % 2 == 0:
-        # Symmetric placement
+        # Symmetric placement — snap each pair to grid half-centres
         for i in range(count // 2):
             y_pos = scale * 0.3 + (i * scale * 0.2)
             x_offset = scale * 0.3 + (i * scale * 0.1)
-            positions.append((x_offset, y_pos, -scale * 0.1))
-            positions.append((-x_offset, y_pos, -scale * 0.1))
+            pos_r = brick_system.snap_to_grid_half((x_offset, y_pos, -scale * 0.1), grid_size)
+            pos_l = brick_system.snap_to_grid_half((-x_offset, y_pos, -scale * 0.1), grid_size)
+            positions.append(pos_r)
+            positions.append(pos_l)
     else:
-        # Non-symmetric
+        # Non-symmetric — snap each position to grid half-centre
         for i in range(count):
             y_pos = scale * 0.3 + (i * scale * 0.2)
             x_pos = (i - count / 2) * scale * 0.2
-            positions.append((x_pos, y_pos, -scale * 0.1))
-    
+            positions.append(brick_system.snap_to_grid_half((x_pos, y_pos, -scale * 0.1), grid_size))
+
     for i, pos in enumerate(positions):
         bpy.ops.mesh.primitive_cylinder_add(
             radius=hardpoint_size,
@@ -576,11 +597,12 @@ def generate_weapon_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix=
         hardpoint.name = _prefixed_name(naming_prefix, f"Weapon_Hardpoint_{i+1}")
         hardpoint.rotation_euler = (math.radians(90), 0, 0)
         hardpoints.append(hardpoint)
-    
+
     return hardpoints
 
 
-def generate_turret_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix=''):
+def generate_turret_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix='',
+                               grid_size=1.0):
     """
     Generate turret hardpoint fittings with visual turret geometry.
 
@@ -596,6 +618,7 @@ def generate_turret_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix=
         scale: Ship scale factor
         symmetry: Use symmetrical placement
         naming_prefix: Project naming prefix
+        grid_size: Snap grid cell size from brick_system
 
     Returns:
         List of turret hardpoint root objects
@@ -604,19 +627,22 @@ def generate_turret_hardpoints(count=2, scale=1.0, symmetry=True, naming_prefix=
     turrets = []
     turret_size = scale * 0.12
 
-    # Calculate positions along the dorsal (top) surface of the hull
+    # Calculate positions along the dorsal (top) surface of the hull,
+    # snapped to half-cell grid centres for modular alignment.
     positions = []
     if symmetry and count % 2 == 0:
         for i in range(count // 2):
             y_pos = scale * 0.2 - (i * scale * 0.25)
             x_offset = scale * 0.2 + (i * scale * 0.08)
-            positions.append((x_offset, y_pos, scale * 0.15))
-            positions.append((-x_offset, y_pos, scale * 0.15))
+            pos_r = brick_system.snap_to_grid_half((x_offset, y_pos, scale * 0.15), grid_size)
+            pos_l = brick_system.snap_to_grid_half((-x_offset, y_pos, scale * 0.15), grid_size)
+            positions.append(pos_r)
+            positions.append(pos_l)
     else:
         for i in range(count):
             y_pos = scale * 0.3 - (i * scale * 0.15)
             x_pos = (i - count / 2) * scale * 0.15
-            positions.append((x_pos, y_pos, scale * 0.15))
+            positions.append(brick_system.snap_to_grid_half((x_pos, y_pos, scale * 0.15), grid_size))
 
     for i, pos in enumerate(positions):
         turret_name = _prefixed_name(naming_prefix, f"Turret_Hardpoint_{i+1}")
