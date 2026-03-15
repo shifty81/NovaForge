@@ -145,3 +145,5 @@ cpp_client/build_atlas_test/
 cpp_server/build/
 build/
 tools/BlenderSpaceshipGenerator.zip
+data/Output/BATTLECRUISER_seed1.mtl
+*.mtl
