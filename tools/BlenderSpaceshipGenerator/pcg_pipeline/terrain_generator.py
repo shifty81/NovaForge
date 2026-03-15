@@ -75,13 +75,15 @@ def _noise_2d(rng, x, y, frequency=1.0):
     """Simple value-noise approximation using hashed random offsets.
 
     Not a true Perlin/Simplex implementation, but deterministic and
-    sufficient for metadata-level terrain sketches.
+    sufficient for metadata-level terrain sketches.  The *rng* is used
+    once to generate a salt that makes the result unique per-seed.
     """
+    salt = rng.randint(0, 2**31 - 1)
     # Hash the grid coordinates into a repeatable seed
     ix = int(math.floor(x * frequency))
     iy = int(math.floor(y * frequency))
-    cell_seed = hash((ix, iy, rng.getrandbits(0))) % (2**31)
-    cell_rng = random.Random(cell_seed ^ hash((ix, iy)))
+    cell_seed = hash((ix, iy, salt)) % (2**31)
+    cell_rng = random.Random(cell_seed)
     return cell_rng.random()
 
 
