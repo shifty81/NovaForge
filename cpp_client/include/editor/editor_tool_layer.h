@@ -26,6 +26,9 @@
 #include "editor/itool.h"
 #include "editor/editor_command_bus.h"
 #include "editor/undoable_command_bus.h"
+#include "editor/multi_selection_manager.h"
+#include "editor/prefab_library.h"
+#include "editor/simulation_step_controller.h"
 #include "../../engine/ecs/DeltaEditStore.h"
 
 namespace atlas {
@@ -63,6 +66,12 @@ class AssetPalettePanel;
 class PhysicsTunerPanel;
 class SceneBookmarkManager;
 class LayerTagSystem;
+
+// Phase 1/2 tools (header-only, constructed in init())
+class SnapAlignTool;
+class CameraViewTool;
+class AnimationEditorTool;
+class IKRigTool;
 
 /**
  * Editor overlay that lives inside the game client.
@@ -132,6 +141,27 @@ public:
     /** Access the layer/tag system. */
     LayerTagSystem& layerTagSystem();
 
+    /** Access the multi-selection manager. */
+    MultiSelectionManager& selectionManager() { return m_selectionManager; }
+
+    /** Access the prefab library. */
+    PrefabLibrary& prefabLibrary() { return m_prefabLibrary; }
+
+    /** Access the simulation step controller. */
+    SimulationStepController& simulationController() { return m_simController; }
+
+    /** Access the snap/align tool (available after init). */
+    SnapAlignTool& snapAlignTool();
+
+    /** Access the camera view tool (available after init). */
+    CameraViewTool& cameraViewTool();
+
+    /** Access the animation editor tool (available after init). */
+    AnimationEditorTool& animationEditorTool();
+
+    /** Access the IK rig tool (available after init). */
+    IKRigTool& ikRigTool();
+
     /** Number of panels registered in the layout. */
     size_t panelCount() const;
 
@@ -178,6 +208,17 @@ private:
     // ── Editor utilities ─────────────────────────────────────────────
     std::unique_ptr<SceneBookmarkManager> m_bookmarkManager;
     std::unique_ptr<LayerTagSystem>       m_layerTagSystem;
+
+    // ── Phase 1 tools ───────────────────────────────────────────────
+    MultiSelectionManager  m_selectionManager;
+    PrefabLibrary          m_prefabLibrary;
+    std::unique_ptr<SnapAlignTool>   m_snapAlignTool;
+    std::unique_ptr<CameraViewTool>  m_cameraViewTool;
+
+    // ── Phase 2 tools ───────────────────────────────────────────────
+    std::unique_ptr<AnimationEditorTool> m_animationEditor;
+    std::unique_ptr<IKRigTool>           m_ikRigTool;
+    SimulationStepController             m_simController;
 };
 
 } // namespace atlas::editor

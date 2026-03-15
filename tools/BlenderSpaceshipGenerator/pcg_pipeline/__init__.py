@@ -25,12 +25,13 @@ Usage (CLI):
     python -m pcg_pipeline --seed 123456 --systems 5 --output-dir build
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __pipeline_name__ = "NovaForge Generator"
 
 from . import galaxy_generator
 from . import system_generator
 from . import planet_generator
+from . import terrain_generator
 from . import station_generator
 from . import ship_generator
 from . import character_generator
@@ -40,6 +41,7 @@ __all__ = [
     "galaxy_generator",
     "system_generator",
     "planet_generator",
+    "terrain_generator",
     "station_generator",
     "ship_generator",
     "character_generator",
