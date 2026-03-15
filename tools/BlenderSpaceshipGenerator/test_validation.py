@@ -44,6 +44,9 @@ def test_addon_structure():
         'damage_system.py',
         'power_system.py',
         'build_validator.py',
+        'lighting_system.py',
+        'greeble_system.py',
+        'preset_library.py',
     ]
     
     all_exist = True
@@ -83,6 +86,9 @@ def test_file_syntax():
         'damage_system.py',
         'power_system.py',
         'build_validator.py',
+        'lighting_system.py',
+        'greeble_system.py',
+        'preset_library.py',
     ]
     
     all_valid = True
@@ -243,6 +249,9 @@ def test_register_functions():
         'damage_system.py',
         'power_system.py',
         'build_validator.py',
+        'lighting_system.py',
+        'greeble_system.py',
+        'preset_library.py',
     ]
     
     all_valid = True
@@ -1190,6 +1199,182 @@ def test_render_setup():
     return all_valid
 
 
+def test_lighting_system():
+    """Test that lighting_system.py has required constants and functions"""
+    print("\nTesting lighting system module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    ls_path = os.path.join(addon_path, 'lighting_system.py')
+
+    if not os.path.exists(ls_path):
+        print("✗ lighting_system.py not found")
+        return False
+
+    with open(ls_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'WARM_WHITE': 'WARM_WHITE colour constant',
+        'COOL_WHITE': 'COOL_WHITE colour constant',
+        'ENGINE_BLUE': 'ENGINE_BLUE colour constant',
+        'NAV_RED': 'NAV_RED colour constant',
+        'NAV_GREEN': 'NAV_GREEN colour constant',
+        'ROOM_LIGHT_MAP': 'ROOM_LIGHT_MAP constant',
+        'def create_interior_lights(': 'create_interior_lights function',
+        'def create_engine_glow_lights(': 'create_engine_glow_lights function',
+        'def create_running_lights(': 'create_running_lights function',
+        'def setup_ship_lighting(': 'setup_ship_lighting function',
+        'def register()': 'register function',
+        'def unregister()': 'unregister function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    return all_valid
+
+
+def test_greeble_system():
+    """Test the greeble / detail pass system"""
+    print("\nTesting greeble system module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    gs_path = os.path.join(addon_path, 'greeble_system.py')
+
+    if not os.path.exists(gs_path):
+        print("✗ greeble_system.py not found")
+        return False
+
+    with open(gs_path, 'r') as f:
+        content = f.read()
+
+    checks = {
+        'GREEBLE_TYPES': 'GREEBLE_TYPES constant',
+        'def apply_greebles(': 'apply_greebles function',
+        'def get_greeble_types(': 'get_greeble_types function',
+        'def get_greeble_count(': 'get_greeble_count function',
+        'def register()': 'register function',
+        'def unregister()': 'unregister function',
+    }
+
+    all_valid = True
+    for pattern, description in checks.items():
+        if pattern in content:
+            print(f"✓ {description} found")
+        else:
+            print(f"✗ {description} not found")
+            all_valid = False
+
+    # Check that all greeble types have required fields
+    tree = ast.parse(content)
+    greeble_keys = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == 'GREEBLE_TYPES':
+                    if isinstance(node.value, ast.Dict):
+                        for k in node.value.keys:
+                            if isinstance(k, ast.Constant):
+                                greeble_keys.add(k.value)
+
+    expected_types = {'PANEL', 'VENT', 'PIPE', 'ANTENNA', 'SENSOR_DOME', 'BOX', 'CONDUIT'}
+    if greeble_keys == expected_types:
+        print(f"✓ All {len(expected_types)} greeble types defined")
+    else:
+        missing = expected_types - greeble_keys
+        if missing:
+            print(f"✗ Missing greeble types: {missing}")
+            all_valid = False
+
+    return all_valid
+
+
+def test_preset_library():
+    """Test the preset save/load system"""
+    print("\nTesting preset library module...")
+
+    addon_path = os.path.dirname(os.path.abspath(__file__))
+    pl_path = os.path.join(addon_path, 'preset_library.py')
+
+    if not os.path.exists(pl_path):
+        print("✗ preset_library.py not found")
+        return False
+
+    import importlib.util
+    import tempfile
+    spec = importlib.util.spec_from_file_location("preset_library", pl_path)
+    pl = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pl)
+
+    all_valid = True
+
+    # Check constants
+    if len(pl.PRESET_KEYS) >= 15:
+        print(f"✓ PRESET_KEYS has {len(pl.PRESET_KEYS)} entries")
+    else:
+        print("✗ PRESET_KEYS too short")
+        all_valid = False
+
+    # Functional round-trip test
+    with tempfile.TemporaryDirectory() as d:
+        pl.save_preset('TestPreset', {
+            'ship_class': 'BATTLESHIP',
+            'style': 'EVE',
+            'seed': 99,
+            'hull_complexity': 2.0,
+        }, preset_dir=d)
+
+        names = pl.list_presets(preset_dir=d)
+        if names == ['TestPreset']:
+            print("✓ list_presets works")
+        else:
+            print(f"✗ list_presets returned {names}")
+            all_valid = False
+
+        data = pl.load_preset('TestPreset', preset_dir=d)
+        if data.get('ship_class') == 'BATTLESHIP' and data.get('seed') == 99:
+            print("✓ save/load round-trip works")
+        else:
+            print("✗ save/load round-trip failed")
+            all_valid = False
+
+        info = pl.get_preset_info('TestPreset', preset_dir=d)
+        if info and info['ship_class'] == 'BATTLESHIP':
+            print("✓ get_preset_info works")
+        else:
+            print("✗ get_preset_info failed")
+            all_valid = False
+
+        if pl.delete_preset('TestPreset', preset_dir=d):
+            print("✓ delete_preset works")
+        else:
+            print("✗ delete_preset failed")
+            all_valid = False
+
+        # Verify empty name raises
+        try:
+            pl.save_preset('', {}, preset_dir=d)
+            print("✗ Empty name should raise ValueError")
+            all_valid = False
+        except ValueError:
+            print("✓ Empty name correctly rejected")
+
+        # Verify missing preset raises
+        try:
+            pl.load_preset('nonexistent', preset_dir=d)
+            print("✗ Missing preset should raise FileNotFoundError")
+            all_valid = False
+        except FileNotFoundError:
+            print("✓ Missing preset correctly raises FileNotFoundError")
+
+    return all_valid
+
+
 def run_tests():
     """Run all validation tests"""
     print("=" * 60)
@@ -1224,6 +1409,9 @@ def run_tests():
         ("Power System", test_power_system),
         ("Build Validator", test_build_validator),
         ("Render Setup", test_render_setup),
+        ("Lighting System", test_lighting_system),
+        ("Greeble System", test_greeble_system),
+        ("Preset Library", test_preset_library),
     ]
     
     results = []

@@ -217,15 +217,15 @@ Easy to add:
 
 While not implemented in this initial version, the architecture supports:
 1. ~~Advanced materials (PBR, procedural textures)~~ ✓ Implemented
-2. Animation system (doors, landing gear)
-3. Damage system (battle damage)
-4. Lighting system (interior/exterior)
-5. Detail pass (greebles, panels)
+2. ~~Animation system (doors, landing gear)~~ ✓ Implemented (turrets, bay doors, landing gear, radar spin)
+3. ~~Damage system (battle damage)~~ ✓ Implemented (brick HP, structural integrity, cascade propagation)
+4. ~~Lighting system (interior/exterior)~~ ✓ Implemented (room lights, engine glow, nav running lights)
+5. ~~Detail pass (greebles, panels)~~ ✓ Implemented (7 greeble types: panels, vents, pipes, antennas, domes, boxes, conduits)
 6. ~~LOD system (performance)~~ ✓ Implemented (LOD0/LOD1/LOD2 tiers in metadata)
 7. ~~Export presets (game engines)~~ ✓ Implemented (OBJ export for Atlas)
-8. Preset library (save/load)
+8. ~~Preset library (save/load)~~ ✓ Implemented (JSON-based preset save/load/delete)
 9. Advanced interiors (furniture)
-10. Physics support (collision meshes)
+10. ~~Physics support (collision meshes)~~ ✓ Implemented (box, convex hull, multi-convex)
 11. ~~PCG pipeline integration~~ ✓ Implemented (universe → galaxy → system → planet → station → ship → character)
 12. ~~CLI batch generation~~ ✓ Implemented (`python -m pcg_pipeline`)
 
