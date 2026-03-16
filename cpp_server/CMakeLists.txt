@@ -463,6 +463,7 @@ set(CORE_SOURCES
     src/systems/survey_scanner_system.cpp
     src/systems/fuel_block_system.cpp
     src/systems/jump_clone_system.cpp
+    src/systems/access_list_system.cpp
     src/systems/incursion_system.cpp
     src/systems/meta_level_system.cpp
     src/systems/reaction_formula_system.cpp
@@ -943,6 +944,7 @@ set(SERVER_HEADERS
     include/systems/survey_scanner_system.h
     include/systems/fuel_block_system.h
     include/systems/jump_clone_system.h
+    include/systems/access_list_system.h
 )
 
 # Steam SDK configuration
