@@ -2748,6 +2748,36 @@ public:
     COMPONENT_TYPE(JumpCloneState)
 };
 
+// ---------------------------------------------------------------------------
+// SkillPlanState — skill training plan management
+// ---------------------------------------------------------------------------
+class SkillPlanState : public ecs::Component {
+public:
+    struct PlannedSkill {
+        std::string skill_id;
+        std::string skill_name;
+        int         target_level    = 1;
+        float       training_time   = 0.0f;
+    };
+
+    struct SkillPlan {
+        std::string plan_id;
+        std::string plan_name;
+        std::vector<PlannedSkill> skills;
+    };
+
+    std::string active_plan_id;
+    std::vector<SkillPlan> plans;
+    int   max_plans              = 10;
+    int   total_plans_created    = 0;
+    int   total_plans_deleted    = 0;
+    int   total_skills_planned   = 0;
+    float elapsed                = 0.0f;
+    bool  active                 = true;
+
+    COMPONENT_TYPE(SkillPlanState)
+};
+
 } // namespace components
 } // namespace atlas
 
