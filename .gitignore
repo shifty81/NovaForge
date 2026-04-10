@@ -1,0 +1,23 @@
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+
+# Test results
+TestResults/
+*.trx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Save files (runtime)
+save.json

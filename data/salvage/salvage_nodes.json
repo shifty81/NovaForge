@@ -1,0 +1,4 @@
+[
+  { "Id": "salvage_scrap", "Name": "Scrap Pile", "ResourceIds": ["iron_scrap"], "MinYield": 1, "MaxYield": 5 },
+  { "Id": "salvage_ore", "Name": "Ore Vein", "ResourceIds": ["rare_ore"], "MinYield": 1, "MaxYield": 3 }
+]

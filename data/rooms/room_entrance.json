@@ -1,0 +1,10 @@
+{
+  "Id": "entrance",
+  "Archetype": "entrance",
+  "MinWidth": 5,
+  "MaxWidth": 8,
+  "MinHeight": 4,
+  "MaxHeight": 5,
+  "Tags": ["spawn"],
+  "PossibleSalvageNodes": []
+}

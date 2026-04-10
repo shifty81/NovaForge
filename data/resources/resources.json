@@ -1,0 +1,5 @@
+[
+  { "Id": "iron_scrap", "Name": "Iron Scrap", "Description": "Salvaged iron fragments.", "BaseValue": 5 },
+  { "Id": "rare_ore", "Name": "Rare Ore", "Description": "A rare metallic ore.", "BaseValue": 25 },
+  { "Id": "stone", "Name": "Stone", "Description": "Common stone block.", "BaseValue": 1 }
+]
