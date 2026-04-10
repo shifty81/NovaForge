@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NovaForge.Core/NovaForge.Core.csproj" />
+    <Project Path="src/NovaForge.Data/NovaForge.Data.csproj" />
+    <Project Path="src/NovaForge.Game/NovaForge.Game.csproj" />
+    <Project Path="src/NovaForge.ProcGen/NovaForge.ProcGen.csproj" />
+    <Project Path="src/NovaForge.Render/NovaForge.Render.csproj" />
+    <Project Path="src/NovaForge.Tests/NovaForge.Tests.csproj" />
+    <Project Path="src/NovaForge.Voxels/NovaForge.Voxels.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,10 @@
+{
+  "Id": "corridor",
+  "Archetype": "corridor",
+  "MinWidth": 3,
+  "MaxWidth": 5,
+  "MinHeight": 3,
+  "MaxHeight": 3,
+  "Tags": ["traversal"],
+  "PossibleSalvageNodes": ["salvage_scrap"]
+}

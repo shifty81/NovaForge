@@ -1,0 +1,10 @@
+{
+  "Id": "cargo",
+  "Archetype": "cargo",
+  "MinWidth": 6,
+  "MaxWidth": 10,
+  "MinHeight": 4,
+  "MaxHeight": 6,
+  "Tags": ["loot"],
+  "PossibleSalvageNodes": ["salvage_ore", "salvage_scrap"]
+}
