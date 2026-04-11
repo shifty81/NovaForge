@@ -57,7 +57,7 @@ namespace NovaForge.Tests
         public void BeginFrame_ResetsChunkAndTriangleCounters()
         {
             var m = new PerformanceMetrics();
-            m.AddChunk(100);
+            m.RecordChunk(100);
             m.BeginFrame();
             Assert.Equal(0, m.ChunksRendered);
             Assert.Equal(0, m.TrianglesDrawn);
@@ -68,8 +68,8 @@ namespace NovaForge.Tests
         {
             var m = new PerformanceMetrics();
             m.BeginFrame();
-            m.AddChunk(300);
-            m.AddChunk(150);
+            m.RecordChunk(300);
+            m.RecordChunk(150);
             Assert.Equal(2, m.ChunksRendered);
             Assert.Equal(450, m.TrianglesDrawn);
         }
@@ -79,7 +79,7 @@ namespace NovaForge.Tests
         {
             var m = new PerformanceMetrics();
             m.BeginFrame();
-            m.AddChunk(10);
+            m.RecordChunk(10);
             m.EndFrame(1.0);
             m.Sample();
             string s = m.ToString();

@@ -22,10 +22,13 @@ namespace NovaForge.Core.Diagnostics
         private int _chunksRendered;
         private int _trianglesDrawn;
 
-        // Snapshot values exposed after each Sample() == true.
+        // FPS/frame-time are updated by Sample(); chunk/triangle counters reflect the current frame
+        // and are reset at each BeginFrame() call.
         public float FPS => _fps;
         public float FrameTimeMs => _frameTimeMs;
+        /// <summary>Chunks recorded via <see cref="RecordChunk"/> since the last <see cref="BeginFrame"/>.</summary>
         public int ChunksRendered => _chunksRendered;
+        /// <summary>Triangles recorded via <see cref="RecordChunk"/> since the last <see cref="BeginFrame"/>.</summary>
         public int TrianglesDrawn => _trianglesDrawn;
 
         /// <summary>Reset per-frame counters. Call once at the start of each frame.</summary>
@@ -42,8 +45,11 @@ namespace NovaForge.Core.Diagnostics
             _frameCount++;
         }
 
-        /// <summary>Increment the chunks-rendered counter for the current frame.</summary>
-        public void AddChunk(int triangles = 0)
+        /// <summary>
+        /// Record one rendered chunk and its <paramref name="triangles"/> count for the current frame.
+        /// Accumulates into <see cref="ChunksRendered"/> and <see cref="TrianglesDrawn"/>.
+        /// </summary>
+        public void RecordChunk(int triangles = 0)
         {
             _chunksRendered++;
             _trianglesDrawn += triangles;

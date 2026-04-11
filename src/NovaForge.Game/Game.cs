@@ -46,6 +46,8 @@ namespace NovaForge.Game
         private const float PlayerRadius = 0.3f;
         private const float PlayerEyeHeight = 1.6f;
         private const float PlayerCrownOffset = 0.2f;
+        // Fraction of eye-height used for the mid-body collision check (between feet and eyes).
+        private const float PlayerMidpointFraction = 0.5f;
 
         private List<RoomDefinition> _roomDefs;
         private List<SalvageNodeDefinition> _nodeDefs;
@@ -187,7 +189,7 @@ namespace NovaForge.Game
         {
             float[] xOff = { -PlayerRadius, PlayerRadius };
             float[] zOff = { -PlayerRadius, PlayerRadius };
-            float[] yOff = { -PlayerEyeHeight, -PlayerEyeHeight * 0.5f, PlayerCrownOffset };
+            float[] yOff = { -PlayerEyeHeight, -PlayerEyeHeight * PlayerMidpointFraction, PlayerCrownOffset };
 
             foreach (float yo in yOff)
             foreach (float xo in xOff)
@@ -329,7 +331,7 @@ namespace NovaForge.Game
                     cz * VoxelChunk.SIZE);
                 _shader.SetUniform("uModel", model);
                 kv.Value.Render();
-                _metrics.AddChunk(kv.Value.TriangleCount);
+                _metrics.RecordChunk(kv.Value.TriangleCount);
             }
         }
     }
