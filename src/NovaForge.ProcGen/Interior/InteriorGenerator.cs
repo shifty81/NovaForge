@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NovaForge.Core.Math;
@@ -10,6 +11,9 @@ namespace NovaForge.ProcGen.Interior
     {
         public InteriorLayout Generate(long seed, List<RoomDefinition> roomDefs, List<SalvageNodeDefinition> nodeDefs)
         {
+            if (roomDefs == null || roomDefs.Count == 0)
+                throw new ArgumentException("roomDefs must not be empty. Ensure the data/rooms directory exists and contains valid JSON files.", nameof(roomDefs));
+
             var rng = new DeterministicRng(seed).Fork("Interior");
             var layout = new InteriorLayout { Seed = seed };
 

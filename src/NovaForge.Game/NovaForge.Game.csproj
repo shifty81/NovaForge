@@ -6,6 +6,12 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="..\..\data\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>data\%(RecursiveDir)%(FileName)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\NovaForge.Core\NovaForge.Core.csproj" />
     <ProjectReference Include="..\NovaForge.Data\NovaForge.Data.csproj" />
     <ProjectReference Include="..\NovaForge.ProcGen\NovaForge.ProcGen.csproj" />
