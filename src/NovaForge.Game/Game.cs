@@ -88,22 +88,36 @@ namespace NovaForge.Game
 
             WorldBuilder.StampLayout(_layout, _chunkManager);
 
-            RebuildMeshes();
+            // Stamp is deterministic — reset edits so saves only persist player changes.
+            _chunkManager.ResetAllEdits();
+
+            RebuildAllMeshes();
 
             _window.CursorState = CursorState.Grabbed;
             Logger.Log("NovaForge loaded. WASD=move, mouse=look, E=scan, LMB=mine, F5=save, F9=load");
         }
 
-        private void RebuildMeshes()
+        private void RebuildAllMeshes()
         {
             foreach (var kv in _chunkManager.GetChunks())
-            {
-                var meshData = _mesher.GenerateMesh(kv.Value);
-                if (_gpuMeshes.TryGetValue(kv.Key, out var existing))
-                    existing.Update(meshData);
-                else
-                    _gpuMeshes[kv.Key] = new GpuMesh(meshData);
-            }
+                RebuildChunkMesh(kv.Key, kv.Value);
+            _chunkManager.ClearAllDirty();
+        }
+
+        private void RebuildDirtyMeshes()
+        {
+            foreach (var kv in _chunkManager.GetDirtyChunks())
+                RebuildChunkMesh(kv.Key, kv.Value);
+            _chunkManager.ClearAllDirty();
+        }
+
+        private void RebuildChunkMesh((int, int, int) key, NovaForge.Voxels.Chunk.VoxelChunk chunk)
+        {
+            var meshData = _mesher.GenerateMesh(chunk);
+            if (_gpuMeshes.TryGetValue(key, out var existing))
+                existing.Update(meshData);
+            else
+                _gpuMeshes[key] = new GpuMesh(meshData);
         }
 
         private void OnUpdate(double dt)
@@ -205,7 +219,7 @@ namespace NovaForge.Game
 
                 _events.Publish(new VoxelMinedEvent { Position = vp, OldType = oldType });
 
-                RebuildMeshes();
+                RebuildDirtyMeshes();
             }
         }
 
@@ -233,7 +247,7 @@ namespace NovaForge.Game
                     }
                 }
             }
-            RebuildMeshes();
+            RebuildDirtyMeshes();
         }
 
         private void OnRender(double dt)
@@ -248,7 +262,6 @@ namespace NovaForge.Game
             _shader.SetUniform("uView", view);
             _shader.SetUniform("uProjection", proj);
             _shader.SetUniform("uLightDir", new Vector3(0.5f, 1f, 0.3f));
-            _shader.SetUniform("uColor", new Vector3(0.6f, 0.6f, 0.65f));
 
             foreach (var kv in _gpuMeshes)
             {

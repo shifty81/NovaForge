@@ -25,9 +25,9 @@ namespace NovaForge.Tests
 
             WorldBuilder.StampLayout(layout, chunks);
 
-            // The entrance room is at grid position (0,0). Floor voxel at world (1, 0, 1)
-            // (offset 1 for the wall thickness) should be solid.
-            Assert.Equal(WorldBuilder.SolidType, chunks.GetVoxel(1, 0, 1));
+            // The entrance room is at grid position (0,0). Interior floor voxel at world (1, 0, 1)
+            // (offset 1 for the wall thickness) should be the floor type.
+            Assert.Equal(WorldBuilder.FloorType, chunks.GetVoxel(1, 0, 1));
         }
 
         [Fact]
@@ -48,7 +48,7 @@ namespace NovaForge.Tests
         }
 
         [Fact]
-        public void StampLayout_WallsAreSolid()
+        public void StampLayout_WallsAreWallType()
         {
             var gen = new InteriorGenerator();
             var layout = gen.Generate(1L, GetRooms(), GetNodes());
@@ -56,11 +56,11 @@ namespace NovaForge.Tests
 
             WorldBuilder.StampLayout(layout, chunks);
 
-            // Left wall of entrance room at x = ox + 0 (grid col 0), y=1..WallHeight should be solid.
+            // Left wall of entrance room at x = ox + 0, y=1..WallHeight should be WallType.
             int ox = 0 * WorldBuilder.Scale;
             int oz = 0 * WorldBuilder.Scale;
-            Assert.Equal(WorldBuilder.SolidType, chunks.GetVoxel(ox, 1, oz + 1));
-            Assert.Equal(WorldBuilder.SolidType, chunks.GetVoxel(ox, WorldBuilder.WallHeight, oz + 1));
+            Assert.Equal(WorldBuilder.WallType, chunks.GetVoxel(ox, 1, oz + 1));
+            Assert.Equal(WorldBuilder.WallType, chunks.GetVoxel(ox, WorldBuilder.WallHeight, oz + 1));
         }
 
         [Fact]
@@ -77,9 +77,43 @@ namespace NovaForge.Tests
             WorldBuilder.StampLayout(layout1, chunks1);
             WorldBuilder.StampLayout(layout2, chunks2);
 
-            // Same seed → identical voxel at a fixed sample point
+            // Same seed → identical voxel at fixed sample points
             Assert.Equal(chunks1.GetVoxel(0, 0, 0), chunks2.GetVoxel(0, 0, 0));
             Assert.Equal(chunks1.GetVoxel(1, 1, 1), chunks2.GetVoxel(1, 1, 1));
+        }
+
+        [Fact]
+        public void StampLayout_SetsChunksDirty()
+        {
+            var gen = new InteriorGenerator();
+            var layout = gen.Generate(1L, GetRooms(), GetNodes());
+            var chunks = new ChunkManager();
+
+            WorldBuilder.StampLayout(layout, chunks);
+
+            // At least one chunk must be dirty after stamping.
+            bool anyDirty = false;
+            foreach (var kv in chunks.GetChunks())
+                if (kv.Value.IsDirty) { anyDirty = true; break; }
+            Assert.True(anyDirty);
+        }
+
+        [Fact]
+        public void ResetAllEdits_ClearsEditsAndDirty()
+        {
+            var gen = new InteriorGenerator();
+            var layout = gen.Generate(1L, GetRooms(), GetNodes());
+            var chunks = new ChunkManager();
+
+            WorldBuilder.StampLayout(layout, chunks);
+            chunks.ResetAllEdits();
+
+            // After reset, no chunks should be dirty and no edits should remain.
+            foreach (var kv in chunks.GetChunks())
+            {
+                Assert.False(kv.Value.IsDirty);
+                Assert.Empty(kv.Value.GetEdits());
+            }
         }
     }
 }

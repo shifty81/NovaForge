@@ -126,6 +126,7 @@ namespace NovaForge.Voxels.Meshing
                 {
                     vertices.Add(c[0]); vertices.Add(c[1]); vertices.Add(c[2]);
                     vertices.Add(nx);   vertices.Add(ny);   vertices.Add(nz);
+                    vertices.Add(type);
                 }
 
                 // CCW winding for +d faces; reversed for -d faces

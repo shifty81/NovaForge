@@ -6,9 +6,11 @@ namespace NovaForge.ProcGen.Interior
     /// <summary>
     /// Stamps a procedurally generated InteriorLayout into a ChunkManager as voxel geometry.
     ///
-    /// Each room grid cell is scaled by <see cref="Scale"/> voxels. Rooms receive a solid floor,
-    /// solid walls, and an open top (no ceiling), making the interior easily navigable. Connected
-    /// rooms have a doorway carved through the shared wall so the player can walk between them.
+    /// Each room grid cell is scaled by <see cref="Scale"/> voxels. Rooms receive a solid floor
+    /// (<see cref="FloorType"/>), solid walls (<see cref="WallType"/>), and an open top (no
+    /// ceiling), making the interior easily navigable. Connected rooms have a doorway carved
+    /// through the shared wall so the player can walk between them. Salvage node positions are
+    /// marked with <see cref="OreType"/> voxels so they are visually distinct.
     /// </summary>
     public static class WorldBuilder
     {
@@ -24,20 +26,25 @@ namespace NovaForge.ProcGen.Interior
         /// <summary>Height of doorways in voxels (y=1 to DoorHeight, inclusive).</summary>
         private const int DoorHeight = 3;
 
-        /// <summary>Solid voxel type used for floors, walls, and ceilings.</summary>
-        public const byte SolidType = 1;
+        /// <summary>Voxel type for room floors (light concrete colour in shader).</summary>
+        public const byte FloorType = 1;
+
+        /// <summary>Voxel type for room walls (dark metal colour in shader).</summary>
+        public const byte WallType = 2;
+
+        /// <summary>Voxel type for salvage ore deposits (rusty orange colour in shader).</summary>
+        public const byte OreType = 3;
 
         /// <summary>
         /// Stamps all rooms in <paramref name="layout"/> into <paramref name="chunks"/> as voxels,
-        /// then carves doorways between every pair of directly connected rooms.
+        /// then carves doorways between every pair of directly connected rooms, and marks salvage
+        /// node positions as ore voxels.
         /// </summary>
         public static void StampLayout(InteriorLayout layout, ChunkManager chunks)
         {
             // First pass: stamp each room's floor and walls.
             foreach (var room in layout.Rooms)
-            {
                 StampRoom(room, chunks);
-            }
 
             // Second pass: carve doorways between connected room pairs (process each pair once).
             var carved = new HashSet<(int, int)>();
@@ -52,6 +59,21 @@ namespace NovaForge.ProcGen.Interior
                     var other = layout.Rooms.Find(r => r.Id == connId);
                     if (other != null)
                         CarveDoorway(room, other, chunks);
+                }
+            }
+
+            // Third pass: stamp salvage node positions as ore voxels on top of the floor.
+            foreach (var room in layout.Rooms)
+            {
+                int ox = room.Position.X * Scale;
+                int oz = room.Position.Y * Scale;
+                foreach (var node in room.SalvageNodes)
+                {
+                    int wx = ox + 1 + node.LocalPosition.X;
+                    int wz = oz + 1 + node.LocalPosition.Z;
+                    // Replace the floor tile and place an ore block on y=1.
+                    chunks.SetVoxel(wx, 0, wz, OreType);
+                    chunks.SetVoxel(wx, 1, wz, OreType);
                 }
             }
         }
@@ -75,13 +97,13 @@ namespace NovaForge.ProcGen.Interior
                 bool isWall = dx == 0 || dx == totalW - 1 || dz == 0 || dz == totalH - 1;
 
                 // Floor (y = 0)
-                chunks.SetVoxel(wx, 0, wz, SolidType);
+                chunks.SetVoxel(wx, 0, wz, FloorType);
 
                 // Walls (y = 1 .. WallHeight)
                 if (isWall)
                 {
                     for (int y = 1; y <= WallHeight; y++)
-                        chunks.SetVoxel(wx, y, wz, SolidType);
+                        chunks.SetVoxel(wx, y, wz, WallType);
                 }
             }
         }
@@ -97,7 +119,7 @@ namespace NovaForge.ProcGen.Interior
             if (ddx == 1)
             {
                 // b is to the right (+X) of a
-                int wallX = ax * Scale + a.Width + 1; // shared wall X
+                int wallX = ax * Scale + a.Width + 1;
                 int doorZ = ay * Scale + 1 + (a.Height / 2) - (DoorWidth / 2);
                 CarveWallSegment(chunks, wallX, doorZ, isXWall: true);
             }
