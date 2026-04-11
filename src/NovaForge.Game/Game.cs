@@ -54,6 +54,8 @@ namespace NovaForge.Game
         private const float PlayerCrownOffset = 0.2f;
         // Fraction of eye-height used for the mid-body collision check (between feet and eyes).
         private const float PlayerMidpointFraction = 0.5f;
+        // Distance below feet used to detect whether the player is standing on solid ground.
+        private const float GroundCheckDistance = 0.05f;
 
         // Maps voxel type to the resource ID awarded when mining that block.
         private static readonly string[] VoxelTypeToResource = { "stone", "stone", "iron_scrap", "rare_ore" };
@@ -180,7 +182,7 @@ namespace NovaForge.Game
             _camera.Position = new Vector3(resolvedX, resolvedY, resolvedZ);
 
             // Jump when grounded (Y was blocked by floor beneath).
-            bool isGrounded = yBlocked || IsPlayerPositionBlocked(new Vector3(resolvedX, resolvedY - 0.05f, resolvedZ));
+            bool isGrounded = yBlocked || IsPlayerPositionBlocked(new Vector3(resolvedX, resolvedY - GroundCheckDistance, resolvedZ));
             if (isGrounded && kb.IsKeyPressed(Keys.Space))
                 _velocityY = JumpSpeed;
 
@@ -295,9 +297,10 @@ namespace NovaForge.Game
                 _chunkManager.SetVoxel(vp.X, vp.Y, vp.Z, 0);
 
                 // Award the appropriate resource for the mined voxel type.
+                // Clamp to valid indices; any type outside the table falls back to "stone".
                 string resourceId = oldType < VoxelTypeToResource.Length
                     ? VoxelTypeToResource[oldType]
-                    : "stone";
+                    : VoxelTypeToResource[0];
                 _inventory.AddItem(resourceId, 1);
 
                 _events.Publish(new VoxelMinedEvent { Position = vp, OldType = oldType });
