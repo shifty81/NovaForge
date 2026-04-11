@@ -18,6 +18,21 @@ namespace NovaForge.Game
             return _items.TryGetValue(id, out int val) ? val : 0;
         }
 
+        /// <summary>Returns a snapshot copy of all inventory entries.</summary>
+        public Dictionary<string, int> GetAllItems()
+        {
+            return new Dictionary<string, int>(_items);
+        }
+
+        /// <summary>Replaces all inventory contents with <paramref name="items"/>.</summary>
+        public void SetAllItems(Dictionary<string, int> items)
+        {
+            _items.Clear();
+            if (items == null) return;
+            foreach (var kv in items)
+                _items[kv.Key] = kv.Value;
+        }
+
         public void PrintContents()
         {
             Console.WriteLine("=== Inventory ===");

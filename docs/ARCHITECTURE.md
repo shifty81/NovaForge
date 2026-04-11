@@ -34,10 +34,13 @@ Main game loop: integrates all layers. Handles input, mining, salvage scanning (
 - After WorldBuilder.StampLayout, calls `ResetAllEdits()` so saves only persist player-driven changes.
 - `RebuildDirtyMeshes()` rebuilds only chunks modified since last clear, keeping per-frame cost low.
 - **Player collision**: per-axis AABB check (0.6 m wide × 1.8 m tall) against solid voxels before committing each frame's movement, enabling sliding along walls.
+- **Gravity + jump**: Y-axis gravity (`-20 m/s²`, terminal velocity `-30 m/s`) with Space-to-jump when grounded. Vertical movement resolved through the existing collision system.
+- **Resource-aware mining**: voxel type maps to resource ID (`1→stone`, `2→iron_scrap`, `3→rare_ore`) so mining gives the correct loot.
+- **Inventory persistence**: `WorldDelta.InventoryItems` serialises the full inventory to save.json; restored on load.
 - **Performance overlay**: `PerformanceMetrics` drives the window title (FPS, frame time, chunk count, triangle count), updated once per second.
 
 ### NovaForge.Tests
-xUnit tests: deterministic generation, voxel delta restoration, greedy meshing (vertex stride, type encoding), world stamping (floor/wall types, dirty flag, reset), `VoxelChunk` dirty-tracking lifecycle, and `PerformanceMetrics` (FPS accuracy, chunk/triangle counters, sampling interval).
+xUnit tests covering: deterministic generation, voxel delta restoration, greedy meshing (vertex stride, type encoding), world stamping (floor/wall types, dirty flag, reset), `VoxelChunk` dirty-tracking lifecycle, `PerformanceMetrics` (FPS accuracy, chunk/triangle counters, sampling interval), `EventBus` (subscribe/publish/unsubscribe), `Inventory` (add, accumulate, snapshot, replace), and `SaveManager` (save/load round-trip including inventory and voxel edits).
 
 ## Data Flow
 ```

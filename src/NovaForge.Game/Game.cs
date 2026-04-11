@@ -42,12 +42,21 @@ namespace NovaForge.Game
         private float _lastMouseX, _lastMouseY;
         private const float MoveSpeed = 10f;
 
+        // Gravity and jump physics.
+        private float _velocityY = 0f;
+        private const float Gravity = -20f;
+        private const float JumpSpeed = 7f;
+        private const float TerminalVelocity = -30f;
+
         // Player AABB half-extents and eye-level offset.
         private const float PlayerRadius = 0.3f;
         private const float PlayerEyeHeight = 1.6f;
         private const float PlayerCrownOffset = 0.2f;
         // Fraction of eye-height used for the mid-body collision check (between feet and eyes).
         private const float PlayerMidpointFraction = 0.5f;
+
+        // Maps voxel type to the resource ID awarded when mining that block.
+        private static readonly string[] VoxelTypeToResource = { "stone", "stone", "iron_scrap", "rare_ore" };
 
         private List<RoomDefinition> _roomDefs;
         private List<SalvageNodeDefinition> _nodeDefs;
@@ -104,7 +113,7 @@ namespace NovaForge.Game
             RebuildAllMeshes();
 
             _window.CursorState = CursorState.Grabbed;
-            Logger.Log("NovaForge loaded. WASD=move, mouse=look, E=scan, LMB=mine, F5=save, F9=load");
+            Logger.Log("NovaForge loaded. WASD=move, Space=jump, mouse=look, E=scan, LMB=mine, F5=save, F9=load");
         }
 
         private void RebuildAllMeshes()
@@ -145,8 +154,10 @@ namespace NovaForge.Game
             if (kb.IsKeyDown(Keys.S)) _camera.MoveBack(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.A)) _camera.MoveLeft(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.D)) _camera.MoveRight(MoveSpeed, fdt);
-            if (kb.IsKeyDown(Keys.Space)) _camera.MoveUp(MoveSpeed, fdt);
-            if (kb.IsKeyDown(Keys.LeftShift)) _camera.MoveDown(MoveSpeed, fdt);
+
+            // Apply gravity and move camera vertically.
+            _velocityY = Math.Max(_velocityY + Gravity * fdt, TerminalVelocity);
+            _camera.Position = new Vector3(_camera.Position.X, _camera.Position.Y + _velocityY * fdt, _camera.Position.Z);
 
             // Per-axis AABB collision against solid voxels.
             var newPos = _camera.Position;
@@ -158,10 +169,20 @@ namespace NovaForge.Game
                 resolvedX = oldPos.X;
             if (IsPlayerPositionBlocked(new Vector3(resolvedX, oldPos.Y, newPos.Z)))
                 resolvedZ = oldPos.Z;
-            if (IsPlayerPositionBlocked(new Vector3(resolvedX, newPos.Y, resolvedZ)))
+
+            bool yBlocked = IsPlayerPositionBlocked(new Vector3(resolvedX, newPos.Y, resolvedZ));
+            if (yBlocked)
+            {
                 resolvedY = oldPos.Y;
+                _velocityY = 0f;
+            }
 
             _camera.Position = new Vector3(resolvedX, resolvedY, resolvedZ);
+
+            // Jump when grounded (Y was blocked by floor beneath).
+            bool isGrounded = yBlocked || IsPlayerPositionBlocked(new Vector3(resolvedX, resolvedY - 0.05f, resolvedZ));
+            if (isGrounded && kb.IsKeyPressed(Keys.Space))
+                _velocityY = JumpSpeed;
 
             float mx = ms.X, my = ms.Y;
             if (_firstMouseMove) { _lastMouseX = mx; _lastMouseY = my; _firstMouseMove = false; }
@@ -171,7 +192,7 @@ namespace NovaForge.Game
             _camera.ProcessMouseMovement(dx, dy);
 
             if (kb.IsKeyPressed(Keys.E)) Scan();
-            if (kb.IsKeyPressed(Keys.F5)) _saveManager.Save(_seed, _chunkManager, _layout);
+            if (kb.IsKeyPressed(Keys.F5)) _saveManager.Save(_seed, _chunkManager, _layout, _inventory);
             if (kb.IsKeyPressed(Keys.F9)) LoadGame();
             if (ms.IsButtonPressed(MouseButton.Left)) Mine();
 
@@ -272,7 +293,12 @@ namespace NovaForge.Game
                 byte oldType = _chunkManager.GetVoxel(vp.X, vp.Y, vp.Z);
                 Logger.Log($"Mined voxel at {vp}");
                 _chunkManager.SetVoxel(vp.X, vp.Y, vp.Z, 0);
-                _inventory.AddItem("stone", 1);
+
+                // Award the appropriate resource for the mined voxel type.
+                string resourceId = oldType < VoxelTypeToResource.Length
+                    ? VoxelTypeToResource[oldType]
+                    : "stone";
+                _inventory.AddItem(resourceId, 1);
 
                 _events.Publish(new VoxelMinedEvent { Position = vp, OldType = oldType });
 
@@ -304,6 +330,8 @@ namespace NovaForge.Game
                     }
                 }
             }
+            if (delta.InventoryItems != null)
+                _inventory.SetAllItems(delta.InventoryItems);
             RebuildDirtyMeshes();
         }
 
