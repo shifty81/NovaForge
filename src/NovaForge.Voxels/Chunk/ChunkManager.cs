@@ -42,6 +42,33 @@ namespace NovaForge.Voxels.Chunk
             return chunk.GetVoxel(lx, ly, lz);
         }
 
+        public Dictionary<(int, int, int), VoxelChunk> GetChunks()
+        {
+            return new Dictionary<(int, int, int), VoxelChunk>(_chunks);
+        }
+
+        /// <summary>Returns chunks that have been modified since the last <see cref="ClearAllDirty"/> call.</summary>
+        public IEnumerable<KeyValuePair<(int, int, int), VoxelChunk>> GetDirtyChunks()
+        {
+            foreach (var kv in _chunks)
+                if (kv.Value.IsDirty)
+                    yield return kv;
+        }
+
+        /// <summary>Clears dirty flags on all chunks without discarding edit history.</summary>
+        public void ClearAllDirty()
+        {
+            foreach (var chunk in _chunks.Values)
+                chunk.ClearDirty();
+        }
+
+        /// <summary>Discards all recorded edits and clears dirty flags on every chunk.</summary>
+        public void ResetAllEdits()
+        {
+            foreach (var chunk in _chunks.Values)
+                chunk.ResetEdits();
+        }
+
         public Dictionary<(int, int, int), List<VoxelEdit>> GetAllEdits()
         {
             var result = new Dictionary<(int, int, int), List<VoxelEdit>>();

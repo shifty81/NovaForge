@@ -7,29 +7,41 @@ NovaForge is a .NET 8 C# game engine scaffold with the following layers:
 
 ### NovaForge.Core
 Foundation utilities: logging, math helpers, deterministic RNG, and an event bus.
+Game events (`VoxelMinedEvent`, `SalvageClaimedEvent`) are defined here and published via `EventBus`.
 
 ### NovaForge.Data
 Data models (RoomDefinition, ResourceDefinition, SalvageNodeDefinition) and a JSON DataLoader.
 
 ### NovaForge.ProcGen
 Procedural interior generation using seeded deterministic RNG. Produces InteriorLayout with RoomInstance and SalvageNodeInstance.
+`WorldBuilder` stamps an InteriorLayout into a ChunkManager as voxel geometry (floor=type 1, wall=type 2, ore/salvage=type 3, doorways).
 
 ### NovaForge.Voxels
-Chunk-based voxel storage (VoxelChunk, ChunkManager), greedy meshing (VoxelMesher), and DDA raycasting (VoxelRaycaster).
+Chunk-based voxel storage (`VoxelChunk`, `ChunkManager`), greedy meshing (`VoxelMesher`), and DDA raycasting (`VoxelRaycaster`).
+- `VoxelChunk.IsDirty` tracks modifications; `ClearDirty()` resets the flag; `ResetEdits()` clears the edit log (used after world gen).
+- `ChunkManager.GetDirtyChunks()` / `ClearAllDirty()` / `ResetAllEdits()` drive incremental mesh rebuilds and clean save deltas.
+- The greedy mesher emits 7 floats per vertex: `[x, y, z, nx, ny, nz, voxelType]` (`MeshData.FloatsPerVertex = 7`).
 
 ### NovaForge.Render
 OpenTK 4 rendering: ShaderProgram (GLSL 330), GpuMesh (VAO/VBO/EBO), Camera, and NovaForgeWindow.
+- Vertex layout: position (loc 0), normal (loc 1), voxelType (loc 2).
+- Fragment shader maps voxel type to base colour: 1=floor (concrete), 2=wall (metal), 3=ore (orange).
 
 ### NovaForge.Game
-Main game loop: integrates all layers. Handles input, mining, salvage scanning, save/load (WorldDelta JSON).
+Main game loop: integrates all layers. Handles input, mining, salvage scanning (deterministic yield), save/load (WorldDelta JSON), and multi-chunk rendering.
+- After WorldBuilder.StampLayout, calls `ResetAllEdits()` so saves only persist player-driven changes.
+- `RebuildDirtyMeshes()` rebuilds only chunks modified since last clear, keeping per-frame cost low.
 
 ### NovaForge.Tests
-xUnit tests for deterministic generation and voxel delta restoration.
+xUnit tests: deterministic generation, voxel delta restoration, greedy meshing (vertex stride, type encoding), world stamping (floor/wall types, dirty flag, reset), and `VoxelChunk` dirty-tracking lifecycle.
 
 ## Data Flow
 ```
 DataLoader -> InteriorGenerator -> InteriorLayout
-ChunkManager <-> VoxelMesher -> GpuMesh -> ShaderProgram -> Display
-VoxelRaycaster -> ChunkManager (mine)
-SaveManager -> WorldDelta (JSON) -> ChunkManager / InteriorLayout
+InteriorLayout -> WorldBuilder -> ChunkManager (floor=1, wall=2, ore=3, doorways)
+ChunkManager.ResetAllEdits() -- clear gen edits so save = player delta only
+ChunkManager<dirty> -> VoxelMesher (greedy, 7 floats/vert) -> GpuMesh -> ShaderProgram -> Display
+VoxelRaycaster -> ChunkManager (mine, marks chunk dirty) -> EventBus (VoxelMinedEvent)
+Scan -> SalvageNodeInstance -> DeterministicRng (yield) -> Inventory -> EventBus (SalvageClaimedEvent)
+SaveManager -> WorldDelta (JSON, player delta only) -> ChunkManager / InteriorLayout
 ```

@@ -7,5 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NovaForge.Core\NovaForge.Core.csproj" />
     <ProjectReference Include="..\NovaForge.Data\NovaForge.Data.csproj" />
+    <ProjectReference Include="..\NovaForge.Voxels\NovaForge.Voxels.csproj" />
   </ItemGroup>
 </Project>

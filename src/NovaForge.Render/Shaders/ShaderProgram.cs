@@ -11,23 +11,37 @@ namespace NovaForge.Render.Shaders
         public static readonly string VertexSource = @"#version 330 core
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;
+layout(location = 2) in float aVoxelType;
 uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProjection;
 out vec3 vNormal;
+out float vVoxelType;
 void main() {
     gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);
     vNormal = aNormal;
+    vVoxelType = aVoxelType;
 }";
 
         public static readonly string FragmentSource = @"#version 330 core
 in vec3 vNormal;
+in float vVoxelType;
 out vec4 FragColor;
 uniform vec3 uLightDir;
-uniform vec3 uColor;
+
+// Per-material base colour lookup.
+// Type 1 = floor (light concrete), 2 = wall (dark metal), 3 = ore (rusty orange), else grey.
+vec3 materialColor(float t) {
+    if (t < 1.5) return vec3(0.72, 0.70, 0.64);  // floor
+    if (t < 2.5) return vec3(0.30, 0.34, 0.40);  // wall
+    if (t < 3.5) return vec3(0.75, 0.45, 0.15);  // ore / salvage node
+    return vec3(0.55, 0.55, 0.55);                // fallback
+}
+
 void main() {
     float diff = max(dot(normalize(vNormal), normalize(uLightDir)), 0.2);
-    FragColor = vec4(uColor * diff, 1.0);
+    vec3 color = materialColor(vVoxelType) * diff;
+    FragColor = vec4(color, 1.0);
 }";
 
         public ShaderProgram(string vertSrc, string fragSrc)
