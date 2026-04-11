@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using NovaForge.ProcGen.Interior;
 using NovaForge.Voxels.Chunk;
 
 namespace NovaForge.ProcGen.Interior
