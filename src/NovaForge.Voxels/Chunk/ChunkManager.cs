@@ -42,6 +42,11 @@ namespace NovaForge.Voxels.Chunk
             return chunk.GetVoxel(lx, ly, lz);
         }
 
+        public Dictionary<(int, int, int), VoxelChunk> GetChunks()
+        {
+            return new Dictionary<(int, int, int), VoxelChunk>(_chunks);
+        }
+
         public Dictionary<(int, int, int), List<VoxelEdit>> GetAllEdits()
         {
             var result = new Dictionary<(int, int, int), List<VoxelEdit>>();

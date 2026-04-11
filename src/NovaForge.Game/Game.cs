@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using NovaForge.Core.Events;
 using NovaForge.Core.Logging;
 using NovaForge.Core.Math;
+using NovaForge.Core.Rng;
 using NovaForge.Data;
 using NovaForge.Data.Models;
 using NovaForge.ProcGen.Interior;
@@ -24,14 +26,14 @@ namespace NovaForge.Game
         private NovaForgeWindow _window;
         private Camera _camera;
         private ShaderProgram _shader;
-        private GpuMesh _gpuMesh;
+        private readonly Dictionary<(int, int, int), GpuMesh> _gpuMeshes = new Dictionary<(int, int, int), GpuMesh>();
         private ChunkManager _chunkManager;
         private InteriorLayout _layout;
         private Inventory _inventory;
         private SaveManager _saveManager;
         private VoxelMesher _mesher;
         private VoxelRaycaster _raycaster;
-        private VoxelChunk _mainChunk;
+        private EventBus _events;
 
         private long _seed = 42L;
         private bool _firstMouseMove = true;
@@ -58,13 +60,19 @@ namespace NovaForge.Game
             GL.Enable(EnableCap.DepthTest);
             GL.ClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 
-            _camera = new Camera { Position = new Vector3(16, 20, 40) };
+            _camera = new Camera { Position = new Vector3(16, 8, 16) };
             _shader = new ShaderProgram(ShaderProgram.VertexSource, ShaderProgram.FragmentSource);
             _mesher = new VoxelMesher();
             _raycaster = new VoxelRaycaster();
             _chunkManager = new ChunkManager();
             _inventory = new Inventory();
             _saveManager = new SaveManager();
+
+            _events = new EventBus();
+            _events.Subscribe<VoxelMinedEvent>(e =>
+                Logger.Log($"[Event] Voxel mined at {e.Position} (type {e.OldType})"));
+            _events.Subscribe<SalvageClaimedEvent>(e =>
+                Logger.Log($"[Event] Salvage claimed: {e.Amount}x {e.ResourceId} from node {e.NodeId}"));
 
             string dataPath = System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../data");
             if (!System.IO.Directory.Exists(dataPath))
@@ -78,26 +86,24 @@ namespace NovaForge.Game
             _layout = generator.Generate(_seed, _roomDefs, _nodeDefs);
             Logger.Log($"Generated {_layout.Rooms.Count} rooms.");
 
-            _mainChunk = _chunkManager.GetOrCreateChunk(0, 0, 0);
-            _mainChunk.Fill(1);
-            for (int x = 0; x < VoxelChunk.SIZE; x++)
-            for (int y = 16; y < VoxelChunk.SIZE; y++)
-            for (int z = 0; z < VoxelChunk.SIZE; z++)
-                _mainChunk.SetVoxel(x, y, z, 0);
+            WorldBuilder.StampLayout(_layout, _chunkManager);
 
-            RebuildMesh();
+            RebuildMeshes();
 
             _window.CursorState = CursorState.Grabbed;
             Logger.Log("NovaForge loaded. WASD=move, mouse=look, E=scan, LMB=mine, F5=save, F9=load");
         }
 
-        private void RebuildMesh()
+        private void RebuildMeshes()
         {
-            var meshData = _mesher.GenerateMesh(_mainChunk);
-            if (_gpuMesh == null)
-                _gpuMesh = new GpuMesh(meshData);
-            else
-                _gpuMesh.Update(meshData);
+            foreach (var kv in _chunkManager.GetChunks())
+            {
+                var meshData = _mesher.GenerateMesh(kv.Value);
+                if (_gpuMeshes.TryGetValue(kv.Key, out var existing))
+                    existing.Update(meshData);
+                else
+                    _gpuMeshes[kv.Key] = new GpuMesh(meshData);
+            }
         }
 
         private void OnUpdate(double dt)
@@ -138,20 +144,47 @@ namespace NovaForge.Game
                 foreach (var node in room.SalvageNodes)
                 {
                     if (node.IsClaimed) continue;
-                    float ddx = node.LocalPosition.X + room.Position.X * 10 - camPos.X;
-                    float ddz = node.LocalPosition.Z + room.Position.Z * 10 - camPos.Z;
+                    float ddx = node.LocalPosition.X + room.Position.X * WorldBuilder.Scale - camPos.X;
+                    float ddz = node.LocalPosition.Z + room.Position.Y * WorldBuilder.Scale - camPos.Z;
                     float dist = (float)System.Math.Sqrt(ddx * ddx + ddz * ddz);
                     if (dist <= scanRadius)
                     {
-                        Logger.Log($"Found salvage node: {node.DefinitionId} in room {room.DefinitionId}. Claiming...");
-                        node.IsClaimed = true;
-                        _inventory.AddItem(node.DefinitionId, 1);
-                        _inventory.PrintContents();
+                        ClaimSalvageNode(room, node);
                         return;
                     }
                 }
             }
             Logger.Log("No salvage nodes in range.");
+        }
+
+        private void ClaimSalvageNode(ProcGen.Interior.RoomInstance room, ProcGen.Interior.SalvageNodeInstance node)
+        {
+            node.IsClaimed = true;
+
+            var nodeDef = _nodeDefs.Find(nd => nd.Id == node.DefinitionId);
+            if (nodeDef == null)
+            {
+                Logger.Warn($"No definition found for salvage node '{node.DefinitionId}'.");
+                return;
+            }
+
+            var rng = new DeterministicRng(node.Id);
+            int yield = rng.NextInt(nodeDef.MinYield, nodeDef.MaxYield + 1);
+
+            Logger.Log($"Claimed salvage node '{node.DefinitionId}' in room '{room.DefinitionId}' — yield: {yield}");
+
+            foreach (string resId in nodeDef.ResourceIds)
+            {
+                _inventory.AddItem(resId, yield);
+                _events.Publish(new SalvageClaimedEvent
+                {
+                    NodeId = node.DefinitionId,
+                    ResourceId = resId,
+                    Amount = yield
+                });
+            }
+
+            _inventory.PrintContents();
         }
 
         private void Mine()
@@ -165,10 +198,14 @@ namespace NovaForge.Game
             if (hit.HasValue)
             {
                 var vp = hit.Value.VoxelPosition;
+                byte oldType = _chunkManager.GetVoxel(vp.X, vp.Y, vp.Z);
                 Logger.Log($"Mined voxel at {vp}");
                 _chunkManager.SetVoxel(vp.X, vp.Y, vp.Z, 0);
                 _inventory.AddItem("stone", 1);
-                RebuildMesh();
+
+                _events.Publish(new VoxelMinedEvent { Position = vp, OldType = oldType });
+
+                RebuildMeshes();
             }
         }
 
@@ -196,7 +233,7 @@ namespace NovaForge.Game
                     }
                 }
             }
-            RebuildMesh();
+            RebuildMeshes();
         }
 
         private void OnRender(double dt)
@@ -205,17 +242,24 @@ namespace NovaForge.Game
 
             _shader.Use();
 
-            var model = Matrix4.Identity;
             var view = _camera.GetViewMatrix();
             var proj = _camera.GetProjectionMatrix((float)_window.ClientSize.X / _window.ClientSize.Y);
 
-            _shader.SetUniform("uModel", model);
             _shader.SetUniform("uView", view);
             _shader.SetUniform("uProjection", proj);
             _shader.SetUniform("uLightDir", new Vector3(0.5f, 1f, 0.3f));
             _shader.SetUniform("uColor", new Vector3(0.6f, 0.6f, 0.65f));
 
-            _gpuMesh?.Render();
+            foreach (var kv in _gpuMeshes)
+            {
+                var (cx, cy, cz) = kv.Key;
+                var model = Matrix4.CreateTranslation(
+                    cx * VoxelChunk.SIZE,
+                    cy * VoxelChunk.SIZE,
+                    cz * VoxelChunk.SIZE);
+                _shader.SetUniform("uModel", model);
+                kv.Value.Render();
+            }
         }
     }
 }
