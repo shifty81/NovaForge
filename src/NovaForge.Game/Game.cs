@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NovaForge.Core.Diagnostics;
 using NovaForge.Core.Events;
 using NovaForge.Core.Logging;
 using NovaForge.Core.Math;
@@ -34,11 +35,17 @@ namespace NovaForge.Game
         private VoxelMesher _mesher;
         private VoxelRaycaster _raycaster;
         private EventBus _events;
+        private PerformanceMetrics _metrics;
 
         private long _seed = 42L;
         private bool _firstMouseMove = true;
         private float _lastMouseX, _lastMouseY;
         private const float MoveSpeed = 10f;
+
+        // Player AABB half-extents and eye-level offset.
+        private const float PlayerRadius = 0.3f;
+        private const float PlayerEyeHeight = 1.6f;
+        private const float PlayerCrownOffset = 0.2f;
 
         private List<RoomDefinition> _roomDefs;
         private List<SalvageNodeDefinition> _nodeDefs;
@@ -67,6 +74,7 @@ namespace NovaForge.Game
             _chunkManager = new ChunkManager();
             _inventory = new Inventory();
             _saveManager = new SaveManager();
+            _metrics = new PerformanceMetrics();
 
             _events = new EventBus();
             _events.Subscribe<VoxelMinedEvent>(e =>
@@ -127,12 +135,31 @@ namespace NovaForge.Game
             float fdt = (float)dt;
 
             if (kb.IsKeyDown(Keys.Escape)) _window.Close();
+
+            // Capture position before movement so we can resolve collision per-axis.
+            var oldPos = _camera.Position;
+
             if (kb.IsKeyDown(Keys.W)) _camera.MoveForward(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.S)) _camera.MoveBack(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.A)) _camera.MoveLeft(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.D)) _camera.MoveRight(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.Space)) _camera.MoveUp(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.LeftShift)) _camera.MoveDown(MoveSpeed, fdt);
+
+            // Per-axis AABB collision against solid voxels.
+            var newPos = _camera.Position;
+            float resolvedX = newPos.X;
+            float resolvedY = newPos.Y;
+            float resolvedZ = newPos.Z;
+
+            if (IsPlayerPositionBlocked(new Vector3(newPos.X, oldPos.Y, oldPos.Z)))
+                resolvedX = oldPos.X;
+            if (IsPlayerPositionBlocked(new Vector3(resolvedX, oldPos.Y, newPos.Z)))
+                resolvedZ = oldPos.Z;
+            if (IsPlayerPositionBlocked(new Vector3(resolvedX, newPos.Y, resolvedZ)))
+                resolvedY = oldPos.Y;
+
+            _camera.Position = new Vector3(resolvedX, resolvedY, resolvedZ);
 
             float mx = ms.X, my = ms.Y;
             if (_firstMouseMove) { _lastMouseX = mx; _lastMouseY = my; _firstMouseMove = false; }
@@ -145,6 +172,34 @@ namespace NovaForge.Game
             if (kb.IsKeyPressed(Keys.F5)) _saveManager.Save(_seed, _chunkManager, _layout);
             if (kb.IsKeyPressed(Keys.F9)) LoadGame();
             if (ms.IsButtonPressed(MouseButton.Left)) Mine();
+
+            // Update performance metrics and refresh window title once per second.
+            _metrics.EndFrame(dt);
+            if (_metrics.Sample())
+                _window.Title = $"NovaForge  |  {_metrics}";
+        }
+
+        /// <summary>
+        /// Returns true if the player AABB centred at <paramref name="pos"/> (camera/eye position)
+        /// overlaps at least one solid voxel. Checks a 2×3×2 grid of AABB corners.
+        /// </summary>
+        private bool IsPlayerPositionBlocked(Vector3 pos)
+        {
+            float[] xOff = { -PlayerRadius, PlayerRadius };
+            float[] zOff = { -PlayerRadius, PlayerRadius };
+            float[] yOff = { -PlayerEyeHeight, -PlayerEyeHeight * 0.5f, PlayerCrownOffset };
+
+            foreach (float yo in yOff)
+            foreach (float xo in xOff)
+            foreach (float zo in zOff)
+            {
+                int vx = (int)Math.Floor(pos.X + xo);
+                int vy = (int)Math.Floor(pos.Y + yo);
+                int vz = (int)Math.Floor(pos.Z + zo);
+                if (_chunkManager.GetVoxel(vx, vy, vz) != 0)
+                    return true;
+            }
+            return false;
         }
 
         private void Scan()
@@ -252,6 +307,8 @@ namespace NovaForge.Game
 
         private void OnRender(double dt)
         {
+            _metrics.BeginFrame();
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             _shader.Use();
@@ -272,6 +329,7 @@ namespace NovaForge.Game
                     cz * VoxelChunk.SIZE);
                 _shader.SetUniform("uModel", model);
                 kv.Value.Render();
+                _metrics.AddChunk(kv.Value.TriangleCount);
             }
         }
     }
