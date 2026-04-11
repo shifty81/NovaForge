@@ -7,6 +7,8 @@ using NovaForge.Core.Math;
 using NovaForge.Core.Rng;
 using NovaForge.Data;
 using NovaForge.Data.Models;
+using NovaForge.Game.Crafting;
+using NovaForge.Game.SaveLoad;
 using NovaForge.ProcGen.Interior;
 using NovaForge.Render;
 using NovaForge.Render.Mesh;
@@ -14,7 +16,6 @@ using NovaForge.Render.Shaders;
 using NovaForge.Voxels.Chunk;
 using NovaForge.Voxels.Meshing;
 using NovaForge.Voxels.Raycast;
-using NovaForge.Game.SaveLoad;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -63,6 +64,7 @@ namespace NovaForge.Game
         private List<RoomDefinition> _roomDefs;
         private List<SalvageNodeDefinition> _nodeDefs;
         private List<ResourceDefinition> _resourceDefs;
+        private List<CraftingRecipe> _recipes;
 
         public void Run()
         {
@@ -102,6 +104,8 @@ namespace NovaForge.Game
             _roomDefs = DataLoader.LoadRooms(dataPath);
             _resourceDefs = DataLoader.LoadResources(dataPath);
             _nodeDefs = DataLoader.LoadSalvageNodes(dataPath);
+            _recipes = DataLoader.LoadRecipes(dataPath);
+            Logger.Log($"Loaded {_recipes.Count} crafting recipe(s).");
 
             var generator = new InteriorGenerator();
             _layout = generator.Generate(_seed, _roomDefs, _nodeDefs);
@@ -115,7 +119,7 @@ namespace NovaForge.Game
             RebuildAllMeshes();
 
             _window.CursorState = CursorState.Grabbed;
-            Logger.Log("NovaForge loaded. WASD=move, Space=jump, mouse=look, E=scan, LMB=mine, F5=save, F9=load");
+            Logger.Log("NovaForge loaded. WASD=move, Space=jump, mouse=look, E=scan, C=craft, LMB=mine, F5=save, F9=load");
         }
 
         private void RebuildAllMeshes()
@@ -194,6 +198,7 @@ namespace NovaForge.Game
             _camera.ProcessMouseMovement(dx, dy);
 
             if (kb.IsKeyPressed(Keys.E)) Scan();
+            if (kb.IsKeyPressed(Keys.C)) Craft();
             if (kb.IsKeyPressed(Keys.F5)) _saveManager.Save(_seed, _chunkManager, _layout, _inventory);
             if (kb.IsKeyPressed(Keys.F9)) LoadGame();
             if (ms.IsButtonPressed(MouseButton.Left)) Mine();
@@ -306,6 +311,26 @@ namespace NovaForge.Game
                 _events.Publish(new VoxelMinedEvent { Position = vp, OldType = oldType });
 
                 RebuildDirtyMeshes();
+            }
+        }
+
+        private void Craft()
+        {
+            var craftable = CraftingSystem.GetCraftableRecipes(_inventory, _recipes);
+            if (craftable.Count == 0)
+            {
+                Logger.Log("Nothing to craft. Gather more resources.");
+                return;
+            }
+
+            // Attempt all affordable recipes and report results.
+            foreach (var recipe in craftable)
+            {
+                if (CraftingSystem.TryCraft(recipe.Id, _inventory, _recipes))
+                {
+                    Logger.Log($"Crafted: {recipe.Name} (×{recipe.OutputCount}) → {recipe.OutputId}");
+                    _inventory.PrintContents();
+                }
             }
         }
 

@@ -11,7 +11,8 @@ Game events (`VoxelMinedEvent`, `SalvageClaimedEvent`) are defined here and publ
 `PerformanceMetrics` (in `Diagnostics/`) tracks per-frame FPS, average frame time, chunks rendered, and triangles drawn; callers call `BeginFrame`/`EndFrame`/`Sample` each frame.
 
 ### NovaForge.Data
-Data models (RoomDefinition, ResourceDefinition, SalvageNodeDefinition) and a JSON DataLoader.
+Data models (RoomDefinition, ResourceDefinition, SalvageNodeDefinition, CraftingRecipe) and a JSON DataLoader.
+`DataLoader` loads rooms (per-file from `data/rooms/`), resources (`data/resources/resources.json`), salvage nodes (`data/salvage/salvage_nodes.json`), and crafting recipes (`data/recipes/recipes.json`).
 
 ### NovaForge.ProcGen
 Procedural interior generation using seeded deterministic RNG. Produces InteriorLayout with RoomInstance and SalvageNodeInstance.
@@ -22,6 +23,7 @@ Chunk-based voxel storage (`VoxelChunk`, `ChunkManager`), greedy meshing (`Voxel
 - `VoxelChunk.IsDirty` tracks modifications; `ClearDirty()` resets the flag; `ResetEdits()` clears the edit log (used after world gen).
 - `ChunkManager.GetDirtyChunks()` / `ClearAllDirty()` / `ResetAllEdits()` drive incremental mesh rebuilds and clean save deltas.
 - The greedy mesher emits 7 floats per vertex: `[x, y, z, nx, ny, nz, voxelType]` (`MeshData.FloatsPerVertex = 7`).
+- `VoxelRaycaster.Cast` uses DDA traversal; correctly handles axis-aligned rays by guarding against IEEE −0 division.
 
 ### NovaForge.Render
 OpenTK 4 rendering: ShaderProgram (GLSL 330), GpuMesh (VAO/VBO/EBO), Camera, and NovaForgeWindow.
@@ -36,11 +38,12 @@ Main game loop: integrates all layers. Handles input, mining, salvage scanning (
 - **Player collision**: per-axis AABB check (0.6 m wide × 1.8 m tall) against solid voxels before committing each frame's movement, enabling sliding along walls.
 - **Gravity + jump**: Y-axis gravity (`-20 m/s²`, terminal velocity `-30 m/s`) with Space-to-jump when grounded. Vertical movement resolved through the existing collision system.
 - **Resource-aware mining**: voxel type maps to resource ID (`1→stone`, `2→iron_scrap`, `3→rare_ore`) so mining gives the correct loot.
+- **Crafting** (`C` key): `CraftingSystem.GetCraftableRecipes` checks current inventory; `TryCraft` deducts ingredients atomically and adds the output item. Recipes loaded from `data/recipes/recipes.json`. `Inventory.TryRemoveItems` and `GetTotalValue` support crafting and economy.
 - **Inventory persistence**: `WorldDelta.InventoryItems` serialises the full inventory to save.json; restored on load.
 - **Performance overlay**: `PerformanceMetrics` drives the window title (FPS, frame time, chunk count, triangle count), updated once per second.
 
 ### NovaForge.Tests
-xUnit tests covering: deterministic generation, voxel delta restoration, greedy meshing (vertex stride, type encoding), world stamping (floor/wall types, dirty flag, reset), `VoxelChunk` dirty-tracking lifecycle, `PerformanceMetrics` (FPS accuracy, chunk/triangle counters, sampling interval), `EventBus` (subscribe/publish/unsubscribe), `Inventory` (add, accumulate, snapshot, replace), and `SaveManager` (save/load round-trip including inventory and voxel edits).
+xUnit tests covering: deterministic generation, voxel delta restoration, greedy meshing (vertex stride, type encoding), world stamping (floor/wall types, dirty flag, reset), `VoxelChunk` dirty-tracking lifecycle, `PerformanceMetrics` (FPS accuracy, chunk/triangle counters, sampling interval), `EventBus` (subscribe/publish/unsubscribe), `Inventory` (add, accumulate, snapshot, replace), `SaveManager` (save/load round-trip including inventory and voxel edits), `CraftingSystem` (success, deduction, insufficient-stock, unknown-recipe, output count, GetCraftableRecipes), `VoxelRaycaster` (hit, miss, max-distance, zero-direction, near-voxel priority, normal direction, negative-direction), and `DataLoader` (rooms, resources, salvage nodes, crafting recipes).
 
 ## Data Flow
 ```

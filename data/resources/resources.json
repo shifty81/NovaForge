@@ -1,5 +1,7 @@
 [
   { "Id": "iron_scrap", "Name": "Iron Scrap", "Description": "Salvaged iron fragments.", "BaseValue": 5 },
   { "Id": "rare_ore", "Name": "Rare Ore", "Description": "A rare metallic ore.", "BaseValue": 25 },
-  { "Id": "stone", "Name": "Stone", "Description": "Common stone block.", "BaseValue": 1 }
+  { "Id": "stone", "Name": "Stone", "Description": "Common stone block.", "BaseValue": 1 },
+  { "Id": "iron_plate", "Name": "Iron Plate", "Description": "Refined iron sheet, crafted from scrap.", "BaseValue": 20 },
+  { "Id": "refined_ore", "Name": "Refined Ore", "Description": "Purified ore ingot.", "BaseValue": 60 }
 ]
