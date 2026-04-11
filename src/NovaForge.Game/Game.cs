@@ -74,9 +74,9 @@ namespace NovaForge.Game
             _events.Subscribe<SalvageClaimedEvent>(e =>
                 Logger.Log($"[Event] Salvage claimed: {e.Amount}x {e.ResourceId} from node {e.NodeId}"));
 
-            string dataPath = System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../data");
+            string dataPath = System.IO.Path.Combine(AppContext.BaseDirectory, "data");
             if (!System.IO.Directory.Exists(dataPath))
-                dataPath = System.IO.Path.Combine(AppContext.BaseDirectory, "data");
+                dataPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../../data"));
 
             _roomDefs = DataLoader.LoadRooms(dataPath);
             _resourceDefs = DataLoader.LoadResources(dataPath);
