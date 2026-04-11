@@ -9,7 +9,12 @@ namespace NovaForge.Game.SaveLoad
 {
     public class SaveManager
     {
-        public string SavePath { get; } = "save.json";
+        public string SavePath { get; }
+
+        public SaveManager(string savePath = "save.json")
+        {
+            SavePath = savePath;
+        }
 
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
         {
@@ -17,7 +22,7 @@ namespace NovaForge.Game.SaveLoad
             PropertyNameCaseInsensitive = true
         };
 
-        public void Save(long seed, ChunkManager chunks, InteriorLayout layout)
+        public void Save(long seed, ChunkManager chunks, InteriorLayout layout, Inventory inventory = null)
         {
             var delta = new WorldDelta { Seed = seed };
 
@@ -33,6 +38,9 @@ namespace NovaForge.Game.SaveLoad
             foreach (var room in layout.Rooms)
                 foreach (var node in room.SalvageNodes)
                     delta.SalvageStates.Add(new SalvageNodeState(room.Id, node.Id, node.IsClaimed));
+
+            if (inventory != null)
+                delta.InventoryItems = inventory.GetAllItems();
 
             File.WriteAllText(SavePath, JsonSerializer.Serialize(delta, _options));
             Console.WriteLine($"[SaveManager] Saved to {SavePath}");

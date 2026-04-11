@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using NovaForge.Core.Diagnostics;
 using NovaForge.Core.Events;
 using NovaForge.Core.Logging;
 using NovaForge.Core.Math;
 using NovaForge.Core.Rng;
 using NovaForge.Data;
 using NovaForge.Data.Models;
+using NovaForge.Game.Crafting;
+using NovaForge.Game.SaveLoad;
 using NovaForge.ProcGen.Interior;
 using NovaForge.Render;
 using NovaForge.Render.Mesh;
@@ -13,7 +16,6 @@ using NovaForge.Render.Shaders;
 using NovaForge.Voxels.Chunk;
 using NovaForge.Voxels.Meshing;
 using NovaForge.Voxels.Raycast;
-using NovaForge.Game.SaveLoad;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -34,15 +36,35 @@ namespace NovaForge.Game
         private VoxelMesher _mesher;
         private VoxelRaycaster _raycaster;
         private EventBus _events;
+        private PerformanceMetrics _metrics;
 
         private long _seed = 42L;
         private bool _firstMouseMove = true;
         private float _lastMouseX, _lastMouseY;
         private const float MoveSpeed = 10f;
 
+        // Gravity and jump physics.
+        private float _velocityY = 0f;
+        private const float Gravity = -20f;
+        private const float JumpSpeed = 7f;
+        private const float TerminalVelocity = -30f;
+
+        // Player AABB half-extents and eye-level offset.
+        private const float PlayerRadius = 0.3f;
+        private const float PlayerEyeHeight = 1.6f;
+        private const float PlayerCrownOffset = 0.2f;
+        // Fraction of eye-height used for the mid-body collision check (between feet and eyes).
+        private const float PlayerMidpointFraction = 0.5f;
+        // Distance below feet used to detect whether the player is standing on solid ground.
+        private const float GroundCheckDistance = 0.05f;
+
+        // Maps voxel type to the resource ID awarded when mining that block.
+        private static readonly string[] VoxelTypeToResource = { "stone", "stone", "iron_scrap", "rare_ore" };
+
         private List<RoomDefinition> _roomDefs;
         private List<SalvageNodeDefinition> _nodeDefs;
         private List<ResourceDefinition> _resourceDefs;
+        private List<CraftingRecipe> _recipes;
 
         public void Run()
         {
@@ -67,6 +89,7 @@ namespace NovaForge.Game
             _chunkManager = new ChunkManager();
             _inventory = new Inventory();
             _saveManager = new SaveManager();
+            _metrics = new PerformanceMetrics();
 
             _events = new EventBus();
             _events.Subscribe<VoxelMinedEvent>(e =>
@@ -81,6 +104,8 @@ namespace NovaForge.Game
             _roomDefs = DataLoader.LoadRooms(dataPath);
             _resourceDefs = DataLoader.LoadResources(dataPath);
             _nodeDefs = DataLoader.LoadSalvageNodes(dataPath);
+            _recipes = DataLoader.LoadRecipes(dataPath);
+            Logger.Log($"Loaded {_recipes.Count} crafting recipe(s).");
 
             var generator = new InteriorGenerator();
             _layout = generator.Generate(_seed, _roomDefs, _nodeDefs);
@@ -94,7 +119,7 @@ namespace NovaForge.Game
             RebuildAllMeshes();
 
             _window.CursorState = CursorState.Grabbed;
-            Logger.Log("NovaForge loaded. WASD=move, mouse=look, E=scan, LMB=mine, F5=save, F9=load");
+            Logger.Log("NovaForge loaded. WASD=move, Space=jump, mouse=look, E=scan, C=craft, LMB=mine, F5=save, F9=load");
         }
 
         private void RebuildAllMeshes()
@@ -127,12 +152,43 @@ namespace NovaForge.Game
             float fdt = (float)dt;
 
             if (kb.IsKeyDown(Keys.Escape)) _window.Close();
+
+            // Capture position before movement so we can resolve collision per-axis.
+            var oldPos = _camera.Position;
+
             if (kb.IsKeyDown(Keys.W)) _camera.MoveForward(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.S)) _camera.MoveBack(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.A)) _camera.MoveLeft(MoveSpeed, fdt);
             if (kb.IsKeyDown(Keys.D)) _camera.MoveRight(MoveSpeed, fdt);
-            if (kb.IsKeyDown(Keys.Space)) _camera.MoveUp(MoveSpeed, fdt);
-            if (kb.IsKeyDown(Keys.LeftShift)) _camera.MoveDown(MoveSpeed, fdt);
+
+            // Apply gravity and move camera vertically.
+            _velocityY = Math.Max(_velocityY + Gravity * fdt, TerminalVelocity);
+            _camera.Position = new Vector3(_camera.Position.X, _camera.Position.Y + _velocityY * fdt, _camera.Position.Z);
+
+            // Per-axis AABB collision against solid voxels.
+            var newPos = _camera.Position;
+            float resolvedX = newPos.X;
+            float resolvedY = newPos.Y;
+            float resolvedZ = newPos.Z;
+
+            if (IsPlayerPositionBlocked(new Vector3(newPos.X, oldPos.Y, oldPos.Z)))
+                resolvedX = oldPos.X;
+            if (IsPlayerPositionBlocked(new Vector3(resolvedX, oldPos.Y, newPos.Z)))
+                resolvedZ = oldPos.Z;
+
+            bool yBlocked = IsPlayerPositionBlocked(new Vector3(resolvedX, newPos.Y, resolvedZ));
+            if (yBlocked)
+            {
+                resolvedY = oldPos.Y;
+                _velocityY = 0f;
+            }
+
+            _camera.Position = new Vector3(resolvedX, resolvedY, resolvedZ);
+
+            // Jump when grounded (Y was blocked by floor beneath).
+            bool isGrounded = yBlocked || IsPlayerPositionBlocked(new Vector3(resolvedX, resolvedY - GroundCheckDistance, resolvedZ));
+            if (isGrounded && kb.IsKeyPressed(Keys.Space))
+                _velocityY = JumpSpeed;
 
             float mx = ms.X, my = ms.Y;
             if (_firstMouseMove) { _lastMouseX = mx; _lastMouseY = my; _firstMouseMove = false; }
@@ -142,9 +198,38 @@ namespace NovaForge.Game
             _camera.ProcessMouseMovement(dx, dy);
 
             if (kb.IsKeyPressed(Keys.E)) Scan();
-            if (kb.IsKeyPressed(Keys.F5)) _saveManager.Save(_seed, _chunkManager, _layout);
+            if (kb.IsKeyPressed(Keys.C)) Craft();
+            if (kb.IsKeyPressed(Keys.F5)) _saveManager.Save(_seed, _chunkManager, _layout, _inventory);
             if (kb.IsKeyPressed(Keys.F9)) LoadGame();
             if (ms.IsButtonPressed(MouseButton.Left)) Mine();
+
+            // Update performance metrics and refresh window title once per second.
+            _metrics.EndFrame(dt);
+            if (_metrics.Sample())
+                _window.Title = $"NovaForge  |  {_metrics}";
+        }
+
+        /// <summary>
+        /// Returns true if the player AABB centred at <paramref name="pos"/> (camera/eye position)
+        /// overlaps at least one solid voxel. Checks a 2×3×2 grid of AABB corners.
+        /// </summary>
+        private bool IsPlayerPositionBlocked(Vector3 pos)
+        {
+            float[] xOff = { -PlayerRadius, PlayerRadius };
+            float[] zOff = { -PlayerRadius, PlayerRadius };
+            float[] yOff = { -PlayerEyeHeight, -PlayerEyeHeight * PlayerMidpointFraction, PlayerCrownOffset };
+
+            foreach (float yo in yOff)
+            foreach (float xo in xOff)
+            foreach (float zo in zOff)
+            {
+                int vx = (int)Math.Floor(pos.X + xo);
+                int vy = (int)Math.Floor(pos.Y + yo);
+                int vz = (int)Math.Floor(pos.Z + zo);
+                if (_chunkManager.GetVoxel(vx, vy, vz) != 0)
+                    return true;
+            }
+            return false;
         }
 
         private void Scan()
@@ -215,11 +300,37 @@ namespace NovaForge.Game
                 byte oldType = _chunkManager.GetVoxel(vp.X, vp.Y, vp.Z);
                 Logger.Log($"Mined voxel at {vp}");
                 _chunkManager.SetVoxel(vp.X, vp.Y, vp.Z, 0);
-                _inventory.AddItem("stone", 1);
+
+                // Award the appropriate resource for the mined voxel type.
+                // Clamp to valid indices; any type outside the table falls back to "stone".
+                string resourceId = oldType < VoxelTypeToResource.Length
+                    ? VoxelTypeToResource[oldType]
+                    : VoxelTypeToResource[0];
+                _inventory.AddItem(resourceId, 1);
 
                 _events.Publish(new VoxelMinedEvent { Position = vp, OldType = oldType });
 
                 RebuildDirtyMeshes();
+            }
+        }
+
+        private void Craft()
+        {
+            var craftable = CraftingSystem.GetCraftableRecipes(_inventory, _recipes);
+            if (craftable.Count == 0)
+            {
+                Logger.Log("Nothing to craft. Gather more resources.");
+                return;
+            }
+
+            // Attempt all affordable recipes and report results.
+            foreach (var recipe in craftable)
+            {
+                if (CraftingSystem.TryCraft(recipe.Id, _inventory, _recipes))
+                {
+                    Logger.Log($"Crafted: {recipe.Name} (×{recipe.OutputCount}) → {recipe.OutputId}");
+                    _inventory.PrintContents();
+                }
             }
         }
 
@@ -247,11 +358,15 @@ namespace NovaForge.Game
                     }
                 }
             }
+            if (delta.InventoryItems != null)
+                _inventory.SetAllItems(delta.InventoryItems);
             RebuildDirtyMeshes();
         }
 
         private void OnRender(double dt)
         {
+            _metrics.BeginFrame();
+
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             _shader.Use();
@@ -272,6 +387,7 @@ namespace NovaForge.Game
                     cz * VoxelChunk.SIZE);
                 _shader.SetUniform("uModel", model);
                 kv.Value.Render();
+                _metrics.RecordChunk(kv.Value.TriangleCount);
             }
         }
     }

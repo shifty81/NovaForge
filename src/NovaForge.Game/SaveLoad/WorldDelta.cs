@@ -7,5 +7,6 @@ namespace NovaForge.Game.SaveLoad
         public long Seed { get; set; }
         public Dictionary<string, List<VoxelEditDto>> ChunkEdits { get; set; } = new Dictionary<string, List<VoxelEditDto>>();
         public List<SalvageNodeState> SalvageStates { get; set; } = new List<SalvageNodeState>();
+        public Dictionary<string, int> InventoryItems { get; set; } = new Dictionary<string, int>();
     }
 }

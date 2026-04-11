@@ -31,15 +31,20 @@ namespace NovaForge.Voxels.Raycast
             float tDeltaY = MathF.Abs(1f / direction.Y);
             float tDeltaZ = MathF.Abs(1f / direction.Z);
 
-            float tMaxX = direction.X > 0
-                ? ((x + 1) - origin.X) / direction.X
-                : (origin.X - x) / -direction.X;
-            float tMaxY = direction.Y > 0
-                ? ((y + 1) - origin.Y) / direction.Y
-                : (origin.Y - y) / -direction.Y;
-            float tMaxZ = direction.Z > 0
-                ? ((z + 1) - origin.Z) / direction.Z
-                : (origin.Z - z) / -direction.Z;
+            // When a direction component is zero the ray never crosses that axis boundary.
+            // Guard against IEEE -0 division producing -Infinity instead of +Infinity.
+            float tMaxX = direction.X == 0f ? float.PositiveInfinity
+                : direction.X > 0
+                    ? ((x + 1) - origin.X) / direction.X
+                    : (origin.X - x) / -direction.X;
+            float tMaxY = direction.Y == 0f ? float.PositiveInfinity
+                : direction.Y > 0
+                    ? ((y + 1) - origin.Y) / direction.Y
+                    : (origin.Y - y) / -direction.Y;
+            float tMaxZ = direction.Z == 0f ? float.PositiveInfinity
+                : direction.Z > 0
+                    ? ((z + 1) - origin.Z) / direction.Z
+                    : (origin.Z - z) / -direction.Z;
 
             Vector3i normal = new Vector3i(0, 0, 0);
             float t = 0;

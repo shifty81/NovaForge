@@ -41,5 +41,13 @@ namespace NovaForge.Data
             var json = File.ReadAllText(file);
             return JsonSerializer.Deserialize<List<SalvageNodeDefinition>>(json, _options) ?? new List<SalvageNodeDefinition>();
         }
+
+        public static List<CraftingRecipe> LoadRecipes(string dataPath)
+        {
+            var file = Path.Combine(dataPath, "recipes", "recipes.json");
+            if (!File.Exists(file)) return new List<CraftingRecipe>();
+            var json = File.ReadAllText(file);
+            return JsonSerializer.Deserialize<List<CraftingRecipe>>(json, _options) ?? new List<CraftingRecipe>();
+        }
     }
 }

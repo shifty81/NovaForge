@@ -1,0 +1,16 @@
+[
+  {
+    "Id": "iron_plate",
+    "Name": "Iron Plate",
+    "Ingredients": { "iron_scrap": 3 },
+    "OutputId": "iron_plate",
+    "OutputCount": 1
+  },
+  {
+    "Id": "refined_ore",
+    "Name": "Refined Ore",
+    "Ingredients": { "rare_ore": 2 },
+    "OutputId": "refined_ore",
+    "OutputCount": 1
+  }
+]

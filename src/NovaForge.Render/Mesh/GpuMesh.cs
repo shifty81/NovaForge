@@ -60,6 +60,9 @@ namespace NovaForge.Render.Mesh
             _indexCount = data.Indices.Length;
         }
 
+        /// <summary>Number of triangles in the last uploaded mesh (indexCount / 3).</summary>
+        public int TriangleCount => _indexCount / 3;
+
         public void Render()
         {
             if (_indexCount == 0) return;
